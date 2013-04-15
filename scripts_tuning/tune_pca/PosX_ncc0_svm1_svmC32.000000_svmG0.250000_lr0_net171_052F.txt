@@ -1,0 +1,1943 @@
+Adding train_params to mdp.Node:  AdaptiveCutoffNode
+Adding train_params to mdp.Node:  Convolution2DNode
+Adding train_params to mdp.Node:  CuBICANode
+Adding train_params to mdp.Node:  CutoffNode
+Adding train_params to mdp.Node:  DiscreteHopfieldClassifier
+Adding train_params to mdp.Node:  EtaComputerNode
+Adding train_params to mdp.Node:  FANode
+Adding train_params to mdp.Node:  FDANode
+Adding train_params to mdp.Node:  FastICANode
+Adding train_params to mdp.Node:  GaussianClassifier
+Adding train_params to mdp.Node:  GeneralExpansionNode
+Adding train_params to mdp.Node:  GrowingNeuralGasExpansionNode
+Adding train_params to mdp.Node:  GrowingNeuralGasNode
+Adding train_params to mdp.Node:  HLLENode
+Adding train_params to mdp.Node:  HeadNode
+Adding train_params to mdp.Node:  HistogramNode
+Adding train_params to mdp.Node:  HitParadeNode
+Adding train_params to mdp.Node:  ICANode
+Adding train_params to mdp.Node:  IEVMLRecNode
+Adding train_params to mdp.Node:  IEVMNode
+Adding train_params to mdp.Node:  ISFANode
+Adding train_params to mdp.Node:  IdentityNode
+Adding train_params to mdp.Node:  JADENode
+Adding train_params to mdp.Node:  KMeansClassifier
+Adding train_params to mdp.Node:  KNNClassifier
+Adding train_params to mdp.Node:  LLENode
+Adding train_params to mdp.Node:  LibSVMClassifier
+Adding train_params to mdp.Node:  LinearRegressionNode
+Adding train_params to mdp.Node:  NIPALSNode
+Adding train_params to mdp.Node:  NearestMeanClassifier
+Adding train_params to mdp.Node:  NoiseNode
+Adding train_params to mdp.Node:  NormalNoiseNode
+Adding train_params to mdp.Node:  NormalizeNode
+Adding train_params to mdp.Node:  PCANode
+Adding train_params to mdp.Node:  PInvSwitchboard
+Adding train_params to mdp.Node:  PerceptronClassifier
+Adding train_params to mdp.Node:  PointwiseFunctionNode
+Adding train_params to mdp.Node:  PolynomialExpansionNode
+Adding train_params to mdp.Node:  QuadraticExpansionNode
+Adding train_params to mdp.Node:  RBFExpansionNode
+Adding train_params to mdp.Node:  RBMNode
+Adding train_params to mdp.Node:  RBMWithLabelsNode
+Adding train_params to mdp.Node:  RandomPermutationNode
+Adding train_params to mdp.Node:  RandomizedMaskNode
+Adding train_params to mdp.Node:  SFA2Node
+Adding train_params to mdp.Node:  SFANode
+Adding train_params to mdp.Node:  SFAPCANode
+Adding train_params to mdp.Node:  SignumClassifier
+Adding train_params to mdp.Node:  SimpleMarkovClassifier
+Adding train_params to mdp.Node:  TDSEPNode
+Adding train_params to mdp.Node:  TimeDelayNode
+Adding train_params to mdp.Node:  TimeDelaySlidingWindowNode
+Adding train_params to mdp.Node:  TimeFramesNode
+Adding train_params to mdp.Node:  WhiteningNode
+Adding train_params to mdp.Node:  XSFANode
+Adding train_params to (hinet) mdp.Node:  ChannelSwitchboard
+Adding train_params to (hinet) mdp.Node:  DoubleRect2dSwitchboard
+Adding train_params to (hinet) mdp.Node:  DoubleRhomb2dSwitchboard
+Adding train_params to (hinet) mdp.Node:  FactoryDoubleRect2dSwitchboard
+Adding train_params to (hinet) mdp.Node:  FactoryDoubleRhomb2dSwitchboard
+Adding train_params to (hinet) mdp.Node:  FactoryExtensionChannelSwitchboard
+Adding train_params to (hinet) mdp.Node:  FactoryRectangular2dSwitchboard
+Adding train_params to (hinet) mdp.Node:  FlowNode
+Adding train_params to (hinet) mdp.Node:  MeanInverseSwitchboard
+Adding train_params to (hinet) mdp.Node:  Rectangular2dSwitchboard
+Adding train_params to (hinet) mdp.Node:  Switchboard
+<class 'mdp.nodes.AdaptiveCutoffNode'>
+Adding execute_data_vec to node: AdaptiveCutoffNode
+<class 'mdp.nodes.Convolution2DNode'>
+Adding execute_data_vec to node: Convolution2DNode
+<class 'mdp.nodes.CuBICANode'>
+Adding execute_data_vec to node: CuBICANode
+<class 'mdp.nodes.CutoffNode'>
+Adding execute_data_vec to node: CutoffNode
+<class 'mdp.nodes.DiscreteHopfieldClassifier'>
+Adding execute_data_vec to node: DiscreteHopfieldClassifier
+<class 'mdp.nodes.EtaComputerNode'>
+Adding execute_data_vec to node: EtaComputerNode
+<class 'mdp.nodes.FANode'>
+Adding execute_data_vec to node: FANode
+<class 'mdp.nodes.FDANode'>
+Adding execute_data_vec to node: FDANode
+<class 'mdp.nodes.FastICANode'>
+Adding execute_data_vec to node: FastICANode
+<class 'mdp.nodes.GaussianClassifier'>
+Adding execute_data_vec to node: GaussianClassifier
+<class 'more_nodes.GeneralExpansionNode'>
+Adding execute_data_vec to node: GeneralExpansionNode
+<class 'mdp.nodes.GrowingNeuralGasExpansionNode'>
+Adding execute_data_vec to node: GrowingNeuralGasExpansionNode
+<class 'mdp.nodes.GrowingNeuralGasNode'>
+Adding execute_data_vec to node: GrowingNeuralGasNode
+<class 'mdp.nodes.HLLENode'>
+Adding execute_data_vec to node: HLLENode
+<class 'more_nodes.HeadNode'>
+Adding execute_data_vec to node: HeadNode
+<class 'mdp.nodes.HistogramNode'>
+Adding execute_data_vec to node: HistogramNode
+<class 'mdp.nodes.HitParadeNode'>
+Adding execute_data_vec to node: HitParadeNode
+<class 'mdp.nodes.ica_nodes.ICANode'>
+Adding execute_data_vec to node: ICANode
+<class 'more_nodes.IEVMLRecNode'>
+Adding execute_data_vec to node: IEVMLRecNode
+<class 'more_nodes.IEVMNode'>
+Adding execute_data_vec to node: IEVMNode
+<class 'mdp.nodes.ISFANode'>
+Adding execute_data_vec to node: ISFANode
+<class 'mdp.nodes.IdentityNode'>
+Adding execute_data_vec to node: IdentityNode
+<class 'mdp.nodes.JADENode'>
+Adding execute_data_vec to node: JADENode
+<class 'mdp.nodes.KMeansClassifier'>
+Adding execute_data_vec to node: KMeansClassifier
+<class 'mdp.nodes.KNNClassifier'>
+Adding execute_data_vec to node: KNNClassifier
+<class 'mdp.nodes.LLENode'>
+Adding execute_data_vec to node: LLENode
+<class 'mdp.nodes.LibSVMClassifier'>
+Adding execute_data_vec to node: LibSVMClassifier
+<class 'mdp.nodes.LinearRegressionNode'>
+Adding execute_data_vec to node: LinearRegressionNode
+<class 'mdp.nodes.NIPALSNode'>
+Adding execute_data_vec to node: NIPALSNode
+<class 'mdp.nodes.NearestMeanClassifier'>
+Adding execute_data_vec to node: NearestMeanClassifier
+<class 'mdp.nodes.NoiseNode'>
+Adding execute_data_vec to node: NoiseNode
+<class 'mdp.nodes.NormalNoiseNode'>
+Adding execute_data_vec to node: NormalNoiseNode
+<class 'mdp.nodes.NormalizeNode'>
+Adding execute_data_vec to node: NormalizeNode
+<class 'mdp.nodes.PCANode'>
+Adding execute_data_vec to node: PCANode
+<class 'more_nodes.PInvSwitchboard'>
+Adding execute_data_vec to node: PInvSwitchboard
+<class 'mdp.nodes.PerceptronClassifier'>
+Adding execute_data_vec to node: PerceptronClassifier
+<class 'more_nodes.PointwiseFunctionNode'>
+Adding execute_data_vec to node: PointwiseFunctionNode
+<class 'mdp.nodes.PolynomialExpansionNode'>
+Adding execute_data_vec to node: PolynomialExpansionNode
+<class 'mdp.nodes.QuadraticExpansionNode'>
+Adding execute_data_vec to node: QuadraticExpansionNode
+<class 'mdp.nodes.RBFExpansionNode'>
+Adding execute_data_vec to node: RBFExpansionNode
+<class 'mdp.nodes.RBMNode'>
+Adding execute_data_vec to node: RBMNode
+<class 'mdp.nodes.RBMWithLabelsNode'>
+Adding execute_data_vec to node: RBMWithLabelsNode
+<class 'more_nodes.RandomPermutationNode'>
+Adding execute_data_vec to node: RandomPermutationNode
+<class 'more_nodes.RandomizedMaskNode'>
+Adding execute_data_vec to node: RandomizedMaskNode
+<class 'mdp.nodes.SFA2Node'>
+Adding execute_data_vec to node: SFA2Node
+<class 'mdp.nodes.SFANode'>
+Adding execute_data_vec to node: SFANode
+<class 'more_nodes.SFAPCANode'>
+Adding execute_data_vec to node: SFAPCANode
+<class 'mdp.nodes.SignumClassifier'>
+Adding execute_data_vec to node: SignumClassifier
+<class 'mdp.nodes.SimpleMarkovClassifier'>
+Adding execute_data_vec to node: SimpleMarkovClassifier
+<class 'mdp.nodes.TDSEPNode'>
+Adding execute_data_vec to node: TDSEPNode
+<class 'mdp.nodes.TimeDelayNode'>
+Adding execute_data_vec to node: TimeDelayNode
+<class 'mdp.nodes.TimeDelaySlidingWindowNode'>
+Adding execute_data_vec to node: TimeDelaySlidingWindowNode
+<class 'mdp.nodes.TimeFramesNode'>
+Adding execute_data_vec to node: TimeFramesNode
+<class 'mdp.nodes.WhiteningNode'>
+Adding execute_data_vec to node: WhiteningNode
+<class 'mdp.nodes.XSFANode'>
+Adding execute_data_vec to node: XSFANode
+<class 'mdp.nodes.OneDimensionalHitParade'>
+Not a node: _OneDimensionalHitParade
+['PCANode', 'WhiteningNode', 'NIPALSNode', 'FastICANode', 'CuBICANode', 'TDSEPNode', 'JADENode', 'SFANode', 'SFA2Node', 'ISFANode', 'XSFANode', 'FDANode', 'FANode', 'RBMNode', 'RBMWithLabelsNode', 'GrowingNeuralGasNode', 'LLENode', 'HLLENode', 'LinearRegressionNode', 'QuadraticExpansionNode', 'PolynomialExpansionNode', 'RBFExpansionNode', 'GeneralExpansionNode', 'GrowingNeuralGasExpansionNode', '_expanded_dim', 'SignumClassifier', 'PerceptronClassifier', 'SimpleMarkovClassifier', 'DiscreteHopfieldClassifier', 'KMeansClassifier', 'NormalizeNode', 'GaussianClassifier', 'NearestMeanClassifier', 'KNNClassifier', 'EtaComputerNode', 'HitParadeNode', 'NoiseNode', 'NormalNoiseNode', 'TimeFramesNode', 'TimeDelayNode', 'TimeDelaySlidingWindowNode', 'CutoffNode', 'AdaptiveCutoffNode', 'HistogramNode', 'IdentityNode', '_OneDimensionalHitParade', 'Convolution2DNode', 'LibSVMClassifier']
+Not a node: __all__
+{'bytearray': <type 'bytearray'>, 'IndexError': <type 'exceptions.IndexError'>, 'all': <built-in function all>, 'help': Type help() for interactive help, or help(object) for help about object., 'vars': <built-in function vars>, 'SyntaxError': <type 'exceptions.SyntaxError'>, 'unicode': <type 'unicode'>, 'UnicodeDecodeError': <type 'exceptions.UnicodeDecodeError'>, 'isinstance': <built-in function isinstance>, 'copyright': Copyright (c) 2001-2010 Python Software Foundation.
+All Rights Reserved.
+
+Copyright (c) 2000 BeOpen.com.
+All Rights Reserved.
+
+Copyright (c) 1995-2001 Corporation for National Research Initiatives.
+All Rights Reserved.
+
+Copyright (c) 1991-1995 Stichting Mathematisch Centrum, Amsterdam.
+All Rights Reserved., 'NameError': <type 'exceptions.NameError'>, 'BytesWarning': <type 'exceptions.BytesWarning'>, 'dict': <type 'dict'>, 'input': <built-in function input>, 'oct': <built-in function oct>, 'bin': <built-in function bin>, 'SystemExit': <type 'exceptions.SystemExit'>, 'StandardError': <type 'exceptions.StandardError'>, 'format': <built-in function format>, 'repr': <built-in function repr>, 'sorted': <built-in function sorted>, 'False': False, 'RuntimeWarning': <type 'exceptions.RuntimeWarning'>, 'list': <type 'list'>, 'iter': <built-in function iter>, 'reload': <built-in function reload>, 'Warning': <type 'exceptions.Warning'>, '__package__': None, 'round': <built-in function round>, 'dir': <built-in function dir>, 'cmp': <built-in function cmp>, 'set': <type 'set'>, 'bytes': <type 'str'>, 'reduce': <built-in function reduce>, 'intern': <built-in function intern>, 'issubclass': <built-in function issubclass>, 'Ellipsis': Ellipsis, 'EOFError': <type 'exceptions.EOFError'>, 'locals': <built-in function locals>, 'BufferError': <type 'exceptions.BufferError'>, 'slice': <type 'slice'>, 'FloatingPointError': <type 'exceptions.FloatingPointError'>, 'sum': <built-in function sum>, 'getattr': <built-in function getattr>, 'abs': <built-in function abs>, 'exit': Use exit() or Ctrl-D (i.e. EOF) to exit, 'print': <built-in function print>, 'True': True, 'FutureWarning': <type 'exceptions.FutureWarning'>, 'ImportWarning': <type 'exceptions.ImportWarning'>, 'None': None, 'hash': <built-in function hash>, 'ReferenceError': <type 'exceptions.ReferenceError'>, 'len': <built-in function len>, 'credits':     Thanks to CWI, CNRI, BeOpen.com, Zope Corporation and a cast of thousands
+    for supporting Python development.  See www.python.org for more information., 'frozenset': <type 'frozenset'>, '__name__': '__builtin__', 'ord': <built-in function ord>, 'super': <type 'super'>, 'TypeError': <type 'exceptions.TypeError'>, 'license': Type license() to see the full license text, 'KeyboardInterrupt': <type 'exceptions.KeyboardInterrupt'>, 'UserWarning': <type 'exceptions.UserWarning'>, 'filter': <built-in function filter>, 'range': <built-in function range>, 'staticmethod': <type 'staticmethod'>, 'SystemError': <type 'exceptions.SystemError'>, 'BaseException': <type 'exceptions.BaseException'>, 'pow': <built-in function pow>, 'RuntimeError': <type 'exceptions.RuntimeError'>, 'float': <type 'float'>, 'MemoryError': <type 'exceptions.MemoryError'>, 'StopIteration': <type 'exceptions.StopIteration'>, 'globals': <built-in function globals>, 'divmod': <built-in function divmod>, 'enumerate': <type 'enumerate'>, 'apply': <built-in function apply>, 'LookupError': <type 'exceptions.LookupError'>, 'open': <built-in function open>, 'quit': Use quit() or Ctrl-D (i.e. EOF) to exit, 'basestring': <type 'basestring'>, 'UnicodeError': <type 'exceptions.UnicodeError'>, 'zip': <built-in function zip>, 'hex': <built-in function hex>, 'long': <type 'long'>, 'next': <built-in function next>, 'ImportError': <type 'exceptions.ImportError'>, 'chr': <built-in function chr>, 'xrange': <type 'xrange'>, 'type': <type 'type'>, '__doc__': "Built-in functions, exceptions, and other objects.\n\nNoteworthy: None is the `nil' object; Ellipsis represents `...' in slices.", 'Exception': <type 'exceptions.Exception'>, 'tuple': <type 'tuple'>, 'UnicodeTranslateError': <type 'exceptions.UnicodeTranslateError'>, 'reversed': <type 'reversed'>, 'UnicodeEncodeError': <type 'exceptions.UnicodeEncodeError'>, 'IOError': <type 'exceptions.IOError'>, 'hasattr': <built-in function hasattr>, 'delattr': <built-in function delattr>, 'setattr': <built-in function setattr>, 'raw_input': <built-in function raw_input>, 'SyntaxWarning': <type 'exceptions.SyntaxWarning'>, 'compile': <built-in function compile>, 'ArithmeticError': <type 'exceptions.ArithmeticError'>, 'str': <type 'str'>, 'property': <type 'property'>, 'GeneratorExit': <type 'exceptions.GeneratorExit'>, 'int': <type 'int'>, '__import__': <built-in function __import__>, 'KeyError': <type 'exceptions.KeyError'>, 'coerce': <built-in function coerce>, 'PendingDeprecationWarning': <type 'exceptions.PendingDeprecationWarning'>, 'file': <type 'file'>, 'EnvironmentError': <type 'exceptions.EnvironmentError'>, 'unichr': <built-in function unichr>, 'id': <built-in function id>, 'OSError': <type 'exceptions.OSError'>, 'DeprecationWarning': <type 'exceptions.DeprecationWarning'>, 'min': <built-in function min>, 'UnicodeWarning': <type 'exceptions.UnicodeWarning'>, 'execfile': <built-in function execfile>, 'any': <built-in function any>, 'complex': <type 'complex'>, 'bool': <type 'bool'>, 'ValueError': <type 'exceptions.ValueError'>, 'NotImplemented': NotImplemented, 'map': <built-in function map>, 'buffer': <type 'buffer'>, 'max': <built-in function max>, 'object': <type 'object'>, 'TabError': <type 'exceptions.TabError'>, 'callable': <built-in function callable>, 'ZeroDivisionError': <type 'exceptions.ZeroDivisionError'>, 'eval': <built-in function eval>, '__debug__': True, 'IndentationError': <type 'exceptions.IndentationError'>, 'AssertionError': <type 'exceptions.AssertionError'>, 'classmethod': <type 'classmethod'>, 'UnboundLocalError': <type 'exceptions.UnboundLocalError'>, 'NotImplementedError': <type 'exceptions.NotImplementedError'>, 'AttributeError': <type 'exceptions.AttributeError'>, 'OverflowError': <type 'exceptions.OverflowError'>}
+Not a node: __builtins__
+None
+Not a node: __doc__
+restructuredtext en
+Not a node: __docformat__
+/home/escalafl/usr/lib/python2.6/site-packages/mdp/nodes/__init__.pyc
+Not a node: __file__
+mdp.nodes
+Not a node: __name__
+mdp.nodes
+Not a node: __package__
+['/home/escalafl/usr/lib/python2.6/site-packages/mdp/nodes']
+Not a node: __path__
+<function expanded_dim at 0x2103de8>
+Not a node: _expanded_dim
+<class 'mdp.hinet.ChannelSwitchboard'>
+Adding execute_data_vec to (hinet) node: ChannelSwitchboard
+<class 'mdp.hinet.CloneLayer'>
+Adding execute_data_vec to (hinet) node: CloneLayer
+<class 'mdp.hinet.DoubleRect2dSwitchboard'>
+Adding execute_data_vec to (hinet) node: DoubleRect2dSwitchboard
+<class 'mdp.hinet.DoubleRect2dSwitchboardException'>
+Not a node: DoubleRect2dSwitchboardException
+<class 'mdp.hinet.DoubleRhomb2dSwitchboard'>
+Adding execute_data_vec to (hinet) node: DoubleRhomb2dSwitchboard
+<class 'mdp.hinet.DoubleRhomb2dSwitchboardException'>
+Not a node: DoubleRhomb2dSwitchboardException
+<class 'mdp.hinet.switchboard_factory.FactoryDoubleRect2dSwitchboard'>
+Adding execute_data_vec to (hinet) node: FactoryDoubleRect2dSwitchboard
+<class 'mdp.hinet.switchboard_factory.FactoryDoubleRhomb2dSwitchboard'>
+Adding execute_data_vec to (hinet) node: FactoryDoubleRhomb2dSwitchboard
+<class 'mdp.hinet.switchboard_factory.FactoryExtensionChannelSwitchboard'>
+Adding execute_data_vec to (hinet) node: FactoryExtensionChannelSwitchboard
+<class 'mdp.hinet.switchboard_factory.FactoryRectangular2dSwitchboard'>
+Adding execute_data_vec to (hinet) node: FactoryRectangular2dSwitchboard
+<class 'mdp.hinet.FlowNode'>
+Adding execute_data_vec to (hinet) node: FlowNode
+<class 'mdp.hinet.htmlvisitor.HiNetHTMLVisitor'>
+Not a node: HiNetHTMLVisitor
+<class 'mdp.hinet.htmlvisitor.HiNetXHTMLVisitor'>
+Not a node: HiNetXHTMLVisitor
+<class 'mdp.hinet.Layer'>
+Adding execute_data_vec to (hinet) node: Layer
+<class 'mdp.hinet.switchboard.MeanInverseSwitchboard'>
+Adding execute_data_vec to (hinet) node: MeanInverseSwitchboard
+<class 'mdp.hinet.htmlvisitor.NewlineWriteFile'>
+Not a node: NewlineWriteFile
+<class 'mdp.hinet.Rectangular2dSwitchboard'>
+Adding execute_data_vec to (hinet) node: Rectangular2dSwitchboard
+<class 'mdp.hinet.Rectangular2dSwitchboardException'>
+Not a node: Rectangular2dSwitchboardException
+<class 'mdp.hinet.SameInputLayer'>
+Adding execute_data_vec to (hinet) node: SameInputLayer
+<class 'mdp.hinet.Switchboard'>
+Adding execute_data_vec to (hinet) node: Switchboard
+<class 'mdp.hinet.SwitchboardException'>
+Not a node: SwitchboardException
+['FlowNode', 'Layer', 'SameInputLayer', 'CloneLayer', 'Switchboard', 'SwitchboardException', 'ChannelSwitchboard', 'Rectangular2dSwitchboard', 'Rectangular2dSwitchboardException', 'DoubleRect2dSwitchboard', 'DoubleRect2dSwitchboardException', 'DoubleRhomb2dSwitchboard', 'DoubleRhomb2dSwitchboardException', 'HiNetHTMLVisitor', 'HiNetXHTMLVisitor', 'NewlineWriteFile', 'show_flow', 'get_2d_image_switchboard']
+Not a node: __all__
+{'bytearray': <type 'bytearray'>, 'IndexError': <type 'exceptions.IndexError'>, 'all': <built-in function all>, 'help': Type help() for interactive help, or help(object) for help about object., 'vars': <built-in function vars>, 'SyntaxError': <type 'exceptions.SyntaxError'>, 'unicode': <type 'unicode'>, 'UnicodeDecodeError': <type 'exceptions.UnicodeDecodeError'>, 'isinstance': <built-in function isinstance>, 'copyright': Copyright (c) 2001-2010 Python Software Foundation.
+All Rights Reserved.
+
+Copyright (c) 2000 BeOpen.com.
+All Rights Reserved.
+
+Copyright (c) 1995-2001 Corporation for National Research Initiatives.
+All Rights Reserved.
+
+Copyright (c) 1991-1995 Stichting Mathematisch Centrum, Amsterdam.
+All Rights Reserved., 'NameError': <type 'exceptions.NameError'>, 'BytesWarning': <type 'exceptions.BytesWarning'>, 'dict': <type 'dict'>, 'input': <built-in function input>, 'oct': <built-in function oct>, 'bin': <built-in function bin>, 'SystemExit': <type 'exceptions.SystemExit'>, 'StandardError': <type 'exceptions.StandardError'>, 'format': <built-in function format>, 'repr': <built-in function repr>, 'sorted': <built-in function sorted>, 'False': False, 'RuntimeWarning': <type 'exceptions.RuntimeWarning'>, 'list': <type 'list'>, 'iter': <built-in function iter>, 'reload': <built-in function reload>, 'Warning': <type 'exceptions.Warning'>, '__package__': None, 'round': <built-in function round>, 'dir': <built-in function dir>, 'cmp': <built-in function cmp>, 'set': <type 'set'>, 'bytes': <type 'str'>, 'reduce': <built-in function reduce>, 'intern': <built-in function intern>, 'issubclass': <built-in function issubclass>, 'Ellipsis': Ellipsis, 'EOFError': <type 'exceptions.EOFError'>, 'locals': <built-in function locals>, 'BufferError': <type 'exceptions.BufferError'>, 'slice': <type 'slice'>, 'FloatingPointError': <type 'exceptions.FloatingPointError'>, 'sum': <built-in function sum>, 'getattr': <built-in function getattr>, 'abs': <built-in function abs>, 'exit': Use exit() or Ctrl-D (i.e. EOF) to exit, 'print': <built-in function print>, 'True': True, 'FutureWarning': <type 'exceptions.FutureWarning'>, 'ImportWarning': <type 'exceptions.ImportWarning'>, 'None': None, 'hash': <built-in function hash>, 'ReferenceError': <type 'exceptions.ReferenceError'>, 'len': <built-in function len>, 'credits':     Thanks to CWI, CNRI, BeOpen.com, Zope Corporation and a cast of thousands
+    for supporting Python development.  See www.python.org for more information., 'frozenset': <type 'frozenset'>, '__name__': '__builtin__', 'ord': <built-in function ord>, 'super': <type 'super'>, 'TypeError': <type 'exceptions.TypeError'>, 'license': Type license() to see the full license text, 'KeyboardInterrupt': <type 'exceptions.KeyboardInterrupt'>, 'UserWarning': <type 'exceptions.UserWarning'>, 'filter': <built-in function filter>, 'range': <built-in function range>, 'staticmethod': <type 'staticmethod'>, 'SystemError': <type 'exceptions.SystemError'>, 'BaseException': <type 'exceptions.BaseException'>, 'pow': <built-in function pow>, 'RuntimeError': <type 'exceptions.RuntimeError'>, 'float': <type 'float'>, 'MemoryError': <type 'exceptions.MemoryError'>, 'StopIteration': <type 'exceptions.StopIteration'>, 'globals': <built-in function globals>, 'divmod': <built-in function divmod>, 'enumerate': <type 'enumerate'>, 'apply': <built-in function apply>, 'LookupError': <type 'exceptions.LookupError'>, 'open': <built-in function open>, 'quit': Use quit() or Ctrl-D (i.e. EOF) to exit, 'basestring': <type 'basestring'>, 'UnicodeError': <type 'exceptions.UnicodeError'>, 'zip': <built-in function zip>, 'hex': <built-in function hex>, 'long': <type 'long'>, 'next': <built-in function next>, 'ImportError': <type 'exceptions.ImportError'>, 'chr': <built-in function chr>, 'xrange': <type 'xrange'>, 'type': <type 'type'>, '__doc__': "Built-in functions, exceptions, and other objects.\n\nNoteworthy: None is the `nil' object; Ellipsis represents `...' in slices.", 'Exception': <type 'exceptions.Exception'>, 'tuple': <type 'tuple'>, 'UnicodeTranslateError': <type 'exceptions.UnicodeTranslateError'>, 'reversed': <type 'reversed'>, 'UnicodeEncodeError': <type 'exceptions.UnicodeEncodeError'>, 'IOError': <type 'exceptions.IOError'>, 'hasattr': <built-in function hasattr>, 'delattr': <built-in function delattr>, 'setattr': <built-in function setattr>, 'raw_input': <built-in function raw_input>, 'SyntaxWarning': <type 'exceptions.SyntaxWarning'>, 'compile': <built-in function compile>, 'ArithmeticError': <type 'exceptions.ArithmeticError'>, 'str': <type 'str'>, 'property': <type 'property'>, 'GeneratorExit': <type 'exceptions.GeneratorExit'>, 'int': <type 'int'>, '__import__': <built-in function __import__>, 'KeyError': <type 'exceptions.KeyError'>, 'coerce': <built-in function coerce>, 'PendingDeprecationWarning': <type 'exceptions.PendingDeprecationWarning'>, 'file': <type 'file'>, 'EnvironmentError': <type 'exceptions.EnvironmentError'>, 'unichr': <built-in function unichr>, 'id': <built-in function id>, 'OSError': <type 'exceptions.OSError'>, 'DeprecationWarning': <type 'exceptions.DeprecationWarning'>, 'min': <built-in function min>, 'UnicodeWarning': <type 'exceptions.UnicodeWarning'>, 'execfile': <built-in function execfile>, 'any': <built-in function any>, 'complex': <type 'complex'>, 'bool': <type 'bool'>, 'ValueError': <type 'exceptions.ValueError'>, 'NotImplemented': NotImplemented, 'map': <built-in function map>, 'buffer': <type 'buffer'>, 'max': <built-in function max>, 'object': <type 'object'>, 'TabError': <type 'exceptions.TabError'>, 'callable': <built-in function callable>, 'ZeroDivisionError': <type 'exceptions.ZeroDivisionError'>, 'eval': <built-in function eval>, '__debug__': True, 'IndentationError': <type 'exceptions.IndentationError'>, 'AssertionError': <type 'exceptions.AssertionError'>, 'classmethod': <type 'classmethod'>, 'UnboundLocalError': <type 'exceptions.UnboundLocalError'>, 'NotImplementedError': <type 'exceptions.NotImplementedError'>, 'AttributeError': <type 'exceptions.AttributeError'>, 'OverflowError': <type 'exceptions.OverflowError'>}
+Not a node: __builtins__
+Hierarchical Networks Package.
+
+This package makes it possible to construct graph-like Node structures,
+especially hierarchical networks.
+
+The most important building block is the new Layer node, which works as an
+horizontal version of flow. It encapsulates a list of Nodes, which are trained
+and executed in parallel.
+For example we can take two Nodes with 100 dimensional input to
+construct a layer with a 200 dimensional input. The first half of the input
+data is automatically fed into the first Node, the second half into the second
+Node.
+
+Since one might also want to use Flows (i.e. vertical stacks of Nodes) in a
+Layer, a wrapper class for Nodes is provided.
+The FlowNode class wraps any Flow into a Node, which can then be used like any
+other Node. Together with the Layer this allows you to combine Nodes both
+horizontally and vertically. Thereby one can in principle realize
+any feed-forward network topology.
+
+For a hierarchical networks one might want to route the different parts of the
+data to different Nodes in a Layer in complicated ways. This is done by a
+Switchboard that handles all the routing.
+Defining the routing manually can be quite tedious, so one can derive subclasses
+for special routing situations. One such subclass for 2d image data is provided.
+It maps the data according to rectangular overlapping 2d input areas. One can
+then feed the output into a Layer and each Node will get the correct input.
+
+Not a node: __doc__
+/home/escalafl/usr/lib/python2.6/site-packages/mdp/hinet/__init__.pyc
+Not a node: __file__
+mdp.hinet
+Not a node: __name__
+mdp.hinet
+Not a node: __package__
+['/home/escalafl/usr/lib/python2.6/site-packages/mdp/hinet']
+Not a node: __path__
+<module 'sys' (built-in)>
+Not a node: _sys
+<function fixup_namespace at 0x2170c08>
+Not a node: fixup_namespace
+<module 'mdp.hinet.flownode' from '/home/escalafl/usr/lib/python2.6/site-packages/mdp/hinet/flownode.pyc'>
+Not a node: flownode
+<function get_2d_image_switchboard at 0x23dded8>
+Not a node: get_2d_image_switchboard
+<module 'mdp.hinet.htmlvisitor' from '/home/escalafl/usr/lib/python2.6/site-packages/mdp/hinet/htmlvisitor.pyc'>
+Not a node: htmlvisitor
+<module 'mdp.hinet.layer' from '/home/escalafl/usr/lib/python2.6/site-packages/mdp/hinet/layer.pyc'>
+Not a node: layer
+<function show_flow at 0x23d8668>
+Not a node: show_flow
+<module 'mdp.hinet.switchboard' from '/home/escalafl/usr/lib/python2.6/site-packages/mdp/hinet/switchboard.pyc'>
+Not a node: switchboard
+<module 'mdp.hinet.switchboard_factory' from '/home/escalafl/usr/lib/python2.6/site-packages/mdp/hinet/switchboard_factory.pyc'>
+Not a node: switchboard_factory
+LOADING INPUT INFORMATION
+SystemParameters.ParamsSFALayer.ord_node_class is: None
+SystemParameters.ParamsSFALayer.ord_args is: {}
+*******************************************************************
+********    Creating Void Network            ******************
+*******************************************************************
+******** Setting Layer L0 Parameters          *********************
+*******************************************************************
+********    Creating One-Layer Linear SFA Network            ******************
+*******************************************************************
+******** Setting Layer L0 Parameters          *********************
+*******************************************************************
+******** Creating Linear 4L SFA Network          ******************
+*******************************************************************
+******** Setting Layer L0 Parameters          *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x24ed950> contains 'None' fields:  ['clip_func', 'ny_value', 'layer_number', 'ord_node_class', 'node_list', 'clip_inv_func', 'nx_value']
+******** Setting Layer L1 Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x24eda10> contains 'None' fields:  ['clip_func', 'ny_value', 'layer_number', 'ord_node_class', 'node_list', 'clip_inv_func', 'nx_value']
+******** Setting Layer L2 Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x24eda50> contains 'None' fields:  ['clip_func', 'ny_value', 'layer_number', 'ord_node_class', 'node_list', 'clip_inv_func', 'nx_value']
+******** Setting Layer L3 Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFASuperNode object at 0x24eda90> contains 'None' fields:  ['clip_func', 'ord_node_class', 'node_list', 'clip_inv_func']
+******** Setting Layer L4 Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFASuperNode object at 0x24ed9d0> contains 'None' fields:  ['clip_func', 'ord_node_class', 'node_list', 'clip_inv_func']
+*******************************************************************
+******** Creating Non-Linear 4L SFA Network      ******************
+*******************************************************************
+******** Setting Layer NL0 Parameters          ********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x24edb90> contains 'None' fields:  ['clip_func', 'ny_value', 'layer_number', 'ord_node_class', 'node_list', 'clip_inv_func', 'nx_value']
+******** Setting Layer NL1 Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x24edd50> contains 'None' fields:  ['clip_func', 'ny_value', 'layer_number', 'ord_node_class', 'node_list', 'clip_inv_func', 'nx_value']
+******** Setting Layer NL2 Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x24edd90> contains 'None' fields:  ['clip_func', 'ny_value', 'layer_number', 'ord_node_class', 'node_list', 'clip_inv_func', 'nx_value']
+******** Setting Layer NL3 Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFASuperNode object at 0x24ede10> contains 'None' fields:  ['clip_func', 'ord_node_class', 'node_list', 'clip_inv_func']
+******** Setting Layer NL4 Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFASuperNode object at 0x24eddd0> contains 'None' fields:  ['clip_func', 'ord_node_class', 'node_list', 'clip_inv_func']
+*******************************************************************
+******** Creating Linear Thin 6L SFA Network          ******************
+*******************************************************************
+******** Setting Layer L0 Parameters          *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x24edf10> contains 'None' fields:  ['clip_func', 'red_node_class', 'ny_value', 'layer_number', 'ord_node_class', 'node_list', 'clip_inv_func', 'nx_value']
+******** Setting Layer L1 Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x24edf90> contains 'None' fields:  ['clip_func', 'ny_value', 'layer_number', 'ord_node_class', 'node_list', 'clip_inv_func', 'nx_value']
+******** Setting Layer L2 Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x24edfd0> contains 'None' fields:  ['clip_func', 'ny_value', 'layer_number', 'ord_node_class', 'node_list', 'clip_inv_func', 'nx_value']
+******** Setting Layer L3 Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x24edf50> contains 'None' fields:  ['clip_func', 'ny_value', 'clip_inv_func', 'nx_value', 'layer_number', 'ord_node_class', 'node_list']
+******** Setting Layer L4 Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x24f1090> contains 'None' fields:  ['clip_func', 'ny_value', 'clip_inv_func', 'nx_value', 'layer_number', 'ord_node_class', 'node_list']
+******** Setting Layer L5 Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x24f10d0> contains 'None' fields:  ['clip_func', 'ny_value', 'clip_inv_func', 'nx_value', 'layer_number', 'ord_node_class', 'node_list']
+*******************************************************************
+******** Creating Non-Linear Thin 6L SFA Network ******************
+*******************************************************************
+*******************************************************************
+******** Creating Linear Ultra Thin 11L SFA Network ***************
+*******************************************************************
+******** Copying Layer L0 Parameters from  pSFATLayerL0    ********
+******** Setting Ultra Thin Layer L1 H Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x24f1350> contains 'None' fields:  ['clip_func', 'red_node_class', 'ny_value', 'layer_number', 'ord_node_class', 'node_list', 'clip_inv_func', 'nx_value']
+******** Setting Ultra Thin Layer L1 V Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x24f13d0> contains 'None' fields:  ['clip_func', 'red_node_class', 'ny_value', 'layer_number', 'ord_node_class', 'node_list', 'clip_inv_func', 'nx_value']
+******** Setting Layer L2 H Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x24f1410> contains 'None' fields:  ['clip_func', 'red_node_class', 'ny_value', 'layer_number', 'ord_node_class', 'node_list', 'clip_inv_func', 'nx_value']
+******** Setting Layer L2 V Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x24f1450> contains 'None' fields:  ['clip_func', 'red_node_class', 'ny_value', 'layer_number', 'ord_node_class', 'node_list', 'clip_inv_func', 'nx_value']
+******** Setting Layer L3 H Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x24f1490> contains 'None' fields:  ['clip_func', 'red_node_class', 'ny_value', 'clip_inv_func', 'nx_value', 'layer_number', 'ord_node_class', 'node_list']
+******** Setting Layer L3 V Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x24f14d0> contains 'None' fields:  ['clip_func', 'red_node_class', 'ny_value', 'clip_inv_func', 'nx_value', 'layer_number', 'ord_node_class', 'node_list']
+******** Setting Layer L4 H Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x24f1510> contains 'None' fields:  ['clip_func', 'red_node_class', 'ny_value', 'clip_inv_func', 'nx_value', 'layer_number', 'ord_node_class', 'node_list']
+******** Setting Layer L4 V Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x24f1550> contains 'None' fields:  ['clip_func', 'red_node_class', 'ny_value', 'clip_inv_func', 'nx_value', 'layer_number', 'ord_node_class', 'node_list']
+******** Setting Layer L5 H Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x24f1590> contains 'None' fields:  ['clip_func', 'red_node_class', 'ny_value', 'clip_inv_func', 'nx_value', 'layer_number', 'ord_node_class', 'node_list']
+******** Setting Layer L5 V Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x24f15d0> contains 'None' fields:  ['clip_func', 'red_node_class', 'ny_value', 'clip_inv_func', 'nx_value', 'layer_number', 'ord_node_class', 'node_list']
+linearPCANetwork4L, L0-3_PCA_out_dim =  [12, 52, 229, 1000]
+WARNING!!!! Overriding output_dimensionalities of PCA Network, to fit SFA Network or exceed it
+linearPCANetworkU11L, L0-10_PCA_out_dim =  [13, 20, 35, 60, 100, 120, 120, 120, 120, 120, 120]
+IEVMLRecNetworkU11L L0-10_SFA_out_dim =  [22, 35, 45, 60, 60, 60, 60, 60, 60, 60, 60]
+IEMNetworkU11L L0-10_SFA_out_dim =  [13, 20, 35, 60, 60, 60, 60, 60, 60, 60, 60]
+*******************************************************************
+******** Creating Non-Linear Ultra Thin 11L SFA Network ******************
+*******************************************************************
+Unknown host, but /local/escalafl available
+******** Setting Training Information Parameters for Gender **********
+Warning!!! object <SystemParameters.ParamsInput object at 0x24fab90> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Gender  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x24f1bd0> contains 'None' fields:  ['obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+****** Setting Seen Id Test Information Parameters for Gender ********
+Warning!!! object <SystemParameters.ParamsInput object at 0x24ed490> contains 'None' fields:  ['train_mode']
+***** Setting Seen Id Sequence Parameters for Gender ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x24edc50> contains 'None' fields:  ['train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter']
+** Setting New Id Test Information Parameters for Gender **********
+Warning!!! object <SystemParameters.ParamsInput object at 0x24edcd0> contains 'None' fields:  ['train_mode']
+******** Setting New Id Data Parameters ******************************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x24ed290> contains 'None' fields:  ['train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter']
+******** Setting Train Information Parameters for Identity ***********
+Warning!!! object <SystemParameters.ParamsInput object at 0x24fabd0> contains 'None' fields:  ['train_mode']
+***** Setting Train Sequence Parameters for Identity *****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x24fac10> contains 'None' fields:  ['train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+******** Setting Seen Id Information Parameters for Identity *********
+Warning!!! object <SystemParameters.ParamsInput object at 0x24fac50> contains 'None' fields:  ['train_mode']
+******** Setting Seen Id Sequence Parameters for Identity ************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x24ed3d0> contains 'None' fields:  ['train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+******** Setting New Id Information Parameters for Identity **********
+Warning!!! object <SystemParameters.ParamsInput object at 0x24f1a50> contains 'None' fields:  ['train_mode']
+******** Setting New Id Sequence Parameters for Identity *************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x24f1b50> contains 'None' fields:  ['train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+******** Setting Train Information Parameters for Angle **************
+Warning!!! object <SystemParameters.ParamsInput object at 0x24facd0> contains 'None' fields:  ['train_mode']
+***** Setting Train Sequence Parameters for Angle ********************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x24fad10> contains 'None' fields:  ['train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+******** Setting Seen Id Information Parameters for Angle ************
+Warning!!! object <SystemParameters.ParamsInput object at 0x24fad50> contains 'None' fields:  ['train_mode']
+******** Setting Seen Id Sequence Parameters for Angle ***************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x24fad90> contains 'None' fields:  ['train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+******** Setting New Id Information Parameters for Angle *************
+Warning!!! object <SystemParameters.ParamsInput object at 0x24fadd0> contains 'None' fields:  ['train_mode']
+******** Setting New Id Sequence Parameters for Angle ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x24fae10> contains 'None' fields:  ['train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting Training Information Parameters for Translation X ******
+Warning!!! object <SystemParameters.ParamsInput object at 0x24fae90> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for TransX  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x24faed0> contains 'None' fields:  ['train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting Seen ID Information Parameters for Translation X *******
+Warning!!! object <SystemParameters.ParamsInput object at 0x24fafd0> contains 'None' fields:  ['train_mode']
+******** Setting Seen Id Data Parameters for TransX  *****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2dc9050> contains 'None' fields:  ['train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+******** Setting New Id Information Parameters for Translation X *****
+Warning!!! object <SystemParameters.ParamsInput object at 0x2dc9090> contains 'None' fields:  ['train_mode']
+******** Setting Seen Id Data Parameters for TransX  *****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x24faf90> contains 'None' fields:  ['train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting Training Information Parameters for Age ******
+Warning!!! object <SystemParameters.ParamsInput object at 0x2dc9150> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Age  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2dc9190> contains 'None' fields:  ['obj_avgs', 'rotation', 'obj_stds', 'filter']
+***** Setting Seen Id Test Information Parameters for Age ******
+Warning!!! object <SystemParameters.ParamsInput object at 0x2dc91d0> contains 'None' fields:  ['train_mode']
+******** Setting Seen Id Data Parameters for Age  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2dc9210> contains 'None' fields:  ['train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter']
+***** Setting New Id Test Information Parameters for Age ******
+Warning!!! object <SystemParameters.ParamsInput object at 0x2dc9250> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Age  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2dc9290> contains 'None' fields:  ['train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter']
+***** Setting Training Information Parameters for Real Translation X ******
+BLOCK SIZE = 708
+Warning!!! object <SystemParameters.ParamsInput object at 0x2dc9310> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Real TransX  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x24f1950> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting Seen ID Information Parameters for Real Translation X *******
+Warning!!! object <SystemParameters.ParamsInput object at 0x2dc93d0> contains 'None' fields:  ['train_mode']
+******** Setting Seen Id Data Parameters for Real TransX  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2dc9410> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+******** Setting New Id Information Parameters for Real Translation X *****
+Warning!!! object <SystemParameters.ParamsInput object at 0x2dc9450> contains 'None' fields:  ['train_mode']
+******** Setting New ID Data Parameters for Real TransX  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2dc9490> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting Training Information Parameters for Real Translation Y ******
+BLOCK SIZE = 800
+Warning!!! object <SystemParameters.ParamsInput object at 0x2dc9510> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Real TransY  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2dc9550> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting Seen ID Information Parameters for Real Translation Y *******
+Warning!!! object <SystemParameters.ParamsInput object at 0x2dc95d0> contains 'None' fields:  ['train_mode']
+******** Setting Seen Id Data Parameters for Real TransY  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2dc9350> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+******** Setting New Id Information Parameters for Real Translation Y *****
+Warning!!! object <SystemParameters.ParamsInput object at 0x2dc9610> contains 'None' fields:  ['train_mode']
+******** Setting New ID Data Parameters for Real TransY  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2dc9650> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+Studienprojekt. Scale estimation datasets. By Jan, Stephan and Alberto 
+***** Setting Training Information Parameters for Scale ******
+BLOCK SIZE = 1200
+Warning!!! object <SystemParameters.ParamsInput object at 0x2dc96d0> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Real Scale  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2dc9710> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting SeenId Information Parameters for Scale ******
+BLOCK SIZE = 600
+Warning!!! object <SystemParameters.ParamsInput object at 0x2dc9790> contains 'None' fields:  ['train_mode']
+******** Setting SeenId Data Parameters for Real Scale  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x24ed850> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting NewId Information Parameters for Scale ******
+BLOCK SIZE = 200
+Warning!!! object <SystemParameters.ParamsInput object at 0x2dc97d0> contains 'None' fields:  ['train_mode']
+******** Setting NewId Data Parameters for Real Scale  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2dc9810> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+Studienprojekt. Illumination estimation datasets. By Jan and Stephan and Alberto 
+***** Setting Training Information Parameters for Illumination ******
+BLOCK SIZE = 220
+Warning!!! object <SystemParameters.ParamsInput object at 0x2dc9390> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Real Illumination  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2dc98d0> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+BLOCK SIZE = 50
+Warning!!! object <SystemParameters.ParamsInput object at 0x2dc9850> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Real Illumination  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2dc9910> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+BLOCK SIZE = 40
+Warning!!! object <SystemParameters.ParamsInput object at 0x2dc9990> contains 'None' fields:  ['train_mode']
+******** Setting Testing Data Parameters for Real Illumination  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2dc99d0> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+Studienprojekt. Rotation estimation datasets. By Jan and Stephan and Alberto 
+***** Setting Training Information Parameters for Rotation ******
+BLOCK SIZE = 280
+Warning!!! object <SystemParameters.ParamsInput object at 0x2dc9a50> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Real Rotation  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2dc9a90> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+BLOCK SIZE = 60
+Warning!!! object <SystemParameters.ParamsInput object at 0x2dc9ad0> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Real Rotation  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2dc9b10> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+BLOCK SIZE = 50
+Warning!!! object <SystemParameters.ParamsInput object at 0x2dc9b50> contains 'None' fields:  ['train_mode']
+******** Setting Testing Data Parameters for Real Illumination  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2dc9b90> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting Training Information Parameters for Face ******
+BLOCK SIZE = 12000
+Warning!!! object <SystemParameters.ParamsInput object at 0x2dc9c10> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Real Face  ****************
+ sSeq.subimage_first_row = [ 38.74143769  33.83476536  40.11733445 ...,  23.76573613  23.26944834
+  46.9433079 ]
+sSeq.pixelsampling_x [ 0.848275    0.92096644  0.82789134 ...,  1.0560901   0.71534896
+  1.07420123]
+sSeq.translations_x [-11.          13.          19.         ..., -27.54774209  32.44001575
+  37.21771382]
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2dc9c50> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting Seenid Information Parameters for Face ******
+BLOCK SIZE = 8000
+Warning!!! object <SystemParameters.ParamsInput object at 0x2dc9d50> contains 'None' fields:  ['train_mode']
+******** Setting SeenID Data Parameters for Real Face  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2dc9590> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting Newid Information Parameters for Face ******
+BLOCK SIZE = 2000
+Warning!!! object <SystemParameters.ParamsInput object at 0x2dc9d90> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Real Face  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2dc9dd0> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting Training Information Parameters for RObject ******
+totaling 0 images
+BLOCK SIZE = [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+BLOCK SIZES = [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+[]
+[]
+Warning!!! object <SystemParameters.ParamsInput object at 0x2dc9e50> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Real Object  ****************
+ sSeq.subimage_first_row = 2.0
+sSeq.pixelsampling_x 1.5
+sSeq.translations_x []
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2dc9e90> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting Seenid Information Parameters for RObject ******
+totaling 0 images
+BLOCK SIZE = [0 0 0 0 0 0 0 0 0 0]
+BLOCK SIZES = [0 0 0 0 0 0 0 0 0 0]
+[]
+[]
+Warning!!! object <SystemParameters.ParamsInput object at 0x2dc9ed0> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Real Object  ****************
+ sSeq.subimage_first_row = 2.0
+sSeq.pixelsampling_x 1.5
+sSeq.translations_x []
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2dc9f10> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting Training Information Parameters for RObject ******
+totaling 0 images
+BLOCK SIZE = [0 0 0 0 0 0 0 0 0 0]
+BLOCK SIZES = [0 0 0 0 0 0 0 0 0 0]
+[]
+[]
+Warning!!! object <SystemParameters.ParamsInput object at 0x2dc9f90> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Real Object  ****************
+ sSeq.subimage_first_row = 2.0
+sSeq.pixelsampling_x 1.5
+sSeq.translations_x []
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2dc9fd0> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Project: Processing natural images with SFA,  ******
+***** Image Patches courtesy of Niko Wilbert ******
+***** Setting Training Information Parameters for RawNatural ******
+totaling 4000 samples
+BLOCK SIZE = 1
+Warning!!! object <SystemParameters.ParamsInput object at 0x4a3f050> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for RawNatural  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x4a3f090> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'translations_y', 'translations_x', 'obj_stds', 'filter', 'load_data']
+***** Setting Training Information Parameters for RawNatural ******
+totaling 1000 samples
+BLOCK SIZE = 1
+Warning!!! object <SystemParameters.ParamsInput object at 0x4a3f0d0> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Natural  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x4a3f110> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'translations_y', 'translations_x', 'obj_stds', 'filter', 'load_data']
+***** Project: Integration of RBM and SFA,  ******
+***** Setting Training Information Parameters for Natural ******
+binary string read: š  N  ˆ  @   
+Loaded header:  (666, 19999, 5000, 64, -1)
+totaling 4000 samples
+BLOCK SIZE = 1
+Warning!!! object <SystemParameters.ParamsInput object at 0x4a3f190> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Natural  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x4a3f210> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'translations_y', 'translations_x', 'obj_stds', 'filter', 'load_data']
+***** Setting Newid Information Parameters for Natural ******
+binary string read: š  N  ˆ  @   
+Loaded header:  (666, 19999, 5000, 64, -1)
+totaling 1000 images
+BLOCK SIZE = 1
+Warning!!! object <SystemParameters.ParamsInput object at 0x4a3f250> contains 'None' fields:  ['train_mode']
+******** Setting Newid Data Parameters for Natural ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x4a3f2d0> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'translations_y', 'translations_x', 'obj_stds', 'filter', 'load_data']
+***** Setting Training Information Parameters for RFaceCentering******
+BLOCK SIZE = 1200
+Warning!!! object <SystemParameters.ParamsInput object at 0x4a3f3d0> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Real Face Centering****************
+Face Centering. Dx in (-45, 45) Dy in (-19, 19), sampling in (450.000000, 1100.000000, 50)
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x4a3f410> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting SeenId Information Parameters for RFaceCentering******
+BLOCK SIZE = 1500
+Warning!!! object <SystemParameters.ParamsInput object at 0x4a3f450> contains 'None' fields:  ['train_mode']
+******** Setting Seenid Data Parameters for Real Face Centering****************
+Face Centering. Dx in (-45, 45) Dy in (-19, 19), sampling in (450.000000, 1100.000000, 50)
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2dc9cd0> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting NewId Information Parameters for RFaceCentering******
+BLOCK SIZE = 200
+Warning!!! object <SystemParameters.ParamsInput object at 0x4a3f4d0> contains 'None' fields:  ['train_mode']
+******** Setting Seenid Data Parameters for Real Face Centering****************
+Face Centering. Dx in (-45, 45) Dy in (-19, 19), sampling in (450.000000, 1100.000000, 50)
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x4a3f510> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting Training Information Parameters for Real Eye Translation X ******
+Warning!!! object <SystemParameters.ParamsInput object at 0x4a3f590> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Real Eye TransX  ****************
+REyeTans X Dx in (-10, 10) Dy in (-10, 10), sampling in (67.500000, 97.500000)
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2dc9d10> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting Seenid Information Parameters for Real Eye Translation X ******
+Warning!!! object <SystemParameters.ParamsInput object at 0x4a3f610> contains 'None' fields:  ['train_mode']
+******** Setting Seenid Data Parameters for Real Eye TransX  ****************
+REyeTans X Dx in (-10, 10) Dy in (-10, 10), sampling in (67.500000, 97.500000)
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x4a3f650> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting Newid Information Parameters for Real Eye Translation X ******
+Warning!!! object <SystemParameters.ParamsInput object at 0x4a3f690> contains 'None' fields:  ['train_mode']
+******** Setting Newid Data Parameters for Real Eye TransX  ****************
+REyeTans X Dx in (-10, 10) Dy in (-10, 10), sampling in (67.500000, 97.500000)
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x4a3f6d0> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting information Parameters for RFaceCentering******
+BLOCK SIZE = 600
+******** Setting Training Data Parameters for Real Face Centering****************
+Face Centering. Dx in (-45, 45) Dy in (-19, 19), sampling in (450.000000, 1100.000000, 50)
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x4a3f950> contains 'None' fields:  ['background_type', 'obj_avgs', 'rotation', 'obj_stds', 'filter']
+;)
+***** Setting information Parameters for RFaceCentering******
+BLOCK SIZE = 600
+***** Setting information Parameters for RFaceCentering******
+BLOCK SIZE = 600
+***** Setting information Parameters for RFaceCentering******
+BLOCK SIZE = 600
+******** Setting Training Data Parameters for Real Face Centering****************
+Face Centering. Dx in (-45, 45) Dy in (-19, 19), sampling in (450.000000, 1100.000000, 50)
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x4a3f910> contains 'None' fields:  ['background_type', 'obj_avgs', 'rotation', 'obj_stds', 'filter']
+******** Setting Training Data Parameters for Real Face Centering****************
+Face Centering. Dx in (-45, 45) Dy in (-19, 19), sampling in (450.000000, 1100.000000, 50)
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x4a3fad0> contains 'None' fields:  ['background_type', 'obj_avgs', 'rotation', 'obj_stds', 'filter']
+******** Setting Training Data Parameters for Real Face Centering****************
+Face Centering. Dx in (-45, 45) Dy in (-19, 19), sampling in (450.000000, 1100.000000, 50)
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x4a3f950> contains 'None' fields:  ['background_type', 'obj_avgs', 'rotation', 'obj_stds', 'filter']
+***** Setting information Parameters for RFaceCentering******
+BLOCK SIZE = 200
+******** Setting Training Data Parameters for Real Face Centering****************
+Face Centering. Dx in (-45, 45) Dy in (-19, 19), sampling in (450.000000, 1100.000000, 50)
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x4a3fb10> contains 'None' fields:  ['background_type', 'obj_avgs', 'rotation', 'obj_stds', 'filter']
+***** Setting information Parameters for RFaceCentering******
+BLOCK SIZE = 200
+******** Setting Training Data Parameters for Real Face Centering****************
+Face Centering. Dx in (-45, 45) Dy in (-19, 19), sampling in (450.000000, 1100.000000, 50)
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x4a3fc50> contains 'None' fields:  ['background_type', 'obj_avgs', 'rotation', 'obj_stds', 'filter']
+***** Setting Information Parameters for Real Translation X ******
+BLOCK SIZE = 200
+******** Setting Training Data Parameters for Real TransX  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2dc9950> contains 'None' fields:  ['background_type', 'obj_avgs', 'rotation', 'obj_stds', 'filter']
+128
+***** Setting Information Parameters for Real Translation X ******
+BLOCK SIZE = 200
+******** Setting Training Data Parameters for Real TransX  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x4a3f910> contains 'None' fields:  ['background_type', 'obj_avgs', 'rotation', 'obj_stds', 'filter']
+128
+***** Setting Information Parameters for Real Translation X ******
+BLOCK SIZE = 100
+******** Setting Training Data Parameters for Real TransX  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x4a3f490> contains 'None' fields:  ['background_type', 'obj_avgs', 'rotation', 'obj_stds', 'filter']
+128
+***** Setting Training Information Parameters for Real Translation Y ******
+BLOCK SIZE = 250
+******** Setting Training Data Parameters for Real TransY  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x4a3fd10> contains 'None' fields:  ['background_type', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+128
+***** Setting Training Information Parameters for Real Translation Y ******
+BLOCK SIZE = 250
+******** Setting Training Data Parameters for Real TransY  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x24f18d0> contains 'None' fields:  ['background_type', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+128
+***** Setting Training Information Parameters for Real Translation Y ******
+BLOCK SIZE = 125
+******** Setting Training Data Parameters for Real TransY  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x4a3fe50> contains 'None' fields:  ['background_type', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+128
+GTSRBFunc not present or disabled
+posXseed= 1112223339
+:)***********************
+***** Setting Information Parameters for Real Translation XYScale ******
+number of input files= 30000
+number of iSeq.ids= 30000
+BLOCK SIZE = 1200
+******** Setting Training Data Parameters for Real TransX  ****************
+sSeq.translations_x= [-45.         -44.99849997 -44.99699995 ...,  44.99699995  44.99849997  45.        ]
+len( sSeq.translations_x)= 60000
+Var in trans X is: 675.022500375
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x4a3fb50> contains 'None' fields:  ['background_type', 'obj_avgs', 'rotation', 'obj_stds', 'filter']
+***** Setting Information Parameters for Real Translation XYScale ******
+number of input files= 25000
+number of iSeq.ids= 25000
+BLOCK SIZE = 1000
+******** Setting Training Data Parameters for Real TransX  ****************
+sSeq.translations_x= [-45.         -44.99819996 -44.99639993 ...,  44.99639993  44.99819996  45.        ]
+len( sSeq.translations_x)= 50000
+Var in trans X is: 675.02700054
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x4a3fd90> contains 'None' fields:  ['background_type', 'obj_avgs', 'rotation', 'obj_stds', 'filter']
+***** Setting Information Parameters for Real Translation XYScale ******
+number of input files= 9000
+number of iSeq.ids= 9000
+BLOCK SIZE = 360
+******** Setting Training Data Parameters for Real TransX  ****************
+sSeq.translations_x= [-45.         -44.99499972 -44.98999944 ...,  44.98999944  44.99499972  45.        ]
+len( sSeq.translations_x)= 18000
+Var in trans X is: 675.075004167
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x698d250> contains 'None' fields:  ['background_type', 'obj_avgs', 'rotation', 'obj_stds', 'filter']
+Orig iSeenidRTransXYScale.correct_labels= [-45.         -44.99819996 -44.99639993 ...,  44.99639993  44.99819996  45.        ]
+Orig len(iSeenidRTransXYScale.correct_labels)= 50000
+Orig len(iSeenidRTransXYScale.correct_classes)= 50000
+all_classes= [ 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24
+ 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49]
+avg_labels= [-44.10088202 -42.30084602 -40.50081002 -38.70077402 -36.90073801
+ -35.10070201 -33.30066601 -31.50063001 -29.70059401 -27.90055801
+ -26.10052201 -24.30048601 -22.50045001 -20.70041401 -18.90037801
+ -17.10034201 -15.30030601 -13.50027001 -11.700234    -9.900198    -8.100162
+  -6.300126    -4.50009     -2.700054    -0.900018     0.900018     2.700054
+   4.50009      6.300126     8.100162     9.900198    11.700234
+  13.50027001  15.30030601  17.10034201  18.90037801  20.70041401
+  22.50045001  24.30048601  26.10052201  27.90055801  29.70059401
+  31.50063001  33.30066601  35.10070201  36.90073801  38.70077402
+  40.50081002  42.30084602  44.10088202]
+num_images_per_cluster_used_FGNet= 427
+num_images_per_cluster_used_INIBilder= 71
+num_images_per_cluster_used_MORPH_FGNet= 0
+***** Setting Information Parameters for Real Translation XYScale ******
+BLOCK SIZE = 1000
+******** Setting Training Data Parameters for Real Age  ****************
+GSP: sSeq.translations_x= [ 1  0  0 ...,  0  0 -1]
+Mean in correct_labels is: 32.8826333333
+Var in correct_labels is: 121.653458399
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x84153d0> contains 'None' fields:  ['background_type', 'filter']
+***** Setting Information Parameters for Real Translation XYScale ******
+BLOCK SIZE = 200
+******** Setting Training Data Parameters for Real Age  ****************
+GSP: sSeq.translations_x= [ 1  0  1 ...,  0  0 -1]
+Mean in correct_labels is: 32.8856666667
+Var in correct_labels is: 121.759927889
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x8419dd0> contains 'None' fields:  ['background_type', 'filter']
+***** Setting Information Parameters for Real Translation XYScale ******
+BLOCK SIZE = 200
+******** Setting Training Data Parameters for Real Age  ****************
+GSP: sSeq.translations_x= [0 0 0 ..., 0 0 0]
+Mean in correct_labels is: 32.8818333333
+Var in correct_labels is: 121.666869972
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x8419e90> contains 'None' fields:  ['background_type', 'filter']
+Using mdp version: 3.2 file: /home/escalafl/usr/lib/python2.6/site-packages/mdp/__init__.pyc
+/home/escalafl/workspace4/cuicuilco_MDP3.2/src/GenerateSystemParameters.pyc
+Apparent command line arguments:  ['cuicuilco_run.py', '--EnableDisplay=0', '--CacheAvailable=1', '--NetworkCacheReadDir=/local/tmp/escalafl/Alberto/SavedNetworks', '--NetworkCacheWriteDir=None', '--NodeCacheReadDir=/local/tmp/escalafl/Alberto/SavedNodes', '--NodeCacheWriteDir=/local/tmp/escalafl/Alberto/SavedNodes', '--SaveSubimagesTraining=0', '--SaveAverageSubimageTraining=0', '--NumFeaturesSup=52', '--SaveSorted_AE_GaussNewid=0', '--SaveSortedIncorrectClassGaussNewid=0', '--ComputeSlowFeaturesNewidAcrossNet=0', '--UseFilter=0', '--EnableKNN=0', '--kNN_k=5', '--EnableNCC=0', '--EnableSVM=1', '--SVM_C=32.000000', '--SVM_gamma=0.250000', '--EnableLR=0', '--AskNetworkLoading=0', '--LoadNetworkNumber=171', '--NParallel=2', '--EnableScheduler=0', '--EstimateExplainedVarWithInverse=0', '--EstimateExplainedVarWithKNN_k=0', '--EstimateExplainedVarWithKNNLinApp=0', '--EstimateExplainedVarLinGlobal_N=0', '--AddNormalizationNode=0', '--MakeLastPCANodeWhithening=0', '--FeatureCutOffLevel=0.0', '--ExportDataToLibsvm=0']
+opts= [('--EnableDisplay', '0'), ('--CacheAvailable', '1'), ('--NetworkCacheReadDir', '/local/tmp/escalafl/Alberto/SavedNetworks'), ('--NetworkCacheWriteDir', 'None'), ('--NodeCacheReadDir', '/local/tmp/escalafl/Alberto/SavedNodes'), ('--NodeCacheWriteDir', '/local/tmp/escalafl/Alberto/SavedNodes'), ('--SaveSubimagesTraining', '0'), ('--SaveAverageSubimageTraining', '0'), ('--NumFeaturesSup', '52'), ('--SaveSorted_AE_GaussNewid', '0'), ('--SaveSortedIncorrectClassGaussNewid', '0'), ('--ComputeSlowFeaturesNewidAcrossNet', '0'), ('--UseFilter', '0'), ('--EnableKNN', '0'), ('--kNN_k', '5'), ('--EnableNCC', '0'), ('--EnableSVM', '1'), ('--SVM_C', '32.000000'), ('--SVM_gamma', '0.250000'), ('--EnableLR', '0'), ('--AskNetworkLoading', '0'), ('--LoadNetworkNumber', '171'), ('--NParallel', '2'), ('--EnableScheduler', '0'), ('--EstimateExplainedVarWithInverse', '0'), ('--EstimateExplainedVarWithKNN_k', '0'), ('--EstimateExplainedVarWithKNNLinApp_k', '0'), ('--EstimateExplainedVarLinGlobal_N', '0'), ('--AddNormalizationNode', '0'), ('--MakeLastPCANodeWhithening', '0'), ('--FeatureCutOffLevel', '0.0'), ('--ExportDataToLibsvm', '0')]
+args= []
+Setting enable_display to False
+Setting cache_available to True
+Setting network_cache_read_dir to /local/tmp/escalafl/Alberto/SavedNetworks
+Setting network_cache_write_dir to None
+Setting node_cache_read_dir to /local/tmp/escalafl/Alberto/SavedNodes
+Setting node_cache_write_dir to /local/tmp/escalafl/Alberto/SavedNodes
+Setting save_subimages_training to False
+Setting save_average_subimage_training to False
+Setting  to Setting save_sorted_AE_Gauss_newid to False
+Setting save_sorted_incorrect_class_Gauss_newid to False
+Setting compute_slow_features_newid_across_net to 0
+Setting use_filter to 0
+Setting enable_kNN to False
+Setting kNN_k to 5
+Setting enable_NCC to False
+Setting enable_svm to 1
+Setting svm_C to 32.0
+Setting svm_gamma to 0.25
+Setting enable_lr to 0
+Setting ask_network_loading to 0
+Setting load_network_number to 171
+Setting n_parallel to 2
+Setting enable_scheduler to 0
+Setting estimate_explained_var_with_inverse to False
+Setting estimate_explained_var_with_kNN_k to 0
+Setting estimate_explained_var_with_kNN_lin_app_k to 0
+Setting estimate_explained_var_linear_global_N to 0
+Setting add_normalization_node to False
+Setting make_last_PCA_node_whithening to False
+Setting feature_cut_off_level to 0.0
+Setting export_data_to_libsvm to False
+sSeq [[<SystemParameters.ParamsDataLoading object at 0x4a3fb50>]]
+sSeq_vect [<SystemParameters.ParamsDataLoading object at 0x4a3fb50>]
+sSeq.translations_x= [-45.         -44.99849997 -44.99699995 ...,  44.99699995  44.99849997  45.        ]
+128.0 SCALE!
+sSeq <SystemParameters.ParamsDataLoading object at 0x4a3fd90>
+sSeq.translations_x= [-45.         -44.99819996 -44.99639993 ...,  44.99639993  44.99819996  45.        ]
+128.0 SCALE!
+sSeq [[<SystemParameters.ParamsDataLoading object at 0x698d250>]]
+sSeq_vect [<SystemParameters.ParamsDataLoading object at 0x698d250>]
+sSeq.translations_x= [-45.         -44.99499972 -44.98999944 ...,  44.98999944  44.99499972  45.        ]
+128.0 SCALE!
+201 networks found:
+[0] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1312292154
+[1] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1312294355
+[2] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1312299250
+[3] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for GTSRB_Resized images_1312372569
+[4] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for GTSRB_Resized images_1312380408
+[5] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for GTSRB_Resized images_1312381443
+[6] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for GTSRB_Resized images_1312383434
+[7] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for GTSRB_Resized images_1312384708
+[8] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for GTSRB_Resized images_1312385546
+[9] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for GTSRB_1312386323
+[10] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1331724365
+[11] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1331728232
+[12] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1331731019
+[13] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1331743599
+[14] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1331827136
+[15] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1331828741
+[16] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1331839173
+[17] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1331915290
+[18] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1332088640
+[19] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1332164502
+[20] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1332867365
+[21] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1338559865
+[22] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1338813874
+[23] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1338821434
+[24] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1338828302
+[25] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1338896180
+[26] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1338901754
+[27] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1338907754
+[28] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1338915464
+[29] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1338982620
+[30] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1339000675
+[31] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1339166190
+[32] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1339501287
+[33] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1339509794
+[34] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1339515678
+[35] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1339581738
+[36] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1339595963
+[37] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1339606483
+[38] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1339617009
+[39] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1339674335
+[40] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1341924366
+[41] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1341926700
+[42] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1341927650
+[43] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1341930324
+[44] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1341938114
+[45] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1342004206
+[46] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1342016469
+[47] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1342020104
+[48] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1342021771
+[49] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1342097124
+[50] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1342099975
+[51] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1342109264
+[52] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1342109594
+[53] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1342133467
+[54] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkSFA 1 Layer Linear Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1342450662
+[55] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkSFA 1 Layer Linear Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1342451757
+[56] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1342451958
+[57] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1342623331
+[58] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1342626690
+[59] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkSFA 1 Layer Linear Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1342698256
+[60] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkSFA 1 Layer Linear Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1342701109
+[61] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1342703115
+[62] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1342708170
+[63] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1342718881
+[64] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1342777037
+[65] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1342815135
+[66] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1343135509
+[67] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1343651950
+[68] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1343746832
+[69] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1343877008
+[70] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1345473876
+[71] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1345567070
+[72] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1345810184
+[73] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1348882599
+[74] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1349016357
+[75] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1349207870
+[76] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1349473746
+[77] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1349698777
+[78] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1349716700
+[79] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1349797574
+[80] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1349973031
+[81] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1350038780
+[82] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1350044403
+[83] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1350049836
+[84] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1350050554
+[85] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1350050561
+[86] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1350056125
+[87] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1350401258
+[88] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1350402311
+[89] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1351510251
+[90] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1351514408
+[91] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1351522645
+[92] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1352300523
+[93] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1352304867
+[94] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1352814508
+[95] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1352821430
+[96] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1352825146
+[97] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1352890719
+[98] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1352891813
+[99] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1352892830
+[100] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1352900037
+[101] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1352900857
+[102] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1352904712
+[103] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1352906154
+[104] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1352979425
+[105] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1352979444
+[106] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1352982196
+[107] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1352984767
+[108] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1352984901
+[109] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1352988967
+[110] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1352993592
+[111] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1353068868
+[112] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1353074609
+[113] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1353079327
+[114] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1353082475
+[115] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1353322097
+[116] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1353324133
+[117] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1353324183
+[118] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1353324254
+[119] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1353324289
+[120] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1353340264
+[121] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1353340576
+[122] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1353417970
+[123] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1353420496
+[124] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1353436758
+[125] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1353508577
+[126] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1353508871
+[127] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1353509250
+[128] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1353510434
+[129] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1353510913
+[130] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1353516146
+[131] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1353516445
+[132] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1353588018
+[133] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1353588492
+[134] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1353589518
+[135] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1353590075
+[136] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1353591040
+[137] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1353591714
+[138] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1353591728
+[139] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1353592730
+[140] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1353593818
+[141] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1353594092
+[142] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1353594705
+[143] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1353596281
+[144] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1353596315
+[145] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1353599457
+[146] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1353599597
+[147] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1353602718
+[148] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1353602781
+[149] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1353931787
+[150] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1353936396
+[151] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1354023957
+[152] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1354026929
+[153] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1354030627
+[154] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1354032553
+[155] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1354032884
+[156] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1354042154
+[157] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1354120966
+[158] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1354194215
+[159] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1354194281
+[160] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1354194316
+[161] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1354195452
+[162] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1354195501
+[163] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1354197217
+[164] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1354203311
+[165] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1354203338
+[166] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1354211574
+[167] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1354211916
+[168] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1355156687
+[169] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RAge_Resized images_1355158282
+[170] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1355250893
+[171] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1355264502
+[172] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1355273186
+[173] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1355279784
+[174] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1355309671
+[175] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1355314891
+[176] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1355322834
+[177] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1355326032
+[178] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1355333037
+[179] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1355337953
+[180] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1355349595
+[181] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1355356165
+[182] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1355357222
+[183] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1355361335
+[184] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1355395678
+[185] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1355399070
+[186] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1355402464
+[187] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1355409779
+[188] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1355410150
+[189] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1355440845
+[190] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1355449854
+[191] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1355454131
+[192] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1355484673
+[193] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1355484744
+[194] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1355491323
+[195] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1355494140
+[196] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1355504058
+[197] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1355508515
+[198] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1355517571
+[199] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1355522098
+[200] /local/tmp/escalafl/Alberto/SavedNetworks/NetworkNon-Linear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1355536134
+Network selected from program parameters:  171
+Selected: Load Network 171
+******************************************
+Loading Trained Network and Display Data from Disk         
+******************************************
+network_cach_read_dir /local/tmp/escalafl/Alberto/SavedNetworks
+network_cach_write_dir None
+network_filename: /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1355264502
+network_basefilename: /local/tmp/escalafl/Alberto/SavedNetworks/NetworkLinear Ultra Thin 11 Layer Network_ParNameFunction Based Data Creation for RTransXYScale_Resized images_1355264502
+network_hash: 1355264502
+Done loading network: Linear Ultra Thin 11 Layer Network
+[PInvSwitchboard, Layer, PInvSwitchboard, Layer, PInvSwitchboard, Layer, PInvSwitchboard, Layer, PInvSwitchboard, Layer, PInvSwitchboard, Layer, PInvSwitchboard, Layer, PInvSwitchboard, Layer, PInvSwitchboard, Layer, PInvSwitchboard, Layer, PInvSwitchboard, Layer]
+Done loading iTrain sTrain data: RTans XYScale X Dx in (-45, 45) Dy in (-20, 20), sampling in (55, 110)
+Train mode is: mixed
+Trying to unpickle, with basedir= /local/tmp/escalafl/Alberto/SavedNetworks  and base_filename= TrainData_1355264502
+Searching for prefix: TrainData_1355264502
+file TrainData_1355264502_S0010.pckl taken
+file TrainData_1355264502_S0004.pckl taken
+file TrainData_1355264502_S0002.pckl taken
+file TrainData_1355264502_S0008.pckl taken
+file TrainData_1355264502_S0001.pckl taken
+file TrainData_1355264502_S0006.pckl taken
+file TrainData_1355264502_S0011.pckl taken
+file TrainData_1355264502_S0009.pckl taken
+file TrainData_1355264502_S0000.pckl taken
+file TrainData_1355264502_S0007.pckl taken
+file TrainData_1355264502_S0005.pckl taken
+file TrainData_1355264502_S0003.pckl taken
+Creating an array from an iterator
+load /local/tmp/escalafl/Alberto/SavedNetworks/TrainData_1355264502_S0000.pckl
+load /local/tmp/escalafl/Alberto/SavedNetworks/TrainData_1355264502_S0001.pckl
+load /local/tmp/escalafl/Alberto/SavedNetworks/TrainData_1355264502_S0002.pckl
+load /local/tmp/escalafl/Alberto/SavedNetworks/TrainData_1355264502_S0003.pckl
+load /local/tmp/escalafl/Alberto/SavedNetworks/TrainData_1355264502_S0004.pckl
+load /local/tmp/escalafl/Alberto/SavedNetworks/TrainData_1355264502_S0005.pckl
+load /local/tmp/escalafl/Alberto/SavedNetworks/TrainData_1355264502_S0006.pckl
+load /local/tmp/escalafl/Alberto/SavedNetworks/TrainData_1355264502_S0007.pckl
+load /local/tmp/escalafl/Alberto/SavedNetworks/TrainData_1355264502_S0008.pckl
+load /local/tmp/escalafl/Alberto/SavedNetworks/TrainData_1355264502_S0009.pckl
+load /local/tmp/escalafl/Alberto/SavedNetworks/TrainData_1355264502_S0010.pckl
+load /local/tmp/escalafl/Alberto/SavedNetworks/TrainData_1355264502_S0011.pckl
+Done loading subimages_train:  (60000, 16384)
+Trying to unpickle, with basedir= /local/tmp/escalafl/Alberto/SavedNetworks  and base_filename= SLSeqData_1355264502
+Searching for prefix: SLSeqData_1355264502
+file SLSeqData_1355264502_S0002.pckl taken
+file SLSeqData_1355264502_S0004.pckl taken
+file SLSeqData_1355264502_S0011.pckl taken
+file SLSeqData_1355264502_S0001.pckl taken
+file SLSeqData_1355264502_S0005.pckl taken
+file SLSeqData_1355264502_S0010.pckl taken
+file SLSeqData_1355264502_S0009.pckl taken
+file SLSeqData_1355264502_S0006.pckl taken
+file SLSeqData_1355264502_S0007.pckl taken
+file SLSeqData_1355264502_S0008.pckl taken
+file SLSeqData_1355264502_S0003.pckl taken
+file SLSeqData_1355264502_S0000.pckl taken
+Creating an array from an iterator
+load /local/tmp/escalafl/Alberto/SavedNetworks/SLSeqData_1355264502_S0000.pckl
+load /local/tmp/escalafl/Alberto/SavedNetworks/SLSeqData_1355264502_S0001.pckl
+load /local/tmp/escalafl/Alberto/SavedNetworks/SLSeqData_1355264502_S0002.pckl
+load /local/tmp/escalafl/Alberto/SavedNetworks/SLSeqData_1355264502_S0003.pckl
+load /local/tmp/escalafl/Alberto/SavedNetworks/SLSeqData_1355264502_S0004.pckl
+load /local/tmp/escalafl/Alberto/SavedNetworks/SLSeqData_1355264502_S0005.pckl
+load /local/tmp/escalafl/Alberto/SavedNetworks/SLSeqData_1355264502_S0006.pckl
+load /local/tmp/escalafl/Alberto/SavedNetworks/SLSeqData_1355264502_S0007.pckl
+load /local/tmp/escalafl/Alberto/SavedNetworks/SLSeqData_1355264502_S0008.pckl
+load /local/tmp/escalafl/Alberto/SavedNetworks/SLSeqData_1355264502_S0009.pckl
+load /local/tmp/escalafl/Alberto/SavedNetworks/SLSeqData_1355264502_S0010.pckl
+load /local/tmp/escalafl/Alberto/SavedNetworks/SLSeqData_1355264502_S0011.pckl
+Done loading sl_seq_training:  (60000, 120)
+Done creating / training / loading network
+(1, 120)
+Flow has 22 nodes
+0
+PInvSwitchboard
+16384
+16384
+0
+Node[0] is PInvSwitchboard, has input_dim=16384, output_dim=16384 and size=0
+1
+Layer
+16384
+13312
+212992
+Node[1] is Layer, has input_dim=16384, output_dim=13312 and size=212992
+   contains 1024 nodes of type PCANode, each with input_dim=16, output_dim=13
+2
+PInvSwitchboard
+13312
+13312
+0
+Node[2] is PInvSwitchboard, has input_dim=13312, output_dim=13312 and size=0
+3
+Layer
+13312
+10240
+266240
+Node[3] is Layer, has input_dim=13312, output_dim=10240 and size=266240
+   contains 512 nodes of type PCANode, each with input_dim=26, output_dim=20
+4
+PInvSwitchboard
+10240
+10240
+0
+Node[4] is PInvSwitchboard, has input_dim=10240, output_dim=10240 and size=0
+5
+Layer
+10240
+8960
+358400
+Node[5] is Layer, has input_dim=10240, output_dim=8960 and size=358400
+   contains 256 nodes of type PCANode, each with input_dim=40, output_dim=35
+6
+PInvSwitchboard
+8960
+8960
+0
+Node[6] is PInvSwitchboard, has input_dim=8960, output_dim=8960 and size=0
+7
+Layer
+8960
+7680
+537600
+Node[7] is Layer, has input_dim=8960, output_dim=7680 and size=537600
+   contains 128 nodes of type PCANode, each with input_dim=70, output_dim=60
+8
+PInvSwitchboard
+7680
+7680
+0
+Node[8] is PInvSwitchboard, has input_dim=7680, output_dim=7680 and size=0
+9
+Layer
+7680
+6400
+768000
+Node[9] is Layer, has input_dim=7680, output_dim=6400 and size=768000
+   contains 64 nodes of type PCANode, each with input_dim=120, output_dim=100
+10
+PInvSwitchboard
+6400
+6400
+0
+Node[10] is PInvSwitchboard, has input_dim=6400, output_dim=6400 and size=0
+11
+Layer
+6400
+3840
+768000
+Node[11] is Layer, has input_dim=6400, output_dim=3840 and size=768000
+   contains 32 nodes of type PCANode, each with input_dim=200, output_dim=120
+12
+PInvSwitchboard
+3840
+3840
+0
+Node[12] is PInvSwitchboard, has input_dim=3840, output_dim=3840 and size=0
+13
+Layer
+3840
+1920
+460800
+Node[13] is Layer, has input_dim=3840, output_dim=1920 and size=460800
+   contains 16 nodes of type PCANode, each with input_dim=240, output_dim=120
+14
+PInvSwitchboard
+1920
+1920
+0
+Node[14] is PInvSwitchboard, has input_dim=1920, output_dim=1920 and size=0
+15
+Layer
+1920
+960
+230400
+Node[15] is Layer, has input_dim=1920, output_dim=960 and size=230400
+   contains 8 nodes of type PCANode, each with input_dim=240, output_dim=120
+16
+PInvSwitchboard
+960
+960
+0
+Node[16] is PInvSwitchboard, has input_dim=960, output_dim=960 and size=0
+17
+Layer
+960
+480
+115200
+Node[17] is Layer, has input_dim=960, output_dim=480 and size=115200
+   contains 4 nodes of type PCANode, each with input_dim=240, output_dim=120
+18
+PInvSwitchboard
+480
+480
+0
+Node[18] is PInvSwitchboard, has input_dim=480, output_dim=480 and size=0
+19
+Layer
+480
+240
+57600
+Node[19] is Layer, has input_dim=480, output_dim=240 and size=57600
+   contains 2 nodes of type PCANode, each with input_dim=240, output_dim=120
+20
+PInvSwitchboard
+240
+240
+0
+Node[20] is PInvSwitchboard, has input_dim=240, output_dim=240 and size=0
+21
+Layer
+240
+120
+28800
+Node[21] is Layer, has input_dim=240, output_dim=120 and size=28800
+   contains 1 nodes of type PCANode, each with input_dim=240, output_dim=120
+Total flow size: 3804032
+Largest node size: 28800
+Displaying eigenvalues of SFA Nodes in flow of length 22
+hierarchy_out_dim (real output data) = 120
+last_node_out_dim= 120
+last_Layer_node_out_dim= 120
+last node of network is a layer! is this a mistake?
+Computing typical delta, eta values for Train SFA Signal
+typical_delta_train= [ 20675124.99666268  10702800.32226652   6265990.13517693
+   4628469.55366399   2779789.97831437   2312218.19730183
+   1950289.98246199   1623178.38205162   1532644.90017789
+   1457141.79959482   1299119.84092704   1153315.69895231
+    961066.71309627    966400.91100991    794627.40574084
+    885496.86989769    646214.73408314    711867.76340237
+    661300.18889201    588891.62258874    523234.29086203
+    501564.05082807    495195.62421783    483118.57033333
+    462401.38013547    417853.97881179    434859.55166667    398246.4663738
+    366076.18152605    359022.18859099    315907.72767665
+    329098.20453261    324043.25137611    303890.50928552
+    290117.66902291    274730.0889435     259617.58642237
+    259643.21868109    250804.47004761    246204.67924128
+    225769.38693194    221882.35942285    224681.58657853
+    209049.86089066    191959.81709938    191237.78917933
+    191104.94230106    183534.79420944    174036.03453155    168483.150742
+    167245.43674542    168558.49293769    160831.76280112
+    158971.70459566    158213.7995993     144341.41781368
+    141047.98939963    139533.68870919    135836.50416308
+    133719.86407718    133180.56329696    123198.93319942
+    127390.63569654    123488.58783976    124788.10813       117356.50470969
+    115056.30480063    112788.83516523    112436.76073294
+    110866.51878866    102834.4359875     101711.14294372
+     97684.41433253     96834.86849197     97375.49865113
+     94484.76895122     95924.90816747     91150.31981426
+     90201.60417502     90350.85236035     84935.2291972      84003.72305979
+     83276.75787359     81185.67463539     76132.2341463      78316.8403509
+     75813.29406075     78225.43299199     76850.6490608      73827.03322249
+     73760.06505662     70574.82534877     70142.72495634
+     70785.85449364     69066.51290365     69001.54857429     67341.8589121
+     64738.06393884     64140.58021026     65425.88509809
+     63512.14470292     61787.89857684     62490.90647661
+     61213.84761941     58928.96188459     60029.09349463
+     58205.00103325     58356.35406008     56984.27125738
+     55544.45945591     55210.63939982     54009.19962717
+     53670.44561687     54749.38720489     51431.01776563     50413.9513715
+     50881.97789862     48644.09263378     48842.92084715
+     49934.15195237]
+computed delta/eta in 738.299 ms
+Setting correct classes and labels for the Classifier/Regression, Train SFA Signal
+Loading test images, seen ids...
+LOADING KNOWNID TEST INFORMATION
+Loading  50000 Images: width=256, height=192  subimage_width=128,subimage_height=128
+color_background_filter is: None
+50000  Images loaded in 156.896 s
+Execution over known id testing set...
+Input Signal: Known Id test images
+Execution over Known Id in 328.217 s
+Computing typical delta, eta values for Seen Id SFA Signal
+sl_seq_seenid= [[ 4290.43178286 -3259.68386686   434.65940362 ...,    17.03999043
+    -48.26038036  -136.41725149]
+ [  453.35040111  -847.79331459  1378.14596547 ...,   -48.37633383
+    -99.54382257  -310.68983414]
+ [-3107.16705935  -682.81032998  1468.92958079 ...,   146.66126821
+   -121.78103065   113.62989803]
+ ..., 
+ [-6038.78050397 -1420.30204521  1730.29075077 ...,    72.45562976
+    118.64957545    31.49355554]
+ [-1687.46225518  3300.02477118   896.75337849 ...,   -50.24908727
+    -73.50386522  -171.30220192]
+ [ 2158.80312649   762.13837231  1162.71641153 ...,    46.69269078
+    -99.94269817  -158.00081334]]
+typical delta_seenid= [ 20066758.08450818  10529156.04232245   6058289.21990965
+   4774859.01082806   2896653.19259686   2237395.34602934
+   1935216.24350225   1606162.31185994   1572519.34448059
+   1409605.48441165   1339156.99095008   1127793.16213566
+    943469.72703724    958176.33003725    776739.62979918
+    838103.77123519    642181.73353258    693729.71709612
+    633152.81674447    600224.53464903    531618.2190981     494576.09890953
+    500296.53404291    472115.44875674    472502.46077699    402622.5419092
+    439732.60235553    390402.17699987    369689.92476701
+    338582.59885966    319583.54365078    328763.83956295
+    316017.98724104    311978.66828832    283428.42616784
+    263702.72869503    265952.37004014    248230.71776195
+    251177.63418577    246314.04250531    240416.20040821
+    223574.98120304    216365.1880256     203246.84584117
+    188475.22569437    184500.15723984    184057.46715268
+    183288.18022985    181627.57562051    164628.29762133
+    165838.01714735    160681.96202986    157224.77133466
+    154617.70722026    150599.02234459    146768.82662067
+    136937.00730578    140660.52290777    136550.53085692
+    132700.33439286    132860.83537677    128216.82947305
+    128285.63842279    120329.83382104    120645.63722078
+    116230.69557966    110069.41527114    108766.09298097
+    112678.00098984    109384.03388895    100948.39483157    101420.1188016
+     94403.45241309    100554.90421775     96443.86021558
+     91560.54449685     93857.84639618     92509.79106473
+     89935.42268637     90297.75493157     83671.26160857
+     84987.42658602     80374.45790328     84020.78064869
+     74870.58516842     80235.16044148     76617.15631783
+     76575.61107774     77293.09085958     73356.56235244     73751.6474447
+     70095.35327773     70799.97582047     68785.29783686
+     68179.65440686     68850.70916472     67939.16748309
+     64360.68351196     63063.46342422     65995.10258455
+     62819.20252427     60116.86353301     60817.3386951      60303.35144358
+     58580.08891362     58201.89665101     58062.6757071      54425.91404822
+     57257.91648838     53809.08958528     56781.67668587
+     55311.34026182     52387.61979043     52643.60865354
+     51901.24343729     51027.70998642     53916.10853735
+     49152.14294823     52150.47208672     47233.75888963]
+typical eta_seenid= [ 35266.8061997   25593.43606367  19395.1448424   17225.52173273
+  13418.77586198  11792.70805608  10973.82100885  10003.88367808
+   9903.93287955   9355.17704017   9113.73026221   8384.10257838
+   7660.9229336    7713.01488535   6934.48931759   7210.38108167
+   6317.90069158   6560.86190811   6259.11874246   6104.54874326
+   5742.55791537   5537.77517345   5577.66556403   5417.58178519
+   5416.55798838   5002.64220914   5227.60976885   4920.56026692
+   4790.9479858    4588.97312227   4456.66207848   4521.23051178
+   4431.66137521   4394.57401356   4198.65364771   4046.72261849
+   4062.43628674   3925.94821838   3953.77036393   3906.47437872
+   3857.89792643   3729.7646723    3668.42908371   3548.53781595
+   3425.76521583   3381.98033373   3383.35721215   3375.84421225
+   3359.13211305   3194.10257026   3211.99350743   3155.06290267
+   3119.91161687   3101.3367466    3059.12917299   3019.53501013
+   2916.06150268   2951.79145034   2913.75433112   2873.48939947
+   2868.65191495   2825.09465358   2821.47725188   2733.07436966
+   2732.39592159   2687.16459232   2613.41174466   2599.24667524
+   2647.40036205   2604.41902989   2505.07589432   2511.26541802
+   2421.84158827   2499.35206523   2450.81170654   2386.42251083
+   2414.39284173   2398.1474594    2362.53865968   2369.10011367
+   2282.87644545   2301.60469066   2239.2057529    2286.0169557
+   2155.61802038   2234.6643856    2183.78303885   2180.40259826
+   2192.34304954   2135.86636921   2139.14890777   2084.56946999
+   2097.64155319   2070.6285607    2060.06963264   2062.42302109
+   2057.31966181   2000.43546014   1982.31995065   2024.17059732
+   1975.92043207   1936.9178342    1945.09713105   1937.36068625
+   1908.77722034   1902.88225529   1895.85744517   1836.49312698
+   1883.84385953   1826.85505069   1877.7180152    1856.08732931
+   1804.28667102   1808.71214718   1796.58535246   1779.78075399
+   1830.24465094   1750.33023076   1798.18321745   1711.18436685]
+computed delta/eta in 660.314 ms
+Setting correct labels/classes data for seenid
+*** Training Classifier/Regression
+Training Classifier/Regression GC...
+Training SVM...
+SVM.parameters: <svm.svm_parameter object at 0x2669cb0>
+Executing/Executed over training set...
+Input Signal: Training Data
+Classification/Regression over training set...
+GC classify...
+value.shape= (60000,)
+labels= [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49]
+acc_probs[0:5] [[ 0.87618933  0.99999971  1.          1.          1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.        ]
+ [ 0.84577917  0.99993544  0.99999979  1.          1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.        ]
+ [ 0.98703555  0.99507463  0.99999707  1.          1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.        ]
+ [ 0.68202172  0.79584964  0.99519718  0.99974377  0.99994731  0.99996068
+   0.99996698  0.99997307  0.999976    0.99999968  0.99999988  0.99999989
+   0.99999989  0.99999989  0.99999989  0.99999989  0.99999989  0.99999989
+   0.99999989  0.99999989  0.99999989  0.99999989  0.99999989  0.99999989
+   0.99999989  0.99999989  0.99999989  0.99999989  0.99999993  0.99999993
+   0.99999993  0.99999993  0.99999993  0.99999993  0.99999993  0.99999993
+   0.99999993  0.99999993  0.99999993  0.99999993  0.99999993  0.99999993
+   0.99999993  0.99999993  0.99999994  0.99999995  0.99999995  0.99999995
+   0.99999995  1.        ]
+ [ 0.99332538  0.99359875  0.99999372  0.99999999  0.99999999  1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.        ]]
+best_match[0:5] [0 0 0 0 0]
+SVM classify...
+Model supports probability estimates, but disabled in predicton.
+Accuracy = 2.49667% (1498/60000) (classification)
+Classification of training data:  [ 0.  0.  0. ...,  0.  0.  0.]
+Classifier trained in time 1.268 s
+Training Images Classified in time 3672.254 s
+Classification/Regression over Training Set in 2093.499 s
+value.shape= (50000,)
+labels= [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49]
+acc_probs[0:5] [[ 0.21204096  0.67342782  0.91886297  0.99745811  0.99987583  0.99998411
+   0.9999979   0.9999994   0.99999965  0.99999993  1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.          1.        ]
+ [ 0.65566493  0.88810689  0.98423092  0.99775178  0.9999878   0.9999965
+   0.99999905  0.99999974  0.99999983  0.99999999  0.99999999  0.99999999
+   0.99999999  0.99999999  0.99999999  0.99999999  0.99999999  0.99999999
+   0.99999999  0.99999999  0.99999999  0.99999999  0.99999999  0.99999999
+   0.99999999  0.99999999  0.99999999  0.99999999  0.99999999  0.99999999
+   0.99999999  0.99999999  0.99999999  0.99999999  0.99999999  0.99999999
+   0.99999999  0.99999999  0.99999999  0.99999999  0.99999999  0.99999999
+   0.99999999  0.99999999  0.99999999  0.99999999  0.99999999  1.          1.
+   1.        ]
+ [ 0.04360445  0.98654136  0.99996012  0.99999993  1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.        ]
+ [ 0.99937214  0.99971337  0.99994788  0.99994789  0.99994789  0.99994789
+   0.99994789  0.99994789  0.99994789  0.99994789  0.99994789  0.99994789
+   0.99994789  0.99994789  0.99994789  0.99994789  0.99994789  0.99994789
+   0.99994789  0.99994789  0.99994789  0.99994789  0.99994789  0.99994789
+   0.99994789  0.99994789  0.99994789  0.99994789  0.99994789  0.99994789
+   0.99994789  0.99994789  0.99994789  0.99994789  0.99994789  0.99994789
+   0.99994789  0.99994789  0.99994789  0.99994789  0.99994789  0.99994789
+   0.99994789  0.99994791  0.99994792  0.99995331  0.99995366  0.99998121
+   0.99999115  1.        ]
+ [ 0.91037658  0.91039278  0.91048263  0.96615919  0.96695228  0.99576786
+   0.99802741  0.99987554  0.99987687  0.99999981  1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.          1.          1.          1.          1.          1.          1.
+   1.          1.        ]]
+best_match[0:5] [1 0 1 0 0]
+Model supports probability estimates, but disabled in predicton.
+Accuracy = 2.062% (1030/50000) (classification)
+labels_kNN_seenid.shape= (50000,)
+correct_labels_seenid.shape= (50000,)
+Classification/Regression over Seen Id in 1706.459 s
+Loading test images, new ids...
+Loading  18000 Images: width=256, height=192  subimage_width=128,subimage_height=128
+color_background_filter is: None
+18000  Images loaded in 56.191 s
+Execution over New Id testing set...
+Input Signal: New Id test images
+1.0
+Execution over New Id in 110.299 s
+value.shape= (18000,)
+labels= [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49]
+acc_probs[0:5] [[  4.77511298e-01   6.09951290e-01   9.76134110e-01   9.95707275e-01
+    9.96670589e-01   9.96737928e-01   9.96795904e-01   9.96912771e-01
+    9.97166900e-01   9.99304860e-01   9.99894679e-01   9.99924018e-01
+    9.99937141e-01   9.99994692e-01   9.99996857e-01   9.99997766e-01
+    9.99997773e-01   9.99997806e-01   9.99997806e-01   9.99997806e-01
+    9.99997806e-01   9.99997806e-01   9.99997806e-01   9.99997806e-01
+    9.99997806e-01   9.99997806e-01   9.99997806e-01   9.99997806e-01
+    9.99997806e-01   9.99997811e-01   9.99997822e-01   9.99997823e-01
+    9.99997836e-01   9.99997837e-01   9.99997837e-01   9.99997837e-01
+    9.99997837e-01   9.99997837e-01   9.99997837e-01   9.99997837e-01
+    9.99997837e-01   9.99997837e-01   9.99997837e-01   9.99997837e-01
+    9.99997837e-01   9.99997837e-01   9.99997837e-01   9.99997970e-01
+    9.99998114e-01   1.00000000e+00]
+ [  7.97475065e-01   8.71370533e-01   9.41064049e-01   9.66019523e-01
+    9.88201373e-01   9.89176683e-01   9.92814035e-01   9.94286136e-01
+    9.98382529e-01   9.99966795e-01   9.99988004e-01   9.99996157e-01
+    9.99999649e-01   9.99999947e-01   9.99999987e-01   9.99999999e-01
+    9.99999999e-01   1.00000000e+00   1.00000000e+00   1.00000000e+00
+    1.00000000e+00   1.00000000e+00   1.00000000e+00   1.00000000e+00
+    1.00000000e+00   1.00000000e+00   1.00000000e+00   1.00000000e+00
+    1.00000000e+00   1.00000000e+00   1.00000000e+00   1.00000000e+00
+    1.00000000e+00   1.00000000e+00   1.00000000e+00   1.00000000e+00
+    1.00000000e+00   1.00000000e+00   1.00000000e+00   1.00000000e+00
+    1.00000000e+00   1.00000000e+00   1.00000000e+00   1.00000000e+00
+    1.00000000e+00   1.00000000e+00   1.00000000e+00   1.00000000e+00
+    1.00000000e+00   1.00000000e+00]
+ [  4.54811117e-09   7.63286296e-03   9.99365584e-01   9.99365586e-01
+    9.99365715e-01   9.99366349e-01   9.99382767e-01   9.99382767e-01
+    9.99382767e-01   9.99382767e-01   9.99382767e-01   9.99382767e-01
+    9.99382767e-01   9.99382767e-01   9.99382767e-01   9.99382767e-01
+    9.99382767e-01   9.99382767e-01   9.99382767e-01   9.99382767e-01
+    9.99382767e-01   9.99382774e-01   9.99382774e-01   9.99382775e-01
+    9.99387254e-01   1.00000000e+00   1.00000000e+00   1.00000000e+00
+    1.00000000e+00   1.00000000e+00   1.00000000e+00   1.00000000e+00
+    1.00000000e+00   1.00000000e+00   1.00000000e+00   1.00000000e+00
+    1.00000000e+00   1.00000000e+00   1.00000000e+00   1.00000000e+00
+    1.00000000e+00   1.00000000e+00   1.00000000e+00   1.00000000e+00
+    1.00000000e+00   1.00000000e+00   1.00000000e+00   1.00000000e+00
+    1.00000000e+00   1.00000000e+00]
+ [  3.40912142e-04   3.52954274e-04   2.92894602e-03   7.49209771e-03
+    3.50903503e-02   2.14735490e-01   2.34305134e-01   5.05495134e-01
+    5.98224298e-01   7.00385168e-01   7.28865861e-01   7.40412257e-01
+    9.30078702e-01   9.50257080e-01   9.80855676e-01   9.96228995e-01
+    9.97436428e-01   9.99786373e-01   9.99971257e-01   9.99990087e-01
+    9.99999936e-01   9.99999977e-01   9.99999984e-01   9.99999986e-01
+    1.00000000e+00   1.00000000e+00   1.00000000e+00   1.00000000e+00
+    1.00000000e+00   1.00000000e+00   1.00000000e+00   1.00000000e+00
+    1.00000000e+00   1.00000000e+00   1.00000000e+00   1.00000000e+00
+    1.00000000e+00   1.00000000e+00   1.00000000e+00   1.00000000e+00
+    1.00000000e+00   1.00000000e+00   1.00000000e+00   1.00000000e+00
+    1.00000000e+00   1.00000000e+00   1.00000000e+00   1.00000000e+00
+    1.00000000e+00   1.00000000e+00]
+ [  7.10405706e-01   9.04635617e-01   9.47355794e-01   9.90675365e-01
+    9.99811719e-01   9.99975282e-01   9.99991301e-01   9.99999055e-01
+    9.99999310e-01   9.99999999e-01   1.00000000e+00   1.00000000e+00
+    1.00000000e+00   1.00000000e+00   1.00000000e+00   1.00000000e+00
+    1.00000000e+00   1.00000000e+00   1.00000000e+00   1.00000000e+00
+    1.00000000e+00   1.00000000e+00   1.00000000e+00   1.00000000e+00
+    1.00000000e+00   1.00000000e+00   1.00000000e+00   1.00000000e+00
+    1.00000000e+00   1.00000000e+00   1.00000000e+00   1.00000000e+00
+    1.00000000e+00   1.00000000e+00   1.00000000e+00   1.00000000e+00
+    1.00000000e+00   1.00000000e+00   1.00000000e+00   1.00000000e+00
+    1.00000000e+00   1.00000000e+00   1.00000000e+00   1.00000000e+00
+    1.00000000e+00   1.00000000e+00   1.00000000e+00   1.00000000e+00
+    1.00000000e+00   1.00000000e+00]]
+best_match[0:5] [1 0 2 7 0]
+Model supports probability estimates, but disabled in predicton.
+Accuracy = 2.48333% (447/18000) (classification)
+Classification/Regression over New Id in 506.300 s
+Computing typical delta, eta values for Training SFA Signal
+delta_train= [ 20382717.52481892  10583890.95180532   6262901.87448635
+   4690038.31582485   2885278.4511285    2223870.81717327
+   1953356.63475115   1616088.27864983   1568067.51956756
+   1391505.51630693   1342136.26729184   1139853.56337276
+    950482.43213711    979772.16367195    778788.26090971
+    850310.78426023    654704.93976031    687011.46634913
+    655449.05416361    589334.12914281    513128.81555471
+    490277.35091149    489864.49206316    499413.72591109
+    450374.07174927    402649.59557893    414090.73866914
+    388274.76729452    364166.68725786    355058.98068657
+    325057.38874629    315556.09025317    314199.49405031
+    305208.26487565    282540.43610456    272492.44465766
+    265270.76910879    264415.40101416    252980.74005258
+    237087.56185911    222552.60304192    225848.12115864
+    219029.30910379    212392.39427768    198346.50736746
+    188524.01216615    185043.68961765    189362.62608544
+    180499.61081793    169336.62615313    167206.38057067
+    164084.41390854    161642.80317027    159616.4709424     156237.76688102
+    145295.01047051    142566.7768133     142634.52204128
+    137936.52515437    133585.90571261    134867.31001194
+    126843.68267851    121614.91293824    121305.8819817     121025.37730521
+    116824.59958581    115751.46198017    111661.3339557     113362.5662813
+    114868.35046632    102058.40130559    100113.74114489
+     99570.82198774     95915.79396152     96772.83835795
+     96784.38560853     91265.35397745     92152.42125305
+     91151.72755661     91960.69445664     86903.91273968
+     84800.78411443     81293.91242198     81820.8391282      77546.35882659
+     78604.41124879     76114.81958889     74828.02497195
+     78487.23006449     72827.51358413     72972.81035481
+     74830.59475965     71070.75459047     70828.50842129
+     69749.42085454     66392.62575184     67107.29896893
+     66015.03873779     63802.59284639     64371.26151948
+     61033.74285173     60908.36149477     61772.76527152
+     58496.89104229     60307.25471505     57256.00991118
+     60129.09583685     56309.25056302     56166.75798423
+     56416.19713619     55208.28763247     53425.0444868      54293.56292302
+     52771.64878397     52877.45699475     51810.46145824
+     50475.63226285     50844.32886815     50816.32570963
+     51836.50783588]
+eta_train= [ 35881.05788069  25755.14799989  19711.23226686  16975.71048722
+  13141.52523512  11968.94756135  10992.18844692  10033.93678228
+   9766.35239412   9501.17938727   8987.20785642   8461.75286844
+   7715.79287005   7748.86495371   7012.63560903   7418.54022314
+   6327.5927877    6648.35222015   6411.32677088   6052.79226685
+   5693.60807761   5574.61406748   5554.26020979   5483.16450681
+   5359.94517459   5084.67461331   5203.69157223   4967.37248057
+   4765.52862017   4718.9722045    4431.55240352   4526.2454859
+   4485.59679599   4343.62351006   4247.88993126   4135.65568268
+   4017.13469501   4017.13557859   3939.96610163   3907.83434993
+   3742.23974013   3711.44973517   3736.0781953    3597.23159211
+   3451.91525404   3447.81709647   3435.21690813   3366.96002341
+   3289.70167547   3232.25137763   3226.60339117   3236.0562668
+   3160.37806762   3143.39159116   3137.93308581   2999.01624542
+   2962.71452512   2945.34353777   2906.1124121    2879.78066393
+   2878.84411239   2767.26164549   2814.51806655   2769.40850134
+   2776.77494497   2696.41813256   2671.04632675   2648.28391692
+   2643.4911727    2621.36514402   2524.17551148   2510.58899251
+   2464.9974591    2452.99375521   2456.82354819   2423.10945764
+   2442.66970949   2380.2467858    2369.41331083   2365.16715402
+   2293.83529233   2284.67539182   2275.39248739   2244.76542139
+   2176.68763967   2202.60985159   2172.53765954   2204.18803879
+   2180.00847662   2140.80850749   2141.28533688   2094.2133565
+   2088.72507368   2098.00153908   2072.60408022   2070.26499683
+   2040.50416571   2004.6394528    1995.67133507   2014.70773995
+   1986.51993627   1960.57837763   1971.6701624    1950.23992234
+   1911.54028671   1927.60542907   1901.59159718   1905.60287893
+   1880.27986656   1856.17002754   1852.33546508   1831.27415591
+   1825.91669699   1842.98620867   1786.69473162   1767.62736718
+   1777.83115071   1738.48727495   1742.29342006   1760.70864555]
+brute_delta_train= [ 20268480.72610412  10914466.616554     5969031.95946597
+   4772332.05160972   2880084.02355452   2249111.75954193
+   1957834.14895295   1654493.65912019   1560177.92018345
+   1383618.90397811   1320121.22017299   1163602.58130099
+    946488.13446473    973526.26087677    788212.65699797
+    866110.99976602    641736.31591238    697420.63732779
+    654295.13193141    604691.49754104    526119.39529496
+    507519.55106281    491460.52375015    488066.34911867
+    467063.29226264    416346.02407019    432253.87456533
+    402578.85898852    379977.84760989    358109.17564551
+    324771.80691938    330034.50496129    318212.24147724
+    307684.68851735    284321.22373908    272528.61629003    261964.7284434
+    259296.61046187    253573.91397815    241426.76414159    234521.1473675
+    223768.026471      218072.99866125    209494.09134943
+    195592.19368366    192318.90086158    188082.76779055
+    185917.03939297    180248.83755524    169329.14335766
+    168155.90608668    165125.54173626    155618.49265953
+    155761.44262216    154047.30504868    145099.04884108
+    141387.69341763    140746.40178804    137079.57813627
+    131749.79305983    130376.73463286    124582.31218725
+    125729.65258642    119341.19307733    120470.57004013
+    116201.91567903    115476.30419482    113348.63363823
+    111822.95619804    107360.63557734    103179.7521796     100431.48398057
+     97638.38474468     98535.49809491     97988.4838567      94816.98299954
+     92868.96596527     91343.37543896     90903.89466914
+     89236.56750392     86179.36132362     83929.41256163
+     83392.99677038     82136.64983732     76151.88790327
+     78642.53339313     76378.43606405     75782.16428552
+     76167.35279362     75041.41156303     72507.10406308
+     72296.62170535     72089.73260017     70392.55432652
+     69082.57879046     67872.79841442     67651.89035359
+     66556.22059462     64119.73792203     64077.92344682
+     62330.06538002     62021.34992512     61909.79255083
+     60801.38002213     59745.12467037     59450.54700086
+     58957.60565824     57767.28062068     56854.33988844
+     55731.63173363     55794.13450853     54225.12141254
+     54539.70030697     53523.17707311     51497.3330377      51348.51084873
+     51484.52238649     50511.52205868     49984.77323013
+     49610.45489482]
+Computing typical delta, eta values for New Id SFA Signal
+typical delta_newid= [ 20511837.76579347  10381225.10948054   6147442.61208184
+   4611389.44827256   2813690.5321937    2254145.42058262
+   1943233.10300156   1671763.77115181   1645372.21192944
+   1363212.61636599   1320422.67321814   1163180.18249553
+    989537.69829733    975521.36576095    814010.53286747
+    854035.02085103    643439.89291828    683860.02111458
+    662483.78947188    607472.83051529    520173.56834471
+    538390.80371253    491537.16019708    506975.8135766     475783.66274342
+    430488.97832095    455580.28638293    427299.04760884    388662.7393504
+    348222.69605995    331500.52173044    338332.3223414     326105.2852341
+    289803.28093466    271073.46353041    264603.09190794
+    262987.80215564    270173.89378082    255492.88910939    242728.9985745
+    241203.8409451     220075.11938105    220269.61250951
+    212727.28464108    197500.8595806     192780.76994525
+    191724.50506257    182297.9198067     189119.62966131
+    170285.98523439    170257.2618786     162796.10001218
+    160297.78348757    154035.78646579    149195.72427255
+    140251.60149135    142254.44424308    145830.36634747
+    133703.84220311    132528.51827364    130793.44282972
+    122639.96855597    126885.30132404    120048.70188672
+    117592.53109435    113491.35987273    113177.25601703    115275.1479232
+    112570.52170374    110375.67591344    103473.54232184
+    100683.56818335    100895.81356496     95605.06468373
+     98871.40158317     97429.5809259      93162.26621147
+     92025.05128725     90483.38970768     94540.62469716
+     85467.66832912     81825.9566536      83651.88684799     83887.2792665
+     75722.0612324      80689.59613889     75700.09604877
+     77530.85149952     75218.41079679     75613.45104158
+     70581.70083254     70997.69830846     74011.10192938     69942.4816548
+     67969.39831488     66140.91344224     68210.9977415      66324.5108846
+     62770.1515054      65874.40498109     63763.74220986
+     59826.58127391     62388.55979879     58990.52505223
+     60156.78557786     59239.91050898     59324.04252788
+     56885.32448518     57689.87998027     52910.48102969
+     57770.90492828     56802.98449508     55034.71458387
+     51927.72954263     51240.67925631     51609.54654352
+     50830.27965874     52626.36962303     49981.37516437
+     48786.14067038]
+typical eta_newid= [ 35779.56377377  25371.86711121  19521.35247524  16946.77366359
+  13242.52202888  11844.2083986   10981.86912683  10190.86036356
+  10128.13374762   9197.69247855   9054.12766238   8511.16955578
+   7822.26971806   7787.59004324   7087.55192286   7292.58318519
+   6323.3255397    6513.74581477   6405.94862054   6146.43061896
+   5689.04495715   5779.64196109   5520.09522564   5611.29646879
+   5436.19244759   5165.30877674   5315.68696701   5144.80405369
+   4921.32762225   4647.09873633   4540.1091249    4584.43953272
+   4502.37584944   4236.90455305   4105.74535626   4051.25172271
+   4038.12521972   4091.98851797   3993.85901777   3880.65951423
+   3869.28087978   3696.80229539   3702.52529173   3628.82815891
+   3505.57892408   3459.08362805   3449.39770541   3362.6959452
+   3422.91133447   3249.53720629   3247.84157653   3179.93165174
+   3161.43473003   3100.4324252    3040.78850887   2954.9283274
+   2970.33211349   3005.88633409   2884.66153676   2870.36436554
+   2851.71160204   2759.50125425   2807.24927839   2731.2018813
+   2699.47292029   2652.21668682   2647.11758813   2676.89149578
+   2646.97313654   2621.08390522   2536.36028635   2494.62598096
+   2503.14294426   2440.43239017   2481.60412384   2456.7138167
+   2402.4081449    2388.76488179   2372.14589507   2419.58706495
+   2303.01096983   2255.40279996   2280.50893714   2277.51041972
+   2170.87594238   2236.23732192   2170.59882524   2194.62441091
+   2162.9316024    2166.13288375   2095.05706797   2101.58454157
+   2146.15170169   2080.93058039   2052.58533966   2030.4206334
+   2057.38519794   2030.64767279   1976.36526877   2021.9084056
+   1989.30789683   1927.32738367   1969.62278356   1917.248026
+   1937.10008644   1918.40506585   1921.38546941   1880.08286013
+   1891.06444595   1812.00832873   1895.90831022   1879.75255417
+   1847.23587258   1797.26340946   1784.56392035   1793.8176712
+   1777.04503219   1805.29706763   1763.54113139   1741.40038994]
+brute_delta_newid= [ 19914119.29747398  10635034.80293795   6044089.81231345
+   4728393.97266467   2854845.61649454   2170017.90156464
+   2015883.87352604   1650025.49586603   1583602.18825813
+   1356138.23833586   1332986.50523882   1184370.62423175    984343.5302305
+    965280.45246679    813053.08490624    856563.68069345
+    645256.17480851    684007.13025583    649792.27276189
+    601596.94847907    524273.03794494    518429.31401162
+    486993.94565479    501315.77188477    473570.74958706
+    422187.67953794    431642.89901043    412265.54488373
+    383711.04331791    353710.86168411    327226.40197222
+    332523.31276711    322749.95591215    296383.39936832
+    274609.05355829    264044.16048045    262345.60262154
+    264127.66434101    250921.13635634    242073.43944873
+    237023.10079414    215486.94713213    216127.99403717
+    210418.20520069    192335.65436008    189342.77770491
+    190980.01438521    186292.63288086    183123.59417245
+    165526.38307419    169392.97624713    164044.41880625
+    159429.49357071    153394.48929555    152984.26543753
+    141233.14290141    141833.54253199    142245.45897306
+    134384.68008422    132024.40186675    129568.84007197
+    122317.58925766    124018.43950362    116570.40009939
+    120075.51519268    116607.68458245    112302.48587988
+    110180.09058244    109558.14643758    106084.50494737
+    100679.82091075     99615.31290338     96680.08451238
+     97083.63125238     98213.47788573     93923.89370986
+     92432.22904638     89738.42459455     90409.65959422
+     89035.85167334     85205.64459613     81820.8726487      81439.69892072
+     83786.53839876     74108.23593273     78839.9950361      74805.35012172
+     75563.96294292     74518.58255235     74592.73732135
+     70783.75268146     71638.00400564     72105.13082706
+     69578.23947261     67834.56652442     66855.80444792
+     68850.96658602     65729.3145457      63114.23987143
+     63893.65761499     62410.1515544      59088.95790698
+     60259.20160685     58884.65223249     58301.29980843
+     59040.28265552     58240.60419103     55823.25568997
+     57644.88592495     54178.54569235     55972.21843448
+     54668.38514516     54581.35900287     53342.78425267
+     51691.76007214     51140.26410761     51236.00527062
+     52432.04300015     49591.62316062     49113.45348943]
+computed delta/eta in 692.755 ms
+virtual sequence length complete =  35970000
+virtual sequence length sequence =  70560000
+virtual sequence length mixed =  106530000
+Estimating explained variance for Train SFA Signal
+Fast inverse not available, not estimating explained variance
+Not estimating explained variance with kNN
+Not estimating explained variance with kNN_lin_app
+Not estimating explained variance with kNN
+Computations Finished!
+** Displaying Benchmark data: **
+      Hierarchy construction  done in 0.254 s
+      Train node #0 (PInvSwitchboard)  done in 3.723 s
+      Execute node #0 (PInvSwitchboard)  done in 49.812 s
+      Train node #1 (Layer)  done in 66.733 s
+      Execute node #1 (Layer)  done in 57.851 s
+      Train node #2 (PInvSwitchboard)  done in 3.706 s
+      Execute node #2 (PInvSwitchboard)  done in 33.034 s
+      Train node #3 (Layer)  done in 54.940 s
+      Execute node #3 (Layer)  done in 42.706 s
+      Train node #4 (PInvSwitchboard)  done in 2.278 s
+      Execute node #4 (PInvSwitchboard)  done in 26.057 s
+      Train node #5 (Layer)  done in 49.608 s
+      Execute node #5 (Layer)  done in 31.737 s
+      Train node #6 (PInvSwitchboard)  done in 1.966 s
+      Execute node #6 (PInvSwitchboard)  done in 19.586 s
+      Train node #7 (Layer)  done in 60.057 s
+      Execute node #7 (Layer)  done in 41.738 s
+      Train node #8 (PInvSwitchboard)  done in 1.675 s
+      Execute node #8 (PInvSwitchboard)  done in 18.764 s
+      Train node #9 (Layer)  done in 50.009 s
+      Execute node #9 (Layer)  done in 38.460 s
+      Train node #10 (PInvSwitchboard)  done in 1.419 s
+      Execute node #10 (PInvSwitchboard)  done in 13.922 s
+      Train node #11 (Layer)  done in 50.196 s
+      Execute node #11 (Layer)  done in 30.657 s
+      Train node #12 (PInvSwitchboard)  done in 0.825 s
+      Execute node #12 (PInvSwitchboard)  done in 6.872 s
+      Train node #13 (Layer)  done in 28.167 s
+      Execute node #13 (Layer)  done in 17.552 s
+      Train node #14 (PInvSwitchboard)  done in 0.398 s
+      Execute node #14 (PInvSwitchboard)  done in 2.601 s
+      Train node #15 (Layer)  done in 12.643 s
+      Execute node #15 (Layer)  done in 8.951 s
+      Train node #16 (PInvSwitchboard)  done in 0.301 s
+      Execute node #16 (PInvSwitchboard)  done in 1.255 s
+      Train node #17 (Layer)  done in 6.924 s
+      Execute node #17 (Layer)  done in 4.514 s
+      Train node #18 (PInvSwitchboard)  done in 0.147 s
+      Execute node #18 (PInvSwitchboard)  done in 0.739 s
+      Train node #19 (Layer)  done in 3.107 s
+      Execute node #19 (Layer)  done in 2.270 s
+      Train node #20 (PInvSwitchboard)  done in 0.077 s
+      Execute node #20 (PInvSwitchboard)  done in 0.366 s
+      Train node #21 (Layer)  done in 1.678 s
+      Execute node #21 (Layer)  done in 1.127 s
+      Network training  (specialized way)  done in 1049.428 s
+      Computation of delta, eta values for Train SFA Signal  done in 0.738 s
+      Training Classifier/Regression GC  done in 1.268 s
+      Classification of Training Images  done in 3672.254 s
+Classification/Regression Performance: 
+[ 0  0  0 ..., 49 49 49]
+[ 0.  0.  0. ...,  0.  0.  0.]
+(18000,) (18000,)
+Comparisson of MAE for RMSE estimation and MAE estimation
+regression_Gauss_newid[100:150] = [-41.71749804 -41.45781794 -43.65344567 -44.08884477 -42.60577118
+ -42.93746702 -43.28168225 -43.14874742 -41.38180703 -37.1958349
+ -37.55613996 -43.69690639 -42.30083924 -43.94424898 -43.92556254
+ -43.46622844 -43.91017832 -44.03942985 -41.66606802 -42.295942
+ -44.08255287 -42.59182028 -43.99628861 -42.64902231 -42.92151566
+ -14.96603366 -43.42304076 -42.91958589 -43.85291626 -43.23845328
+ -43.59555511 -29.17403539 -42.31329581 -42.08320318 -37.83314622
+ -40.43623209 -43.69577597 -41.97395752 -43.40289125 -43.26393955
+ -43.2924569  -42.94455434 -42.40158186 -43.66722643 -41.04393261
+ -42.55359538 -41.61765288 -41.85335483 -40.50062195 -40.09885472]
+regressionMAE_Gauss_newid[100:150] = [-40.50081002 -42.30084602 -44.10088202 -44.10088202 -44.10088202
+ -42.30084602 -44.10088202 -42.30084602 -42.30084602 -36.90073801
+ -36.90073801 -44.10088202 -42.30084602 -44.10088202 -44.10088202
+ -44.10088202 -44.10088202 -44.10088202 -40.50081002 -42.30084602
+ -44.10088202 -44.10088202 -44.10088202 -44.10088202 -44.10088202
+ -15.30030601 -44.10088202 -42.30084602 -44.10088202 -44.10088202
+ -44.10088202 -20.70041401 -42.30084602 -42.30084602 -38.70077402
+ -40.50081002 -44.10088202 -42.30084602 -44.10088202 -44.10088202
+ -44.10088202 -44.10088202 -42.30084602 -44.10088202 -38.70077402
+ -42.30084602 -40.50081002 -42.30084602 -40.50081002 -38.70077402]
+diff MAE-RMSE=  [  1.21668803e+00  -8.43028075e-01  -4.47436351e-01  -1.20372470e-02
+  -1.49511083e+00   6.36621004e-01  -8.19199764e-01   8.47901405e-01
+  -9.19038986e-01   2.95096886e-01   6.55401948e-01  -4.03975625e-01
+  -6.77733615e-06  -1.56633037e-01  -1.75319476e-01  -6.34653577e-01
+  -1.90703701e-01  -6.14521632e-02   1.16525800e+00  -4.90401346e-03
+  -1.83291429e-02  -1.50906174e+00  -1.04593411e-01  -1.45185971e+00
+  -1.17936635e+00  -3.34272347e-01  -6.77841261e-01   6.18739871e-01
+  -2.47965759e-01  -8.62428735e-01  -5.05326910e-01   8.47362139e+00
+   1.24497885e-02  -2.17642839e-01  -8.67627798e-01  -6.45779275e-02
+  -4.05106052e-01  -3.26888502e-01  -6.97990765e-01  -8.36942463e-01
+  -8.08425121e-01  -1.15632768e+00   1.00735847e-01  -4.33655585e-01
+   2.34315859e+00   2.52749367e-01   1.11684286e+00  -4.47491192e-01
+  -1.88070405e-04   1.39808071e+00]
+worst[-50:] diff MAE-RMSE=  [15197   303 12355  9562 17050  6199   240 15763  4338 17854 17810  4452
+  9272 12454 13151  9923  8576  1697  6363 16755   976   375 15643 11741
+ 16165 16329  3794  1444  4687 12918   606   892 16115  1128  2189  1638
+  4722    87  1032 17993   856  6529 17243  1566  1279  1064  2309  2686
+  1464  3274]
+regression_Gauss_newid[worst[-50:]]= [ 28.12134524  17.15677807  -1.14751615 -29.44296538  22.18819661
+ -25.55103828   9.03001211   9.04123477 -26.86497551  26.80407772
+  16.43420155  -6.88538161  22.98291617  -0.52399954 -26.0387693
+  21.99505143  18.3182328   -5.09464378  17.89851676  19.62632591
+ -21.03252836  25.73314043   9.47932988 -25.09759249  22.00849399
+  21.48783313   3.43722492  12.22046763   8.44092307 -19.24021537
+ -22.46270397  -1.15025957  14.9609081    1.91205171   0.80581581
+  -3.47125498   6.58449538 -18.86555604 -18.68835193  -4.72076986
+  -7.01191554  -3.99905421  12.79611979  10.01523894 -11.61855003
+   7.78204406  -5.16481343  -1.46740324   2.3739941    7.03260318]
+regressionMAE_Gauss_newid[worst[-50:]]= [ 42.30084602  31.50063001  13.50027001 -44.10088202  36.90073801
+ -40.50081002  24.30048601  -6.300126   -42.30084602  42.30084602
+   0.900018   -22.50045001  38.70077402  15.30030601 -42.30084602
+  38.70077402  35.10070201  11.700234    35.10070201  36.90073801
+ -38.70077402  44.10088202  27.90055801 -44.10088202  42.30084602
+  42.30084602  24.30048601  33.30066601  29.70059401 -40.50081002
+ -44.10088202  20.70041401  36.90073801  24.30048601  24.30048601
+  20.70041401  31.50063001 -44.10088202 -44.10088202 -31.50063001
+ -35.10070201 -33.30066601  42.30084602  40.50081002 -42.30084602
+  40.50081002 -40.50081002 -36.90073801  38.70077402  44.10088202]
+correct_labels_newid[worst[-50:]]= [ 30.98922162 -43.48491583  16.77843214   2.81265626  40.25473637
+ -14.00327796 -43.79993333  33.81937885 -23.30879493  44.27495972
+  44.0549475  -22.73876326   1.3625757   17.27345964  20.75865326
+   4.61775654  -2.11761765 -36.51452858 -13.1832324   38.77965443
+ -40.11972887 -43.12489583  33.21934552  13.70826157  35.82949053
+  36.64953609 -26.02894605 -37.77959887 -21.56369798  19.59358853
+ -41.96983166 -40.53975221  35.57947664 -39.35968665 -34.05439191
+ -36.80954497 -21.38868826 -44.56497583 -39.83971332  44.96999833
+ -40.71976221 -12.35318629  41.21978999 -37.16956498 -38.6046447
+ -39.67970443 -33.45435858 -31.56925385 -37.67959331 -28.62909051]
+N1= 2.63140034942
+N2= 2.47782955343
+Train: 0.020 CR_NCC, 0.020 CR_kNN, CR_Gauss 0.325, CR_SVM 0.343, MSE_NCC 675.023, MSE_kNN 675.023, MSE_Gauss 39.599, MSE3_SVM 94.581, MSE2_SVM 94.581, MSE_SVM 94.581, MSE_LR 675.023, MAE 2.495, MAE(Opt) 2.627
+Seen Id: 0.020 CR_NCC, 0.020 CR_kNN, CR_Gauss 0.534, CR_SVM 0.905, MSE_NCC 675.027, MSE_kNN 675.027, MSE_Gauss 30.379, MSE3_SVM 3.644, MSE2_SVM 3.644, MSE_SVM 3.644, MSE_LR 675.027, MAE 1.991, MAE(Opt) 2.057
+New Id: 0.020 CR_NCC, 0.020 CR_kNN, CR_Gauss 0.326, CR_SVM 0.338, MSE_NCC 675.075, MSE_kNN 675.075, MSE_Gauss 39.119, MSE3_SVM 94.008, MSE2_SVM 94.008, MSE_SVM 94.008, MSE_LR 675.075 , MAE 2.478, MAE(Opt) 2.631
+Train:   RMSE_NCC 25.981, RMSE_kNN 25.981, RMSE_Gauss 6.293, RMSE3_SVM 9.725, RMSE2_SVM 9.725, RMSE_SVM 9.725, RMSE_LR 25.981
+Seen Id: RMSE_NCC 25.981, RMSE_kNN 25.981, RMSE_Gauss 5.512, RMSE3_SVM 1.909, RMSE2_SVM 1.909, RMSE_SVM 1.909, RMSE_LR 25.981
+New Id:  RMSE_NCC 25.982, RMSE_kNN 25.982, RMSE_Gauss 6.255, RMSE3_SVM 9.696, RMSE2_SVM 9.696, RMSE_SVM 9.696, RMSE_LR 25.982
+Computing average SFA...
+50 120 (60000, 120) 1200 1200
+50 Blocks used for averages
+Program successfully finished

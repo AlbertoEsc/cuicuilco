@@ -1,0 +1,720 @@
+Adding train_params to mdp.Node:  AdaptiveCutoffNode
+Adding train_params to mdp.Node:  Convolution2DNode
+Adding train_params to mdp.Node:  CuBICANode
+Adding train_params to mdp.Node:  CutoffNode
+Adding train_params to mdp.Node:  DiscreteHopfieldClassifier
+Adding train_params to mdp.Node:  EtaComputerNode
+Adding train_params to mdp.Node:  FANode
+Adding train_params to mdp.Node:  FDANode
+Adding train_params to mdp.Node:  FastICANode
+Adding train_params to mdp.Node:  GaussianClassifier
+Adding train_params to mdp.Node:  GeneralExpansionNode
+Adding train_params to mdp.Node:  GrowingNeuralGasExpansionNode
+Adding train_params to mdp.Node:  GrowingNeuralGasNode
+Adding train_params to mdp.Node:  HLLENode
+Adding train_params to mdp.Node:  HeadNode
+Adding train_params to mdp.Node:  HistogramNode
+Adding train_params to mdp.Node:  HitParadeNode
+Adding train_params to mdp.Node:  ICANode
+Adding train_params to mdp.Node:  IEVMLRecNode
+Adding train_params to mdp.Node:  IEVMNode
+Adding train_params to mdp.Node:  ISFANode
+Adding train_params to mdp.Node:  IdentityNode
+Adding train_params to mdp.Node:  JADENode
+Adding train_params to mdp.Node:  KMeansClassifier
+Adding train_params to mdp.Node:  KNNClassifier
+Adding train_params to mdp.Node:  LLENode
+Adding train_params to mdp.Node:  LibSVMClassifier
+Adding train_params to mdp.Node:  LinearRegressionNode
+Adding train_params to mdp.Node:  NIPALSNode
+Adding train_params to mdp.Node:  NearestMeanClassifier
+Adding train_params to mdp.Node:  NoiseNode
+Adding train_params to mdp.Node:  NormalNoiseNode
+Adding train_params to mdp.Node:  NormalizeNode
+Adding train_params to mdp.Node:  PCANode
+Adding train_params to mdp.Node:  PInvSwitchboard
+Adding train_params to mdp.Node:  PerceptronClassifier
+Adding train_params to mdp.Node:  PointwiseFunctionNode
+Adding train_params to mdp.Node:  PolynomialExpansionNode
+Adding train_params to mdp.Node:  QuadraticExpansionNode
+Adding train_params to mdp.Node:  RBFExpansionNode
+Adding train_params to mdp.Node:  RBMNode
+Adding train_params to mdp.Node:  RBMWithLabelsNode
+Adding train_params to mdp.Node:  RandomPermutationNode
+Adding train_params to mdp.Node:  RandomizedMaskNode
+Adding train_params to mdp.Node:  SFA2Node
+Adding train_params to mdp.Node:  SFANode
+Adding train_params to mdp.Node:  SFAPCANode
+Adding train_params to mdp.Node:  SignumClassifier
+Adding train_params to mdp.Node:  SimpleMarkovClassifier
+Adding train_params to mdp.Node:  TDSEPNode
+Adding train_params to mdp.Node:  TimeDelayNode
+Adding train_params to mdp.Node:  TimeDelaySlidingWindowNode
+Adding train_params to mdp.Node:  TimeFramesNode
+Adding train_params to mdp.Node:  WhiteningNode
+Adding train_params to mdp.Node:  XSFANode
+Adding train_params to (hinet) mdp.Node:  ChannelSwitchboard
+Adding train_params to (hinet) mdp.Node:  DoubleRect2dSwitchboard
+Adding train_params to (hinet) mdp.Node:  DoubleRhomb2dSwitchboard
+Adding train_params to (hinet) mdp.Node:  FactoryDoubleRect2dSwitchboard
+Adding train_params to (hinet) mdp.Node:  FactoryDoubleRhomb2dSwitchboard
+Adding train_params to (hinet) mdp.Node:  FactoryExtensionChannelSwitchboard
+Adding train_params to (hinet) mdp.Node:  FactoryRectangular2dSwitchboard
+Adding train_params to (hinet) mdp.Node:  FlowNode
+Adding train_params to (hinet) mdp.Node:  MeanInverseSwitchboard
+Adding train_params to (hinet) mdp.Node:  Rectangular2dSwitchboard
+Adding train_params to (hinet) mdp.Node:  Switchboard
+<class 'mdp.nodes.AdaptiveCutoffNode'>
+Adding execute_data_vec to node: AdaptiveCutoffNode
+<class 'mdp.nodes.Convolution2DNode'>
+Adding execute_data_vec to node: Convolution2DNode
+<class 'mdp.nodes.CuBICANode'>
+Adding execute_data_vec to node: CuBICANode
+<class 'mdp.nodes.CutoffNode'>
+Adding execute_data_vec to node: CutoffNode
+<class 'mdp.nodes.DiscreteHopfieldClassifier'>
+Adding execute_data_vec to node: DiscreteHopfieldClassifier
+<class 'mdp.nodes.EtaComputerNode'>
+Adding execute_data_vec to node: EtaComputerNode
+<class 'mdp.nodes.FANode'>
+Adding execute_data_vec to node: FANode
+<class 'mdp.nodes.FDANode'>
+Adding execute_data_vec to node: FDANode
+<class 'mdp.nodes.FastICANode'>
+Adding execute_data_vec to node: FastICANode
+<class 'mdp.nodes.GaussianClassifier'>
+Adding execute_data_vec to node: GaussianClassifier
+<class 'more_nodes.GeneralExpansionNode'>
+Adding execute_data_vec to node: GeneralExpansionNode
+<class 'mdp.nodes.GrowingNeuralGasExpansionNode'>
+Adding execute_data_vec to node: GrowingNeuralGasExpansionNode
+<class 'mdp.nodes.GrowingNeuralGasNode'>
+Adding execute_data_vec to node: GrowingNeuralGasNode
+<class 'mdp.nodes.HLLENode'>
+Adding execute_data_vec to node: HLLENode
+<class 'more_nodes.HeadNode'>
+Adding execute_data_vec to node: HeadNode
+<class 'mdp.nodes.HistogramNode'>
+Adding execute_data_vec to node: HistogramNode
+<class 'mdp.nodes.HitParadeNode'>
+Adding execute_data_vec to node: HitParadeNode
+<class 'mdp.nodes.ica_nodes.ICANode'>
+Adding execute_data_vec to node: ICANode
+<class 'more_nodes.IEVMLRecNode'>
+Adding execute_data_vec to node: IEVMLRecNode
+<class 'more_nodes.IEVMNode'>
+Adding execute_data_vec to node: IEVMNode
+<class 'mdp.nodes.ISFANode'>
+Adding execute_data_vec to node: ISFANode
+<class 'mdp.nodes.IdentityNode'>
+Adding execute_data_vec to node: IdentityNode
+<class 'mdp.nodes.JADENode'>
+Adding execute_data_vec to node: JADENode
+<class 'mdp.nodes.KMeansClassifier'>
+Adding execute_data_vec to node: KMeansClassifier
+<class 'mdp.nodes.KNNClassifier'>
+Adding execute_data_vec to node: KNNClassifier
+<class 'mdp.nodes.LLENode'>
+Adding execute_data_vec to node: LLENode
+<class 'mdp.nodes.LibSVMClassifier'>
+Adding execute_data_vec to node: LibSVMClassifier
+<class 'mdp.nodes.LinearRegressionNode'>
+Adding execute_data_vec to node: LinearRegressionNode
+<class 'mdp.nodes.NIPALSNode'>
+Adding execute_data_vec to node: NIPALSNode
+<class 'mdp.nodes.NearestMeanClassifier'>
+Adding execute_data_vec to node: NearestMeanClassifier
+<class 'mdp.nodes.NoiseNode'>
+Adding execute_data_vec to node: NoiseNode
+<class 'mdp.nodes.NormalNoiseNode'>
+Adding execute_data_vec to node: NormalNoiseNode
+<class 'mdp.nodes.NormalizeNode'>
+Adding execute_data_vec to node: NormalizeNode
+<class 'mdp.nodes.PCANode'>
+Adding execute_data_vec to node: PCANode
+<class 'more_nodes.PInvSwitchboard'>
+Adding execute_data_vec to node: PInvSwitchboard
+<class 'mdp.nodes.PerceptronClassifier'>
+Adding execute_data_vec to node: PerceptronClassifier
+<class 'more_nodes.PointwiseFunctionNode'>
+Adding execute_data_vec to node: PointwiseFunctionNode
+<class 'mdp.nodes.PolynomialExpansionNode'>
+Adding execute_data_vec to node: PolynomialExpansionNode
+<class 'mdp.nodes.QuadraticExpansionNode'>
+Adding execute_data_vec to node: QuadraticExpansionNode
+<class 'mdp.nodes.RBFExpansionNode'>
+Adding execute_data_vec to node: RBFExpansionNode
+<class 'mdp.nodes.RBMNode'>
+Adding execute_data_vec to node: RBMNode
+<class 'mdp.nodes.RBMWithLabelsNode'>
+Adding execute_data_vec to node: RBMWithLabelsNode
+<class 'more_nodes.RandomPermutationNode'>
+Adding execute_data_vec to node: RandomPermutationNode
+<class 'more_nodes.RandomizedMaskNode'>
+Adding execute_data_vec to node: RandomizedMaskNode
+<class 'mdp.nodes.SFA2Node'>
+Adding execute_data_vec to node: SFA2Node
+<class 'mdp.nodes.SFANode'>
+Adding execute_data_vec to node: SFANode
+<class 'more_nodes.SFAPCANode'>
+Adding execute_data_vec to node: SFAPCANode
+<class 'mdp.nodes.SignumClassifier'>
+Adding execute_data_vec to node: SignumClassifier
+<class 'mdp.nodes.SimpleMarkovClassifier'>
+Adding execute_data_vec to node: SimpleMarkovClassifier
+<class 'mdp.nodes.TDSEPNode'>
+Adding execute_data_vec to node: TDSEPNode
+<class 'mdp.nodes.TimeDelayNode'>
+Adding execute_data_vec to node: TimeDelayNode
+<class 'mdp.nodes.TimeDelaySlidingWindowNode'>
+Adding execute_data_vec to node: TimeDelaySlidingWindowNode
+<class 'mdp.nodes.TimeFramesNode'>
+Adding execute_data_vec to node: TimeFramesNode
+<class 'mdp.nodes.WhiteningNode'>
+Adding execute_data_vec to node: WhiteningNode
+<class 'mdp.nodes.XSFANode'>
+Adding execute_data_vec to node: XSFANode
+<class 'mdp.nodes.OneDimensionalHitParade'>
+Not a node: _OneDimensionalHitParade
+['PCANode', 'WhiteningNode', 'NIPALSNode', 'FastICANode', 'CuBICANode', 'TDSEPNode', 'JADENode', 'SFANode', 'SFA2Node', 'ISFANode', 'XSFANode', 'FDANode', 'FANode', 'RBMNode', 'RBMWithLabelsNode', 'GrowingNeuralGasNode', 'LLENode', 'HLLENode', 'LinearRegressionNode', 'QuadraticExpansionNode', 'PolynomialExpansionNode', 'RBFExpansionNode', 'GeneralExpansionNode', 'GrowingNeuralGasExpansionNode', '_expanded_dim', 'SignumClassifier', 'PerceptronClassifier', 'SimpleMarkovClassifier', 'DiscreteHopfieldClassifier', 'KMeansClassifier', 'NormalizeNode', 'GaussianClassifier', 'NearestMeanClassifier', 'KNNClassifier', 'EtaComputerNode', 'HitParadeNode', 'NoiseNode', 'NormalNoiseNode', 'TimeFramesNode', 'TimeDelayNode', 'TimeDelaySlidingWindowNode', 'CutoffNode', 'AdaptiveCutoffNode', 'HistogramNode', 'IdentityNode', '_OneDimensionalHitParade', 'Convolution2DNode', 'LibSVMClassifier']
+Not a node: __all__
+{'bytearray': <type 'bytearray'>, 'IndexError': <type 'exceptions.IndexError'>, 'all': <built-in function all>, 'help': Type help() for interactive help, or help(object) for help about object., 'vars': <built-in function vars>, 'SyntaxError': <type 'exceptions.SyntaxError'>, 'unicode': <type 'unicode'>, 'UnicodeDecodeError': <type 'exceptions.UnicodeDecodeError'>, 'isinstance': <built-in function isinstance>, 'copyright': Copyright (c) 2001-2010 Python Software Foundation.
+All Rights Reserved.
+
+Copyright (c) 2000 BeOpen.com.
+All Rights Reserved.
+
+Copyright (c) 1995-2001 Corporation for National Research Initiatives.
+All Rights Reserved.
+
+Copyright (c) 1991-1995 Stichting Mathematisch Centrum, Amsterdam.
+All Rights Reserved., 'NameError': <type 'exceptions.NameError'>, 'BytesWarning': <type 'exceptions.BytesWarning'>, 'dict': <type 'dict'>, 'input': <built-in function input>, 'oct': <built-in function oct>, 'bin': <built-in function bin>, 'SystemExit': <type 'exceptions.SystemExit'>, 'StandardError': <type 'exceptions.StandardError'>, 'format': <built-in function format>, 'repr': <built-in function repr>, 'sorted': <built-in function sorted>, 'False': False, 'RuntimeWarning': <type 'exceptions.RuntimeWarning'>, 'list': <type 'list'>, 'iter': <built-in function iter>, 'reload': <built-in function reload>, 'Warning': <type 'exceptions.Warning'>, '__package__': None, 'round': <built-in function round>, 'dir': <built-in function dir>, 'cmp': <built-in function cmp>, 'set': <type 'set'>, 'bytes': <type 'str'>, 'reduce': <built-in function reduce>, 'intern': <built-in function intern>, 'issubclass': <built-in function issubclass>, 'Ellipsis': Ellipsis, 'EOFError': <type 'exceptions.EOFError'>, 'locals': <built-in function locals>, 'BufferError': <type 'exceptions.BufferError'>, 'slice': <type 'slice'>, 'FloatingPointError': <type 'exceptions.FloatingPointError'>, 'sum': <built-in function sum>, 'getattr': <built-in function getattr>, 'abs': <built-in function abs>, 'exit': Use exit() or Ctrl-D (i.e. EOF) to exit, 'print': <built-in function print>, 'True': True, 'FutureWarning': <type 'exceptions.FutureWarning'>, 'ImportWarning': <type 'exceptions.ImportWarning'>, 'None': None, 'hash': <built-in function hash>, 'ReferenceError': <type 'exceptions.ReferenceError'>, 'len': <built-in function len>, 'credits':     Thanks to CWI, CNRI, BeOpen.com, Zope Corporation and a cast of thousands
+    for supporting Python development.  See www.python.org for more information., 'frozenset': <type 'frozenset'>, '__name__': '__builtin__', 'ord': <built-in function ord>, 'super': <type 'super'>, 'TypeError': <type 'exceptions.TypeError'>, 'license': Type license() to see the full license text, 'KeyboardInterrupt': <type 'exceptions.KeyboardInterrupt'>, 'UserWarning': <type 'exceptions.UserWarning'>, 'filter': <built-in function filter>, 'range': <built-in function range>, 'staticmethod': <type 'staticmethod'>, 'SystemError': <type 'exceptions.SystemError'>, 'BaseException': <type 'exceptions.BaseException'>, 'pow': <built-in function pow>, 'RuntimeError': <type 'exceptions.RuntimeError'>, 'float': <type 'float'>, 'MemoryError': <type 'exceptions.MemoryError'>, 'StopIteration': <type 'exceptions.StopIteration'>, 'globals': <built-in function globals>, 'divmod': <built-in function divmod>, 'enumerate': <type 'enumerate'>, 'apply': <built-in function apply>, 'LookupError': <type 'exceptions.LookupError'>, 'open': <built-in function open>, 'quit': Use quit() or Ctrl-D (i.e. EOF) to exit, 'basestring': <type 'basestring'>, 'UnicodeError': <type 'exceptions.UnicodeError'>, 'zip': <built-in function zip>, 'hex': <built-in function hex>, 'long': <type 'long'>, 'next': <built-in function next>, 'ImportError': <type 'exceptions.ImportError'>, 'chr': <built-in function chr>, 'xrange': <type 'xrange'>, 'type': <type 'type'>, '__doc__': "Built-in functions, exceptions, and other objects.\n\nNoteworthy: None is the `nil' object; Ellipsis represents `...' in slices.", 'Exception': <type 'exceptions.Exception'>, 'tuple': <type 'tuple'>, 'UnicodeTranslateError': <type 'exceptions.UnicodeTranslateError'>, 'reversed': <type 'reversed'>, 'UnicodeEncodeError': <type 'exceptions.UnicodeEncodeError'>, 'IOError': <type 'exceptions.IOError'>, 'hasattr': <built-in function hasattr>, 'delattr': <built-in function delattr>, 'setattr': <built-in function setattr>, 'raw_input': <built-in function raw_input>, 'SyntaxWarning': <type 'exceptions.SyntaxWarning'>, 'compile': <built-in function compile>, 'ArithmeticError': <type 'exceptions.ArithmeticError'>, 'str': <type 'str'>, 'property': <type 'property'>, 'GeneratorExit': <type 'exceptions.GeneratorExit'>, 'int': <type 'int'>, '__import__': <built-in function __import__>, 'KeyError': <type 'exceptions.KeyError'>, 'coerce': <built-in function coerce>, 'PendingDeprecationWarning': <type 'exceptions.PendingDeprecationWarning'>, 'file': <type 'file'>, 'EnvironmentError': <type 'exceptions.EnvironmentError'>, 'unichr': <built-in function unichr>, 'id': <built-in function id>, 'OSError': <type 'exceptions.OSError'>, 'DeprecationWarning': <type 'exceptions.DeprecationWarning'>, 'min': <built-in function min>, 'UnicodeWarning': <type 'exceptions.UnicodeWarning'>, 'execfile': <built-in function execfile>, 'any': <built-in function any>, 'complex': <type 'complex'>, 'bool': <type 'bool'>, 'ValueError': <type 'exceptions.ValueError'>, 'NotImplemented': NotImplemented, 'map': <built-in function map>, 'buffer': <type 'buffer'>, 'max': <built-in function max>, 'object': <type 'object'>, 'TabError': <type 'exceptions.TabError'>, 'callable': <built-in function callable>, 'ZeroDivisionError': <type 'exceptions.ZeroDivisionError'>, 'eval': <built-in function eval>, '__debug__': True, 'IndentationError': <type 'exceptions.IndentationError'>, 'AssertionError': <type 'exceptions.AssertionError'>, 'classmethod': <type 'classmethod'>, 'UnboundLocalError': <type 'exceptions.UnboundLocalError'>, 'NotImplementedError': <type 'exceptions.NotImplementedError'>, 'AttributeError': <type 'exceptions.AttributeError'>, 'OverflowError': <type 'exceptions.OverflowError'>}
+Not a node: __builtins__
+None
+Not a node: __doc__
+restructuredtext en
+Not a node: __docformat__
+/home/escalafl/usr/lib/python2.6/site-packages/mdp/nodes/__init__.pyc
+Not a node: __file__
+mdp.nodes
+Not a node: __name__
+mdp.nodes
+Not a node: __package__
+['/home/escalafl/usr/lib/python2.6/site-packages/mdp/nodes']
+Not a node: __path__
+<function expanded_dim at 0x278fde8>
+Not a node: _expanded_dim
+<class 'mdp.hinet.ChannelSwitchboard'>
+Adding execute_data_vec to (hinet) node: ChannelSwitchboard
+<class 'mdp.hinet.CloneLayer'>
+Adding execute_data_vec to (hinet) node: CloneLayer
+<class 'mdp.hinet.DoubleRect2dSwitchboard'>
+Adding execute_data_vec to (hinet) node: DoubleRect2dSwitchboard
+<class 'mdp.hinet.DoubleRect2dSwitchboardException'>
+Not a node: DoubleRect2dSwitchboardException
+<class 'mdp.hinet.DoubleRhomb2dSwitchboard'>
+Adding execute_data_vec to (hinet) node: DoubleRhomb2dSwitchboard
+<class 'mdp.hinet.DoubleRhomb2dSwitchboardException'>
+Not a node: DoubleRhomb2dSwitchboardException
+<class 'mdp.hinet.switchboard_factory.FactoryDoubleRect2dSwitchboard'>
+Adding execute_data_vec to (hinet) node: FactoryDoubleRect2dSwitchboard
+<class 'mdp.hinet.switchboard_factory.FactoryDoubleRhomb2dSwitchboard'>
+Adding execute_data_vec to (hinet) node: FactoryDoubleRhomb2dSwitchboard
+<class 'mdp.hinet.switchboard_factory.FactoryExtensionChannelSwitchboard'>
+Adding execute_data_vec to (hinet) node: FactoryExtensionChannelSwitchboard
+<class 'mdp.hinet.switchboard_factory.FactoryRectangular2dSwitchboard'>
+Adding execute_data_vec to (hinet) node: FactoryRectangular2dSwitchboard
+<class 'mdp.hinet.FlowNode'>
+Adding execute_data_vec to (hinet) node: FlowNode
+<class 'mdp.hinet.htmlvisitor.HiNetHTMLVisitor'>
+Not a node: HiNetHTMLVisitor
+<class 'mdp.hinet.htmlvisitor.HiNetXHTMLVisitor'>
+Not a node: HiNetXHTMLVisitor
+<class 'mdp.hinet.Layer'>
+Adding execute_data_vec to (hinet) node: Layer
+<class 'mdp.hinet.switchboard.MeanInverseSwitchboard'>
+Adding execute_data_vec to (hinet) node: MeanInverseSwitchboard
+<class 'mdp.hinet.htmlvisitor.NewlineWriteFile'>
+Not a node: NewlineWriteFile
+<class 'mdp.hinet.Rectangular2dSwitchboard'>
+Adding execute_data_vec to (hinet) node: Rectangular2dSwitchboard
+<class 'mdp.hinet.Rectangular2dSwitchboardException'>
+Not a node: Rectangular2dSwitchboardException
+<class 'mdp.hinet.SameInputLayer'>
+Adding execute_data_vec to (hinet) node: SameInputLayer
+<class 'mdp.hinet.Switchboard'>
+Adding execute_data_vec to (hinet) node: Switchboard
+<class 'mdp.hinet.SwitchboardException'>
+Not a node: SwitchboardException
+['FlowNode', 'Layer', 'SameInputLayer', 'CloneLayer', 'Switchboard', 'SwitchboardException', 'ChannelSwitchboard', 'Rectangular2dSwitchboard', 'Rectangular2dSwitchboardException', 'DoubleRect2dSwitchboard', 'DoubleRect2dSwitchboardException', 'DoubleRhomb2dSwitchboard', 'DoubleRhomb2dSwitchboardException', 'HiNetHTMLVisitor', 'HiNetXHTMLVisitor', 'NewlineWriteFile', 'show_flow', 'get_2d_image_switchboard']
+Not a node: __all__
+{'bytearray': <type 'bytearray'>, 'IndexError': <type 'exceptions.IndexError'>, 'all': <built-in function all>, 'help': Type help() for interactive help, or help(object) for help about object., 'vars': <built-in function vars>, 'SyntaxError': <type 'exceptions.SyntaxError'>, 'unicode': <type 'unicode'>, 'UnicodeDecodeError': <type 'exceptions.UnicodeDecodeError'>, 'isinstance': <built-in function isinstance>, 'copyright': Copyright (c) 2001-2010 Python Software Foundation.
+All Rights Reserved.
+
+Copyright (c) 2000 BeOpen.com.
+All Rights Reserved.
+
+Copyright (c) 1995-2001 Corporation for National Research Initiatives.
+All Rights Reserved.
+
+Copyright (c) 1991-1995 Stichting Mathematisch Centrum, Amsterdam.
+All Rights Reserved., 'NameError': <type 'exceptions.NameError'>, 'BytesWarning': <type 'exceptions.BytesWarning'>, 'dict': <type 'dict'>, 'input': <built-in function input>, 'oct': <built-in function oct>, 'bin': <built-in function bin>, 'SystemExit': <type 'exceptions.SystemExit'>, 'StandardError': <type 'exceptions.StandardError'>, 'format': <built-in function format>, 'repr': <built-in function repr>, 'sorted': <built-in function sorted>, 'False': False, 'RuntimeWarning': <type 'exceptions.RuntimeWarning'>, 'list': <type 'list'>, 'iter': <built-in function iter>, 'reload': <built-in function reload>, 'Warning': <type 'exceptions.Warning'>, '__package__': None, 'round': <built-in function round>, 'dir': <built-in function dir>, 'cmp': <built-in function cmp>, 'set': <type 'set'>, 'bytes': <type 'str'>, 'reduce': <built-in function reduce>, 'intern': <built-in function intern>, 'issubclass': <built-in function issubclass>, 'Ellipsis': Ellipsis, 'EOFError': <type 'exceptions.EOFError'>, 'locals': <built-in function locals>, 'BufferError': <type 'exceptions.BufferError'>, 'slice': <type 'slice'>, 'FloatingPointError': <type 'exceptions.FloatingPointError'>, 'sum': <built-in function sum>, 'getattr': <built-in function getattr>, 'abs': <built-in function abs>, 'exit': Use exit() or Ctrl-D (i.e. EOF) to exit, 'print': <built-in function print>, 'True': True, 'FutureWarning': <type 'exceptions.FutureWarning'>, 'ImportWarning': <type 'exceptions.ImportWarning'>, 'None': None, 'hash': <built-in function hash>, 'ReferenceError': <type 'exceptions.ReferenceError'>, 'len': <built-in function len>, 'credits':     Thanks to CWI, CNRI, BeOpen.com, Zope Corporation and a cast of thousands
+    for supporting Python development.  See www.python.org for more information., 'frozenset': <type 'frozenset'>, '__name__': '__builtin__', 'ord': <built-in function ord>, 'super': <type 'super'>, 'TypeError': <type 'exceptions.TypeError'>, 'license': Type license() to see the full license text, 'KeyboardInterrupt': <type 'exceptions.KeyboardInterrupt'>, 'UserWarning': <type 'exceptions.UserWarning'>, 'filter': <built-in function filter>, 'range': <built-in function range>, 'staticmethod': <type 'staticmethod'>, 'SystemError': <type 'exceptions.SystemError'>, 'BaseException': <type 'exceptions.BaseException'>, 'pow': <built-in function pow>, 'RuntimeError': <type 'exceptions.RuntimeError'>, 'float': <type 'float'>, 'MemoryError': <type 'exceptions.MemoryError'>, 'StopIteration': <type 'exceptions.StopIteration'>, 'globals': <built-in function globals>, 'divmod': <built-in function divmod>, 'enumerate': <type 'enumerate'>, 'apply': <built-in function apply>, 'LookupError': <type 'exceptions.LookupError'>, 'open': <built-in function open>, 'quit': Use quit() or Ctrl-D (i.e. EOF) to exit, 'basestring': <type 'basestring'>, 'UnicodeError': <type 'exceptions.UnicodeError'>, 'zip': <built-in function zip>, 'hex': <built-in function hex>, 'long': <type 'long'>, 'next': <built-in function next>, 'ImportError': <type 'exceptions.ImportError'>, 'chr': <built-in function chr>, 'xrange': <type 'xrange'>, 'type': <type 'type'>, '__doc__': "Built-in functions, exceptions, and other objects.\n\nNoteworthy: None is the `nil' object; Ellipsis represents `...' in slices.", 'Exception': <type 'exceptions.Exception'>, 'tuple': <type 'tuple'>, 'UnicodeTranslateError': <type 'exceptions.UnicodeTranslateError'>, 'reversed': <type 'reversed'>, 'UnicodeEncodeError': <type 'exceptions.UnicodeEncodeError'>, 'IOError': <type 'exceptions.IOError'>, 'hasattr': <built-in function hasattr>, 'delattr': <built-in function delattr>, 'setattr': <built-in function setattr>, 'raw_input': <built-in function raw_input>, 'SyntaxWarning': <type 'exceptions.SyntaxWarning'>, 'compile': <built-in function compile>, 'ArithmeticError': <type 'exceptions.ArithmeticError'>, 'str': <type 'str'>, 'property': <type 'property'>, 'GeneratorExit': <type 'exceptions.GeneratorExit'>, 'int': <type 'int'>, '__import__': <built-in function __import__>, 'KeyError': <type 'exceptions.KeyError'>, 'coerce': <built-in function coerce>, 'PendingDeprecationWarning': <type 'exceptions.PendingDeprecationWarning'>, 'file': <type 'file'>, 'EnvironmentError': <type 'exceptions.EnvironmentError'>, 'unichr': <built-in function unichr>, 'id': <built-in function id>, 'OSError': <type 'exceptions.OSError'>, 'DeprecationWarning': <type 'exceptions.DeprecationWarning'>, 'min': <built-in function min>, 'UnicodeWarning': <type 'exceptions.UnicodeWarning'>, 'execfile': <built-in function execfile>, 'any': <built-in function any>, 'complex': <type 'complex'>, 'bool': <type 'bool'>, 'ValueError': <type 'exceptions.ValueError'>, 'NotImplemented': NotImplemented, 'map': <built-in function map>, 'buffer': <type 'buffer'>, 'max': <built-in function max>, 'object': <type 'object'>, 'TabError': <type 'exceptions.TabError'>, 'callable': <built-in function callable>, 'ZeroDivisionError': <type 'exceptions.ZeroDivisionError'>, 'eval': <built-in function eval>, '__debug__': True, 'IndentationError': <type 'exceptions.IndentationError'>, 'AssertionError': <type 'exceptions.AssertionError'>, 'classmethod': <type 'classmethod'>, 'UnboundLocalError': <type 'exceptions.UnboundLocalError'>, 'NotImplementedError': <type 'exceptions.NotImplementedError'>, 'AttributeError': <type 'exceptions.AttributeError'>, 'OverflowError': <type 'exceptions.OverflowError'>}
+Not a node: __builtins__
+Hierarchical Networks Package.
+
+This package makes it possible to construct graph-like Node structures,
+especially hierarchical networks.
+
+The most important building block is the new Layer node, which works as an
+horizontal version of flow. It encapsulates a list of Nodes, which are trained
+and executed in parallel.
+For example we can take two Nodes with 100 dimensional input to
+construct a layer with a 200 dimensional input. The first half of the input
+data is automatically fed into the first Node, the second half into the second
+Node.
+
+Since one might also want to use Flows (i.e. vertical stacks of Nodes) in a
+Layer, a wrapper class for Nodes is provided.
+The FlowNode class wraps any Flow into a Node, which can then be used like any
+other Node. Together with the Layer this allows you to combine Nodes both
+horizontally and vertically. Thereby one can in principle realize
+any feed-forward network topology.
+
+For a hierarchical networks one might want to route the different parts of the
+data to different Nodes in a Layer in complicated ways. This is done by a
+Switchboard that handles all the routing.
+Defining the routing manually can be quite tedious, so one can derive subclasses
+for special routing situations. One such subclass for 2d image data is provided.
+It maps the data according to rectangular overlapping 2d input areas. One can
+then feed the output into a Layer and each Node will get the correct input.
+
+Not a node: __doc__
+/home/escalafl/usr/lib/python2.6/site-packages/mdp/hinet/__init__.pyc
+Not a node: __file__
+mdp.hinet
+Not a node: __name__
+mdp.hinet
+Not a node: __package__
+['/home/escalafl/usr/lib/python2.6/site-packages/mdp/hinet']
+Not a node: __path__
+<module 'sys' (built-in)>
+Not a node: _sys
+<function fixup_namespace at 0x2938c08>
+Not a node: fixup_namespace
+<module 'mdp.hinet.flownode' from '/home/escalafl/usr/lib/python2.6/site-packages/mdp/hinet/flownode.pyc'>
+Not a node: flownode
+<function get_2d_image_switchboard at 0x2a17ed8>
+Not a node: get_2d_image_switchboard
+<module 'mdp.hinet.htmlvisitor' from '/home/escalafl/usr/lib/python2.6/site-packages/mdp/hinet/htmlvisitor.pyc'>
+Not a node: htmlvisitor
+<module 'mdp.hinet.layer' from '/home/escalafl/usr/lib/python2.6/site-packages/mdp/hinet/layer.pyc'>
+Not a node: layer
+<function show_flow at 0x2a12668>
+Not a node: show_flow
+<module 'mdp.hinet.switchboard' from '/home/escalafl/usr/lib/python2.6/site-packages/mdp/hinet/switchboard.pyc'>
+Not a node: switchboard
+<module 'mdp.hinet.switchboard_factory' from '/home/escalafl/usr/lib/python2.6/site-packages/mdp/hinet/switchboard_factory.pyc'>
+Not a node: switchboard_factory
+LOADING INPUT INFORMATION
+SystemParameters.ParamsSFALayer.ord_node_class is: None
+SystemParameters.ParamsSFALayer.ord_args is: {}
+*******************************************************************
+********    Creating Void Network            ******************
+*******************************************************************
+******** Setting Layer L0 Parameters          *********************
+*******************************************************************
+********    Creating One-Layer Linear SFA Network            ******************
+*******************************************************************
+******** Setting Layer L0 Parameters          *********************
+*******************************************************************
+******** Creating Linear 4L SFA Network          ******************
+*******************************************************************
+******** Setting Layer L0 Parameters          *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x3cd3b50> contains 'None' fields:  ['clip_func', 'ny_value', 'layer_number', 'ord_node_class', 'node_list', 'clip_inv_func', 'nx_value']
+******** Setting Layer L1 Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x3cdc1d0> contains 'None' fields:  ['clip_func', 'ny_value', 'layer_number', 'ord_node_class', 'node_list', 'clip_inv_func', 'nx_value']
+******** Setting Layer L2 Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x3cdc210> contains 'None' fields:  ['clip_func', 'ny_value', 'layer_number', 'ord_node_class', 'node_list', 'clip_inv_func', 'nx_value']
+******** Setting Layer L3 Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFASuperNode object at 0x3cdc250> contains 'None' fields:  ['clip_func', 'ord_node_class', 'node_list', 'clip_inv_func']
+******** Setting Layer L4 Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFASuperNode object at 0x3cdc190> contains 'None' fields:  ['clip_func', 'ord_node_class', 'node_list', 'clip_inv_func']
+*******************************************************************
+******** Creating Non-Linear 4L SFA Network      ******************
+*******************************************************************
+******** Setting Layer NL0 Parameters          ********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x3cdca10> contains 'None' fields:  ['clip_func', 'ny_value', 'layer_number', 'ord_node_class', 'node_list', 'clip_inv_func', 'nx_value']
+******** Setting Layer NL1 Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x3cdcbd0> contains 'None' fields:  ['clip_func', 'ny_value', 'layer_number', 'ord_node_class', 'node_list', 'clip_inv_func', 'nx_value']
+******** Setting Layer NL2 Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x3cdcc10> contains 'None' fields:  ['clip_func', 'ny_value', 'layer_number', 'ord_node_class', 'node_list', 'clip_inv_func', 'nx_value']
+******** Setting Layer NL3 Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFASuperNode object at 0x3cdcc90> contains 'None' fields:  ['clip_func', 'ord_node_class', 'node_list', 'clip_inv_func']
+******** Setting Layer NL4 Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFASuperNode object at 0x3cdcc50> contains 'None' fields:  ['clip_func', 'ord_node_class', 'node_list', 'clip_inv_func']
+*******************************************************************
+******** Creating Linear Thin 6L SFA Network          ******************
+*******************************************************************
+******** Setting Layer L0 Parameters          *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x3cdcd90> contains 'None' fields:  ['clip_func', 'red_node_class', 'ny_value', 'layer_number', 'ord_node_class', 'node_list', 'clip_inv_func', 'nx_value']
+******** Setting Layer L1 Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x3cdce10> contains 'None' fields:  ['clip_func', 'ny_value', 'layer_number', 'ord_node_class', 'node_list', 'clip_inv_func', 'nx_value']
+******** Setting Layer L2 Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x3cdce50> contains 'None' fields:  ['clip_func', 'ny_value', 'layer_number', 'ord_node_class', 'node_list', 'clip_inv_func', 'nx_value']
+******** Setting Layer L3 Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x3cdce90> contains 'None' fields:  ['clip_func', 'ny_value', 'clip_inv_func', 'nx_value', 'layer_number', 'ord_node_class', 'node_list']
+******** Setting Layer L4 Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x3cdced0> contains 'None' fields:  ['clip_func', 'ny_value', 'clip_inv_func', 'nx_value', 'layer_number', 'ord_node_class', 'node_list']
+******** Setting Layer L5 Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x3cdcf10> contains 'None' fields:  ['clip_func', 'ny_value', 'clip_inv_func', 'nx_value', 'layer_number', 'ord_node_class', 'node_list']
+*******************************************************************
+******** Creating Non-Linear Thin 6L SFA Network ******************
+*******************************************************************
+*******************************************************************
+******** Creating Linear Ultra Thin 11L SFA Network ***************
+*******************************************************************
+******** Copying Layer L0 Parameters from  pSFATLayerL0    ********
+******** Setting Ultra Thin Layer L1 H Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x3b981d0> contains 'None' fields:  ['clip_func', 'red_node_class', 'ny_value', 'layer_number', 'ord_node_class', 'node_list', 'clip_inv_func', 'nx_value']
+******** Setting Ultra Thin Layer L1 V Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x3b98250> contains 'None' fields:  ['clip_func', 'red_node_class', 'ny_value', 'layer_number', 'ord_node_class', 'node_list', 'clip_inv_func', 'nx_value']
+******** Setting Layer L2 H Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x3b98290> contains 'None' fields:  ['clip_func', 'red_node_class', 'ny_value', 'layer_number', 'ord_node_class', 'node_list', 'clip_inv_func', 'nx_value']
+******** Setting Layer L2 V Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x3b982d0> contains 'None' fields:  ['clip_func', 'red_node_class', 'ny_value', 'layer_number', 'ord_node_class', 'node_list', 'clip_inv_func', 'nx_value']
+******** Setting Layer L3 H Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x3b98310> contains 'None' fields:  ['clip_func', 'red_node_class', 'ny_value', 'clip_inv_func', 'nx_value', 'layer_number', 'ord_node_class', 'node_list']
+******** Setting Layer L3 V Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x3b98350> contains 'None' fields:  ['clip_func', 'red_node_class', 'ny_value', 'clip_inv_func', 'nx_value', 'layer_number', 'ord_node_class', 'node_list']
+******** Setting Layer L4 H Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x3b98390> contains 'None' fields:  ['clip_func', 'red_node_class', 'ny_value', 'clip_inv_func', 'nx_value', 'layer_number', 'ord_node_class', 'node_list']
+******** Setting Layer L4 V Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x3b983d0> contains 'None' fields:  ['clip_func', 'red_node_class', 'ny_value', 'clip_inv_func', 'nx_value', 'layer_number', 'ord_node_class', 'node_list']
+******** Setting Layer L5 H Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x3b98410> contains 'None' fields:  ['clip_func', 'red_node_class', 'ny_value', 'clip_inv_func', 'nx_value', 'layer_number', 'ord_node_class', 'node_list']
+******** Setting Layer L5 V Parameters *********************
+Warning!!! object <SystemParameters.ParamsSFALayer object at 0x3b98450> contains 'None' fields:  ['clip_func', 'red_node_class', 'ny_value', 'clip_inv_func', 'nx_value', 'layer_number', 'ord_node_class', 'node_list']
+linearPCANetwork4L, L0-3_PCA_out_dim =  [12, 52, 229, 1000]
+WARNING!!!! Overriding output_dimensionalities of PCA Network, to fit SFA Network or exceed it
+linearPCANetworkU11L, L0-10_PCA_out_dim =  [13, 20, 35, 60, 100, 120, 120, 120, 120, 120, 120]
+IEVMLRecNetworkU11L L0-10_SFA_out_dim =  [22, 35, 45, 60, 60, 60, 60, 60, 60, 60, 60]
+IEMNetworkU11L L0-10_SFA_out_dim =  [13, 20, 35, 60, 60, 60, 60, 60, 60, 60, 60]
+*******************************************************************
+******** Creating Non-Linear Ultra Thin 11L SFA Network ******************
+*******************************************************************
+Unknown host, but /local/escalafl available
+******** Setting Training Information Parameters for Gender **********
+Warning!!! object <SystemParameters.ParamsInput object at 0x3b80a10> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Gender  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x3cd3910> contains 'None' fields:  ['obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+****** Setting Seen Id Test Information Parameters for Gender ********
+Warning!!! object <SystemParameters.ParamsInput object at 0x3cdcb50> contains 'None' fields:  ['train_mode']
+***** Setting Seen Id Sequence Parameters for Gender ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x3b98a50> contains 'None' fields:  ['train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter']
+** Setting New Id Test Information Parameters for Gender **********
+Warning!!! object <SystemParameters.ParamsInput object at 0x3b987d0> contains 'None' fields:  ['train_mode']
+******** Setting New Id Data Parameters ******************************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x3b98950> contains 'None' fields:  ['train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter']
+******** Setting Train Information Parameters for Identity ***********
+Warning!!! object <SystemParameters.ParamsInput object at 0x3b80a50> contains 'None' fields:  ['train_mode']
+***** Setting Train Sequence Parameters for Identity *****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x3b80a90> contains 'None' fields:  ['train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+******** Setting Seen Id Information Parameters for Identity *********
+Warning!!! object <SystemParameters.ParamsInput object at 0x3b80ad0> contains 'None' fields:  ['train_mode']
+******** Setting Seen Id Sequence Parameters for Identity ************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x3b988d0> contains 'None' fields:  ['train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+******** Setting New Id Information Parameters for Identity **********
+Warning!!! object <SystemParameters.ParamsInput object at 0x3b989d0> contains 'None' fields:  ['train_mode']
+******** Setting New Id Sequence Parameters for Identity *************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x3cdcad0> contains 'None' fields:  ['train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+******** Setting Train Information Parameters for Angle **************
+Warning!!! object <SystemParameters.ParamsInput object at 0x3b80b50> contains 'None' fields:  ['train_mode']
+***** Setting Train Sequence Parameters for Angle ********************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x3b80b90> contains 'None' fields:  ['train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+******** Setting Seen Id Information Parameters for Angle ************
+Warning!!! object <SystemParameters.ParamsInput object at 0x3b80bd0> contains 'None' fields:  ['train_mode']
+******** Setting Seen Id Sequence Parameters for Angle ***************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x3b80c10> contains 'None' fields:  ['train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+******** Setting New Id Information Parameters for Angle *************
+Warning!!! object <SystemParameters.ParamsInput object at 0x3b80c50> contains 'None' fields:  ['train_mode']
+******** Setting New Id Sequence Parameters for Angle ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x3b80c90> contains 'None' fields:  ['train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting Training Information Parameters for Translation X ******
+Warning!!! object <SystemParameters.ParamsInput object at 0x3b80d10> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for TransX  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x3b80d50> contains 'None' fields:  ['train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting Seen ID Information Parameters for Translation X *******
+Warning!!! object <SystemParameters.ParamsInput object at 0x3b80e50> contains 'None' fields:  ['train_mode']
+******** Setting Seen Id Data Parameters for TransX  *****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x3b80e90> contains 'None' fields:  ['train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+******** Setting New Id Information Parameters for Translation X *****
+Warning!!! object <SystemParameters.ParamsInput object at 0x3b80ed0> contains 'None' fields:  ['train_mode']
+******** Setting Seen Id Data Parameters for TransX  *****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x3b80f10> contains 'None' fields:  ['train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting Training Information Parameters for Age ******
+Warning!!! object <SystemParameters.ParamsInput object at 0x3b80e10> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Age  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x3b80fd0> contains 'None' fields:  ['obj_avgs', 'rotation', 'obj_stds', 'filter']
+***** Setting Seen Id Test Information Parameters for Age ******
+Warning!!! object <SystemParameters.ParamsInput object at 0x2f61050> contains 'None' fields:  ['train_mode']
+******** Setting Seen Id Data Parameters for Age  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2f61090> contains 'None' fields:  ['train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter']
+***** Setting New Id Test Information Parameters for Age ******
+Warning!!! object <SystemParameters.ParamsInput object at 0x2f610d0> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Age  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2f61110> contains 'None' fields:  ['train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter']
+***** Setting Training Information Parameters for Real Translation X ******
+BLOCK SIZE = 708
+Warning!!! object <SystemParameters.ParamsInput object at 0x2f61190> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Real TransX  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x3b73cd0> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting Seen ID Information Parameters for Real Translation X *******
+Warning!!! object <SystemParameters.ParamsInput object at 0x2f61250> contains 'None' fields:  ['train_mode']
+******** Setting Seen Id Data Parameters for Real TransX  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2f61290> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+******** Setting New Id Information Parameters for Real Translation X *****
+Warning!!! object <SystemParameters.ParamsInput object at 0x2f612d0> contains 'None' fields:  ['train_mode']
+******** Setting New ID Data Parameters for Real TransX  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2f61310> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting Training Information Parameters for Real Translation Y ******
+BLOCK SIZE = 800
+Warning!!! object <SystemParameters.ParamsInput object at 0x2f61390> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Real TransY  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2f613d0> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting Seen ID Information Parameters for Real Translation Y *******
+Warning!!! object <SystemParameters.ParamsInput object at 0x2f61450> contains 'None' fields:  ['train_mode']
+******** Setting Seen Id Data Parameters for Real TransY  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2f611d0> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+******** Setting New Id Information Parameters for Real Translation Y *****
+Warning!!! object <SystemParameters.ParamsInput object at 0x2f61490> contains 'None' fields:  ['train_mode']
+******** Setting New ID Data Parameters for Real TransY  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2f614d0> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+Studienprojekt. Scale estimation datasets. By Jan, Stephan and Alberto 
+***** Setting Training Information Parameters for Scale ******
+BLOCK SIZE = 1200
+Warning!!! object <SystemParameters.ParamsInput object at 0x2f61550> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Real Scale  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2f61590> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting SeenId Information Parameters for Scale ******
+BLOCK SIZE = 600
+Warning!!! object <SystemParameters.ParamsInput object at 0x2f61610> contains 'None' fields:  ['train_mode']
+******** Setting SeenId Data Parameters for Real Scale  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x3b98750> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting NewId Information Parameters for Scale ******
+BLOCK SIZE = 200
+Warning!!! object <SystemParameters.ParamsInput object at 0x2f61650> contains 'None' fields:  ['train_mode']
+******** Setting NewId Data Parameters for Real Scale  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2f61690> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+Studienprojekt. Illumination estimation datasets. By Jan and Stephan and Alberto 
+***** Setting Training Information Parameters for Illumination ******
+BLOCK SIZE = 220
+Warning!!! object <SystemParameters.ParamsInput object at 0x2f61210> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Real Illumination  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2f61750> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+BLOCK SIZE = 50
+Warning!!! object <SystemParameters.ParamsInput object at 0x2f616d0> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Real Illumination  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2f61790> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+BLOCK SIZE = 40
+Warning!!! object <SystemParameters.ParamsInput object at 0x2f61810> contains 'None' fields:  ['train_mode']
+******** Setting Testing Data Parameters for Real Illumination  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2f61850> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+Studienprojekt. Rotation estimation datasets. By Jan and Stephan and Alberto 
+***** Setting Training Information Parameters for Rotation ******
+BLOCK SIZE = 280
+Warning!!! object <SystemParameters.ParamsInput object at 0x2f618d0> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Real Rotation  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2f61910> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+BLOCK SIZE = 60
+Warning!!! object <SystemParameters.ParamsInput object at 0x2f61950> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Real Rotation  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2f61990> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+BLOCK SIZE = 50
+Warning!!! object <SystemParameters.ParamsInput object at 0x2f619d0> contains 'None' fields:  ['train_mode']
+******** Setting Testing Data Parameters for Real Illumination  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2f61a10> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting Training Information Parameters for Face ******
+BLOCK SIZE = 12000
+Warning!!! object <SystemParameters.ParamsInput object at 0x2f61a90> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Real Face  ****************
+ sSeq.subimage_first_row = [ 38.74143769  33.83476536  40.11733445 ...,  23.76573613  23.26944834
+  46.9433079 ]
+sSeq.pixelsampling_x [ 0.848275    0.92096644  0.82789134 ...,  1.0560901   0.71534896
+  1.07420123]
+sSeq.translations_x [-11.          13.          19.         ..., -27.54774209  32.44001575
+  37.21771382]
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2f61ad0> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting Seenid Information Parameters for Face ******
+BLOCK SIZE = 8000
+Warning!!! object <SystemParameters.ParamsInput object at 0x2f61bd0> contains 'None' fields:  ['train_mode']
+******** Setting SeenID Data Parameters for Real Face  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2f61410> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting Newid Information Parameters for Face ******
+BLOCK SIZE = 2000
+Warning!!! object <SystemParameters.ParamsInput object at 0x2f61c10> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Real Face  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2f61c50> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting Training Information Parameters for RObject ******
+totaling 0 images
+BLOCK SIZE = [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+BLOCK SIZES = [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+[]
+[]
+Warning!!! object <SystemParameters.ParamsInput object at 0x2f61cd0> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Real Object  ****************
+ sSeq.subimage_first_row = 2.0
+sSeq.pixelsampling_x 1.5
+sSeq.translations_x []
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2f61d10> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting Seenid Information Parameters for RObject ******
+totaling 0 images
+BLOCK SIZE = [0 0 0 0 0 0 0 0 0 0]
+BLOCK SIZES = [0 0 0 0 0 0 0 0 0 0]
+[]
+[]
+Warning!!! object <SystemParameters.ParamsInput object at 0x2f61d50> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Real Object  ****************
+ sSeq.subimage_first_row = 2.0
+sSeq.pixelsampling_x 1.5
+sSeq.translations_x []
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2f61d90> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting Training Information Parameters for RObject ******
+totaling 0 images
+BLOCK SIZE = [0 0 0 0 0 0 0 0 0 0]
+BLOCK SIZES = [0 0 0 0 0 0 0 0 0 0]
+[]
+[]
+Warning!!! object <SystemParameters.ParamsInput object at 0x2f61e10> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Real Object  ****************
+ sSeq.subimage_first_row = 2.0
+sSeq.pixelsampling_x 1.5
+sSeq.translations_x []
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2f61e50> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Project: Processing natural images with SFA,  ******
+***** Image Patches courtesy of Niko Wilbert ******
+***** Setting Training Information Parameters for RawNatural ******
+totaling 4000 samples
+BLOCK SIZE = 1
+Warning!!! object <SystemParameters.ParamsInput object at 0x2f61ed0> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for RawNatural  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2f61dd0> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'translations_y', 'translations_x', 'obj_stds', 'filter', 'load_data']
+***** Setting Training Information Parameters for RawNatural ******
+totaling 1000 samples
+BLOCK SIZE = 1
+Warning!!! object <SystemParameters.ParamsInput object at 0x2f61f10> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Natural  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2f61f50> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'translations_y', 'translations_x', 'obj_stds', 'filter', 'load_data']
+***** Project: Integration of RBM and SFA,  ******
+***** Setting Training Information Parameters for Natural ******
+binary string read: š  N  ˆ  @   
+Loaded header:  (666, 19999, 5000, 64, -1)
+totaling 4000 samples
+BLOCK SIZE = 1
+Warning!!! object <SystemParameters.ParamsInput object at 0x2f61fd0> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Natural  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x543b090> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'translations_y', 'translations_x', 'obj_stds', 'filter', 'load_data']
+***** Setting Newid Information Parameters for Natural ******
+binary string read: š  N  ˆ  @   
+Loaded header:  (666, 19999, 5000, 64, -1)
+totaling 1000 images
+BLOCK SIZE = 1
+Warning!!! object <SystemParameters.ParamsInput object at 0x543b0d0> contains 'None' fields:  ['train_mode']
+******** Setting Newid Data Parameters for Natural ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x543b150> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'translations_y', 'translations_x', 'obj_stds', 'filter', 'load_data']
+***** Setting Training Information Parameters for RFaceCentering******
+BLOCK SIZE = 1200
+Warning!!! object <SystemParameters.ParamsInput object at 0x543b250> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Real Face Centering****************
+Face Centering. Dx in (-45, 45) Dy in (-19, 19), sampling in (450.000000, 1100.000000, 50)
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x543b290> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting SeenId Information Parameters for RFaceCentering******
+BLOCK SIZE = 1500
+Warning!!! object <SystemParameters.ParamsInput object at 0x543b2d0> contains 'None' fields:  ['train_mode']
+******** Setting Seenid Data Parameters for Real Face Centering****************
+Face Centering. Dx in (-45, 45) Dy in (-19, 19), sampling in (450.000000, 1100.000000, 50)
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2f61b50> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting NewId Information Parameters for RFaceCentering******
+BLOCK SIZE = 200
+Warning!!! object <SystemParameters.ParamsInput object at 0x543b350> contains 'None' fields:  ['train_mode']
+******** Setting Seenid Data Parameters for Real Face Centering****************
+Face Centering. Dx in (-45, 45) Dy in (-19, 19), sampling in (450.000000, 1100.000000, 50)
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x543b390> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting Training Information Parameters for Real Eye Translation X ******
+Warning!!! object <SystemParameters.ParamsInput object at 0x543b410> contains 'None' fields:  ['train_mode']
+******** Setting Training Data Parameters for Real Eye TransX  ****************
+REyeTans X Dx in (-10, 10) Dy in (-10, 10), sampling in (67.500000, 97.500000)
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2f61b90> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting Seenid Information Parameters for Real Eye Translation X ******
+Warning!!! object <SystemParameters.ParamsInput object at 0x543b490> contains 'None' fields:  ['train_mode']
+******** Setting Seenid Data Parameters for Real Eye TransX  ****************
+REyeTans X Dx in (-10, 10) Dy in (-10, 10), sampling in (67.500000, 97.500000)
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x543b4d0> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting Newid Information Parameters for Real Eye Translation X ******
+Warning!!! object <SystemParameters.ParamsInput object at 0x543b510> contains 'None' fields:  ['train_mode']
+******** Setting Newid Data Parameters for Real Eye TransX  ****************
+REyeTans X Dx in (-10, 10) Dy in (-10, 10), sampling in (67.500000, 97.500000)
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x543b550> contains 'None' fields:  ['background_type', 'train_mode', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+***** Setting information Parameters for RFaceCentering******
+BLOCK SIZE = 600
+******** Setting Training Data Parameters for Real Face Centering****************
+Face Centering. Dx in (-45, 45) Dy in (-19, 19), sampling in (450.000000, 1100.000000, 50)
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x543b7d0> contains 'None' fields:  ['background_type', 'obj_avgs', 'rotation', 'obj_stds', 'filter']
+;)
+***** Setting information Parameters for RFaceCentering******
+BLOCK SIZE = 600
+***** Setting information Parameters for RFaceCentering******
+BLOCK SIZE = 600
+***** Setting information Parameters for RFaceCentering******
+BLOCK SIZE = 600
+******** Setting Training Data Parameters for Real Face Centering****************
+Face Centering. Dx in (-45, 45) Dy in (-19, 19), sampling in (450.000000, 1100.000000, 50)
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x543b790> contains 'None' fields:  ['background_type', 'obj_avgs', 'rotation', 'obj_stds', 'filter']
+******** Setting Training Data Parameters for Real Face Centering****************
+Face Centering. Dx in (-45, 45) Dy in (-19, 19), sampling in (450.000000, 1100.000000, 50)
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x543b950> contains 'None' fields:  ['background_type', 'obj_avgs', 'rotation', 'obj_stds', 'filter']
+******** Setting Training Data Parameters for Real Face Centering****************
+Face Centering. Dx in (-45, 45) Dy in (-19, 19), sampling in (450.000000, 1100.000000, 50)
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x543b7d0> contains 'None' fields:  ['background_type', 'obj_avgs', 'rotation', 'obj_stds', 'filter']
+***** Setting information Parameters for RFaceCentering******
+BLOCK SIZE = 200
+******** Setting Training Data Parameters for Real Face Centering****************
+Face Centering. Dx in (-45, 45) Dy in (-19, 19), sampling in (450.000000, 1100.000000, 50)
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x543b990> contains 'None' fields:  ['background_type', 'obj_avgs', 'rotation', 'obj_stds', 'filter']
+***** Setting information Parameters for RFaceCentering******
+BLOCK SIZE = 200
+******** Setting Training Data Parameters for Real Face Centering****************
+Face Centering. Dx in (-45, 45) Dy in (-19, 19), sampling in (450.000000, 1100.000000, 50)
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x543bad0> contains 'None' fields:  ['background_type', 'obj_avgs', 'rotation', 'obj_stds', 'filter']
+***** Setting Information Parameters for Real Translation X ******
+BLOCK SIZE = 200
+******** Setting Training Data Parameters for Real TransX  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x2f617d0> contains 'None' fields:  ['background_type', 'obj_avgs', 'rotation', 'obj_stds', 'filter']
+128
+***** Setting Information Parameters for Real Translation X ******
+BLOCK SIZE = 200
+******** Setting Training Data Parameters for Real TransX  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x543b790> contains 'None' fields:  ['background_type', 'obj_avgs', 'rotation', 'obj_stds', 'filter']
+128
+***** Setting Information Parameters for Real Translation X ******
+BLOCK SIZE = 100
+******** Setting Training Data Parameters for Real TransX  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x543b310> contains 'None' fields:  ['background_type', 'obj_avgs', 'rotation', 'obj_stds', 'filter']
+128
+***** Setting Training Information Parameters for Real Translation Y ******
+BLOCK SIZE = 250
+******** Setting Training Data Parameters for Real TransY  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x543bb90> contains 'None' fields:  ['background_type', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+128
+***** Setting Training Information Parameters for Real Translation Y ******
+BLOCK SIZE = 250
+******** Setting Training Data Parameters for Real TransY  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x3b73e90> contains 'None' fields:  ['background_type', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+128
+***** Setting Training Information Parameters for Real Translation Y ******
+BLOCK SIZE = 125
+******** Setting Training Data Parameters for Real TransY  ****************
+Warning!!! object <SystemParameters.ParamsDataLoading object at 0x543bcd0> contains 'None' fields:  ['background_type', 'obj_avgs', 'rotation', 'obj_stds', 'filter', 'load_data']
+128
+GTSRBFunc not present or disabled
