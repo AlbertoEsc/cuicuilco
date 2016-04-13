@@ -1,45 +1,532 @@
+#Implementation of the Graph-Based SFA Node
+#See the publication of Escalante-B and Wiskott (2013) at JMLR
+#By Alberto Escalante. Alberto.Escalante@ini.rub.de 
+#Ruhr-University-Bochum, Institute of Neurocomputation, Group of Prof. Dr. Wiskott
+
+#This module is part of the cuicuilco framework. 
+#See the end of the file for an example
+#Requires: mdp (modular toolkit for data processing)
+
 
 import numpy
 import scipy
 import scipy.optimize
-#import scipy.optimize
-#import matplotlib as mpl
-#import matplotlib.pyplot as plt
-#import PIL
-#import Image
+
 import mdp
-#import os
-#import glob
-#import random
-##For patching MDP
-#from mdp import numx
-#from mdp.utils import (mult, pinv, symeig, CovarianceMatrix, QuadraticForm,
-#                       SymeigException)
 from mdp.utils import (mult, pinv, symeig, CovarianceMatrix, SymeigException)
-#from mdp.utils import (mult, pinv, symeig, CovarianceMatrix, SymeigException)
-
-import copy
-#import time
-#import SystemParameters
-#import hashlib
-#
 import sys
-##sys.path.append("/home/escalafl/workspace/hiphi/src/hiphi/utils")
-##import misc
-#import object_cache
-#import more_nodes
-from sfa_libs import select_rows_from_matrix
-#from inversion import invert_exp_funcs2
-import inspect
 
-##################### GSFA functions/classes ################
+#This class is derived from SFANode only to use the function _set_range
+class GSFANode(mdp.nodes.SFANode):
+    """ Graph-Based SFA Node.
+    """
+    def __init__(self, input_dim=None, output_dim=None, dtype=None, block_size=None, train_mode=None, sfa_expo=None, pca_expo=None, magnitude_sfa_biasing=None):
+        super(GSFANode, self).__init__(input_dim, output_dim, dtype)  
+        self.pinv = None
+        self.block_size= block_size
+        self.train_mode = train_mode
+    
+        self.sum_prod_x = None
+        self.sum_x = None
+        self.num_samples = 0
+        self.sum_diff = None 
+        self.sum_prod_diff = None  
+        self.num_diffs = 0
+        
+        self._myvar = None
+        self._covdcovmtx = CovDCovMatrix(block_size)
+        self.list_train_params = ["scheduler", "n_parallel", "train_mode", "block_size"] #Parameters accepted during training
 
-#Special purpose object to compute the covariance matrices used by SFA.
-#It efficiently supports special training methods: clustered, serial, mixed
-#TODO: Remove falsely global unneeded variables
-#TODO: 
+    def _train(self, x, block_size=None, train_mode = None, node_weights=None, edge_weights=None):
+        """ main training function of GSFA. 
+        x: training data (each sample is a row)
+        the usage of the parameters depends on the training mode (train_mode)
+        to train as in standard SFA:
+            set train_mode="regular"
+        to train using the clustered graph:
+            set train_mode="clustered". The cluster size is given by block_size (integer). 
+               Variable cluster sizes are possible if block_size is a list of integers.
+        to train using a graph without edges:
+            set train_mode="unlabeled".
+        to train using the serial graph:
+            set train_mode="serial", and use block_size (integer) to specify the group size. 
+        to train using the mixed graph:
+            set train_mode="mixed", and use block_size (integer) to specify the group size.           
+        to train using an arbitrary graph:
+            set train_mode="graph", specify the node_weights (numpy 1D array), and the
+            edge_weights (numpy 2D array).
+        """
+        if train_mode == None:
+            train_mode = self.train_mode
+        if block_size == None:
+            er="GSFA no block_size"
+            print er
+            #raise Exception(er)
+            block_size = self.block_size
+        
+        self._myvar=1
+        self.set_input_dim(x.shape[1])
+    
+        ## update the covariance matrices
+        # cut the final point to avoid a trivial solution in special cases
+        # WARNING: Force artificial training
+        print "train_mode=", train_mode
+    
+        if isinstance(train_mode, list):
+            train_modes = train_mode
+        else:
+            train_modes = [train_mode]
+    
+        for train_mode in train_modes:
+            if isinstance(train_mode, tuple):
+                method = train_mode[0]
+                labels = train_mode[1]
+                weight = train_mode[2]
+                if method == "classification":
+                    print "update classification"
+                    ordering = numpy.argsort(labels)
+                    x2 = x[ordering,:]
+                    block_sizes = ""
+                    unique_labels = numpy.unique(labels)
+                    unique_labels.sort()
+                    block_sizes = []
+                    for label in unique_labels:
+                        block_sizes.append((labels==label).sum())
+                    self._covdcovmtx.update_clustered(x2, block_sizes=block_sizes, weight=weight)
+                else:
+                    er = "method unknown: %s"%(str(method))
+                    raise Exception(er)
+            else:
+                if train_mode == 'unlabeled':
+                    print "updateUnlabeled"
+                    self._covdcovmtx.updateUnlabeled(x, weight=0.00015) #Warning, set this weight appropiately!
+                elif train_mode == "regular":
+                    print "updateRegular"
+                    self._covdcovmtx.updateRegular(x, weight=1.0)
+                elif train_mode == 'clustered':
+                    print "update_clustered"
+                    self._covdcovmtx.update_clustered(x, block_sizes=block_size, weight=1.0)
+                elif train_mode.startswith('compact_classes'):
+                    print "update_compact_classes:", train_mode
+                    J = int(train_mode[len('compact_classes'):])
+                    self._covdcovmtx.update_compact_classes(x, block_sizes=block_size, Jdes=J, weight=1.0)
+                elif train_mode == 'serial':
+                    print "updateSerial ERROR ERROR ERROR!!!"
+                    self._covdcovmtx.updateSerial(x, torify=False, block_size=block_size)
+                elif train_mode.startswith('DualSerial'):
+                    print "updateDualSerial"
+                    num_blocks = len(x)/block_size
+                    dual_num_blocks = int(train_mode[len("DualSerial"):])
+                    dual_block_size = len(x) / dual_num_blocks
+                    chunk_size = block_size / dual_num_blocks
+                    print "dual_num_blocks = ", dual_num_blocks
+                    self._covdcovmtx.updateSerial(x, torify=False, block_size=block_size)
+                    x2 = numpy.zeros_like(x)
+                    for i in range(num_blocks):
+                        for j in range(dual_num_blocks):
+                            x2[j*dual_block_size+i*chunk_size:j*dual_block_size+(i+1)*chunk_size] = x[i*block_size+j*chunk_size:i*block_size+(j+1)*chunk_size]            
+                    self._covdcovmtx.updateSerial(x2, torify=False, block_size=dual_block_size, weight=0.0)         
+                elif train_mode == 'mixed':
+                    print "update mixed"
+                    bs = block_size
+            # WARNING: THIS Generates degenerated solutions!!! Check code!! it should actually work fine??!!
+                    self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[0:bs], weight=2.0, block_size=block_size)
+                    self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[bs:-bs], weight=1.0, block_size=block_size)
+                    self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[-bs:], weight=2.0, block_size=block_size)
+            #        self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[0:bs], weight=0.5, block_size=block_size)
+            #        self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[bs:-bs], weight=1.0, block_size=block_size)
+            #        self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[-bs:], weight=0.5, block_size=block_size)
+                    self._covdcovmtx.updateSerial(x, torify=False, block_size=block_size)            
+                elif train_mode[0:6] == 'window':
+                    window_halfwidth = int(train_mode[6:])
+                    print "Window (%d)"%window_halfwidth
+                    self._covdcovmtx.updateSlidingWindow(x, weight=1.0, window_halfwidth=window_halfwidth)
+                elif train_mode[0:7] == 'fwindow':
+                    window_halfwidth = int(train_mode[7:])
+                    print "Fast Window (%d)"%window_halfwidth
+                    self._covdcovmtx.updateFastSlidingWindow(x, weight=1.0, window_halfwidth=window_halfwidth)
+                elif train_mode[0:13] == 'mirror_window':
+                    window_halfwidth = int(train_mode[13:])
+                    print "Mirroring Window (%d)"%window_halfwidth
+                    self._covdcovmtx.updateMirroringSlidingWindow(x, weight=1.0, window_halfwidth=window_halfwidth)
+                elif train_mode[0:14] == 'smirror_window':
+                    window_halfwidth = int(train_mode[14:])
+                    print "Slow Mirroring Window (%d)"%window_halfwidth
+                    self._covdcovmtx.updateSlowMirroringSlidingWindow(x, weight=1.0, window_halfwidth=window_halfwidth)
+                elif train_mode == 'graph':
+                    print "updateGraph"
+                    self._covdcovmtx.updateGraph(x, node_weights=node_weights, edge_weights=edge_weights, weight=1.0)
+                elif train_mode == 'smart_unlabeled2':
+                    print "smart_unlabeled2"
+                    N2 = x.shape[0]
+                   
+                    N1 = Q1 = self._covdcovmtx.num_samples*1.0
+                    R1 = self._covdcovmtx.num_diffs*1.0
+                    sum_x_labeled_2D = self._covdcovmtx.sum_x.reshape((1,-1))+0.0       
+                    sum_prod_x_labeled = self._covdcovmtx.sum_prod_x+0.0              
+                    print "Original sum_x[0]/num_samples=", self._covdcovmtx.sum_x[0]/self._covdcovmtx.num_samples
+            
+                    weight_fraction_unlabeled = 0.2 #0.1, 0.25
+                    additional_weight_unlabeled = -0.025 # 0.02 0.25, 0.65?
+            
+                    w1 = Q1*1.0/R1 * (1.0-weight_fraction_unlabeled)
+                    print "weight_fraction_unlabeled=", weight_fraction_unlabeled
+                    print "N1=Q1=", Q1, "R1=", R1, "w1=", w1
+                    print ""
+                    
+                    self._covdcovmtx.sum_prod_diffs *= w1      
+                    self._covdcovmtx.num_diffs *= w1
+                    print "After diff scaling: num_samples=", self._covdcovmtx.num_samples, "num_diffs=", self._covdcovmtx.num_diffs
+                    print ""
+            
+                    #print "Updated self._covdcovmtx.num_diffs=", self._covdcovmtx.num_diffs, "Updated self._covdcovmtx.sum_prod_diffs=", self._covdcovmtx.sum_prod_diffs
+            
+                    node_weights2 = Q1*weight_fraction_unlabeled/N2 #w2*N1
+                    w12 = node_weights2 / N1 # One directional weights 
+                    print "w12 (one dir)", w12
+                    
+                    sum_x_unlabeled_2D = x.sum(axis=0).reshape((1,-1))
+                    sum_prod_x_unlabeled = mdp.utils.mult(x.T, x)
+            #        self._covdcovmtx.sum_prod_x += sum_prod_x_unlabeled
+            #        self._covdcovmtx.sum_x += sum_x_unlabeled
+            #        self._covdcovmtx.num_samples += node_weights2*N2
+                    
+                    self._covdcovmtx.AddSamples(sum_prod_x_unlabeled, sum_x_unlabeled_2D.flatten(), num_samples=N2, weight=node_weights2)
+                    print "After adding unlabeled nodes: num_samples=", self._covdcovmtx.num_samples, "num_diffs=", self._covdcovmtx.num_diffs
+                    print "sum_x[0]/num_samples=" , self._covdcovmtx.sum_x[0] / self._covdcovmtx.num_samples
+                    print ""
+            
+                    print "N2=", N2, "node_weights2=", node_weights2, 
+                    #print "self._covdcovmtx.sum_x=", self._covdcovmtx.sum_x, "self._covdcovmtx.sum_prod_x=", self._covdcovmtx.sum_prod_x
+                    
+                    #TODO: WARNING: Unclear if I should put here the node weights?
+                    #print "T1=", sum_prod_x_unlabeled*N1
+                    #print "T2=", mdp.utils.mult(sum_x_labeled.T, sum_x_unlabeled)
+                    #print "T3=", mdp.utils.mult(sum_x_unlabeled.T, sum_x_labeled)
+                    #print "T4=", sum_prod_x_labeled*N2
+                    
+                    additional_diffs = sum_prod_x_unlabeled*N1 - mdp.utils.mult(sum_x_labeled_2D.T, sum_x_unlabeled_2D) - mdp.utils.mult(sum_x_unlabeled_2D.T, sum_x_labeled_2D) + sum_prod_x_labeled*N2       
+                    print "w12=", w12, "additional_diffs=",additional_diffs
+                    self._covdcovmtx.AddDiffs(2*additional_diffs, 2*N1*N2, weight=w12) #to account for both directions                
+                    print "After mixed diff addition: num_samples=", self._covdcovmtx.num_samples, "num_diffs=", self._covdcovmtx.num_diffs
+                    print "sum_x[0]/num_samples=" , self._covdcovmtx.sum_x[0]/self._covdcovmtx.num_samples
+            
+                    print "\n Adding complete graph for unlabeled data"
+                    self._covdcovmtx.update_clustered_homogeneous_block_sizes(x, weight=additional_weight_unlabeled, block_size=N2)
+                    print "After complete x2 addition: num_samples=", self._covdcovmtx.num_samples, "num_diffs=", self._covdcovmtx.num_diffs
+                    print "sum_x[0]/num_samples=" , self._covdcovmtx.sum_x[0]/self._covdcovmtx.num_samples
+            
+            #        print "\n Removing node weights of unlabeled data"
+            #        self._covdcovmtx.AddSamples(sum_prod_x_unlabeled, sum_x_unlabeled, N2, -1*(node_weights2+additional_weight_unlabeled) )
+            #        print "self._covdcovmtx.num_samples=", self._covdcovmtx.num_samples, "self._covdcovmtx.num_diffs=", self._covdcovmtx.num_diffs
+                elif train_mode == 'smart_unlabeled3':
+                    print "smart_unlabeled3"
+                    N2 = x.shape[0]
+                   
+                    N1 = Q1 = self._covdcovmtx.num_samples*1.0
+                    R1 = self._covdcovmtx.num_diffs*1.0
+                    print "N1=Q1=", Q1, "R1=", R1, "N2=", N2
+                    
+                    v = 2.0 ** (-9.5) #500.0/4500 #weight of unlabeled samples (making it "500" vs "500")
+                    C = 10.0 #10.0 #Clustered graph assumed, with C classes, and each one having N1/C samples
+                    print "v=", v, "C=", C
+            
+                    v_norm = v/C
+                    N1_norm = N1/C
+            
+                    ###Store original values of important data                
+                    sum_x_labeled = self._covdcovmtx.sum_x.reshape((1,-1))+0.0       
+                    sum_prod_x_labeled = self._covdcovmtx.sum_prod_x+0.0       
+            
+                    print "Original (Diag(C')/num_diffs.avg)**0.5 =", ((numpy.diagonal(self._covdcovmtx.sum_prod_diffs)/self._covdcovmtx.num_diffs).mean())**0.5
+            
+                    ###Adjust connections within labeled data        
+                    weight_adjustment = (N1_norm-1) / (N1_norm - 1 + v_norm*N2)
+                    print "weight_adjustment =",weight_adjustment, "w11=", 1/(N1_norm - 1 + v_norm*N2)
+                    #w1 = Q1*1.0/R1 * (1.0-weight_fraction_unlabeled)
+                    
+                    self._covdcovmtx.sum_x *= weight_adjustment  
+                    self._covdcovmtx.sum_prod_x *= weight_adjustment  
+                    self._covdcovmtx.num_samples *= weight_adjustment
+                    self._covdcovmtx.sum_prod_diffs *= weight_adjustment      
+                    self._covdcovmtx.num_diffs *= weight_adjustment
+                    node_weights_complete_1 = weight_adjustment
+                    print "num_diffs (w11) after weight_adjustment=", self._covdcovmtx.num_diffs
+                    w11 = 1 / (N1_norm - 1 + v_norm*N2)
+                    #print "Updated self._covdcovmtx.num_diffs=", self._covdcovmtx.num_diffs, "Updated self._covdcovmtx.sum_prod_diffs=", self._covdcovmtx.sum_prod_diffs     
+                    print "After adjustment (Diag(C')/num_diffs.avg)**0.5 =", ((numpy.diagonal(self._covdcovmtx.sum_prod_diffs)/self._covdcovmtx.num_diffs).mean())**0.5
+                    print ""
+                    
+                    ###Connections within unlabeled data (notice that C times this is equivalent to v*v/(N1+v*(N2-1)) once)
+                    w22 = 0.5*2*(v_norm) * (v_norm) / ( N1_norm + v_norm*(N2 -1)) 
+                    sum_x_unlabeled = x.sum(axis=0).reshape((1,-1))
+                    sum_prod_x_unlabeled = mdp.utils.mult(x.T, x)
+                    node_weights_complete_2 =  w22 * (N2-1) * C
+                    self._covdcovmtx.update_clustered_homogeneous_block_sizes(x, weight=node_weights_complete_2, block_size=N2)
+                    print "w22=",w22, "node_weights_complete_2*N2=", node_weights_complete_2*N2
+                    print "After adding complete 2: num_samples=", self._covdcovmtx.num_samples, "num_diffs=", self._covdcovmtx.num_diffs
+                    print " (Diag(C')/num_diffs.avg)**0.5 =", ((numpy.diagonal(self._covdcovmtx.sum_prod_diffs)/self._covdcovmtx.num_diffs).mean())**0.5
+                    print ""
+                    
+                    ###Connections between labeled and unlabeled samples
+                    w12 = 2*0.5 * v_norm * (1/(N1_norm-1+v_norm*N2) + 1/(N1_norm+v_norm * (N2-1))) #Accounts for transitions in both directions
+                    print "(twice) w12=", w12
+                    sum_prod_diffs_mixed =  w12*( N1 * sum_prod_x_unlabeled - (mdp.utils.mult(sum_x_labeled.T, sum_x_unlabeled)+ mdp.utils.mult(sum_x_unlabeled.T, sum_x_labeled)) + N2 * sum_prod_x_labeled)        
+                    self._covdcovmtx.sum_prod_diffs += sum_prod_diffs_mixed      
+                    self._covdcovmtx.num_diffs += C * N1_norm * N2 * w12 #w12 already counts twice
+                    print " (Diag(mixed)/num_diffs.avg)**0.5 =", ((numpy.diagonal(sum_prod_diffs_mixed)/ (C * N1_norm * N2 * w12)).mean())**0.5
+                    print ""
+            
+                           
+                    #Additional adjustment for node weights of unlabeled data
+                    missing_weight_unlabeled = v - node_weights_complete_2
+                    missing_weight_labeled = 1.0 - node_weights_complete_1
+                    print "missing_weight_unlabeled=", missing_weight_unlabeled       
+                    print "Before two final AddSamples: num_samples=", self._covdcovmtx.num_samples, "num_diffs=", self._covdcovmtx.num_diffs
+                    self._covdcovmtx.AddSamples(sum_prod_x_unlabeled, sum_x_unlabeled, N2, missing_weight_unlabeled)
+                    self._covdcovmtx.AddSamples(sum_prod_x_labeled, sum_x_labeled, N1, missing_weight_labeled)
+                    print "Final transformation: num_samples=", self._covdcovmtx.num_samples, "num_diffs=", self._covdcovmtx.num_diffs
+                    print "Summary v11=%f+%f, v22=%f+%f"%(weight_adjustment, missing_weight_labeled, node_weights_complete_2, missing_weight_unlabeled)
+                    print "Summary w11=%f, w22=%f, w12(two ways)=%f"%(w11, w22, w12) 
+                    print "Summary (N1/C-1)*w11=%f, N2*w12 (one way)=%f"%((N1/C-1)*w11, N2*w12/2)
+                    print "Summary (N2-1)*w22*C=%f, N1*w12 (one way)=%f"%((N2-1)*w22*C, N1*w12/2)
+                    print "Summary (Diag(C')/num_diffs.avg)**0.5 =", ((numpy.diagonal(self._covdcovmtx.sum_prod_diffs)/self._covdcovmtx.num_diffs).mean())**0.5
+                elif train_mode == 'ignore_data':
+                    print "Training graph: ignoring data"
+                else:
+                    ex = "Unknown training method"
+                    raise Exception(ex)
+
+        
+    def _inverse(self, y):
+        """ uses a pseudoinverse of the matrix sf to approximate an inverse to the transformation
+        """
+        if self.pinv is None:
+            self.pinv = pinv(self.sf)
+            #print "SFA.pinv = ", self.pinv
+            #print "Shape of SFA.pinv = ", self.pinv.shape
+            #print "SFA.sf = ", self.sf
+            #print "Shape of sf = ", self.sf.shape        
+            #sf_t = self.sf.T
+            #print "sf_t= ", sf_t
+            #
+            #m2 = mult(sf_t, self.sf)
+            #print "m2 = ", m2
+            #print "For orthonormal sf, m2 is the identity"
+            #
+            #m3 = mult(self.sf, sf_t)
+            #print "m3 = ", m3
+            #print "just for curiosity"
+            
+            #s_mod = (self.sf * self.sf).sum(axis=0)
+            #print "s_mod = ", s_mod
+            #print "(sf/s_mod).T= ", (self.sf / s_mod).T
+        return mult(y, self.pinv)+self.avg
+
+    #TODO: write correct interface to enable for excecution_read, excecution_save
+    #TODO: check integer from float arguments in parallelization
+    def _train_with_scheduler(self, x, block_size=None, train_mode = None, node_weights=None, edge_weights=None, scheduler = None, n_parallel=None):      
+        """ training funcion when an mdp scheduler is provided. 
+        Experimental and buggy code, please do not use it at the time. 
+        Intel MKL is preferred to using this method.
+        """
+        self._train_phase_started = True
+        if train_mode == None:
+            train_mode = self.train_mode
+        if block_size == None:
+            block_size = self.block_size
+        if scheduler == None or n_parallel == None or train_mode == None:
+            #print "NO parallel sfa done...  scheduler=", ,uler, " n_parallel=", n_parallel
+            return self._train(self, x, block_size=block_size, train_mode=train_mode, node_weights=node_weights, edge_weights=edge_weights)
+        else:
+            #self._covdcovmtx.update_clustered_homogeneous_block_sizes(x, weight=1.0)
+    
+            #chunk_size=None 
+            #num_chunks = n_parallel
+            num_chunks = min(n_parallel, x.shape[0]/block_size) #WARNING, cover case where the division is not exact
+            #here chunk_size is given in blocks!!!
+            #chunk_size = int(numpy.ceil((x.shape[0]/block_size)*1.0/num_chunks))
+            chunk_size = int((x.shape[0]/block_size)/num_chunks)
+            
+            #Notice that parallel training doesn't work with clustered mode and inhomogeneous blocks
+            #TODO:Fix this
+            print "%d chunks, of size %d blocks, last chunk contains %d blocks"%(num_chunks, chunk_size, (x.shape[0]/block_size)%chunk_size)
+            if train_mode == 'clustered':
+                #TODO: Implement this
+                for i in range(num_chunks):
+                    print "Adding scheduler task //////////////////////"
+                    sys.stdout.flush()
+                    if i < num_chunks - 1:
+                        scheduler.add_task((x[i*block_size*chunk_size:(i+1)*block_size*chunk_size], block_size, 1.0), ComputeCovDcovMatrixClustered)
+                    else: # i == num_chunks - 1
+                        scheduler.add_task((x[i*block_size*chunk_size:], block_size, 1.0), ComputeCovDcovMatrixClustered)
+                    print "Done Adding scheduler task ///////////////////"
+                    sys.stdout.flush()            
+            elif train_mode == 'serial':
+                for i in range(num_chunks):
+                    if i==0:
+                        print "adding task %d from sample "%i, i*block_size*chunk_size, "to", (i+1)*block_size*chunk_size
+                        scheduler.add_task((x[i*block_size*chunk_size:(i+1)*block_size*chunk_size], block_size), ComputeCovDcovMatrixSerial)
+                    elif i==num_chunks-1: #Add one previous block to the chunk
+                        print "adding task %d from sample "%i, i*block_size*chunk_size-block_size, "to the end"
+                        scheduler.add_task((x[i*block_size*chunk_size-block_size:], block_size), ComputeCovDcovMatrixSerial)
+                    else:
+                        print "adding task %d from sample "%i, i*block_size*chunk_size-block_size, "to", (i+1)*block_size*chunk_size
+                        scheduler.add_task((x[i*block_size*chunk_size-block_size:(i+1)*block_size*chunk_size], block_size), ComputeCovDcovMatrixSerial)
+            elif train_mode == 'mixed':
+                bs = block_size
+                self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[0:bs], weight=0.5)
+    
+                #xxxx self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[bs:-bs], weight=1.0)
+                x2 = x[bs:-bs]
+                #num_chunks2 = int(numpy.ceil((x2.shape[0]/block_size-2)*1.0/chunk_size))
+                num_chunks2 = int((x2.shape[0]/block_size-2)/chunk_size)
+                for i in range(num_chunks2):
+                    if i < num_chunks2-1:
+                        scheduler.add_task((x2[i*block_size*chunk_size:(i+1)*block_size*chunk_size], block_size, 1.0), ComputeCovDcovMatrixClustered)
+                    else:
+                        scheduler.add_task((x2[i*block_size*chunk_size:], block_size, 1.0), ComputeCovDcovMatrixClustered)
+                        
+                self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[-bs:], weight=0.5)
+    
+                #xxxx self._covdcovmtx.updateSerial(x, torify=False)            
+                for i in range(num_chunks):
+                    if i==0:
+                        scheduler.add_task((x[i*block_size*chunk_size:(i+1)*block_size*chunk_size], block_size), ComputeCovDcovMatrixSerial)
+                    elif i==num_chunks-1: #Add one previous block to the chunk
+                        scheduler.add_task((x[i*block_size*chunk_size-block_size:], block_size), ComputeCovDcovMatrixSerial)
+                    else: #Add one previous block to the chunk
+                        scheduler.add_task((x[i*block_size*chunk_size-block_size:(i+1)*block_size*chunk_size], block_size), ComputeCovDcovMatrixSerial)
+            elif train_mode == 'unlabeled':
+                #TODO: IMPLEMENT THIS
+                for i in range(num_chunks):
+                    print "Adding scheduler task //////////////////////"
+                    sys.stdout.flush()
+                    #BUG:Why am I adding here the clustered graph!!!
+                    scheduler.add_task((x[i*block_size*chunk_size:(i+1)*block_size*chunk_size], block_size, 1.0), ComputeCovDcovMatrixClustered)
+                    print "Done Adding scheduler task ///////////////////"
+                    sys.stdout.flush()
+            #TODO:ADD support for regular/standard mode
+            else:
+                ex = "Unknown training method:", self.train_mode
+                raise Exception(ex)
+            
+            print "Getting results"
+            sys.stdout.flush()
+    
+            results = scheduler.get_results()
+            #print "Shutting down scheduler"
+            sys.stdout.flush()
+    
+            for covdcovmtx in results:
+                self._covdcovmtx.addCovDCovMatrix(covdcovmtx)
+
+                
+    def _stop_training(self, debug=False, verbose=False, pca_term = 0.995, pca_exp=2.0):
+        #self._myvar = self._myvar * 10
+        #Warning, changed block_size to artificial_training
+        #if (self.block_size == None) or (isinstance(self.block_size, int) and self.block_size == 1):
+        #WARNING!!! WARNING!!!
+        #TODO: Define a proper way to fix training matrices... add training mode "regular" to SFA???
+        if ((self.block_size == None) or (isinstance(self.block_size, int) and self.block_size == 1)) and False:
+            ##### request the covariance matrices and clean up
+            self.cov_mtx, self.avg, self.tlen = self._cov_mtx.fix()
+            del self._cov_mtx
+            self.dcov_mtx, davg, dtlen = self._dcov_mtx.fix()
+            del self._dcov_mtx
+            print "Finishing training (regular2222). %d tlen, %d tlen of diff"%(self.tlen, dtlen)
+            print "Avg[0:3] is", self.avg[0:3]
+            print "Cov[0:3,0:3] is", self.cov_mtx[0:3,0:3]
+            print "DCov[0:3,0:3] is", self.dcov_mtx[0:3,0:3]
+        else:
+            if verbose or True:
+                print "stop_training: self.block_size=", self.block_size
+            print "self._covdcovmtx.num_samples = ", self._covdcovmtx.num_samples 
+            print "self._covdcovmtx.num_diffs= ", self._covdcovmtx.num_diffs
+            self.cov_mtx, self.avg, self.dcov_mtx = self._covdcovmtx.fix()
+                   
+            print "Finishing GSFA training: ",  self.num_samples, " num_samples, and ", self.num_diffs, " num_diffs"
+    #        print "Avg[0:3] is", self.avg[0:4]
+    #        print "Prod_avg_x[0:3,0:3] is", prod_avg_x[0:3,0:3]
+    #        print "Cov[0:3,0:3] is", self.cov_mtx[0:3,0:3]
+            print "DCov[0:3,0:3] is", self.dcov_mtx[0:3,0:3]
+    #        quit()
+    
+        if pca_term != 0.0 and False:
+            signs = numpy.sign(self.dcov_mtx)
+            self.dcov_mtx = ((1.0-pca_term) * signs * numpy.abs(self.dcov_mtx) ** (1.0/pca_exp) + pca_term * numpy.identity(self.dcov_mtx.shape[0])) ** pca_exp          
+            self.dcov_mtx = numpy.identity(self.dcov_mtx.shape[0])
+        rng = self._set_range()
+        
+            
+        #### solve the generalized eigenvalue problem
+        # the eigenvalues are already ordered in ascending order
+        #WARNING, moved dcov to the second argument!!!
+        #self.d, self.sf = self._symeig(self.dcov_mtx, self.cov_mtx, range=rng, overwrite=(not debug))
+        #TODO: Only remove first eigenvalue and ignore negative eigenvalues (now there are features with negative delta value)
+        try:
+            print "***Range used=", rng
+###            if self.sfa_expo != None and self.pca_expo!=None:
+###                self.d, self.sf = _symeig_fake_regularized(self.dcov_mtx, self.cov_mtx, range=rng, overwrite=(not debug), sfa_expo=self.sfa_expo, pca_expo=self.pca_expo, magnitude_sfa_biasing=self.magnitude_sfa_biasing)
+###            else:
+            self.d, self.sf = self._symeig(self.dcov_mtx, self.cov_mtx, range=rng, overwrite=(not debug))
+            d = self.d
+            # check that we get only *positive* eigenvalues
+            if d.min() < 0:
+                raise SymeigException("Got negative eigenvalues: %s." % str(d))
+        except SymeigException, exception:
+            errstr = str(exception)+"\n Covariance matrices may be singular."
+            raise Exception(errstr)
+    
+        del self._covdcovmtx
+        # store bias
+        self._bias = mult(self.avg, self.sf)
+        print "shape of GSFANode.sf is=", self.sf.shape
+
+########################################## HELPER FUNCTIONS
+def graph_delta_values(y, edge_weights):
+    """ Computes delta values from an arbitrary graph as in the objective 
+    function of GSFA. The feature vectors are not normalized to weighted 
+    unit variance or weighted zero mean.
+    """
+    R = 0
+    deltas = 0
+    for (i, j) in edge_weights.keys():
+        w_ij = edge_weights[(i,j)]
+        deltas += w_ij * (y[j]-y[i])**2
+        R += w_ij
+    return deltas/R
+
+def comp_delta(x):
+    """ Computes delta values as in the objective function of SFA.
+    The feature vectors are not normalized to unit variance or zero mean.
+    """
+    xderiv = x[1:, :]-x[:-1, :]
+    return (xderiv**2).mean(axis=0)
+
+def Hamming_weight(integer_list):
+    """ Computes the Hamming weight of an integer or a list of integers 
+    """
+    if isinstance(integer_list, list):
+        return [Hamming_weight(k) for k in integer_list]
+    elif isinstance(integer_list, int):
+        w = 0
+        n = integer_list
+        while(n>0):
+            if n%2:
+                w += 1
+            n /=2
+        return w
+    else:
+        er = "unsupported input type for Hamming_weight:", integer_list
+        raise Exception(er)
+
+#####################################
+#Special purpose class to compute the covariance matrices used by GSFA.
+#It supports efficiently training methods for various graphs: clustered, serial, mixed
+#TODO: Remove unneeded global variables
 class CovDCovMatrix(object):
-    def __init__(self, block_size):
+    def __init__(self, block_size=None):
         self.block_size = block_size
         self.sum_x = None
         self.sum_prod_x = None
@@ -48,7 +535,8 @@ class CovDCovMatrix(object):
         self.sum_prod_diffs = None  
         self.num_diffs = 0
         self.last_block = None
-#Permanent Results Storage
+
+        #Variables used to store final results
         self.cov_mtx = None
         self.avg = None
         self.dcov_mtx = None
@@ -69,16 +557,13 @@ class CovDCovMatrix(object):
         self.num_samples = self.num_samples + weighted_num_samples
 
     def AddDiffs(self, sum_prod_diffs, num_diffs, weight=1.0):
-        #weighted_sum_diffs = sum_diffs * weight
         weighted_sum_prod_diffs = sum_prod_diffs * weight
         weighted_num_diffs = num_diffs * weight
         
         if self.sum_prod_diffs is None:
             self.sum_prod_diffs = weighted_sum_prod_diffs
-#            self.sum_diffs = weighted_sum_diffs
         else:
             self.sum_prod_diffs = self.sum_prod_diffs + weighted_sum_prod_diffs
-#            self.sum_diffs = self.sum_diffs + weighted_sum_diffs
 
         self.num_diffs = self.num_diffs + weighted_num_diffs   
        
@@ -92,6 +577,7 @@ class CovDCovMatrix(object):
         self.AddSamples(sum_prod_x, sum_x, num_samples, weight)
     
     #TODO:Add option to skip last sample from Cov part.
+    #This is equivalent to regular SFA training
     def updateRegular(self, x, weight=1.0):
         num_samples, dim = x.shape
         
@@ -103,25 +589,33 @@ class CovDCovMatrix(object):
         #Update DCov Matrix
         diffs = x[1:,:]-x[:-1,:]
         num_diffs = num_samples - 1
-#        sum_diffs = diffs.sum(axis=0)
+        #sum_diffs = diffs.sum(axis=0)
         sum_prod_diffs = mdp.utils.mult(diffs.T, diffs)
         self.AddDiffs(sum_prod_diffs, num_diffs, weight)
 
     #Usually: sum(node_weights)=num_samples 
-    def updateGraph(self, x, node_weights=None, edge_weights=None, ignore_edge_avg=True):
+    def updateGraph(self, x, node_weights=None, edge_weights=None, weight=1.0):
         num_samples, dim = x.shape
 
         if node_weights==None:
             node_weights = numpy.ones(num_samples)
 
         if len(node_weights) != num_samples:
-            er = "Node weights should be the same length as the number of samples"
+            er = "Node weights should be the same length %d as the number of samples %d"%(len(node_weights), num_samples)
             raise Exception(er)
 
         if edge_weights==None:
-            er = "edge_weights should be a dictionary with entries: d[(i,j)] = w_{i,j}"
+            er = "edge_weights should be a dictionary with entries: d[(i,j)] = w_{i,j} or an NxN array"
             raise Exception(er)
 
+        if isinstance(edge_weights, numpy.ndarray):
+            #TODO: make sure edge_weights are symmetric
+            #TODO: make sure consistency restriction is fulfilled         
+            if edge_weights.shape != (num_samples,num_samples):
+                er ="Error, dimensions of edge_weights should be (%d,%d) but is (%d,%d)"%(num_samples,num_samples, edge_weights.shape[0], edge_weights.shape[1])
+                raise Exception(er)
+                   
+        
         node_weights_column = node_weights.reshape((num_samples, 1))                
         #Update Cov Matrix
         weighted_x = x * node_weights_column
@@ -129,8 +623,67 @@ class CovDCovMatrix(object):
         weighted_sum_x = weighted_x.sum(axis=0) 
         weighted_sum_prod_x = mdp.utils.mult(x.T, weighted_x)
         weighted_num_samples = node_weights.sum()
-        print "weighted_num_samples=",  weighted_num_samples         
-        self.AddSamples(weighted_sum_prod_x, weighted_sum_x, weighted_num_samples)
+        #print "weighted_num_samples=",  weighted_num_samples         
+        self.AddSamples(weighted_sum_prod_x, weighted_sum_x, weighted_num_samples, weight=weight)
+
+        #Update DCov Matrix
+        if isinstance(edge_weights, numpy.ndarray):
+            weighted_num_diffs = edge_weights.sum() #R
+            prod1 = weighted_sum_prod_x #TODO: USE THE CORRECT EQUATIONS; THIS ONLY WORKS IF Q==R!!!!!!!
+            prod2 = mdp.utils.mult(mdp.utils.mult(x.T, edge_weights), x)
+            weighted_sum_prod_diffs = 2*prod1-2*prod2
+            self.AddDiffs(weighted_sum_prod_diffs, weighted_num_diffs, weight=weight)
+        else:
+            num_diffs = len(edge_weights)
+            diffs = numpy.zeros((num_diffs, dim))
+            weighted_diffs = numpy.zeros((num_diffs, dim))
+            weighted_num_diffs = 0
+            for ii, (i,j) in enumerate(edge_weights.keys()):
+                diff = x[j,:]-x[i,:]
+                diffs[ii] = diff
+                w_ij = edge_weights[(i,j)]
+                weighted_diff = diff * w_ij
+                weighted_diffs[ii] = weighted_diff
+                weighted_num_diffs += w_ij
+    
+            weighted_sum_prod_diffs = mdp.utils.mult(diffs.T, weighted_diffs)
+            self.AddDiffs(weighted_sum_prod_diffs, weighted_num_diffs, weight=weight)
+
+    #Same as updateGraph without unoptimizations
+    def updateGraphOld(self, x, node_weights=None, edge_weights=None, weight=1.0):
+        num_samples, dim = x.shape
+
+        if node_weights==None:
+            node_weights = numpy.ones(num_samples)
+
+        if len(node_weights) != num_samples:
+            er = "Node weights should be the same length %d as the number of samples %d"%(len(node_weights), num_samples)
+            raise Exception(er)
+
+        if edge_weights==None:
+            er = "edge_weights should be a dictionary with entries: d[(i,j)] = w_{i,j} or an NxN array"
+            raise Exception(er)
+
+        if isinstance(edge_weights, numpy.ndarray):
+            if edge_weights.shape == (num_samples,num_samples):
+                e_w = {}
+                for i in range(num_samples):
+                    for j in range(num_samples):
+                        if edge_weights[i,j] != 0:
+                            e_w[(i,j)] = edge_weights[i,j]
+                edge_weights = e_w
+            else:
+                er ="Error, dimensions of edge_weights should be (%d,%d) but is (%d,%d)"%(num_samples,num_samples, edge_weights.shape[0], edge_weights.shape[1])
+                raise Exception(er)
+        node_weights_column = node_weights.reshape((num_samples, 1))                
+        #Update Cov Matrix
+        weighted_x = x * node_weights_column
+    
+        weighted_sum_x = weighted_x.sum(axis=0) 
+        weighted_sum_prod_x = mdp.utils.mult(x.T, weighted_x)
+        weighted_num_samples = node_weights.sum()
+        #print "weighted_num_samples=",  weighted_num_samples         
+        self.AddSamples(weighted_sum_prod_x, weighted_sum_x, weighted_num_samples, weight=weight)
 
         #Update DCov Matrix
         num_diffs = len(edge_weights)
@@ -146,9 +699,9 @@ class CovDCovMatrix(object):
             weighted_num_diffs += w_ij
 
         weighted_sum_prod_diffs = mdp.utils.mult(diffs.T, weighted_diffs)
-        self.AddDiffs(weighted_sum_prod_diffs, weighted_num_diffs)
+        self.AddDiffs(weighted_sum_prod_diffs, weighted_num_diffs, weight=weight)
 
-    #Note, this method makes sense from consistency constraints for "larger" windows. 
+    #Note: this method makes sense according to the consistency restriction for "larger" windows. 
     def updateMirroringSlidingWindow(self, x, weight=1.0, window_halfwidth=2):
         num_samples, dim = x.shape
         width = window_halfwidth #window_halfwidth is way too long to write it
@@ -200,15 +753,15 @@ class CovDCovMatrix(object):
 #         print "N3=", num_diffs
         self.AddDiffs(sum_prod_diffs_full, num_diffs, weight)        
     
-    #Note, this method makes sense from consistency constraints for "larger" windows. 
+    #Note: this method makes sense according to the consistency restriction for "larger" windows. 
+    #This is an unoptimized version of updateMirroringSlidingWindow
     def updateSlowMirroringSlidingWindow(self, x, weight=1.0, window_halfwidth=2):
         num_samples, dim = x.shape
         width = window_halfwidth #window_halfwidth is way too long to write it
         if 2*width >= num_samples:
             ex = "window_halfwidth %d not supported for %d samples!"%(width, num_samples)
             raise Exception(ex)
-
-      
+     
         #Update Cov Matrix
         #All samples have same weight
         sum_x = x.sum(axis=0) 
@@ -237,7 +790,7 @@ class CovDCovMatrix(object):
 #                self.AddDiffs(sum_prod_diffs, sum_diffs, num_diffs, weight * window[width+offset])
                 self.AddDiffs(sum_prod_diffs, num_diffs, weight)               
 
-################## Truncating Window ####################
+    ################## Truncating Window ####################
     def updateSlowTruncatingSlidingWindow(self, x, weight=1.0, window_halfwidth=2):
         num_samples, dim = x.shape
         width = window_halfwidth #window_halfwidth is way too long to write it
@@ -357,7 +910,7 @@ class CovDCovMatrix(object):
         self.AddDiffs(sum_prod_diffs_full, num_diffs, weight)  
         print ":|"
 
-################### Sliding window with node-weight correction #################    
+    ################### Sliding window with node-weight correction #################    
     def updateFastSlidingWindow(self, x, weight=1.0, window_halfwidth=2):
         num_samples, dim = x.shape
         width = window_halfwidth
@@ -365,7 +918,7 @@ class CovDCovMatrix(object):
             ex = "window_halfwidth %d not supported for %d samples!"%(width, num_samples)
             raise Exception(ex)
 
-#MOST CORRECT VERSION
+        #MOST CORRECT VERSION
         x_sel = x+0.0
         w_up = numpy.arange(width, 2*width) / (2.0*width)
         w_up = w_up.reshape((width, 1))
@@ -385,16 +938,16 @@ class CovDCovMatrix(object):
             diffs = x[0:width+i+1,:]-x[i,:]
             sum_prod_diffs = mdp.utils.mult(diffs.T, diffs)
             num_diffs = len(diffs) - 1 # removed zero differences
-#            print "N1=", num_diffs
-#            print "sum_prod_diffs[0]=", sum_prod_diffs[0]
+            #print "N1=", num_diffs
+            #print "sum_prod_diffs[0]=", sum_prod_diffs[0]
             self.AddDiffs(sum_prod_diffs, num_diffs, weight)
         #Right border
         for i in range(num_samples-width, num_samples): # [num_samples-width, num_samples-1]
             diffs = x[i-width:num_samples,:]-x[i,:]                                 
             sum_prod_diffs = mdp.utils.mult(diffs.T, diffs)
             num_diffs = len(diffs) - 1 # removed zero differences
-#            print "N2=", num_diffs
-#            print "sum_prod_diffs[0]=", sum_prod_diffs[0]
+            #print "N2=", num_diffs
+            #print "sum_prod_diffs[0]=", sum_prod_diffs[0]
             self.AddDiffs(sum_prod_diffs, num_diffs, weight)
 
 
@@ -509,8 +1062,8 @@ class CovDCovMatrix(object):
     #Add samples belonging to a serial training graph
     #TODO:Remove torify option 
     #NOTE: include_last_block not needed
-    #Torify: copy first block to the end of the serial
-    def updateSerial(self, x, block_size, Torify=False, weight=1.0, include_last_block=True):
+    #torify: copy first block to the end of the serial
+    def updateSerial(self, x, block_size, torify=False, weight=1.0, include_last_block=True):
         num_samples, dim = x.shape
         if block_size == None:
             er = "block_size must be specified"
@@ -519,8 +1072,15 @@ class CovDCovMatrix(object):
         if isinstance(block_size, (numpy.ndarray)):
             err = "Inhomogeneous block sizes not yet supported in updateSerial"
             raise Exception(err)
-                    
-        if Torify is True:    
+        elif isinstance(block_size, list):
+            block_size_0 = block_size[0]
+            for bs in block_size:
+                if bs != block_size_0:
+                    er = "for serial graph all groups must have same group size (block_size constant), but ", bs, "!=", block_size_0
+                    raise Exception(er)
+            block_size = block_size_0
+
+        if torify is True:    
             x2 = numpy.zeros((num_samples+block_size, dim))
             x2[0:num_samples] = x
             x2[num_samples:] = x[0:block_size]
@@ -573,7 +1133,7 @@ class CovDCovMatrix(object):
 #        sum_prod_diffs = block_size * (2.0 * sum_prod_x + 2.0 * prod_last_block - 0.0 *prod_first_block) - (block_size * block_size) * sum_prod_mixed_meds
         sum_prod_diffs = (block_size * (sum_prod_x) - (block_size * block_size) * sum_prod_mixed_meds) * (1.0 / block_size)
 #        sum_prod_diffs = block_size * (2.0 * sum_prod_x + 2.0 * prod_last_block + 0.0 *prod_first_block) - (block_size * block_size) * sum_prod_mixed_meds
-        self.AddDiffs(sum_prod_diffs, num_diffs, weight)
+        self.AddDiffs(2*sum_prod_diffs, 2*num_diffs, weight) #NEW: Factor 2 to account for both directions
 
 #Here block_size must be an array or list
 #why block_sizes is not a parameter???
@@ -583,27 +1143,27 @@ class CovDCovMatrix(object):
         num_samples, dim = x.shape
 
         if isinstance(block_sizes, (int)):
-            return self.updateClustered_homogeneous_blocks(x, weight=weight, block_sizes=block_sizes)
+            return self.update_clustered_homogeneous_block_sizes(x, weight=weight, block_size=block_sizes)
         
         if block_sizes == None:
             er = "error, block_size not specified!!!!"
             raise Exception(er)
             block_sizes = self.block_size
 
-        if num_samples != block_sizes.sum():
+        if num_samples != numpy.array(block_sizes).sum():
             err = "Inconsistency error: num_samples (%d) is not equal to sum of block_sizes:"%num_samples, block_sizes
             raise Exception(err)
 
-#        num_blocks = len(block_sizes)
+        #num_blocks = len(block_sizes)
         
         counter_sample=0
         for block_size in block_sizes:
             #Note, here a sqrt might be useful to compensate for very unbalanced datasets
             #normalized_weight = weight * block_size * 1.0 / num_samples
             #Warning Warning
-#            normalized_weight = weight / block_size #Warning! is this necessary!!??? I do sample balancing, in general what should be done???
+            #normalized_weight = weight / block_size #Warning! is this necessary!!??? I do sample balancing, in general what should be done???
             normalized_weight = weight
-            self.update_clustered_homogeneous_block_sizes(x[counter_sample:counter_sample+block_size], weight=normalized_weight, block_size=block_size)
+            self.update_clustered_homogeneous_block_sizes(x[counter_sample:counter_sample+block_size,:], weight=normalized_weight, block_size=block_size)
             counter_sample += block_size
 
 # If the input is an array, the inhomogeneous function is used
@@ -659,14 +1219,111 @@ class CovDCovMatrix(object):
         #WARNING!!!!!
 #        num_diffs = (block_size-1) * num_blocks
 #TODO: why such factor 0.5???
-        num_diffs = block_size * 0.5 * num_blocks
+        #BEFORE FIX1: num_diffs = block_size * 0.5 * num_blocks
+        num_diffs = num_blocks * block_size * (block_size-1) * 1/(block_size-1.0) #FIX1: AFTER DT in (0,4) normalization
 
         #WARNING!
         #sum_prod_diffs = (2 * block_size) * sum_prod_x - 2 * (block_size * block_size) * sum_prod_meds
 #TODO: why the extra factor block_size in both terms, why divide here by num_neighbors??? both terms almost cancel.
-        sum_prod_diffs = ((2 * block_size) * sum_prod_x - 2 * (block_size * block_size) * sum_prod_meds)/num_neighbours
-        
+        #BEFORE FIX1: sum_prod_diffs = ((2 * block_size) * sum_prod_x - 2 * (block_size * block_size) * sum_prod_meds)/(num_neighbours)
+#        sum_prod_diffs = 2.0*(sum_prod_x - block_size * sum_prod_meds) #FIX1: AFTER DT in (0,4) normalization
+        sum_prod_diffs = 2.0*block_size*(sum_prod_x - block_size * sum_prod_meds) * 1/(block_size-1.0) #FIX6: Making sure the summation has the correct scaling from theory
+#        block_size / (block_size-1.0) #FIX2: making sure value sin range 2 are noise...
+
         self.AddDiffs(sum_prod_diffs, num_diffs, weight)
+        print "(Diag(complete)/num_diffs.avg)**0.5 =", ((numpy.diagonal(sum_prod_diffs)/num_diffs).mean())**0.5
+
+    def update_compact_classes(self, x, block_sizes = None, Jdes=None, weight=1.0):       
+        num_samples, dim = x.shape
+        
+        print "block_sizes=", block_sizes, type(block_sizes)
+        if isinstance(block_sizes, list):
+            block_sizes = numpy.array(block_sizes)
+            
+        if isinstance(block_sizes, numpy.ndarray):
+            if len(block_sizes) > 1:
+                if block_sizes.var() > 0:
+                    er = "for compact_classes all groups must have the same number of elements (block_sizes)!!!!"
+                    raise Exception(er)
+                else:
+                    block_size = block_sizes[0]
+            else:
+                block_size = block_sizes[0]
+        elif block_sizes == None:
+            er = "error, block_size not specified!!!!"
+            raise Exception(er)
+        else:
+            block_size = block_sizes
+
+        if num_samples%block_size != 0:
+            err = "Inconsistency error: num_samples (%d) must be a multiple of block_size: "%num_samples, block_sizes
+            raise Exception(err)
+        
+        num_classes = num_samples/block_size
+        J = int(numpy.log2(num_classes))
+        if Jdes == None:
+            Jdes = J
+        extra_label = Jdes-J #0, 1, 2
+
+        print "Besides J=%d labels, also adding %d labels"%(J, extra_label)
+
+        if num_classes != 2**J:
+            err = "Inconsistency error: num_clases %d does not appear to be a power of 2"%num_classes
+            raise Exception(err)
+
+        N=num_samples
+        labels = numpy.zeros((N,J+extra_label))
+        for j in range(J):
+            labels[:,j] = (numpy.arange(N)/ block_size / (2**(J-j-1))%2)*2-1
+        eigenvalues = numpy.concatenate(([1.0]*(J-1), numpy.arange(1.0, 0.0, -1.0/(extra_label+1))))
+#        eigenvalues = numpy.concatenate(([1.0]*(J-1), 0.98**numpy.arange(0, extra_label+1)))
+
+        n_taken = [2**k for k in range(J)]
+        n_free = list(set(range(num_classes))-set(n_taken))
+        n_free_weights = Hamming_weight(n_free)
+        order = numpy.argsort(n_free_weights)[::-1]
+        
+        for j in range(extra_label):
+            digit = n_free[order[j]]
+            label = numpy.ones(N)
+            for c in range(J):
+                if (digit>>c)%2:
+                    label *=  labels[:,c]
+            if n_free_weights[order[j]]%2 == 0:
+                label *= -1
+            labels[:,J+j] = label
+
+# #         l0 = [-1]*block_size
+# #         l1 = [1]*block_size
+# #         if extra_label >= 1:
+# #             labels[:,J]=  numpy.concatenate((l0,l1,l1,l0,l1,l0,l0,l1)) # 0 1 1 0 1 0 0 1
+# #             eigenvalues.append(0.9)
+# #         if extra_label >= :2:
+# #             labels[:,J+1]=numpy.concatenate((l0,l0,l1,l1,l1,l1,l0,l0)) # 0 0 1 1 1 1 0 0
+# #             eigenvalues.append(0.8)
+# #         if extra_label >= 3:
+# #             labels[:,J+2]=numpy.concatenate((l0,l1,l0,l1,l1,l0,l1,l0)) # 0 1 0 1 1 0 1 0 
+# #             eigenvalues.append(0.7)
+# #         if extra_label >= 4:
+# #             labels[:,J+3]=numpy.concatenate((l0,l1,l1,l0,l0,l1,l1,l0)) # 0 1 1 0 0 1 1 0
+# #             eigenvalues.append(0.6)
+        eigenvalues = numpy.array(eigenvalues)
+        #eigenvalues = numpy.ones(J+extra_label) #WARNING!!!!! ERROR!!!! CAUTION!!!!
+
+        print "Eigenvalues:", eigenvalues
+        eigenvalues /= eigenvalues.sum()      
+        print "Eigenvalues normalized:", eigenvalues
+
+        for j in range(J+extra_label):
+            print "labels[%d]="%j, labels[:,j]
+
+
+        for j in range(J+extra_label):
+            #w = 1.0/(N/2-1)
+            set10 = x[labels[:,j]==-1]
+            self.update_clustered_homogeneous_block_sizes(set10, weight=eigenvalues[j], block_size=N/2) # first cluster
+            set10 = x[labels[:,j]==1]           
+            self.update_clustered_homogeneous_block_sizes(set10, weight=eigenvalues[j], block_size=N/2) # second cluster
         
     def addCovDCovMatrix(self, cov_dcov_mat, adding_weight=1.0, own_weight=1.0):
         if self.sum_prod_x is None:
@@ -684,17 +1341,16 @@ class CovDCovMatrix(object):
             self.sum_prod_diffs = self.sum_prod_diffs * own_weight + cov_dcov_mat.sum_prod_diffs * adding_weight
         self.num_diffs = self.num_diffs * own_weight + cov_dcov_mat.num_diffs * adding_weight
 
-    #This is not a good place to select whether to include the last sample or not... move it somewhere or remove it if not needed
-    def fix(self, divide_by_num_samples_or_differences=True, include_tail=False, verbose=False, center_dcov=False):
+    def fix(self, divide_by_num_samples_or_differences=True, verbose=False, center_dcov=False): #include_tail=False,
         if verbose:
             print "Fixing CovDCovMatrix, with block_size=", self.block_size
   
         #Finalize covariance matrix of x
-        if include_tail is True:
-            print "Including data tail into computation of covariance matrix of shape:" + str(self.last_block.shape)
-            self.sum_x = self.sum_x + self.last_block.sum(axis=0)
-            self.sum_prod_x = self.sum_prod_x + mdp.utils.mult(self.last_block.T, self.last_block )
-            self.num_samples = self.num_samples + self.block_size
+        #if include_tail is True:
+        #    print "Including data tail into computation of covariance matrix of shape:" + str(self.last_block.shape)
+        #    self.sum_x = self.sum_x + self.last_block.sum(axis=0)
+        #    self.sum_prod_x = self.sum_prod_x + mdp.utils.mult(self.last_block.T, self.last_block )
+        #    self.num_samples = self.num_samples + self.block_size
             
         avg_x = self.sum_x * (1.0 / self.num_samples)
 #        avg_x = avg_x.reshape((1,self.input_dim))
@@ -720,23 +1376,24 @@ class CovDCovMatrix(object):
         self.tlen = self.num_samples            
         self.dcov_mtx = cov_dx
         
-#        print "cov_mtx[0]", self.cov_mtx[0]
-#        print "avg", self.avg
-#        print "dcov_mtx[0]", self.dcov_mtx[0]
-#        quit()
+        #print "cov_mtx[0]", self.cov_mtx[0]
+        #print "avg", self.avg
+        #print "dcov_mtx[0]", self.dcov_mtx[0]
+        #quit()
 
-#Safely decomment for debugging
-#        print "Finishing training CovDcovMtx: ",  self.num_samples, " num_samples, and ", self.num_diffs, " num_diffs"
-#        print "Avg[0:3] is", self.avg[0:4]
-#        print "Prod_avg_x[0:3,0:3] is", prod_avg_x[0:3,0:3]
-#        print "Cov[0:3,0:3] is", self.cov_mtx[0:3,0:3]
-#        print "DCov[0:3,0:3] is", self.dcov_mtx[0:3,0:3]
-#        print "AvgDiff[0:4] is", avg_diff[0:4]
-#        print "Prod_avg_diff[0:3,0:3] is", prod_avg_diff[0:3,0:3]
-#        print "Sum_prod_diffs[0:3,0:3] is", self.sum_prod_diffs[0:3,0:3]
-#        print "exp_prod_diffs[0:3,0:3] is", exp_prod_diffs[0:3,0:3]
+        #Safely uncomment for debugging
+        #print "Finishing training CovDcovMtx: ",  self.num_samples, " num_samples, and ", self.num_diffs, " num_diffs"
+        #print "Avg[0:3] is", self.avg[0:4]
+        #print "Prod_avg_x[0:3,0:3] is", prod_avg_x[0:3,0:3]
+        #print "Cov[0:3,0:3] is", self.cov_mtx[0:3,0:3]
+        #print "DCov[0:3,0:3] is", self.dcov_mtx[0:3,0:3]
+        #print "AvgDiff[0:4] is", avg_diff[0:4]
+        #print "Prod_avg_diff[0:3,0:3] is", prod_avg_diff[0:3,0:3]
+        #print "Sum_prod_diffs[0:3,0:3] is", self.sum_prod_diffs[0:3,0:3]
+        #print "exp_prod_diffs[0:3,0:3] is", exp_prod_diffs[0:3,0:3]
       
         return self.cov_mtx, self.avg, self.dcov_mtx 
+
 
 ######## Helper functions for parallel processing and CovDcovMatrices #########
 #This function appears to be obsolete
@@ -771,9 +1428,9 @@ def ComputeCovDcovMatrixSerial(params, verbose=False):
         print "Computation Began!!! **********************************************************8"
         sys.stdout.flush()
     x, block_size = params
-    Torify= False
+    torify= False
     covdcovmtx = CovDCovMatrix(block_size)
-    covdcovmtx.updateSerial(x, block_size = block_size, Torify=Torify)
+    covdcovmtx.updateSerial(x, block_size = block_size, torify=torify)
     if verbose:
         print "Computation Ended!!! **********************************************************8"
         sys.stdout.flush()
@@ -790,307 +1447,12 @@ def ComputeCovDcovMatrixMixed(params, verbose=False):
     covdcovmtx.update_clustered_homogeneous_block_sizes(x[0:bs], block_size=block_size, weight=0.5)
     covdcovmtx.update_clustered_homogeneous_block_sizes(x[bs:-bs], block_size=block_size, weight=1.0)
     covdcovmtx.update_clustered_homogeneous_block_sizes(x[-bs:], block_size=block_size, weight=0.5)
-    covdcovmtx.updateSerial(x, block_size = block_size, Torify=False)            
+    covdcovmtx.updateSerial(x, block_size = block_size, torify=False)            
     if verbose:
         print "Computation Ended!!! **********************************************************8"
         sys.stdout.flush()
     return covdcovmtx
 
-#This class is derived from SFANode only because I need the function _set_range
-class GSFANode(mdp.nodes.SFANode):
-    def __init__(self, input_dim=None, output_dim=None, dtype=None, block_size=None, train_mode=None, sfa_expo=None, pca_expo=None, magnitude_sfa_biasing=None):
-        super(GSFANode, self).__init__(input_dim, output_dim, dtype)
-        #Warning! bias activated, "courtesy" of Alberto
-        # init two covariance matrices
-        # one for the input data
-###        self._cov_mtx = CovarianceMatrix(dtype, bias=True)
-        # one for the derivatives
-###        self._dcov_mtx = CovarianceMatrix(dtype, bias=True)
-    
-        self.pinv = None
-###        self._symeig = symeig
-        self.block_size= block_size
-        self.train_mode = train_mode
-    
-        self.sum_prod_x = None
-        self.sum_x = None
-        self.num_samples = 0
-        self.sum_diff = None 
-        self.sum_prod_diff = None  
-        self.num_diffs = 0
-        
-###        self.sfa_expo=sfa_expo # 1.2: 1=Regular SFA directions, >1: schrink derivative in the direction of the principal components
-###        self.pca_expo=pca_expo # 0.25: 0=No magnitude reduction 1=Whitening
-###        self.magnitude_sfa_biasing = magnitude_sfa_biasing
-        self._myvar = None
-        self._covdcovmtx = CovDCovMatrix(block_size)
-        self.list_train_params = ["scheduler", "n_parallel", "train_mode", "block_size"] #Parameters accepted during training
-        
-    def _inverse(self, y):
-        #code for storing pseudoinverse courtesy of Alberto Escalante
-        if self.pinv is None:
-            self.pinv = pinv(self.sf)
-    #        print "SFA.pinv = ", self.pinv
-    #        print "Shape of SFA.pinv = ", self.pinv.shape
-    #        print "SFA.sf = ", self.sf
-    #        print "Shape of sf = ", self.sf.shape        
-    #        sf_t = self.sf.T
-    #        print "sf_t= ", sf_t
-    #        
-    #        m2 = mult(sf_t, self.sf)
-    #        print "m2 = ", m2
-    #        print "For orthonormal sf, m2 is the identity"
-    #
-    #        m3 = mult(self.sf, sf_t)
-    #        print "m3 = ", m3
-    #        print "just curiosity"
-    #        
-    #        s_mod = (self.sf * self.sf).sum(axis=0)
-    #        print "s_mod = ", s_mod
-    #        print "(sf/s_mod).T= ", (self.sf / s_mod).T
-        return mult(y, self.pinv)+self.avg
-
-    def _train_with_scheduler(self, x, block_size=None, train_mode = None, node_weights=None, edge_weights=None, scheduler = None, n_parallel=None):      
-        self._train_phase_started = True
-        if train_mode == None:
-            train_mode = self.train_mode
-        if block_size == None:
-            block_size = self.block_size
-        if scheduler == None or n_parallel == None or train_mode == None:
-    #        print "NO parallel sfa done...  scheduler=", ,uler, " n_parallel=", n_parallel
-            return self._train(self, x, block_size=block_size, train_mode=train_mode, node_weights=node_weights, edge_weights=edge_weights)
-        else:
-    #        self._covdcovmtx.update_clustered_homogeneous_block_sizes(x, weight=1.0)
-    
-    #        chunk_size=None 
-    #        num_chunks = n_parallel
-            num_chunks = min(n_parallel, x.shape[0]/block_size) #WARNING, cover case where the division is not exact
-            #here chunk_size is given in blocks!!!
-    #        chunk_size = int(numpy.ceil((x.shape[0]/block_size)*1.0/num_chunks))
-            chunk_size = int((x.shape[0]/block_size)/num_chunks)
-            
-            #Notice that parallel training doesn't work with clustered mode and inhomogeneous blocks
-            #TODO:Fix this
-            print "%d chunks, of size %d blocks, last chunk contains %d blocks"%(num_chunks, chunk_size, (x.shape[0]/block_size)%chunk_size)
-            if train_mode == 'clustered':
-                #TODO: Implement this
-                for i in range(num_chunks):
-                    print "Adding scheduler task //////////////////////"
-                    sys.stdout.flush()
-                    if i < num_chunks - 1:
-                        scheduler.add_task((x[i*block_size*chunk_size:(i+1)*block_size*chunk_size], block_size, 1.0), ComputeCovDcovMatrixClustered)
-                    else: # i == num_chunks - 1
-                        scheduler.add_task((x[i*block_size*chunk_size:], block_size, 1.0), ComputeCovDcovMatrixClustered)
-                    print "Done Adding scheduler task ///////////////////"
-                    sys.stdout.flush()
-            elif train_mode == 'serial':
-                for i in range(num_chunks):
-                    if i==0:
-                        print "adding task %d from sample "%i, i*block_size*chunk_size, "to", (i+1)*block_size*chunk_size
-                        scheduler.add_task((x[i*block_size*chunk_size:(i+1)*block_size*chunk_size], block_size), ComputeCovDcovMatrixSerial)
-                    elif i==num_chunks-1: #Add one previous block to the chunk
-                        print "adding task %d from sample "%i, i*block_size*chunk_size-block_size, "to the end"
-                        scheduler.add_task((x[i*block_size*chunk_size-block_size:], block_size), ComputeCovDcovMatrixSerial)
-                    else:
-                        print "adding task %d from sample "%i, i*block_size*chunk_size-block_size, "to", (i+1)*block_size*chunk_size
-                        scheduler.add_task((x[i*block_size*chunk_size-block_size:(i+1)*block_size*chunk_size], block_size), ComputeCovDcovMatrixSerial)
-                        
-            elif train_mode == 'mixed':
-                bs = block_size
-                self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[0:bs], weight=0.5)
-    
-    #           xxxx self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[bs:-bs], weight=1.0)
-                x2 = x[bs:-bs]
-    #            num_chunks2 = int(numpy.ceil((x2.shape[0]/block_size-2)*1.0/chunk_size))
-                num_chunks2 = int((x2.shape[0]/block_size-2)/chunk_size)
-                for i in range(num_chunks2):
-                    if i < num_chunks2-1:
-                        scheduler.add_task((x2[i*block_size*chunk_size:(i+1)*block_size*chunk_size], block_size, 1.0), ComputeCovDcovMatrixClustered)
-                    else:
-                        scheduler.add_task((x2[i*block_size*chunk_size:], block_size, 1.0), ComputeCovDcovMatrixClustered)
-                        
-                self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[-bs:], weight=0.5)
-    
-    #           xxxx self._covdcovmtx.updateSerial(x, Torify=False)            
-                for i in range(num_chunks):
-                    if i==0:
-                        scheduler.add_task((x[i*block_size*chunk_size:(i+1)*block_size*chunk_size], block_size), ComputeCovDcovMatrixSerial)
-                    elif i==num_chunks-1: #Add one previous block to the chunk
-                        scheduler.add_task((x[i*block_size*chunk_size-block_size:], block_size), ComputeCovDcovMatrixSerial)
-                    else: #Add one previous block to the chunk
-                        scheduler.add_task((x[i*block_size*chunk_size-block_size:(i+1)*block_size*chunk_size], block_size), ComputeCovDcovMatrixSerial)
-            elif train_mode == 'unlabeled':
-                #TODO: IMPLEMENT THIS
-                for i in range(num_chunks):
-                    print "Adding scheduler task //////////////////////"
-                    sys.stdout.flush()
-                    #BUG:Why am I adding here the clustered graph!!!
-                    scheduler.add_task((x[i*block_size*chunk_size:(i+1)*block_size*chunk_size], block_size, 1.0), ComputeCovDcovMatrixClustered)
-                    print "Done Adding scheduler task ///////////////////"
-                    sys.stdout.flush()
-            #TODO:ADD support for regular/standar mode
-            else:
-                ex = "Unknown training method:", self.train_mode
-                raise Exception(ex)
-            
-            print "Getting results"
-            sys.stdout.flush()
-    
-            results = scheduler.get_results()
-    #        print "Shutting down scheduler"
-            sys.stdout.flush()
-    
-            for covdcovmtx in results:
-                self._covdcovmtx.addCovDCovMatrix(covdcovmtx)
-
-    def _train(self, x, block_size=None, train_mode = None, node_weights=None, edge_weights=None):
-        if train_mode == None:
-            train_mode = self.train_mode
-#            train_mode = ""
-        if block_size == None:
-#            er="SFA no block_size"
-#            raise Exception(er)
-            block_size = self.block_size
-        
-        self._myvar=1
-        self.set_input_dim(x.shape[1])
-    
-        ## update the covariance matrices
-        # cut the final point to avoid a trivial solution in special cases
-        # WARNING: Force artificial training
-        print "train_mode=", train_mode
-        if train_mode == 'unlabeled':
-            print "updateUnlabeled"
-            self._covdcovmtx.updateUnlabeled(x, weight=0.00015) #Warning, set this weight appropiately!
-        elif train_mode == "regular":
-            print "updateRegular"
-            self._covdcovmtx.updateRegular(x, weight=1.0)
-        elif train_mode == 'clustered':
-            print "update_clustered_homogeneous_block_sizes"
-            self._covdcovmtx.update_clustered_homogeneous_block_sizes(x, weight=1.0, block_size=block_size)
-        elif train_mode == 'serial':
-            print "updateSerial"
-            self._covdcovmtx.updateSerial(x, Torify=False, block_size=block_size)
-        elif train_mode == 'mixed':
-            print "update mixed"
-            bs = block_size
-    # WARNING: THIS Generates degenerated solutions!!! Check code!! it should actually work fine??!!
-            self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[0:bs], weight=2.0, block_size=block_size)
-            self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[bs:-bs], weight=1.0, block_size=block_size)
-            self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[-bs:], weight=2.0, block_size=block_size)
-    #        self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[0:bs], weight=0.5, block_size=block_size)
-    #        self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[bs:-bs], weight=1.0, block_size=block_size)
-    #        self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[-bs:], weight=0.5, block_size=block_size)
-            self._covdcovmtx.updateSerial(x, Torify=False, block_size=block_size)            
-        elif train_mode.startswith('window'):
-            window_halfwidth = int(train_mode[len('window'):])
-            print "Window (%d)"%window_halfwidth
-            self._covdcovmtx.updateSlidingWindow(x, weight=1.0, window_halfwidth=window_halfwidth)
-        elif train_mode.startswith('fwindow'):
-            window_halfwidth = int(train_mode[len('fwindow'):])
-            print "Fast Window (%d)"%window_halfwidth
-            self._covdcovmtx.updateFastSlidingWindow(x, weight=1.0, window_halfwidth=window_halfwidth)
-        elif train_mode.startswith('mirror_window'):
-            window_halfwidth = int(train_mode[len('mirror_window'):])
-            print "Mirroring Window (%d)"%window_halfwidth
-            self._covdcovmtx.updateMirroringSlidingWindow(x, weight=1.0, window_halfwidth=window_halfwidth)
-        elif train_mode.startswith('smirror_window'):
-            window_halfwidth = int(train_mode[len('smirror_window'):])
-            print "Slow Mirroring Window (%d)"%window_halfwidth
-            self._covdcovmtx.updateSlowMirroringSlidingWindow(x, weight=1.0, window_halfwidth=window_halfwidth)
-        elif train_mode.startswith('ftruncate_window'):
-            window_halfwidth = int(train_mode[len('ftruncate_window'):])
-            print "Fast Truncating Window (%d)"%window_halfwidth
-            self._covdcovmtx.updateFastTruncatingSlidingWindow2(x, weight=1.0, window_halfwidth=window_halfwidth)
-        elif train_mode.startswith('truncate_window'):
-            window_halfwidth = int(train_mode[len('truncate_window'):])
-            print "Slow Truncating Window (%d)"%window_halfwidth
-            self._covdcovmtx.updateSlowTruncatingSlidingWindow(x, weight=1.0, window_halfwidth=window_halfwidth)
-        elif train_mode == 'graph':
-            print "updateGraph"
-            self._covdcovmtx.updateGraph(x, node_weights=node_weights, edge_weights=edge_weights)
-        else:
-            ex = "Unknown training method %s or window halfwidth not specified"%train_mode
-            raise Exception(ex)
-
-    def _stop_training(self, debug=False, verbose=False, pca_term = 0.995, pca_exp=2.0):
-    #    self._myvar = self._myvar * 10
-    #    Warning, changed block_size to artificial_training
-    #    if (self.block_size == None) or (isinstance(self.block_size, int) and self.block_size == 1):
-    #   WARNING!!! WARNING!!!
-    #TODO: Define a proper way to fix training matrices... add training mode "regular" to SFA???
-        if ((self.block_size == None) or (isinstance(self.block_size, int) and self.block_size == 1)) and False:
-            ##### request the covariance matrices and clean up
-            self.cov_mtx, self.avg, self.tlen = self._cov_mtx.fix()
-            del self._cov_mtx
-            self.dcov_mtx, davg, dtlen = self._dcov_mtx.fix()
-            del self._dcov_mtx
-            print "Finishing training (regular2222). %d tlen, %d tlen of diff"%(self.tlen, dtlen)
-            print "Avg[0:3] is", self.avg[0:3]
-            print "Cov[0:3,0:3] is", self.cov_mtx[0:3,0:3]
-            print "DCov[0:3,0:3] is", self.dcov_mtx[0:3,0:3]
-        else:
-            if verbose or True:
-                print "stop_training: Warning, using experimental SFA training method, with self.block_size=", self.block_size
-            print "self._covdcovmtx.num_samples = ", self._covdcovmtx.num_samples 
-            print "self._covdcovmtx.num_diffs= ", self._covdcovmtx.num_diffs
-            self.cov_mtx, self.avg, self.dcov_mtx = self._covdcovmtx.fix()
-                   
-            print "Finishing SFA training: ",  self.num_samples, " num_samples, and ", self.num_diffs, " num_diffs"
-    #        print "Avg[0:3] is", self.avg[0:4]
-    #        print "Prod_avg_x[0:3,0:3] is", prod_avg_x[0:3,0:3]
-    #        print "Cov[0:3,0:3] is", self.cov_mtx[0:3,0:3]
-            print "DCov[0:3,0:3] is", self.dcov_mtx[0:3,0:3]
-    #        quit()
-    
-        if pca_term != 0.0 and False:
-            signs = numpy.sign(self.dcov_mtx)
-            self.dcov_mtx = ((1.0-pca_term) * signs * numpy.abs(self.dcov_mtx) ** (1.0/pca_exp) + pca_term * numpy.identity(self.dcov_mtx.shape[0])) ** pca_exp          
-            self.dcov_mtx = numpy.identity(self.dcov_mtx.shape[0])
-        rng = self._set_range()
-        
-            
-        #### solve the generalized eigenvalue problem
-        # the eigenvalues are already ordered in ascending order
-        #SUPERMEGAWARNING, moved dcov to the second argument!!!
-        #self.d, self.sf = self._symeig(self.dcov_mtx, self.cov_mtx, range=rng, overwrite=(not debug))
-        try:
-            print "***Range used=", rng
-###            if self.sfa_expo != None and self.pca_expo!=None:
-###                self.d, self.sf = _symeig_fake_regularized(self.dcov_mtx, self.cov_mtx, range=rng, overwrite=(not debug), sfa_expo=self.sfa_expo, pca_expo=self.pca_expo, magnitude_sfa_biasing=self.magnitude_sfa_biasing)
-###            else:
-            self.d, self.sf = self._symeig(self.dcov_mtx, self.cov_mtx, range=rng, overwrite=(not debug))
-            d = self.d
-            # check that we get only *positive* eigenvalues
-            if d.min() < 0:
-                raise SymeigException("Got negative eigenvalues: %s." % str(d))
-        except SymeigException, exception:
-            errstr = str(exception)+"\n Covariance matrices may be singular."
-            raise Exception(errstr)
-    
-        # delete covariance matrix if no exception occurred
-###        del self.cov_mtx
-###        del self.dcov_mtx
-        del self._covdcovmtx
-        # store bias
-        self._bias = mult(self.avg, self.sf)
-        print "shape of SFANode.sf is=", self.sf.shape
-
-def graph_delta_values(y, edge_weights):
-    R = 0
-    deltas = 0
-    for (i, j) in edge_weights.keys():
-        w_ij = edge_weights[(i,j)]
-        deltas += w_ij * (y[j]-y[i])**2
-        R += w_ij
-    return deltas/R
-
-def comp_delta(x):
-    xderiv = x[1:, :]-x[:-1, :]
-    return (xderiv**2).mean(axis=0)
-
-#Basic experiment
-#from GSFA_node import *
 basic_test_GSFA_edge_dict=True and False
 if basic_test_GSFA_edge_dict:
     print "******************************************************************"
@@ -1112,6 +1474,15 @@ if basic_test_GSFA_edge_dict:
     x2 = numpy.random.normal(size=(200,15))
     y2 = n.execute(x2)
     print "Graph delta values of test data (should be larger than for training)", graph_delta_values(y2, e)
+
+#SUMMARY:
+#Mirroring windows work fine in slow and fast versions
+#Truncating window does not work in optimized version, I need to clarify the algebraic optimization
+#Plain Sliding window (node-weight adjusting) seems to be broken in optimized version. For simplicity would be desirable
+#Is it worth it to have so many methods? I guess the mirroring windows are enough, they have constant node weights and edge weights almost fulfill consistency
+
+#TESTS:
+#All training modes should return something reasonable.
 
 test_equivalence_SFA_GSFA_linear_graph=True and False
 if test_equivalence_SFA_GSFA_linear_graph:
@@ -1150,14 +1521,14 @@ if test_equivalence_SFA_GSFA_linear_graph:
     y2_sfa = n_sfa.execute(x2)
     print comp_delta(y2)
 
-test_fast_windows=True #and False
+test_fast_windows=True and False
 if test_fast_windows:
     print ""
     print "***********************************************************************"
     print "Testing equivalence of slow and fast mirroring sliding windows for GSFA"
     x = numpy.random.normal(size=(200,15))
     
-    training_modes = ("window3", "fwindow3", "smirror_window3", "mirror_window3", "truncate_window3", "ftruncate_window3")
+    training_modes = ("window3", "fwindow3", "smirror_window3", "mirror_window3") #, "truncate_window3", "ftruncate_window3")
 #    training_modes = ("truncate_window3", "ftruncate_window3",)
 #    training_modes = ("smirror_window32", "mirror_window32") #Test passed
     
@@ -1173,9 +1544,9 @@ if test_fast_windows:
         delta_values.append(delta)
     
     print delta_values
-    quit()
+    #quit()
 
-test_pathological_outputs=True #and False
+test_pathological_outputs=True and False
 if test_pathological_outputs:
     print ""
     print "**************************************************************************"
@@ -1194,7 +1565,8 @@ if test_pathological_outputs:
     e = {}
     for t in range(19):
         e[(t,t+1)] = 1.0
-    experiment = 11
+    experiment = 0
+    print "experiment", experiment
     if experiment==0:
         exp_title = "Original linear SFA graph"
     elif experiment==1:
@@ -1211,8 +1583,16 @@ if test_pathological_outputs:
         e[(18,19)] = 10.0
         exp_title = "Modified edge weights 3"
     elif experiment==4:
-        e[(10,11)] = 0.1
-        e[(1,2)] = 0.1
+        e[(0,1)] = 0.0
+        e[(18,19)] = 0.0
+        e[(15,17)] = 0.5
+        e[(16,18)] = 0.5
+        e[(12,14)] = 0.5
+        e[(3,5)] = 0.5
+        e[(4,6)] = 0.5
+        e[(5,7)] = 0.5
+
+        #e[(1,2)] = 0.1
         exp_title = "Modified edge weights 4"
     elif experiment==4.5:
         e[(10,11)] = 0.0
@@ -1293,16 +1673,92 @@ if test_pathological_outputs:
             l *= -1
         plt.plot(l, "*")
     plt.show()
-#    f1a11 = plt.subplot(2,5,1)
-#    f1a11.set_position([0.05, 0.5, 0.04, 0.4])
-#    plt.title("Layer Sel.")
 
 
-#SUMMARY:
-#Mirroring windows work fine in slow and fast versions
-#Truncating window does not work in optimized version, I need to clarify the algebraic optimization
-#Plain Sliding window (node-weight adjusting) seems to be broken in optimized version. For simplicity would be desirable
-#Is it worth it to have so many methods? I guess the mirroring windows are enough, they have constant node weights and edge weights almost fulfill consistency
+test_continuous_edge_weights=True and False
+if test_continuous_edge_weights:
+    print ""
+    print "**************************************************************************"
+    print "*Testing continuous edge weigths w_{n,n'} = 1/(|l_n'-l_n|+k)"
+    x = numpy.random.normal(size=(20,19))
+    x2 = numpy.random.normal(size=(20,19))
+    
+    l = numpy.random.normal(size=(20))
+    l -= l.mean()
+    l /= l.std()
+    l.sort()
+    k = 0.0001
+    
+    v = numpy.ones(20)
+    e = {}
+    for n1 in range(20):
+        for n2 in range(20):
+            if (n1 != n2):
+                e[(n1,n2)] = 1.0 / (numpy.abs(l[n2]-l[n1])+k)
 
-#TESTS:
-#All training modes should return something reasonable.
+    exp_title = "Original linear SFA graph"    
+    n = GSFANode(output_dim=5)
+    n.train(x, train_mode="graph", node_weights=v, edge_weights=e)
+    n.stop_training()
+
+    print "/"*20, "Brute delta values of GSFA features (training/test):"
+    y = n.execute(x)
+    y2 = n.execute(x2)
+    if e != {}:
+        print graph_delta_values(y,e)    
+        print graph_delta_values(y2,e)
+    
+    D = numpy.zeros(20)
+    for (j1,j2) in e:
+        D[j1] += e[(j1,j2)]/2.0 
+        D[j2] += e[(j1,j2)]/2.0 
+    
+    import matplotlib as mpl
+    import matplotlib.pyplot as plt
+    f1 = plt.figure()
+    plt.title("Overfitted outputs on training data,v="+str(v))
+    plt.xlabel(exp_title + "\n With D=" + str(D))
+    plt.xticks(numpy.arange(0, 20, 1))
+    plt.plot(y)
+    plt.plot(l, "*")
+    plt.show()
+
+
+#AN EXAMPLE:
+example_clustered_graph = True and False
+if example_clustered_graph:
+    cluster_size = 20
+    num_clusters = 5
+    num_samples = cluster_size * num_clusters
+    dim = 20
+    output_dim=2
+    x = numpy.random.normal(size=(num_samples,dim))
+    x += 0.1*numpy.arange(num_samples).reshape((num_samples,1)) 
+    
+    print "x=", x
+
+    GSFA_n = GSFANode(output_dim=output_dim)
+    
+    def identity(x): 
+        return x
+
+    def norm2(x): #Computes the norm of each sample returning an Nx1 array
+        return ((x**2).sum(axis=1)**0.5).reshape((-1,1))
+    
+    Exp_n = mdp.nodes.GeneralExpansionNode([identity, norm2])
+
+    exp_x = Exp_n.execute(x) #Expanded data
+    GSFA_n.train(exp_x, train_mode="clustered", block_size = cluster_size)
+    GSFA_n.stop_training()
+
+    print "GSFA_n.d=", GSFA_n.d
+
+    y = GSFA_n.execute(Exp_n(x))
+    print "y", y
+    print "Standard delta values of output features y:", comp_delta(y)
+    
+    x_test = numpy.random.normal(size=(num_samples,dim))
+    x_test += 0.1*numpy.arange(num_samples).reshape((num_samples,1))
+    y_test = GSFA_n.execute(Exp_n(x_test))
+    print "y_test", y_test
+    print "Standard delta values of output features y_test:", comp_delta(y_test)

@@ -84,7 +84,7 @@ def CreateNetwork(Network, subimage_width, subimage_height, block_size, train_mo
 #
 #    L0.preserve_mask, L0.preserve_mask_sparse = lattice.compute_lsrf_preserve_masks(L0.x_field_channels, L0.y_field_channels, L0.nx_value, L0.ny_value, L0.in_channel_dim)    
 #        
-#    print "About to create (Lattice based) intermediate Layer widht=%d, height=%d"%(L0.x_field_channels, L0.y_field_channels) 
+#    print "About to create (Lattice based) intermediate Layer width=%d, height=%d"%(L0.x_field_channels, L0.y_field_channels) 
 #    print "With a spacing of horiz=%d, vert=%d, and %d channels"%(L0.x_field_spacing, L0.y_field_spacing, L0.in_channel_dim) 
 #    L0.y_in_channels = previous_layer_height 
 #    L0.x_in_channels = previous_layer_width
@@ -160,7 +160,7 @@ def CreateNetwork(Network, subimage_width, subimage_height, block_size, train_mo
 #    print "L1.nx_value & ny_value are ", L1.nx_value, L1.ny_value
 #    L1.preserve_mask, L1.preserve_mask_sparse = lattice.compute_lsrf_preserve_masks(L1.x_field_channels, L1.y_field_channels, L1.nx_value, L1.ny_value, L1.in_channel_dim)    
 #    print "L1.preserve_mask_sparse is", L1.preserve_mask_sparse
-#    print "About to create (lattice based) intermediate layer widht=%d, height=%d"%(L1.x_field_channels, L1.y_field_channels) 
+#    print "About to create (lattice based) intermediate layer width=%d, height=%d"%(L1.x_field_channels, L1.y_field_channels) 
 #    print "With a spacing of horiz=%d, vert=%d, and %d channels"%(L1.x_field_spacing, L1.y_field_spacing, L1.in_channel_dim) 
 #    L1.y_in_channels = previous_layer_height 
 #    L1.x_in_channels = previous_layer_width
@@ -235,7 +235,7 @@ def CreateNetwork(Network, subimage_width, subimage_height, block_size, train_mo
 ##        L2.preserve_mask = numpy.ones((L2.y_field_channels, L2.x_field_channels)) > 0.5
 #    L2.preserve_mask, L2.preserve_mask_sparse = lattice.compute_lsrf_preserve_masks(L2.x_field_channels, L2.y_field_channels, L2.nx_value, L2.ny_value, L2.in_channel_dim)    
 #        
-#    print "About to create (lattice based) intermediate layer widht=%d, height=%d"%(L2.x_field_channels, L2.y_field_channels) 
+#    print "About to create (lattice based) intermediate layer width=%d, height=%d"%(L2.x_field_channels, L2.y_field_channels) 
 #    print "With a spacing of horiz=%d, vert=%d, and %d channels"%(L2.x_field_spacing, L2.y_field_spacing, L2.in_channel_dim) 
 #    L2.y_in_channels = previous_layer_height 
 #    L2.x_in_channels = previous_layer_width
@@ -411,7 +411,8 @@ def create_layer(prevLA, LA, num_layer, prevLA_height=None, prevLA_width=None):
 #            print "Warning, there might be a bug in here: ", er
 #            raise Exception(er)
         
-        if LA.exp_funcs != [identity]:
+        #TODO:USE ARGUMENTS EXP_ARGS HERE?
+        if LA.exp_funcs != [identity] and LA.exp_funcs != None:
             LA.exp_node = more_nodes.GeneralExpansionNode(LA.exp_funcs, use_hint=LA.inv_use_hint, max_steady_factor=LA.inv_max_steady_factor, \
                                                delta_factor=LA.inv_delta_factor, min_delta=LA.inv_min_delta)
         else:
@@ -459,7 +460,7 @@ def create_layer(prevLA, LA, num_layer, prevLA_height=None, prevLA_width=None):
 #            LA.preserve_mask = numpy.ones((LA.y_field_channels, LA.x_field_channels)) > 0.5
         LA.preserve_mask, LA.preserve_mask_sparse = lattice.compute_lsrf_preserve_masks(LA.x_field_channels, LA.y_field_channels, LA.nx_value, LA.ny_value, LA.in_channel_dim)
              
-        print "About to create (lattice based) intermediate layer widht=%d, height=%d"%(LA.x_field_channels, LA.y_field_channels) 
+        print "About to create (lattice based) intermediate layer width=%d, height=%d"%(LA.x_field_channels, LA.y_field_channels) 
         print "With a spacing of horiz=%d, vert=%d, and %d channels"%(LA.x_field_spacing, LA.y_field_spacing, LA.in_channel_dim) 
         LA.y_in_channels = previous_layer_height 
         LA.x_in_channels = previous_layer_width
@@ -482,7 +483,7 @@ def create_layer(prevLA, LA, num_layer, prevLA_height=None, prevLA_width=None):
                 #Create array of sfa_nodes (just one node, but cloned)
                 LA.pca_layer = mdp.hinet.CloneLayer(LA.pca_node, n_nodes=LA.num_nodes)
             else:
-                print "Layer L%d with "%num_layer, LA.num_nodes, " independent PCA nodes will be created"
+                print "Layer L%d with "%num_layer, LA.num_nodes, " independent PCA nodes will be created, with arguments ", LA.pca_args
                 LA.PCA_nodes = range(LA.num_nodes)
                 for i in range(LA.num_nodes):
                     LA.PCA_nodes[i] = LA.pca_node_class(input_dim=LA.preserve_mask_sparse.sum(), output_dim=LA.pca_out_dim, **LA.pca_args)
@@ -507,7 +508,7 @@ def create_layer(prevLA, LA, num_layer, prevLA_height=None, prevLA_width=None):
         else:
             LA.ord_layer = None
 
-        if LA.exp_funcs != [identity]:
+        if LA.exp_funcs != [identity] and LA.exp_funcs != None:
             LA.exp_node = more_nodes.GeneralExpansionNode(LA.exp_funcs, use_hint=True, max_steady_factor=0.05, \
                                                delta_factor=0.6, min_delta=0.0001)
             LA.exp_layer = mdp.hinet.CloneLayer(LA.exp_node, n_nodes=LA.num_nodes)
@@ -537,11 +538,11 @@ def create_layer(prevLA, LA, num_layer, prevLA_height=None, prevLA_width=None):
             if LA.cloneLayer == True: 
                 #print "Warning!!! layer L%d using cloned SFA instead of several independent copies!!!"%num_layer
                 #sfa_node_La = mdp.nodes.SFANode(input_dim=switchboard_LA.out_channel_dim, output_dim=sfa_out_dim_La)
-                LA.sfa_node = LA.sfa_node_class(output_dim=LA.sfa_out_dim, **LA.sfa_args)    
+                LA.sfa_node = LA.sfa_node_class(output_dim=LA.sfa_out_dim, **LA.sfa_args)
                 #!!!no ma, ya aniadele el atributo output_channels al more_nodes.PInvSwitchboard    
                 LA.sfa_layer = mdp.hinet.CloneLayer(LA.sfa_node, n_nodes=LA.num_nodes)
             else:    
-                print "Layer L%d with "%num_layer, LA.num_nodes, " independent SFA nodes will be created"
+                print "Layer L%d with "%num_layer, LA.num_nodes, " independent SFA nodes will be created, with arguments ", LA.sfa_args
                 LA.SFA_nodes = range(LA.num_nodes)
                 for i in range(LA.num_nodes):
                     LA.SFA_nodes[i] = LA.sfa_node_class(output_dim=LA.sfa_out_dim, **LA.sfa_args)
@@ -567,7 +568,7 @@ def expand_iSeq_sSeq_Layer_to_Network(iSeq_set, sSeq_set, Network):
                 num_nodes += 1
             if LA.ord_node_class != None:
                 num_nodes += 1            
-            if LA.exp_funcs != [identity]:
+            if LA.exp_funcs != [identity] and LA.exp_funcs != None:
                 num_nodes += 1            
             if LA.red_node_class != None:
                 num_nodes += 1
@@ -581,7 +582,7 @@ def expand_iSeq_sSeq_Layer_to_Network(iSeq_set, sSeq_set, Network):
                 num_nodes += 1
             if LA.ord_node_class != None:
                 num_nodes += 1            
-            if LA.exp_funcs != [identity]:
+            if LA.exp_funcs != [identity] and LA.exp_funcs != None:
                 num_nodes += 1            
             if LA.red_node_class != None:
                 num_nodes += 1

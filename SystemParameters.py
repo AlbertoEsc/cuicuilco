@@ -44,7 +44,7 @@ class ParamsSystem (object):
         self.reduction_factor = 2.0
         self.hack_image_size = 64
         self.enable_hack_image_size = True
-        self.patch_network_for_RGB = True
+        self.patch_network_for_RGB = False
     def __values__(self):
         return (self.network, self.iTraining, self.sTraining, self.iSeenid, self.sSeenid, self.iNewid, self.sNewid)
         
@@ -79,6 +79,7 @@ class ParamsDataLoading(object):
     def __init__(self):
         self.name = "test input data"
         self.input_files = []
+        self.images_array = None        
         self.num_images = 0
         self.image_width = 256
         self.image_height = 192
@@ -99,11 +100,13 @@ class ParamsDataLoading(object):
         self.translations_y = None
         self.trans_sampled = True
         self.rotation = None
-        self.contrast_enhance = False
+        self.contrast_enhance = None
         self.load_data = None
         self.block_size = 1
         self.train_mode = None
         self.include_latest = False
+        self.node_weights = None
+        self.edge_weights = None        
         self.filter = None
         self.obj_avgs = None
         self.obj_stds = None
@@ -160,9 +163,9 @@ class ParamsSFASuperNode(object):
     def __init__(self):
         self.name = "SFA Supernode"
         self.in_channel_dim=1
-        self.pca_node_class = mdp.nodes.WhiteningNode
-        self.pca_out_dim = 0.99999
-        self.pca_args = {"block_size": 1}
+        self.pca_node_class = None
+        self.pca_out_dim = None
+        self.pca_args = {}
         self.ord_node_class = None
         self.ord_args = {}
         self.exp_funcs = None
@@ -170,9 +173,9 @@ class ParamsSFASuperNode(object):
         self.inv_max_steady_factor=0.35
         self.inv_delta_factor=0.6
         self.inv_min_delta=0.0001
-        self.red_node_class = mdp.nodes.WhiteningNode
-        self.red_out_dim = 0.99999
-        #self.red_args = {"block_size": 1, "cutoff": 4}
+        self.red_node_class = None
+        self.red_out_dim = None #0.99999
+        self.red_args = {}
         self.clip_func = None
         self.clip_inv_func = None
 #        self.clip_func = lambda x: clipping_sigma(x, 100.5)
@@ -277,14 +280,14 @@ class NetworkOutputs(object):
         self.reg_mse = 0
         self.gauss_reg_mse = 0
         
-def test_object_contents(object):
-    dict = object.__dict__
+def test_object_contents(an_object):
+    a_dict = an_object.__dict__
     list_none_elements = []
-    for w in dict.keys():
-        if dict[w] == None:
+    for w in a_dict.keys():
+        if a_dict[w] is None:
             list_none_elements.append(str(w))
     if len(list_none_elements) > 0:
-        print "Warning!!! object %s contains 'None' fields: "%(str(object)), list_none_elements
+        print "Warning!!! object %s contains 'None' fields: "%(str(an_object)), list_none_elements
 
 #make recursive in case of lists
 def scale_sSeq(sSeq, reduction_factor):
@@ -308,6 +311,17 @@ def take_first_02D(obj_list):
             raise Exception(er)
     else:
         return obj_list
+
+def take_0_k_th_from_2D_list(obj_list, k=0):
+    if isinstance(obj_list, list):
+        if isinstance(obj_list[0], list):
+            return obj_list[0][k]
+        else:
+            er = "obj_list is a list but not a 2D list"
+            raise Exception(er)
+    else:
+        return obj_list
+
     
 def sSeq_force_image_size(sSeq, forced_subimage_width, forced_subimage_height):
     if isinstance(sSeq, list):
@@ -353,8 +367,8 @@ def sSeq_getinfo_format(sSeq):
 #Perhaps iSeq should be included and block size, train_mode, etc.. included from
 #Notice the recursive nature of this function, only for 
 #Takes an sSeq structure: either [[sSeq1, ...], ... [sSeqN,...]] or 
-def convert_sSeq_to_funcs_params_sets(sSeq, verbose=False):
-    print "sSeq is:", sSeq
+def convert_sSeq_to_funcs_params_sets(sSeq, verbose=True):
+    print "conversion of sSeq:", sSeq
     if isinstance(sSeq, list):
         funcs_sets = []
         params_sets = []
@@ -371,6 +385,9 @@ def convert_sSeq_to_funcs_params_sets(sSeq, verbose=False):
                 params_sets.append(None)
                     
         print "sSeq (list):", sSeq
+        if verbose:
+            print "funcs_sets=", funcs_sets
+            print "params_sets=", params_sets
         return funcs_sets, params_sets
     else:
         if sSeq != None:
@@ -386,6 +403,8 @@ def convert_sSeq_to_funcs_params_sets(sSeq, verbose=False):
             params["block_size"] = sSeq.block_size
             params["train_mode"] = sSeq.train_mode
             params["include_latest"] = sSeq.include_latest
+            params["node_weights"] = sSeq.node_weights
+            params["edge_weights"] = sSeq.edge_weights
         else:
             data_func = None
             params = None
@@ -400,7 +419,7 @@ def load_data_from_sSeq(self):
     elif seq.input_files == "LoadRawData":
         data = imageLoader.load_raw_data(seq.data_base_dir, seq.base_filename, input_dim=seq.input_dim, dtype=seq.dtype, select_samples=seq.samples, verbose=False)
     else:
-        data = imageLoader.load_image_data(seq.input_files, seq.image_width, seq.image_height, seq.subimage_width, \
+        data = imageLoader.load_image_data(seq.input_files, seq.images_array, seq.image_width, seq.image_height, seq.subimage_width, \
                                 seq.subimage_height, seq.pre_mirror_flags, seq.pixelsampling_x, seq.pixelsampling_y, \
                                 seq.subimage_first_row, seq.subimage_first_column, seq.add_noise_L0, \
                                 seq.convert_format, seq.translations_x, seq.translations_y, seq.trans_sampled, seq.rotation, seq.contrast_enhance, seq.obj_avgs, seq.obj_stds, background_type=seq.background_type, color_background_filter=seq.filter, verbose=False)

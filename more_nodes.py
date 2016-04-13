@@ -15,7 +15,7 @@ import mdp
 #from mdp import numx
 #from mdp.utils import (mult, pinv, symeig, CovarianceMatrix, QuadraticForm,
 #                       SymeigException)
-from mdp.utils import (mult, pinv, symeig)
+from mdp.utils import (mult, pinv, symeig, CovarianceMatrix, SymeigException)
 #from mdp.utils import (mult, pinv, symeig, CovarianceMatrix, SymeigException)
 
 import copy
@@ -28,8 +28,12 @@ import sys
 ##import misc
 #import object_cache
 #import more_nodes
-from sfa_libs import select_rows_from_matrix
+from sfa_libs import select_rows_from_matrix, distance_squared_Euclidean
 from inversion import invert_exp_funcs2
+
+import inspect
+
+from histogram_equalization import *
 
 #using the provided average and standard deviation
 def gauss_noise(x, avg, std):
@@ -112,14 +116,23 @@ class RandomizedMaskNode(mdp.Node):
     
 class GeneralExpansionNode(mdp.Node):
     def __init__(self, funcs, input_dim = None, dtype = None, \
-                 use_pseudoinverse=True, use_hint=False, max_steady_factor=1.5, \
+                 use_pseudoinverse=True, use_hint=False, output_dim=None, starting_point = None, max_steady_factor=1.5, \
                  delta_factor=0.6, min_delta=0.00001):
         self.funcs = funcs
+        self.exp_output_dim = output_dim
+        self.starting_point = starting_point
+        if self.funcs == "RandomSigmoids" and self.exp_output_dim <= 0:
+            er = "output_dim in GeneralExpansion node with RandomSigmoids should be at least 1, but is", self.exp_output_dim
+            raise Exception(er)
         self.use_pseudoinverse = use_pseudoinverse
         self.use_hint = use_hint
         self.max_steady_factor = max_steady_factor
         self.delta_factor = delta_factor
         self.min_delta = min_delta
+        self.rs_coefficients = None
+        self.rs_offsets = None
+        self.rs_data_training_std = None
+        self.rs_data_training_mean = None
         super(GeneralExpansionNode, self).__init__(input_dim, dtype)
     def expanded_dim(self, n):
         exp_dim=0
@@ -137,10 +150,47 @@ class GeneralExpansionNode(mdp.Node):
             sizes[i] = outx.shape[1]
         return sizes
     def is_trainable(self):
-        return False
+        if self.funcs == "RandomSigmoids":
+            return True
+        else:
+            return False
     def _train(self, x):
         if self.input_dim is None:
             self.set_input_dim(x.shape[1])
+            
+        input_dim = self.input_dim
+    
+        #Generate functions used for regression
+        self.rs_data_training_mean = x.mean(axis=0)
+        self.rs_data_training_std = x.std(axis=0)
+ 
+        starting_point = self.starting_point
+        c1, l1 = generate_random_sigmoid_weights(self.input_dim, self.output_dim)
+        if starting_point == "Identity":
+            print "starting_point: adding identity coefficients to expansion"
+            c1[0:input_dim, 0:input_dim] = numpy.identity(input_dim)
+            l1[0:input_dim] = numpy.ones(input_dim) * 1.0 #Code identity
+        elif starting_point == "Sigmoids":
+            print "starting_point: adding sigmoid of coefficients to expansion"
+            c1[0:input_dim, 0:input_dim] = 4.0*numpy.identity(input_dim)
+            l1[0:input_dim] = numpy.ones(input_dim) * 0.0  
+        elif starting_point == "08Exp":
+            print "starting_point: adding 08Exp coefficients to expansion"
+            c1[0:input_dim, 0:input_dim] = numpy.identity(input_dim)
+            c1[0:input_dim, input_dim:2*input_dim] = numpy.identity(input_dim)
+    
+            l1[0:input_dim] = numpy.ones(input_dim) * 1.0 #Code identity
+            l1[input_dim:2*input_dim] = numpy.ones(input_dim) * 0.8 #Code abs(x)**0.8  
+        elif starting_point == None:
+            print "starting_point: no starting point"
+        else:
+            er= "Unknown starting_point", starting_point
+            print er
+            raise Exception(er)    
+        self.rs_coefficients = c1
+        self.rs_offsets = l1
+            
+            
     def is_invertible(self):
         return self.use_pseudoinverse
     def inverse(self, x, use_hint=None, max_steady_factor=None, \
@@ -163,22 +213,29 @@ class GeneralExpansionNode(mdp.Node):
         return app_x_2
     def _set_input_dim(self, n):
         self._input_dim = n
-        self._output_dim = self.expanded_dim(n)
+
+        if self.funcs == "RandomSigmoids":
+            self._output_dim = self.exp_output_dim
+        else:
+            self._output_dim = self.expanded_dim(n)
 
     def _execute(self, x):
         if self.input_dim is None:
             self.set_input_dim(x.shape[1]) 
 
-        num_samples = x.shape[0]
-#        output_dim = expanded_dim(self.input_dim)
-        sizes = self.output_sizes(self.input_dim)
+        if self.funcs != "RandomSigmoids":
+            num_samples = x.shape[0]
+    #        output_dim = expanded_dim(self.input_dim)
+            sizes = self.output_sizes(self.input_dim)
+            out = numpy.zeros((num_samples, self.output_dim))
 
-        out = numpy.zeros((num_samples, self.output_dim))
-
-        current_pos = 0
-        for i, func in enumerate(self.funcs):
-            out[:,current_pos:current_pos+sizes[i]] = func(x)
-            current_pos += sizes[i]
+            current_pos = 0
+            for i, func in enumerate(self.funcs):
+                out[:,current_pos:current_pos+sizes[i]] = func(x)
+                current_pos += sizes[i]
+        else:
+            data_norm = (x-self.rs_data_training_mean)/self.rs_data_training_std
+            out = extract_sigmoid_features(data_norm, self.rs_coefficients, self.rs_offsets, scale=1.0, offset=0.0, use_special_features=True)
         return out
     
     
@@ -244,19 +301,33 @@ class BinomialAbsoluteExpansionNode(mdp.Node):
         return out
 
 
-
+#TODO:ADD inverse type sum, suitable for when output_scaling is True
 class PInvSwitchboard(mdp.hinet.Switchboard):
-    def __init__(self, input_dim, connections, slow_inv=False, type_inverse="average"):
+    def __init__(self, input_dim, connections, slow_inv=False, type_inverse="average", output_scaling=True, noise_addition=0.000004):
         super(PInvSwitchboard, self).__init__(input_dim=input_dim, connections=connections)
         self.pinv = None
         self.mat2 = None
         self.slow_inv = slow_inv
         self.type_inverse = type_inverse
-        self.output_dim = connections.size
-        if self.inverse_connections == None and self.slow_inv == False:
+        self.output_dim = len(connections) #WARNING was connections.size
+        self.output_scales = None
+        self.noise_addition = noise_addition #noise_std
+        #O[j] = I[connections[j]] 
+        #O[inverse_indices[i]]=I[i]
+        if self.inverse_connections == None:
+            print "type(connections)", type(connections)
+            all_outputs = numpy.arange(self.output_dim)
+
+            self.inverse_indices = [[]]*self.input_dim
+            for i in range(self.input_dim):
+                self.inverse_indices[i] = all_outputs[connections==i]
+                #print "inverse_indices[%d]="%i, self.inverse_indices[i]
+            #print "inverse_indices =", self.inverse_indices
+        elif self.inverse_connections == None and self.slow_inv == False:
             index_array = numpy.argsort(connections)
             value_array = connections[index_array]
-        
+            
+            
             value_range = numpy.zeros((input_dim, 2))
             self.inverse_indices = range(input_dim)
             for i in range(input_dim):
@@ -265,6 +336,8 @@ class PInvSwitchboard(mdp.hinet.Switchboard):
                     self.inverse_indices[i]=[]
                 else:
                     self.inverse_indices[i]= index_array[ value_range[i][0]: value_range[i][1] ]
+            print "inverse_indices computed in PINVSB"
+
         elif self.inverse_connections == None and self.slow_inv == True:
             print "warning using slow inversion in PInvSwitchboard!!!"
 #find input variables not used by connections:
@@ -295,14 +368,66 @@ class PInvSwitchboard(mdp.hinet.Switchboard):
             self.pinv = (mat2.T * mat2).I * mat2.T
         else:
             print "Inverse connections already given, in PInvSwitchboard"
-            
-#
+
+        if output_scaling:
+            if self.inverse_connections == None and self.slow_inv == False:
+                print "**A",
+                if self.type_inverse != "average":
+                    err = "self.type_inverse not supported " + self.type_inverse
+                    raise Exception(err)
+                self.output_scales = numpy.zeros(self.output_dim)
+                tt = 0
+                for i in range(self.input_dim):
+                    output_indices = self.inverse_indices[i]
+                    multiplicity = len(output_indices)
+                    for j in output_indices:
+                        self.output_scales[j] = (1.0/multiplicity)**0.5
+                        tt += 1
+                print "connections in switchboard considered: ", tt, "output dimension=", self.output_dim
+            elif self.inverse_connections == None and self.slow_inv == True:
+                print "**B",
+                err = "use of self.slow_inv = True is obsolete"
+                raise Exception(err)
+            else: #inverse connections are unique, mapping bijective
+                print "**C",
+                self.output_scales = numpy.ones(self.output_dim)
+        else:
+            print "**D",
+            self.output_scales = numpy.ones(self.output_dim)
+        print "PINVSB output_scales =", self.output_scales
+        print "SUM output_scales/len(output_scales)=", self.output_scales.sum() / len (self.output_scales)
+        print "output_scales.min()", self.output_scales.min()
 #PInvSwitchboard is always invertible                
     def is_invertible(self):
         return True
 #
+    def _execute(self, x):
+        print "calling PInvSwitchboard/superclass _execute" #calling execute(x) instead of _execute(x) results in infinite loop!!!
+        print "super(PInvSwitchboard, self)=", super(PInvSwitchboard, self)
+        x = numpy.array(x,order="FORTRAN")
+#        print "super()=", super()
+        y = super(PInvSwitchboard, self)._execute(x) * self.output_scales
+        print "y.shape", y.shape
+#        print "y computed"
+#        quit()
+        if self.noise_addition>0.0:
+            steps=10
+            print "PInvSwitchboard is adding noise to the output features with std", self.noise_addition, " computation in %d steps"%steps
+            n, dim = y.shape
+            step_size= int(n/steps)
+#            y += numpy.random.uniform(low=-(3**0.5)*self.noise_addition, high=(3**0.5)*self.noise_addition, size=y.shape)
+            for s in range(steps):
+                y[step_size*s:step_size*(s+1)] += numpy.random.uniform(low=-(3**0.5)*self.noise_addition, high=(3**0.5)*self.noise_addition, size=(step_size, dim))
+                print "noise block %d added"%s
+            if step_size * steps < n:
+                rest= n-step_size * steps
+                y[step_size*steps:step_size*steps+rest] += numpy.random.uniform(low=-(3**0.5)*self.noise_addition, high=(3**0.5)*self.noise_addition, size=(rest, dim))                
+                print "remaining noise block added"                
+        return y
+#
 #If true inverse is present, just use it, otherwise compute it by means of the pseudoinverse                    
     def _inverse(self, x):
+        x = x * (1.0 / self.output_scales) 
         if self.inverse_connections == None and self.slow_inv == False:
             height_x = x.shape[0]
             mat2 = numpy.zeros((height_x, self.input_dim))
@@ -316,7 +441,7 @@ class PInvSwitchboard(mdp.hinet.Switchboard):
                     else:
                         err = "self.type_inverse not supported: " + self.type_inverse
                         raise Exception(err)
-            return mat2
+            output = mat2
         elif self.inverse_connections == None and self.slow_inv == True:
             print "x=", x
             height_x = x.shape[0]
@@ -324,11 +449,12 @@ class PInvSwitchboard(mdp.hinet.Switchboard):
             data2 = numpy.matrix(full_x)
             print "data2=", data2
             print "PINV=", self.pinv
-            return (self.pinv * data2.T).T
+            output = (self.pinv * data2.T).T
         else:
+            print "using inverse_connections in PInvSwitchboard"
 #            return apply_permutation_to_signal(x, self.inverse_connections, self.input_dim)
-            return select_rows_from_matrix(x, self.inverse_connections)
-        
+            output = select_rows_from_matrix(x, self.inverse_connections)
+        return output 
     
 #Random Permutation Node
 #Randomly permutes the components of the input signal in a constant way after initialization
@@ -393,15 +519,19 @@ class RandomPermutationNode(mdp.Node):
 
 
 
-def sfa_pretty_coefficients(sfa_node, transf_training):
+def sfa_pretty_coefficients(sfa_node, transf_training, start_negative=True):
     count = 0
-    for i in range(transf_training.shape[1]):
-        if transf_training[0,i] + transf_training[1,i] + transf_training[2,i] + transf_training[3,i] + \
+
+    for i in range(sfa_node.output_dim):
+        sum_firsts = transf_training[0,i] + transf_training[1,i] + transf_training[2,i] + transf_training[3,i] + \
            transf_training[4,i] + transf_training[5,i] + transf_training[6,i] + transf_training[7,i] + \
-           transf_training[8,i] + transf_training[9,i] + transf_training[10,i] + transf_training[11,i] > 0:
+           transf_training[8,i] + transf_training[9,i] + transf_training[10,i] + transf_training[11,i]
+
+        if (sum_firsts > 0 and start_negative) or (sum_firsts < 0 and not start_negative):
             sfa_node.sf[:,i] = (sfa_node.sf[:,i] * -1)
             transf_training[:,i] = (transf_training[:,i] * -1)
             count +=1
+
     print "Polarization of %d SFA Signals Corrected!!!\n"%count,
     sfa_node._bias = mdp.utils.mult(sfa_node.avg, sfa_node.sf)
     print "Bias updated"
@@ -434,112 +564,149 @@ def describe_flow(flow):
     print "Largest node size: %d"%compute_largest_node_size(flow)
 
 
-#modes: "FirstNodeInLayer", "Average", "All"
-def display_eigenvalues(flow, mode="All"):
-    length = len(flow)
-    
-    print "Displaying eigenvalues of SFA Nodes in flow of length",length
 
-    for i in range(length):
-        node = flow[i]
-        if isinstance(node, mdp.hinet.CloneLayer):
-            if isinstance(node.nodes[0], mdp.nodes.SFANode):
-                print "Node %d is a CloneLayer that contains an SFANode with d="%i, node.nodes[0].d
-            elif isinstance(node.nodes[0], mdp.nodes.IEVMNode):
-                if node.nodes[0].use_sfa:
-                    print "Node %d is a CloneLayer that contains an IEVMNode containing an SFA node with num_sfa_features_preserved=%d and d="%(i, node.nodes[0].num_sfa_features_preserved), node.nodes[0].sfa_node.d
-            elif isinstance(node.nodes[0], mdp.nodes.IEVMLRecNode):
-                print "Node %d is a CloneLayer that contains an IEVMLRecNode containing an SFA node with num_sfa_features_preserved=%d and d="%(i, node.nodes[0].num_sfa_features_preserved), node.nodes[0].sfa_node.d
+def display_node_eigenvalues(node, i, mode="All"):
+    if isinstance(node, mdp.hinet.CloneLayer):
+        if isinstance(node.nodes[0], mdp.nodes.SFANode):
+            print "Node %d is a CloneLayer that contains an SFANode with d="%i, node.nodes[0].d
+        elif isinstance(node.nodes[0], mdp.nodes.IEVMNode):
+            if node.nodes[0].use_sfa:
+                print "Node %d is a CloneLayer that contains an IEVMNode containing an SFA node with num_sfa_features_preserved=%d and d="%(i, node.nodes[0].num_sfa_features_preserved), node.nodes[0].sfa_node.d
+        elif isinstance(node.nodes[0], mdp.nodes.IEVMLRecNode):
+            print "Node %d is a CloneLayer that contains an IEVMLRecNode containing an SFA node with num_sfa_features_preserved=%d and d="%(i, node.nodes[0].num_sfa_features_preserved), node.nodes[0].sfa_node.d
+        elif isinstance(node.nodes[0], mdp.nodes.PCANode):
+            print "Node %d is a CloneLayer that contains a PCANode with d="%i, node.nodes[0].d
 
-        elif isinstance(node, mdp.hinet.Layer):
-            if isinstance(node.nodes[0], mdp.nodes.SFANode):
-                if mode == "Average":
-                    out = 0.0
-                    for n in node.nodes:
-                        out += n.d
-                    print "Node %d is a Layer that contains SFANodes with avg(d)="%i, out / len(node.nodes)
-                elif mode == "All":
-                    for n in node.nodes:
-                        print "Node %d is a Layer that contains an SFANode with d="%i, n.d
-                elif mode == "FirstNodeInLayer":
-                    print "Node %d is a Layer, and its first SFANode has d="%i, node.nodes[0].d
-                else:
-                    er = 'Unknown mode in display_eigenvalues, try "FirstNodeInLayer", "Average" or "All"'
-                    raise Exception(er)
-            elif isinstance(node.nodes[0], mdp.nodes.IEVMNode) and (node.nodes[0].use_sfa or node.nodes[0].out_sfa_filter):
-                use_sfa = node.nodes[0].use_sfa
-                out_sfa_filter = node.nodes[0].out_sfa_filter
-                if mode == "Average":
-                    out = 0.0
-                    num_sfa_features = 0.0
-                    filter_out = 0.0
-                    for n in node.nodes:
-                        if use_sfa:
-                            out += n.sfa_node.d
-                            num_sfa_features += n.num_sfa_features_preserved
-                        if out_sfa_filter:
-                            filter_out += n.out_sfa_node.d
-                    print "Node %d is a Layer that contains IEVMNodes containing SFANodes with avg(num_sfa_features_preserved)=%f and avg(d)="%(i, node.nodes[0].num_sfa_features_preserved),  out / len(node.nodes)
-                    if out_sfa_filter:
-                        print "and output SFA filter with avg(out_sfa_node.d)=", filter_out / len(node.nodes)
-
-                elif mode == "All":
-                    for n in node.nodes:
-                        print "Node %d is a Layer that contains an IEVMNode"%i,
-                        if use_sfa: 
-                            print "containing an SFANode with num_sfa_features_preserved=%f and d="%n.num_sfa_features_preserved, n.sfa_node.d
-                        if out_sfa_filter:
-                            print "and output SFA filter with out_sfa_node.d=", n.out_sfa_node.d
-
-                elif mode == "FirstNodeInLayer":
-                    print "Node %d is a Layer, and its first IEVMNode"%i
+    elif isinstance(node, mdp.hinet.Layer):
+        if isinstance(node.nodes[0], mdp.nodes.SFANode):
+            if mode == "Average":
+                out = 0.0
+                for n in node.nodes:
+                    out += n.d
+                print "Node %d is a Layer that contains SFANodes with avg(d)="%i, out / len(node.nodes)
+            elif mode == "All":
+                for n in node.nodes:
+                    print "Node %d is a Layer that contains an SFANode with d="%i, n.d
+            elif mode == "FirstNodeInLayer":
+                print "Node %d is a Layer, and its first SFANode has d="%i, node.nodes[0].d
+            else:
+                er = 'Unknown mode in display_eigenvalues, try "FirstNodeInLayer", "Average" or "All"'
+                raise Exception(er)
+        elif isinstance(node.nodes[0], mdp.nodes.IEVMNode) and (node.nodes[0].use_sfa or node.nodes[0].out_sfa_filter):
+            use_sfa = node.nodes[0].use_sfa
+            out_sfa_filter = node.nodes[0].out_sfa_filter
+            if mode == "Average":
+                out = 0.0
+                num_sfa_features = 0.0
+                filter_out = 0.0
+                for n in node.nodes:
                     if use_sfa:
-                        print "contains an SFANode with num_sfa_features_preserved)=%f and d="%node.nodes[0].num_sfa_features_preserved, node.nodes[0].sfa_node.d
+                        out += n.sfa_node.d
+                        num_sfa_features += n.num_sfa_features_preserved
+                    if out_sfa_filter:
+                        filter_out += n.out_sfa_node.d
+                print "Node %d is a Layer that contains IEVMNodes containing SFANodes with avg(num_sfa_features_preserved)=%f and avg(d)="%(i, node.nodes[0].num_sfa_features_preserved),  out / len(node.nodes)
+                if out_sfa_filter:
+                    print "and output SFA filter with avg(out_sfa_node.d)=", filter_out / len(node.nodes)
+
+            elif mode == "All":
+                for n in node.nodes:
+                    print "Node %d is a Layer that contains an IEVMNode"%i,
+                    if use_sfa: 
+                        print "containing an SFANode with num_sfa_features_preserved=%f and d="%n.num_sfa_features_preserved, n.sfa_node.d
+                    if out_sfa_filter:
+                        print "and output SFA filter with out_sfa_node.d=", n.out_sfa_node.d
+
+            elif mode == "FirstNodeInLayer":
+                print "Node %d is a Layer, and its first IEVMNode"%i
+                if use_sfa:
+                    print "contains an SFANode with num_sfa_features_preserved)=%f and d="%node.nodes[0].num_sfa_features_preserved, node.nodes[0].sfa_node.d
                     if out_sfa_filter:
                         print "and Output SFA filter with out_sfa_node.d=", node.nodes[0].out_sfa_node.d   
                 else:
                     er = 'Unknown mode in display_eigenvalues, try "FirstNodeInLayer", "Average" or "All"'
                     raise Exception(er)
-            elif isinstance(node.nodes[0], mdp.nodes.IEVMLRecNode):
-                if mode == "Average":
-                    evar_avg = 0.0
-                    d_avg = 0.0
-                    avg_num_sfa_features = 0.0
-                    for n in node.nodes:
-                        d_avg += n.sfa_node.d
-                        evar_avg += n.evar 
-                        avg_num_sfa_features += n.num_sfa_features_preserved
-                    d_avg /=  len(node.nodes)
-                    evar_avg /=  len(node.nodes)
-                    avg_num_sfa_features /=  len(node.nodes)
-                    print "Node %d is a Layer that contains IEVMLRecNodes containing SFANodes with avg(num_sfa_features_preserved)=%f and avg(d)=%s and avg(evar)=%f"%(i,avg_num_sfa_features, str(d_avg), evar_avg)
-                elif mode == "All":
-                    print "Node %d is a Layer that contains IEVMLRecNodes:"%i
-                    for n in node.nodes:
-                        print "  IEVMLRecNode containing an SFANode with num_sfa_features_preserved=%f, d=%s and evar=%f"%(n.num_sfa_features_preserved, str(n.sfa_node.d), n.evar)
-                elif mode == "FirstNodeInLayer":
-                    print "Node %d is a Layer, and its first IEVMLRecNode"%i
-                    print "contains an SFANode with num_sfa_features_preserved)=%f, d=%s and evar=%f"%(node.nodes[0].num_sfa_features_preserved, str(node.nodes[0].sfa_node.d), node.nodes[0].evar)
-                else:
-                    er = 'Unknown mode in display_eigenvalues, try "FirstNodeInLayer", "Average" or "All"'
-                    raise Exception(er)
-            elif isinstance(node.nodes[0], mdp.nodes.SFAAdaptiveNLNode):
-                if mode == "Average":
-                    out = 0.0
-                    for n in node.nodes:
-                        out += n.sfa_node.d
-                    print "Node %d is a Layer that contains SFAAdaptiveNLNodes containing SFANodes with avg(d)="%i,  out / len(node.nodes)
-                elif mode == "All":
-                    for n in node.nodes:
-                        print "Node %d is a Layer that contains an SFAAdaptiveNLNode"%i,
-                        print "containing an SFANode with d=", n.sfa_node.d
-                elif mode == "FirstNodeInLayer":
-                    print "Node %d is a Layer, and its first SFAAdaptiveNLNode"%i
-                    print "contains an SFANode with d=", node.nodes[0].sfa_node.d
-                else:
-                    er = 'Unknown mode in display_eigenvalues, try "FirstNodeInLayer", "Average" or "All"'
-                    raise Exception(er)                    
+        elif isinstance(node.nodes[0], mdp.nodes.IEVMLRecNode):
+            if mode == "Average":
+                evar_avg = 0.0
+                d_avg = 0.0
+                avg_num_sfa_features = 0.0
+                min_num_sfa_features_preserved = min([n.num_sfa_features_preserved for n in node.nodes]) 
+                for n in node.nodes:
+                    d_avg += n.sfa_node.d[:min_num_sfa_features_preserved]
+                    evar_avg += n.evar 
+                    avg_num_sfa_features += n.num_sfa_features_preserved
+                d_avg /=  len(node.nodes)
+                evar_avg /=  len(node.nodes)
+                avg_num_sfa_features /=  len(node.nodes)
+                print "Node %d is a Layer that contains IEVMLRecNodes containing SFANodes with avg(num_sfa_features_preserved)=%f and avg(d)=%s and avg(evar)=%f"%(i,avg_num_sfa_features, str(d_avg), evar_avg)
+            elif mode == "All":
+                print "Node %d is a Layer that contains IEVMLRecNodes:"%i
+                for n in node.nodes:
+                    print "  IEVMLRecNode containing an SFANode with num_sfa_features_preserved=%f, d=%s and evar=%f"%(n.num_sfa_features_preserved, str(n.sfa_node.d), n.evar)
+            elif mode == "FirstNodeInLayer":
+                print "Node %d is a Layer, and its first IEVMLRecNode"%i
+                print "contains an SFANode with num_sfa_features_preserved)=%f, d=%s and evar=%f"%(node.nodes[0].num_sfa_features_preserved, str(node.nodes[0].sfa_node.d), node.nodes[0].evar)
+            else:
+                er = 'Unknown mode in display_eigenvalues, try "FirstNodeInLayer", "Average" or "All"'
+                raise Exception(er)
+        elif isinstance(node.nodes[0], mdp.nodes.SFAAdaptiveNLNode):
+            if mode == "Average":
+                out = 0.0
+                for n in node.nodes:
+                    out += n.sfa_node.d
+                print "Node %d is a Layer that contains SFAAdaptiveNLNodes containing SFANodes with avg(d)="%i,  out / len(node.nodes)
+            elif mode == "All":
+                for n in node.nodes:
+                    print "Node %d is a Layer that contains an SFAAdaptiveNLNode"%i,
+                    print "containing an SFANode with d=", n.sfa_node.d
+            elif mode == "FirstNodeInLayer":
+                print "Node %d is a Layer, and its first SFAAdaptiveNLNode"%i
+                print "contains an SFANode with d=", node.nodes[0].sfa_node.d
+            else:
+                er = 'Unknown mode in display_eigenvalues, try "FirstNodeInLayer", "Average" or "All"'
+                raise Exception(er)
+        elif isinstance(node.nodes[0], mdp.nodes.PCANode):
+            if mode == "Average":
+                d_avg = 0.0
+                evar_avg = 0.0
+                min_num_pca_features_preserved = min([n.output_dim for n in node.nodes]) 
+                for n in node.nodes:
+                    d_avg += n.d[:min_num_pca_features_preserved]
+                    evar_avg += n.explained_variance
+                d_avg /=  len(node.nodes)
+                evar_avg /=  len(node.nodes)
+                print "Node %d is a Layer that contains PCA nodes with avg(d)=%s and avg(evar)=%f"%(i, str(d_avg), evar_avg)
+            elif mode == "All":
+                print "Node %d is a Layer that contains PCA nodes:"%i
+                for n in node.nodes:
+                    print "  PCANode with d=%s and evar=%f"%(str(n.d), n.explained_variance)
+            elif mode == "FirstNodeInLayer":
+                print "Node %d is a Layer, and its first PCANode"%i, "has d=%s and evar=%f"%(str(node.nodes[0].sfa_node.d), node.nodes[0].explained_variance)
+            else:
+                er = 'Unknown mode in display_eigenvalues, try "FirstNodeInLayer", "Average" or "All"'
+                raise Exception(er)
+    elif isinstance(node, mdp.nodes.SFANode):
+        print "Node %d is an SFANode with d="%i, node.d
+    elif isinstance(node, mdp.nodes.IEVMNode):
+        if node.use_sfa:
+            print "Node %d is an IEVMNode containing an SFA node with num_sfa_features_preserved=%d and d="%(i, node.num_sfa_features_preserved), node.sfa_node.d
+    elif isinstance(node, mdp.nodes.IEVMLRecNode):
+        print "Node %d is an IEVMLRecNode containing an SFA node with num_sfa_features_preserved=%d and d="%(i, node.num_sfa_features_preserved), node.sfa_node.d
+    elif isinstance(node, mdp.nodes.PCANode):
+        print "Node %d is a PCANode with d=%s and evar=%f"%(i, str(node.d), node.explained_variance)
+    else:
+        print "Cannot display eigenvalues of Node %d"%i, node
 
+
+#modes: "FirstNodeInLayer", "Average", "All"
+def display_eigenvalues(flow, mode="All"):
+    length = len(flow)   
+    print "Displaying eigenvalues of SFA Nodes in flow of length",length
+
+    for i in range(length):
+        node = flow[i]
+        display_node_eigenvalues(node, i, mode)
 
 def compute_node_size(node):
     """ Computes the number of weights learned by node after training.
@@ -632,6 +799,7 @@ def estimated_explained_variance(images, flow, sl_images, num_considered_images=
         print "Therefore, estimated explained variance has std of about: ", explained_individual.std()/numpy.sqrt(num_considered_images)
         print "rec_error_energy/ori_energy=", rec_error_energy/ori_energy
         print "Thus explained variance about:", 1-rec_error_energy/ori_energy
+        print "Dumb reconstruction_energy/original_energy=", rec_energy/ori_energy
     return rec_energy/ori_energy
     
 
@@ -1943,6 +2111,18 @@ def f_residual(x_app_i, node, y_i):
     #print "returning resudial res=", res
     return res_long
 
+def SFANode_force_output_dim(sfa_node, new_output_dim):
+    print "Updating output dimensionality of SFA node"
+    if new_output_dim > sfa_node.output_dim:
+        er = "Can only reduce output dimensionality of SFA node, not increase it"
+        raise Exception(er)
+    print "Before: sfa_node.d.shape=",sfa_node.d.shape, " sfa_node.sf.shape=",sfa_node.sf.shape, " sfa_node._bias.shape=",sfa_node._bias.shape
+    sfa_node.d = sfa_node.d[:new_output_dim]
+    sfa_node.sf = sfa_node.sf[:,:new_output_dim]
+    sfa_node._bias = sfa_node._bias[:new_output_dim]
+    sfa_node._output_dim = new_output_dim
+    print "After: sfa_node.d.shape=",sfa_node.d.shape, " sfa_node.sf.shape=",sfa_node.sf.shape, " sfa_node._bias.shape=",sfa_node._bias.shape
+
 class IEVMLRecNode(mdp.Node):
 #     """Node implementing simple Incremental Explained Variance Maximization. 
 #     Extracted features are moderately useful for reconstruction, although this node does 
@@ -1950,14 +2130,20 @@ class IEVMLRecNode(mdp.Node):
 #    The expansion function is optional, as well as performing PCA on the scores.
 #    The added variance of the first k-outputs is equal to the explained variance of such k-outputs. 
 #    """    
-    def __init__(self, input_dim = None, output_dim=None, pre_expansion_node_class = None, expansion_funcs=None, max_comp = None, max_num_samples_for_ev = None, max_test_samples_for_ev=None, offsetting_mode = "all features", max_preserved_sfa=1.999999, reconstruct_with_sfa = True,  out_sfa_filter=False, **argv ):
+#WARNING! Official Dt for age: 1.999999, control1: 1.9999, control2: 1.99999999
+    def __init__(self, input_dim = None, output_dim=None, pre_expansion_node_class = None, expansion_funcs=None, expansion_output_dim=None, expansion_starting_point=None, max_comp = None, max_num_samples_for_ev = None, max_test_samples_for_ev=None, offsetting_mode = "all features", max_preserved_sfa=1.9999, reconstruct_with_sfa = True,  out_sfa_filter=False, **argv ):
         super(IEVMLRecNode, self).__init__(input_dim =input_dim, output_dim=output_dim, **argv)
         self.pre_expansion_node_class = pre_expansion_node_class
         self.pre_expansion_node = None
+        self.expansion_output_dim = expansion_output_dim
+        self.expansion_starting_point = expansion_starting_point
+
         if expansion_funcs != None:
-            self.exp_node = GeneralExpansionNode(funcs=expansion_funcs)
+            #print "creating node with expansion dim = ", self.expansion_output_dim,
+            self.exp_node = GeneralExpansionNode(funcs=expansion_funcs, output_dim = self.expansion_output_dim, starting_point=self.expansion_starting_point)
         else:
             self.exp_node = None
+
         self.sfa_node = None
         self.max_comp = max_comp
         
@@ -2013,9 +2199,18 @@ class IEVMLRecNode(mdp.Node):
         self.expanded_dim = exp_x.shape[1]
         
         #Apply SFA to it
-        self.sfa_node = mdp.nodes.SFANode()
-        self.sfa_node.train(exp_x, block_size=block_size, train_mode = train_mode)#, node_weights=None, edge_weights=None, scheduler = None, n_parallel=None)
+        #print "block_size=", block_size
+        #print "train_mode=", train_mode
+        self.sfa_node = mdp.nodes.SFANode(output_dim=min(self.output_dim,self.expanded_dim) )
+        #print dir(mdp.nodes.SFANode)
+        #print self.sfa_node.train
+        #print "with args: ", inspect.getargspec(self.sfa_node.train)
+        #print self.sfa_node._train
+        #print "with args: ", inspect.getargspec(self.sfa_node._train)
+#        self.sfa_node.train(exp_x, block_size=block_size, train_mode = train_mode)#, node_weights=None, edge_weights=None, scheduler = None, n_parallel=None)
+        self.sfa_node.train_params(exp_x, params={"block_size":block_size, "train_mode":train_mode, "node_weights":node_weights, "edge_weights":edge_weights})#, node_weights=None, edge_weights=None, scheduler = None, n_parallel=None)
         self.sfa_node.stop_training()
+        #quit()
         print "self.sfa_node.d", self.sfa_node.d
             
         #Adaptive mechanism based on delta values
@@ -2030,8 +2225,12 @@ class IEVMLRecNode(mdp.Node):
 
         if self.num_sfa_features_preserved > self.output_dim:
             self.num_sfa_features_preserved = self.output_dim
-            
+        
+        SFANode_force_output_dim(self.sfa_node, self.num_sfa_features_preserved)
+
+        #TODO: Make sure to adjust the matrix used by SFA to only consider num_sfa_features_preserved
         #self.num_sfa_features_preserved = 10
+        print "sfa execute..."
         sfa_x = self.sfa_node.execute(exp_x)
           
         #Truncate leaving only slowest features             
@@ -2058,6 +2257,7 @@ class IEVMLRecNode(mdp.Node):
                 x_pca = x_zm
     
             #approximate input linearly, done inline to preserve node
+            print "training linear regression..."
             self.lr_node = mdp.nodes.LinearRegressionNode()
             self.lr_node.train(n_sfa_x, x_pca) #Notice that the input "x"=n_sfa_x and the output to learn is "y" = x_pca
             self.lr_node.stop_training()  
@@ -2078,6 +2278,7 @@ class IEVMLRecNode(mdp.Node):
         #print "Data_variance(sfa_removed_x)=", data_variance(sfa_removed_x)
         #print "x_app.mean(axis=0)=", x_app
         #TODO:Compute variance removed by linear approximation
+        print "ranking method..."
         if self.reconstruct_with_sfa and self.offsetting_mode not in ["QR_decomposition", "sensitivity_based_pure", "sensitivity_based_normalized"]:
             #Compute scaling and permutation of sfa signals. Note that permutation is not needed actually
             #TODO: what to use x, x_zm, x_pca???
@@ -2096,16 +2297,21 @@ class IEVMLRecNode(mdp.Node):
             self.R = R
             self.Rpinv = pinv(R)
             s_n_sfa_x = numpy.dot(n_sfa_x, R.T)
-        elif self.reconstruct_with_sfa and self.offsetting_mode == "sensitivity_based_pure": #AKA Laurenz method for feature scaling( +rotation)
+        elif self.reconstruct_with_sfa and self.offsetting_mode == "sensitivity_based_pure": #AKA my method for feature scaling (no rotation)
             beta = self.lr_node.beta[1:,:] # bias is used by default, we do not need to consider it
             sens = (beta**2).sum(axis=1)
             self.magn_n_sfa_x = sens
-            s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x ** self.exponent_variance       
-        elif self.reconstruct_with_sfa and self.offsetting_mode == "sensitivity_based_normalized": #AKA Laurenz method for feature scaling( +rotation)
+            s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x ** self.exponent_variance
+            print "method: sensitivity_based_pure enforced"       
+        elif self.reconstruct_with_sfa and self.offsetting_mode == "sensitivity_based_normalized": #AKA my method for feature scaling (no rotation)
             beta = self.lr_node.beta[1:,:] # bias is used by default, we do not need to consider it
             sens = (beta**2).sum(axis=1)
             self.magn_n_sfa_x = sens * ((x_pca_app**2).sum(axis=1).mean() / sens.sum())
-            s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x ** self.exponent_variance    
+            s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x ** self.exponent_variance
+            print "method: sensitivity_based_normalized enforced" 
+        elif self.offsetting_mode == None:
+            self.magn_n_sfa_x = 1
+            s_n_sfa_x = n_sfa_x
         else:
             self.magn_n_sfa_x = 0.01 * numpy.min(x_zm.var(axis=0)) # SFA components have a variance of 1/10000 smallest data variance
             s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x ** self.exponent_variance #Scale according to ranking
@@ -2115,10 +2321,14 @@ class IEVMLRecNode(mdp.Node):
         #Apply PCA to sfa removed data             
 #        pca_out_dim = self.expanded_dim - self.num_sfa_features_preserved
 
+        print "training PCA..."
         self.pca_node = mdp.nodes.PCANode(reduce=True) #output_dim = pca_out_dim)
         self.pca_node.train(sfa_removed_x)
-            
+        self.pca_node.stop_training()
+
         #TODO:check that pca_out_dim > 0
+        print "executing PCA..."
+ 
         pca_x = self.pca_node.execute(sfa_removed_x)
         
         if self.pca_node.output_dim + self.num_sfa_features_preserved < self.output_dim:
@@ -2348,10 +2558,10 @@ def map_class_numbers_to_avg_label(all_classes, avg_labels, class_numbers):
         er = "Array of class numbers should be monotonically increasing:", all_classes
         raise Exception(er)
     if not(is_monotonic_increasing(avg_labels)):
-        er = "Array of labels should be monotonically increasing:", avg_labels
-        raise Exception(er)
+        er = "SEVERE WARNING! Array of labels should be monotonically increasing:", avg_labels
+        #raise Exception(er)
     if len(all_classes) != len(avg_labels):
-        er = "Array of classes should have the same lenght as the array of labels:", len(all_classes), " vs. ", len(avg_labels)
+        er = "SEVERE WARNING! Array of classes should have the same lenght as the array of labels:", len(all_classes), " vs. ", len(avg_labels)
 
     indices = numpy.searchsorted(all_classes, class_numbers)
     return avg_labels[indices]
@@ -2376,31 +2586,39 @@ def random_boolean_array(size):
 
 
 def generate_random_sigmoid_weights(input_dim, num_features):
-    c = numpy.random.normal(loc=0.0, scale=1.0, size=(input_dim, num_features))
+#    scale_factor = 8.0 / numpy.sqrt(input_dim)
+    scale_factor = 1.0 
+    c = numpy.random.normal(loc=0.0, scale=scale_factor, size=(input_dim, num_features))
+    c2 = (numpy.abs(c)**1.5)
+#    print "c2=", c2
+#    print "c2[0]=", c2[0]
+    c = 4.0 * numpy.sign(c) * c2 / c2.max() 
+#    print "c=", c
+#    print "c[0]=", c[0]
     l = numpy.random.normal(loc=0.0, scale=1.0, size=num_features)
     return (c,l)
 
-def extract_sigmoid_features(x, c1, l1, scale=1.0, offset=0.0, smart_fix=False):
+def extract_sigmoid_features(x, c1, l1, scale=1.0, offset=0.0, use_special_features=False):
     if x.shape[1] != c1.shape[0] or c1.shape[1] != len(l1):
         er = "Array dimensions mismatch: x.shape =" + str(x.shape) + ", c1.shape =" + str(c1.shape) + ", l1.shape=" + str(l1.shape)
         print er
         raise Exception(er)   
     s = numpy.dot(x,c1)+l1
     f = numpy.tanh(s)
-    if smart_fix: 
+    if use_special_features:
         #replace features with l1 = -1.0 to x^T * c1[i]
         #replace features with l1 =  0.8 to 0.8 expo(x^T * c1[i])
-        print "f.shape=", f.shape
-        print "numpy.dot(x,c1[:,0]).shape=", numpy.dot(x,c1[:,0]).shape
+#        print "f.shape=", f.shape
+#        print "numpy.dot(x,c1[:,0]).shape=", numpy.dot(x,c1[:,0]).shape
         fixed=0
         for i in range(c1.shape[1]):
             if l1[i] == 0.8:
                 f[:,i] = numpy.abs(numpy.dot(x,c1[:,i]))**0.8
                 fixed += 1
-            elif l1[i] == -1.0:
+            elif l1[i] == 1.0: #identity
                 f[:,i] = numpy.dot(x,c1[:,i])
                 fixed += 1
-    print "Number of features apted to either identity or 08Expo:", fixed
+        print "Number of features adapted to either identity or 08Expo:", fixed
     return f * scale + offset
 
 #sf_matrix has shape input_dim x output_dim
@@ -2460,7 +2678,7 @@ class SFAAdaptiveNLNode(mdp.Node):
         elif self.starting_point == "08Exp":
             print "good 1"
             c0 = numpy.concatenate((numpy.identity(self.input_dim), numpy.identity(self.input_dim)),axis=1)
-            l0 = numpy.concatenate((numpy.ones(self.input_dim)*-1.0, numpy.ones(self.input_dim)* 0.8),axis=0)
+            l0 = numpy.concatenate((numpy.ones(self.input_dim)*1.0, numpy.ones(self.input_dim)* 0.8),axis=0)
             
         if self.starting_point == "Identity" or self.starting_point == "08Exp":
             print "good 2"
@@ -2486,7 +2704,7 @@ class SFAAdaptiveNLNode(mdp.Node):
                 l1 = numpy.append(l1, lp, axis=0)
             #print "c1=", c1
             #print "l1=", l1
-            f1 = extract_sigmoid_features(x, c1, l1, smart_fix=True)
+            f1 = extract_sigmoid_features(x, c1, l1, use_special_features=True)
             f1_mean = f1.mean(axis=0)
             f1 = f1 - f1_mean
             f1_std = f1.std(axis=0) 
@@ -2524,7 +2742,7 @@ class SFAAdaptiveNLNode(mdp.Node):
         self.l1 = l1
         print "self.c1.shape=,",self.c1.shape,"self.l1.shape=,",self.l1.shape
         print "Learning of non-linear features finished"
-        f1 = extract_sigmoid_features(x, self.c1, self.l1, smart_fix=True)
+        f1 = extract_sigmoid_features(x, self.c1, self.l1, use_special_features=True)
         self.f1_mean = f1.mean(axis=0)
         f1 -= self.f1_mean
         self.f1_std = f1.std(axis=0) 
@@ -2557,7 +2775,7 @@ class SFAAdaptiveNLNode(mdp.Node):
     def _execute(self, x):
         num_samples = x.shape[0]
 
-        f1 = extract_sigmoid_features(x, self.c1, self.l1, smart_fix=True)
+        f1 = extract_sigmoid_features(x, self.c1, self.l1, use_special_features=True)
         f1 -= self.f1_mean
         f1 /= self.f1_std
         return self.sfa_node.execute(f1)
@@ -2595,7 +2813,7 @@ def indices_training_graph_split(num_samples, train_mode="regular", block_size=N
             er = "Inhomogeneous block sizes not supported for now"
             raise Exception(er)
     
-    elif train_mode == "complete":
+    elif train_mode == "clustered":
         print "Mode unuported for now... FIX this!!!"
 
 #Cumulative score metric
@@ -2615,582 +2833,11 @@ def cumulative_score(ground_truth, estimation, largest_error, integer_rounding=T
 ##################### GSFA functions/classes ################
 
 #Special purpose object to compute the covariance matrices used by SFA.
-#It efficiently supports special training methods: clustered, serial, mixed
-#TODO: Remove falsely global unneeded variables
-#TODO: 
-class CovDCovMatrix(object):
-    def __init__(self, block_size):
-        self.block_size = block_size
-        self.sum_x = None
-        self.sum_prod_x = None
-        self.num_samples = 0
-        self.sum_diffs = None 
-        self.sum_prod_diffs = None  
-        self.num_diffs = 0
-        self.last_block = None
-#Permanent Results Storage
-        self.cov_mtx = None
-        self.avg = None
-        self.dcov_mtx = None
-        self.tlen = 0            
+from GSFA_node import CovDCovMatrix, GSFANode
 
-    def AddSamples(self, sum_prod_x, sum_x, num_samples, weight=1.0):
-        weighted_sum_x = sum_x * weight
-        weighted_sum_prod_x = sum_prod_x * weight
-        weighted_num_samples = num_samples * weight
-        
-        if self.sum_prod_x is None:
-            self.sum_prod_x = weighted_sum_prod_x
-            self.sum_x = weighted_sum_x
-        else:
-            self.sum_prod_x = self.sum_prod_x + weighted_sum_prod_x
-            self.sum_x = self.sum_x + weighted_sum_x
-
-        self.num_samples = self.num_samples + weighted_num_samples
-
-    def AddDiffs(self, sum_prod_diffs, num_diffs, weight=1.0):
-        #weighted_sum_diffs = sum_diffs * weight
-        weighted_sum_prod_diffs = sum_prod_diffs * weight
-        weighted_num_diffs = num_diffs * weight
-        
-        if self.sum_prod_diffs is None:
-            self.sum_prod_diffs = weighted_sum_prod_diffs
-#            self.sum_diffs = weighted_sum_diffs
-        else:
-            self.sum_prod_diffs = self.sum_prod_diffs + weighted_sum_prod_diffs
-#            self.sum_diffs = self.sum_diffs + weighted_sum_diffs
-
-        self.num_diffs = self.num_diffs + weighted_num_diffs   
-       
-    #TODO:Add option to skip last sample from Cov part.
-    #Add unlabeled samples to Cov matrix (DCov remains unmodified)
-    def updateUnlabeled(self, x, weight=1.0):
-        num_samples, dim = x.shape
-                       
-        sum_x = x.sum(axis=0) 
-        sum_prod_x = mdp.utils.mult(x.T, x)
-        self.AddSamples(sum_prod_x, sum_x, num_samples, weight)
-    
-    #TODO:Add option to skip last sample from Cov part.
-    def updateRegular(self, x, weight=1.0):
-        num_samples, dim = x.shape
-        
-        #Update Cov Matrix
-        sum_x = x.sum(axis=0) 
-        sum_prod_x = mdp.utils.mult(x.T, x)            
-        self.AddSamples(sum_prod_x, sum_x, num_samples, weight)
-
-        #Update DCov Matrix
-        diffs = x[1:,:]-x[:-1,:]
-        num_diffs = num_samples - 1
-#        sum_diffs = diffs.sum(axis=0)
-        sum_prod_diffs = mdp.utils.mult(diffs.T, diffs)
-        self.AddDiffs(sum_prod_diffs, num_diffs, weight)
-
-    #Usually: sum(node_weights)=num_samples 
-    def updateGraph(self, x, node_weights=None, edge_weights=None, ignore_edge_avg=True):
-        num_samples, dim = x.shape
-
-        if node_weights==None:
-            node_weights = numpy.ones(num_samples)
-
-        if len(node_weights) != num_samples:
-            er = "Node weights should be the same length as the number of samples"
-            raise Exception(er)
-
-        if edge_weights==None:
-            er = "edge_weights should be a dictionary with entries: d[(i,j)] = w_{i,j}"
-            raise Exception(er)
-
-        node_weights_column = node_weights.reshape((num_samples, 1))                
-        #Update Cov Matrix
-        weighted_x = x * node_weights_column
-    
-        weighted_sum_x = weighted_x.sum(axis=0) 
-        weighted_sum_prod_x = mdp.utils.mult(x.T, weighted_x)
-        weighted_num_samples = node_weights.sum()            
-        self.AddSamples(weighted_sum_prod_x, weighted_sum_x, weighted_num_samples)
-
-        #Update DCov Matrix
-        num_diffs = len(edge_weights)
-        diffs = numpy.zeros((num_diffs, dim))
-        weighted_diffs = numpy.zeros((num_diffs, dim))
-        weighted_num_diffs = 0
-        for ii, (i,j) in enumerate(edge_weights.keys()):
-            diff = x[j,:]-x[i,:]
-            diffs[ii] = diff
-            w_ij = edge_weights[(i,j)]
-            weighted_diff = diff * w_ij
-            weighted_diffs[ii] = weighted_diff
-            weighted_num_diffs += w_ij
-
-        weighted_sum_diffs = weighted_diffs.sum(axis=0)
-        weighted_sum_prod_diffs = mdp.utils.mult(diffs.T, weighted_diffs)
-        self.AddDiffs(weighted_sum_prod_diffs, weighted_num_diffs)
-
-    #Note, this method makes sense from consistency constraints for "larger" windows. 
-    def updateMirroringSlidingWindow(self, x, weight=1.0, window_halfwidth=2):
-        num_samples, dim = x.shape
-        width = window_halfwidth #window_halfwidth is way too long to write it
-
-        #Update Cov Matrix
-        #All samples have same weight
-        sum_x = x.sum(axis=0) 
-        sum_prod_x = mdp.utils.mult(x.T, x)       
-        self.AddSamples(sum_prod_x, sum_x, num_samples, weight)
-        
-        #Update DCov Matrix
-        #First mirror the borders
-        x_mirror = numpy.zeros((num_samples+2*width, dim))
-        x_mirror[width:-width] = x #center part
-        x_mirror[0:width, :] = x[0:width, :][::-1,:] #first end
-        x_mirror[-width:, :] = x[-width:, :][::-1,:] #second end
-
-        #Center part
-        x_full = x
-        sum_prod_x_full = mdp.utils.mult(x_full.T, x_full)
-#        print "sum_prod_x_full[0]=", sum_prod_x_full[0]
-#        print "(2*width+1)*sum_prod_x_full=", (2*width+1)*sum_prod_x_full[0:3,0:3]
-
-        Aacc123 = numpy.zeros((dim, dim))
-        for i in range(0, 2*width): # [0, 2*width-1]
-            Aacc123 += (i+1)*mdp.utils.mult(x_mirror[i:i+1,:].T, x_mirror[i:i+1,:]) #(i+1)=1,2,3..., 2*width
-
-        for i in range(num_samples, num_samples+2*width): # [num_samples-width, num_samples-1]
-            Aacc123 += (num_samples+2*width-i)*mdp.utils.mult(x_mirror[i:i+1,:].T, x_mirror[i:i+1,:])
-#            print (num_samples+2*width-i)
-        #Warning [-1,0] does not work!!!    
-        #for i in range(0, 2*width): # [0, 2*width-1]
-        #    Aacc123 += (i+1)*mdp.utils.mult(x_mirror[-(i+1):-i,:].T, x_mirror[-(i+1):-i,:]) #(i+1)=1,2,3..., 2*width
-        x_middle = x_mirror[2*width:-2*width,:] #intermediate values of x, which are connected 2*width+1 times
-        Aacc123 += (2*width+1)*mdp.utils.mult(x_middle.T, x_middle)
-#        print "Aacc123[0:3,0:3]=", Aacc123[0:3,0:3]
-
-        b = numpy.zeros((num_samples+1+2*width, dim))
-        b[1:] = x_mirror.cumsum(axis=0)
-        B = b[2*width+1:]-b[0:-2*width-1]
-        Bprod = mdp.utils.mult(x_full.T, B)
-#        print "Bprod[0:3,0:3]=", Bprod[0:3,0:3]
-         
-        sum_prod_diffs_full = (2*width+1)*sum_prod_x_full + (Aacc123) - Bprod - Bprod.T
-        num_diffs = num_samples*(2*width) # removed zero differences
-#         print "N3=", num_diffs
-        sum_diffs = numpy.zeros(dim)
-        self.AddDiffs(sum_prod_diffs_full, num_diffs, weight)        
-    
-    #Note, this method makes sense from consistency constraints for "larger" windows. 
-    def updateSlowMirroringSlidingWindow(self, x, weight=1.0, window_halfwidth=2):
-        num_samples, dim = x.shape
-        width = window_halfwidth #window_halfwidth is way too long to write it
-      
-        #Update Cov Matrix
-        #All samples have same weight
-        sum_x = x.sum(axis=0) 
-        sum_prod_x = mdp.utils.mult(x.T, x)       
-        self.AddSamples(sum_prod_x, sum_x, num_samples, weight)
-                
-        #Update DCov Matrix
-        #window = numpy.ones(2*width+1) # Rectangular window
-        x_mirror = numpy.zeros((num_samples+2*width, dim))
-        x_mirror[width:-width] = x #center part
-        x_mirror[0:width, :] = x[0:width, :][::-1,:] #first end
-        x_mirror[-width:, :] = x[-width:, :][::-1,:] #second end
-                
-        diffs = numpy.zeros((num_samples, dim))
-        #print "width=", width
-        for offset in range(-width, width+1):
-            if offset == 0:
-                pass
-            else:
-                diffs = x_mirror[offset+width:offset+width+num_samples,:]-x
-                                 
-                sum_diffs = diffs.sum(axis=0) 
-                sum_prod_diffs = mdp.utils.mult(diffs.T, diffs)
-                num_diffs = len(diffs)
-# WARNING!
-#                self.AddDiffs(sum_prod_diffs, sum_diffs, num_diffs, weight * window[width+offset])
-                self.AddDiffs(sum_prod_diffs, sum_diffs, num_diffs, weight)               
-    
-    def updateFastSlidingWindow(self, x, weight=1.0, window_halfwidth=2):
-        num_samples, dim = x.shape
-        width = window_halfwidth
-
-#MOST CORRECT VERSION
-        x_sel = x+0.0
-        w_up = numpy.arange(width, 2*width) / (2.0*width)
-        w_up = w_up.reshape((width, 1))
-        w_down = numpy.arange(2*width-1,width-1,-1) / (2.0*width)
-        w_down = w_down.reshape((width, 1))
-        x_sel[0:width, :] =  x_sel[0:width, :] * w_up
-        x_sel[-width:, :] =  x_sel[-width:, :] * w_down
-        
-        sum_x = x_sel.sum(axis=0) 
-        sum_prod_x = mdp.utils.mult(x_sel.T, x_sel)       #There is also a bug here!!!! fix me!!!!
-        self.AddSamples(sum_prod_x, sum_x, num_samples - (0.5 *window_halfwidth-0.5), weight)
-        
-        #Update DCov Matrix
-        #First we compute the borders.
-        #Left border
-        for i in range(0, width): # [0, width -1]
-            diffs = x[0:width+i+1,:]-x[i,:]
-            sum_diffs = diffs.sum(axis=0) 
-            sum_prod_diffs = mdp.utils.mult(diffs.T, diffs)
-            num_diffs = len(diffs) - 1 # removed zero differences
-#            print "N1=", num_diffs
-#            print "sum_prod_diffs[0]=", sum_prod_diffs[0]
-            self.AddDiffs(sum_prod_diffs, num_diffs, weight)
-        #Right border
-        for i in range(num_samples-width, num_samples): # [num_samples-width, num_samples-1]
-            diffs = x[i-width:num_samples,:]-x[i,:]                                 
-            sum_diffs = diffs.sum(axis=0) 
-            sum_prod_diffs = mdp.utils.mult(diffs.T, diffs)
-            num_diffs = len(diffs) - 1 # removed zero differences
-#            print "N2=", num_diffs
-#            print "sum_prod_diffs[0]=", sum_prod_diffs[0]
-            self.AddDiffs(sum_prod_diffs, num_diffs, weight)
-
-
-        #Center part
-        x_full = x[width:num_samples-width,:]
-        sum_prod_x_full = mdp.utils.mult(x_full.T, x_full)
-#        print "sum_prod_x_full[0]=", sum_prod_x_full[0]
-
-        Aacc123 = numpy.zeros((dim, dim))
-        for i in range(0, 2*width): # [0, 2*width-1]
-            Aacc123 += (i+1)*mdp.utils.mult(x[i:i+1,:].T, x[i:i+1,:]) #(i+1)=1,2,3..., 2*width
-
-        for i in range(num_samples-2*width, num_samples): # [num_samples-width, num_samples-1]
-            Aacc123 += (num_samples-i)*mdp.utils.mult(x[i:i+1,:].T, x[i:i+1,:]) #(num_samples-1)=2*width,...,3,2,1
-
-        x_middle = x[2*width:num_samples-2*width,:] #intermediate values of x, which are connected 2*width+1 times
-
-        Aacc123 += (2*width+1)*mdp.utils.mult(x_middle.T, x_middle)
-
-##        a = numpy.zeros((num_samples+1, dim, dim))
-##        x1 = numpy.reshape(x, (num_samples, dim, 1))
-##        x2 = numpy.reshape(x, (num_samples, 1, dim))
-##        pp =numpy.multiply(x1, x2)
-##        #print "pp[0]", pp[0], pp.shape
-##        #for i in range(1,num_samples+1):
-##        #    #reimplement this using sumcum?
-##        #    a[i] = a[i-1] + mdp.utils.mult(x[i-1:i,:].T, x[i-1:i,:])
-##        #print "a[1]", a[1]
-##        #
-##        #a2 = a + 0.0
-##        a[1:] = pp.cumsum(axis=0)
-        #print "a[-1]", a[-1]
-        #print "a2[-1]", a2[-1]
-            #print "a[i]", a[i]
-#        print "a[0:2]", a[0:2]
-        b = numpy.zeros((num_samples+1, dim))
-        b[1:] = x.cumsum(axis=0)
-#        for i in range(1,num_samples+1):
-#            b[i] = b[i-1] + x[i-1,:]
-#        A = a[2*width+1:]-a[0:-2*width-1]
-        B = b[2*width+1:]-b[0:-2*width-1]
-#        Aacc = A.sum(axis=0)
-#        print "Aacc[0]=", Aacc[0]
-        Bprod = mdp.utils.mult(x_full.T, B)
-#        print "Bprod[0]=", Bprod[0]
-#        print sum_prod_x_full.shape, Aacc.shape, Bprod.shape
-        sum_prod_diffs_full = (2*width+1)*sum_prod_x_full + (Aacc123) - Bprod - Bprod.T
-        num_diffs = (num_samples-2*width)*(2*width) # removed zero differences
-#         print "N3=", num_diffs
-        sum_diffs = numpy.zeros(dim)
-        self.AddDiffs(sum_prod_diffs_full, num_diffs, weight)        
-    #Add sliding window data to covariance matrices
-    def updateSlidingWindow(self, x, weight=1.0, window_halfwidth=2):
-        num_samples, dim = x.shape
-        width = window_halfwidth
-
-        #Update Cov Matrix
-        #Warning, truncating samples to avoid edge problems
-#TRUNCATED VERSION
-#        x_sel = x[window_halfwidth:-window_halfwidth,:]
-#        sum_x = x_sel.sum(axis=0) 
-#        sum_prod_x = mdp.utils.mult(x_sel.T, x_sel)       
-#        self.AddSamples(sum_prod_x, sum_x, num_samples-2*window_halfwidth, weight)
-
-#MOST CORRECT VERSION
-        x_sel = x+0.0
-        w_up = numpy.arange(width, 2*width) / (2.0 * width)
-        w_up = w_up.reshape((width, 1))
-        w_down = numpy.arange(2*width-1,width-1,-1) / (2.0 * width)
-        w_down = w_down.reshape((width, 1))
-        x_sel[0:width, :] =  x_sel[0:width, :] * w_up
-        x_sel[-width:, :] =  x_sel[-width:, :] * w_down
-        
-        sum_x = x_sel.sum(axis=0)
-        print "F:)",
-        sum_prod_x = mdp.utils.mult(x_sel.T, x)       #Bug fixed!!! computing w * X^T * X, with X=(x1,..xN)^T
-        self.AddSamples(sum_prod_x, sum_x, num_samples - (0.5 *window_halfwidth-0.5), weight)
-        
-        #Update DCov Matrix
-        window = numpy.ones(2*width+1) # Rectangular window
-        
-        diffs = numpy.zeros((num_samples-2*width, dim))
-        #print "width=", width
-        for offset in range(-width, width+1):
-            if offset == 0:
-                pass
-            else:
-                if offset > 0:
-                    diffs = x[offset:,:]-x[0:num_samples-offset,:]
-                else: #offset < 0, only makes sense if window asymetric! (be careful about mean, however)
-                    abs_offset = -1 * offset
-                    diffs = x[0:num_samples-abs_offset,:] - x[abs_offset:,:]
-                                 
-                sum_diffs = diffs.sum(axis=0) 
-                sum_prod_diffs = mdp.utils.mult(diffs.T, diffs)
-                num_diffs = len(diffs)
-# WARNING!
-#                self.AddDiffs(sum_prod_diffs, sum_diffs, num_diffs, weight * window[width+offset])
-                self.AddDiffs(sum_prod_diffs, num_diffs, weight)
-
-# ERRONEOUS VERSION USED FOR PERFORMANCE REPORT:
-#                diffs = x[width+offset:num_samples-width+offset,:]-x[width:num_samples-width,:]
-#                                 
-#                sum_diffs = diffs.sum(axis=0) 
-#                sum_prod_diffs = mdp.utils.mult(diffs.T, diffs)
-#                num_diffs = len(diffs)
-## WARNING!
-##                self.AddDiffs(sum_prod_diffs, sum_diffs, num_diffs, weight * window[width+offset])
-#                self.AddDiffs(sum_prod_diffs, sum_diffs, num_diffs, weight)
-
-#            def AddDiffs(self, sum_prod_diffs, sum_diffs, num_diffs, weight=1.0):
-    #Add samples belonging to a serial training graph
-    #TODO:Remove torify option 
-    #NOTE: include_last_block not needed
-    #Torify: copy first block to the end of the serial
-    def updateSerial(self, x, block_size, Torify=False, weight=1.0, include_last_block=True):
-        num_samples, dim = x.shape
-        if block_size == None:
-            er = "block_size must be specified"
-            raise Exception(er)
-            block_size = self.block_size
-        if isinstance(block_size, (numpy.ndarray)):
-            err = "Inhomogeneous block sizes not yet supported in updateSerial"
-            raise Exception(err)
-                    
-        if Torify is True:    
-            x2 = numpy.zeros((num_samples+block_size, dim))
-            x2[0:num_samples] = x
-            x2[num_samples:] = x[0:block_size]
-            x = x2
-            num_samples = num_samples + block_size
-                       
-        if num_samples % block_size > 0:
-            err = "Consistency error: num_samples is not a multiple of block_size"
-            raise Exception(err)
-        num_blocks = num_samples / block_size
-
-        #warning, plenty of dtype missing!!!!!!!!
-        #Optimize computation of x.T ???
-        #Warning, remove last element of x (incremental computation)!!!
-
-        #Correlation Matrix. Computing sum of outer products (the easy part)
-        xp = x[block_size:num_samples-block_size]
-        x_b_ini = x[0:block_size]
-        x_b_end =  x[num_samples-block_size:]
-        sum_x = x_b_ini.sum(axis=0) + 2 * xp.sum(axis=0) + x_b_end.sum(axis=0)
-
-#            print "Sum_x[0:3] is ", sum_x[0:3]
-        sum_prod_x = mdp.utils.mult(x_b_ini.T, x_b_ini) + 2 *  mdp.utils.mult(xp.T, xp) + mdp.utils.mult(x_b_end.T, x_b_end)        
-        num_samples = 2 * block_size + 2 * (num_samples- 2 * block_size)
-        
-        self.AddSamples(sum_prod_x, sum_x, num_samples, weight)
-        
-        self.last_block = x[num_samples-block_size:]
-
-        #DCorrelation Matrix. Compute medias signal
-        media = numpy.zeros((num_blocks, dim))
-        for i in range(num_blocks):
-            media[i] = x[i*block_size:(i+1)*block_size].sum(axis=0) * (1.0 / block_size)
-
-        media_a = media[0:-1]
-        media_b = media[1:]
-        sum_prod_mixed_meds = (mdp.utils.mult(media_a.T, media_b) + mdp.utils.mult(media_b.T, media_a))
-#        prod_first_media = numpy.outer(media[0], media[0]) * block_size
-#        prod_last_media = numpy.outer(media[num_blocks-1], media[num_blocks-1]) * block_size
-        prod_first_block = mdp.utils.mult(x[0:block_size].T, x[0:block_size])
-        prod_last_block = mdp.utils.mult(x[num_samples-block_size:].T, x[num_samples-block_size:])
-
-        #next line causes an exception index out of bounds: n_threads=10
-#        sum_diffs = (media[num_blocks-1] - media[0]) * (block_size * block_size)  * (1.0 / block_size)
-#        num_diffs = (block_size * block_size) * (num_blocks - 1)
-#       WARNING? why did I remove one factor block_size?
-        num_diffs = block_size * (num_blocks - 1)
-
-#warning with factors!!!! they should be 2.0, 1.0, -1.0
-#        sum_prod_diffs = block_size * (2.0 * sum_prod_x + 2.0 * prod_last_block - 0.0 *prod_first_block) - (block_size * block_size) * sum_prod_mixed_meds
-        sum_prod_diffs = (block_size * (sum_prod_x) - (block_size * block_size) * sum_prod_mixed_meds) * (1.0 / block_size)
-#        sum_prod_diffs = block_size * (2.0 * sum_prod_x + 2.0 * prod_last_block + 0.0 *prod_first_block) - (block_size * block_size) * sum_prod_mixed_meds
-        self.AddDiffs(sum_prod_diffs, num_diffs, weight)
-
-#Here block_size must be an array or list
-#why block_sizes is not a parameter???
-#This will be changed to updateClustered
-#Weight should refer to node weights
-    def update_clustered(self, x, block_sizes = None, weight=1.0):       
-        num_samples, dim = x.shape
-
-        if isinstance(block_sizes, (int)):
-            return self.updateClustered_homogeneous_blocks(x, weight=weight, block_sizes=block_sizes)
-        
-        if block_sizes == None:
-            er = "error, block_size not specified!!!!"
-            raise Exception(er)
-            block_sizes = self.block_size
-
-        if num_samples != block_sizes.sum():
-            err = "Inconsistency error: num_samples (%d) is not equal to sum of block_sizes:"%num_samples, block_sizes
-            raise Exception(err)
-
-#        num_blocks = len(block_sizes)
-        
-        counter_sample=0
-        for block_size in block_sizes:
-            #Note, here a sqrt might be useful to compensate for very unbalanced datasets
-            #normalized_weight = weight * block_size * 1.0 / num_samples
-            #Warning Warning
-#            normalized_weight = weight / block_size #Warning! is this necessary!!??? I do sample balancing, in general what should be done???
-            normalized_weight = weight
-            self.update_clustered_homogeneous_block_sizes(x[counter_sample:counter_sample+block_size], weight=normalized_weight, block_size=block_size)
-            counter_sample += block_size
-
-# If the input is an array, the inhomogeneous function is used
-# Create true updateClustered
-# Change to updateClustered
-#TODO: For consisency with paper: make sure edge weights are = 1/Ns, and that self-loops are not counted, so divide by Ns * (Ns-1)
-  
-    def update_clustered_homogeneous_block_sizes(self, x, weight=1.0, block_size=None):
-        if block_size == None:
-            er = "error, block_size not specified!!!!"
-            raise Exception(er)
-            block_size = self.block_size
-
-        if isinstance(block_size, (numpy.ndarray)):
-            er = "Error: inhomogeneous block sizes not supported by this function"
-            raise Exception(er)
-#            return self.updateClustered_inhomogeneous_blocks(x, weight=weight, block_sizes=block_size)
-        
-        #Assuming block_size is an integer:
-        num_samples, dim = x.shape
-        if num_samples % block_size > 0:
-            err = "Inconsistency error: num_samples (%d) is not a multiple of block_size (%d)"%(num_samples, block_size)
-            raise Exception(err)
-        num_blocks = num_samples / block_size
-        num_neighbours = block_size-1
-
-        #warning, plenty of dtype missing!!!!!!!!
-
-        #Optimize computation of x.T ???
-        #Correlation Matrix. Computing sum of outer products, all elements are equally likely
-        sum_x = x.sum(axis=0)
-#            print "Sum_x[0:3] is ", sum_x[0:3]
-        sum_prod_x = mdp.utils.mult(x.T, x)
-        
-        #Note that each node is in 2 * (N-1) links, half of it beginning the link, half ending it.
-        #the number of nodes is N * B
-        #WARNING THEORY; IT WAS:
-        #weighted_sum_x = (2 * num_neighbours) * sum_x * weight
-        #weighted_sum_prod_x = (2 * num_neighbours) * sum_prod_x * weight
-        self.AddSamples(sum_prod_x, sum_x, num_samples, weight)
-
-        self.last_block = None
-        #DCorrelation Matrix. Compute medias signal
-        media = numpy.zeros((num_blocks, dim))
-        for i in range(num_blocks):
-            media[i] = x[i*block_size:(i+1)*block_size].sum(axis=0) * (1.0 / block_size)
-    
-        sum_prod_meds = mdp.utils.mult(media.T, media)
-        sum_diffs = numpy.zeros((1,dim))
-        #note there are N * (N-1) * B links
-        #WARNING!
-        #num_diffs = (block_size * (block_size-1)) * num_blocks
-        #WARNING!!!!!
-#        num_diffs = (block_size-1) * num_blocks
-#TODO: why such factor 0.5???
-        num_diffs = block_size * 0.5 * num_blocks
-
-        #WARNING!
-        #sum_prod_diffs = (2 * block_size) * sum_prod_x - 2 * (block_size * block_size) * sum_prod_meds
-#TODO: why the extra factor block_size in both terms, why divide here by num_neighbors??? both terms almost cancel.
-        sum_prod_diffs = ((2 * block_size) * sum_prod_x - 2 * (block_size * block_size) * sum_prod_meds)/num_neighbours
-        
-        self.AddDiffs(sum_prod_diffs, num_diffs, weight)
-        
-    def addCovDCovMatrix(self, cov_dcov_mat, adding_weight=1.0, own_weight=1.0):
-        if self.sum_prod_x is None:
-            self.sum_prod_x = cov_dcov_mat.sum_prod_x * adding_weight
-            self.sum_x = cov_dcov_mat.sum_x * adding_weight
-        else:
-            self.sum_prod_x = self.sum_prod_x * own_weight + cov_dcov_mat.sum_prod_x * adding_weight
-            self.sum_x = self.sum_x * own_weight + cov_dcov_mat.sum_x * adding_weight
-        self.num_samples = self.num_samples * own_weight + cov_dcov_mat.num_samples * adding_weight
-        if self.sum_prod_diffs is None:
-            self.sum_diffs = cov_dcov_mat.sum_diffs * adding_weight
-            self.sum_prod_diffs = cov_dcov_mat.sum_prod_diffs * adding_weight
-        else:
-            self.sum_diffs = self.sum_diffs * own_weight + cov_dcov_mat.sum_diffs * adding_weight
-            self.sum_prod_diffs = self.sum_prod_diffs * own_weight + cov_dcov_mat.sum_prod_diffs * adding_weight
-        self.num_diffs = self.num_diffs * own_weight + cov_dcov_mat.num_diffs * adding_weight
-
-    #This is not a good place to select whether to include the last sample or not... move it somewhere or remove it if not needed
-    def fix(self, divide_by_num_samples_or_differences=True, include_tail=False, verbose=False, center_dcov=False):
-        if verbose:
-            print "Fixing CovDCovMatrix, with block_size=", self.block_size
-  
-        #Finalize covariance matrix of x
-        if include_tail is True:
-            print "Including data tail into computation of covariance matrix of shape:" + str(self.last_block.shape)
-            self.sum_x = self.sum_x + self.last_block.sum(axis=0)
-            self.sum_prod_x = self.sum_prod_x + mdp.utils.mult(self.last_block.T, self.last_block )
-            self.num_samples = self.num_samples + self.block_size
-            
-        avg_x = self.sum_x * (1.0 / self.num_samples)
-#        avg_x = avg_x.reshape((1,self.input_dim))
-
-        #TEORY; This computation has a bias            
-        #exp_prod_x = self.sum_prod_x * (1.0 / self.num_samples) 
-        #prod_avg_x = numpy.outer(avg_x, avg_x)
-        #cov_x = exp_prod_x - prod_avg_x
-        prod_avg_x = numpy.outer(avg_x, avg_x)
-        if divide_by_num_samples_or_differences: # as specified by the theory on Training Graphs
-            cov_x = (self.sum_prod_x - self.num_samples * prod_avg_x) / (1.0 * self.num_samples)
-        else: # standard unbiased estimation
-            cov_x = (self.sum_prod_x - self.num_samples * prod_avg_x) / (self.num_samples-1.0)
-        
-        #Finalize covariance matrix of dx
-        if divide_by_num_samples_or_differences:
-            cov_dx = self.sum_prod_diffs / (1.0 * self.num_diffs)
-        else:
-            cov_dx = self.sum_prod_diffs / (self.num_diffs-1.0)
-            
-        self.cov_mtx = cov_x
-        self.avg = avg_x
-        self.tlen = self.num_samples            
-        self.dcov_mtx = cov_dx
-        
-#        print "cov_mtx[0]", self.cov_mtx[0]
-#        print "avg", self.avg
-#        print "dcov_mtx[0]", self.dcov_mtx[0]
-#        quit()
-
-#Safely decomment for debugging
-#        print "Finishing training CovDcovMtx: ",  self.num_samples, " num_samples, and ", self.num_diffs, " num_diffs"
-#        print "Avg[0:3] is", self.avg[0:4]
-#        print "Prod_avg_x[0:3,0:3] is", prod_avg_x[0:3,0:3]
-#        print "Cov[0:3,0:3] is", self.cov_mtx[0:3,0:3]
-#        print "DCov[0:3,0:3] is", self.dcov_mtx[0:3,0:3]
-#        print "AvgDiff[0:4] is", avg_diff[0:4]
-#        print "Prod_avg_diff[0:3,0:3] is", prod_avg_diff[0:3,0:3]
-#        print "Sum_prod_diffs[0:3,0:3] is", self.sum_prod_diffs[0:3,0:3]
-#        print "exp_prod_diffs[0:3,0:3] is", exp_prod_diffs[0:3,0:3]
-      
-        return self.cov_mtx, self.avg, self.dcov_mtx 
 
 ######## Helper functions for parallel processing and CovDcovMatrices #########
+#This function appears to be obsolete
 def ComputeCovMatrix(x, verbose=False):
     print "PCov",
     if verbose:
@@ -3209,8 +2856,24 @@ def ComputeCovDcovMatrixClustered(params, verbose=False):
         print "Computation Began!!! **********************************************************8"
         sys.stdout.flush()
     x, block_size, weight = params
-    covdcovmtx = CovDCovMatrix(block_size)
-    covdcovmtx.update_clustered_homogeneous_block_sizes(x, block_size=block_size, weight=weight)
+    covdcovmtx = CovDCovMatrix()
+    if isinstance(block_size, int):
+        covdcovmtx.update_clustered_homogeneous_block_sizes(x, block_size=block_size, weight=weight)
+    elif isinstance(block_size, list):
+        if isinstance(weight, int):
+            weight = [weight]*len(block_size)
+        elif isinstance(weight, list) and len(weight)==len(block_size):
+            weight = weight
+        else:
+            er = "weight is/are invalid:", weight, "block_size:", block_size
+            raise Exception(er)
+        current_pos = 0
+        for i, curr_block_size in enumerate(block_size):
+            covdcovmtx.update_clustered_homogeneous_block_sizes(x[:, current_pos:current_pos+curr_block_size], block_size=curr_block_size, weight=weight[i])
+            current_pos += curr_block_size
+    else:
+        er = "Unsupported block_size: ", block_size
+        raise Exception(er)
     if verbose:
         print "Computation Ended!!! **********************************************************8"
         sys.stdout.flush()
@@ -3247,272 +2910,145 @@ def ComputeCovDcovMatrixMixed(params, verbose=False):
         sys.stdout.flush()
     return covdcovmtx
 
-class GSFANode(mdp.Node):
-    def __init__(self, input_dim=None, output_dim=None, dtype=None, block_size=None, train_mode=None, sfa_expo=None, pca_expo=None, magnitude_sfa_biasing=None):
-        super(mdp.nodes.SFANode, self).__init__(input_dim, output_dim, dtype)
-        #Warning! bias activated, "courtesy" of Alberto
-        # init two covariance matrices
-        # one for the input data
-        self._cov_mtx = CovarianceMatrix(dtype, bias=True)
-        # one for the derivatives
-        self._dcov_mtx = CovarianceMatrix(dtype, bias=True)
-    
-        self.pinv = None
-        self._symeig = symeig
-        self.block_size= block_size
-        self.train_mode = train_mode
-    
-        self.sum_prod_x = None
-        self.sum_x = None
-        self.num_samples = 0
-        self.sum_diff = None 
-        self.sum_prod_diff = None  
-        self.num_diffs = 0
-        
-        self.sfa_expo=sfa_expo # 1.2: 1=Regular SFA directions, >1: schrink derivative in the direction of the principal components
-        self.pca_expo=pca_expo # 0.25: 0=No magnitude reduction 1=Whitening
-        self.magnitude_sfa_biasing = magnitude_sfa_biasing
-        self._myvar = None
-        self._covdcovmtx = CovDCovMatrix(block_size)
-        self.list_train_params = ["scheduler", "n_parallel", "train_mode", "block_size"] #Parameters accepted during training
-        
-    def _inverse(self, y):
-        #code for storing pseudoinverse courtesy of Alberto Escalante
-        if self.pinv is None:
-            self.pinv = pinv(self.sf)
-    #        print "SFA.pinv = ", self.pinv
-    #        print "Shape of SFA.pinv = ", self.pinv.shape
-    #        print "SFA.sf = ", self.sf
-    #        print "Shape of sf = ", self.sf.shape        
-    #        sf_t = self.sf.T
-    #        print "sf_t= ", sf_t
-    #        
-    #        m2 = mult(sf_t, self.sf)
-    #        print "m2 = ", m2
-    #        print "For orthonormal sf, m2 is the identity"
-    #
-    #        m3 = mult(self.sf, sf_t)
-    #        print "m3 = ", m3
-    #        print "just curiosity"
-    #        
-    #        s_mod = (self.sf * self.sf).sum(axis=0)
-    #        print "s_mod = ", s_mod
-    #        print "(sf/s_mod).T= ", (self.sf / s_mod).T
-        return mult(y, self.pinv)+self.avg
 
-    def train_with_scheduler(self, x, block_size=None, train_mode = None, node_weights=None, edge_weights=None, scheduler = None, n_parallel=None):      
-        self._train_phase_started = True
-        if train_mode == None:
-            train_mode = self.train_mode
-        if block_size == None:
-            block_size = self.block_size
-        if scheduler == None or n_parallel == None or train_mode == None:
-    #        print "NO parallel sfa done...  scheduler=", ,uler, " n_parallel=", n_parallel
-            return SFANode_train(self, x, block_size=block_size, train_mode=train_mode, node_weights=node_weights, edge_weights=edge_weights)
-        else:
-    #        self._covdcovmtx.update_clustered_homogeneous_block_sizes(x, weight=1.0)
-    
-    #        chunk_size=None 
-    #        num_chunks = n_parallel
-            num_chunks = min(n_parallel, x.shape[0]/block_size)
-            #here chunk_size is given in blocks!!!
-    #        chunk_size = int(numpy.ceil((x.shape[0]/block_size)*1.0/num_chunks))
-            chunk_size = int((x.shape[0]/block_size)/num_chunks)
-            
-            #Notice that parallel training doesn't work with clustered mode and inhomogeneous blocks
-            #TODO:Fix this
-            print "%d chunks, of size %d blocks, last chunk contains %d blocks"%(num_chunks, chunk_size, (x.shape[0]/block_size)%chunk_size)
-            if train_mode == 'clustered':
-                #TODO: Implement this
-                for i in range(num_chunks):
-                    print "Adding scheduler task //////////////////////"
-                    sys.stdout.flush()
-                    if i < num_chunks - 1:
-                        scheduler.add_task((x[i*block_size*chunk_size:(i+1)*block_size*chunk_size], block_size, 1.0), ComputeCovDcovMatrixClustered)
-                    else: # i == num_chunks - 1
-                        scheduler.add_task((x[i*block_size*chunk_size:], block_size, 1.0), ComputeCovDcovMatrixClustered)
-                    print "Done Adding scheduler task ///////////////////"
-                    sys.stdout.flush()
-            elif train_mode == 'serial':
-                for i in range(num_chunks):
-                    if i==0:
-                        print "adding task %d from sample "%i, i*block_size*chunk_size, "to", (i+1)*block_size*chunk_size
-                        scheduler.add_task((x[i*block_size*chunk_size:(i+1)*block_size*chunk_size], block_size), ComputeCovDcovMatrixSerial)
-                    elif i==num_chunks-1: #Add one previous block to the chunk
-                        print "adding task %d from sample "%i, i*block_size*chunk_size-block_size, "to the end"
-                        scheduler.add_task((x[i*block_size*chunk_size-block_size:], block_size), ComputeCovDcovMatrixSerial)
-                    else:
-                        print "adding task %d from sample "%i, i*block_size*chunk_size-block_size, "to", (i+1)*block_size*chunk_size
-                        scheduler.add_task((x[i*block_size*chunk_size-block_size:(i+1)*block_size*chunk_size], block_size), ComputeCovDcovMatrixSerial)
-                        
-            elif train_mode == 'mixed':
-                bs = block_size
-                self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[0:bs], weight=0.5)
-    
-    #           xxxx self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[bs:-bs], weight=1.0)
-                x2 = x[bs:-bs]
-    #            num_chunks2 = int(numpy.ceil((x2.shape[0]/block_size-2)*1.0/chunk_size))
-                num_chunks2 = int((x2.shape[0]/block_size-2)/chunk_size)
-                for i in range(num_chunks2):
-                    if i < num_chunks2-1:
-                        scheduler.add_task((x2[i*block_size*chunk_size:(i+1)*block_size*chunk_size], block_size, 1.0), ComputeCovDcovMatrixClustered)
-                    else:
-                        scheduler.add_task((x2[i*block_size*chunk_size:], block_size, 1.0), ComputeCovDcovMatrixClustered)
-                        
-                self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[-bs:], weight=0.5)
-    
-    #           xxxx self._covdcovmtx.updateSerial(x, Torify=False)            
-                for i in range(num_chunks):
-                    if i==0:
-                        scheduler.add_task((x[i*block_size*chunk_size:(i+1)*block_size*chunk_size], block_size), ComputeCovDcovMatrixSerial)
-                    elif i==num_chunks-1: #Add one previous block to the chunk
-                        scheduler.add_task((x[i*block_size*chunk_size-block_size:], block_size), ComputeCovDcovMatrixSerial)
-                    else: #Add one previous block to the chunk
-                        scheduler.add_task((x[i*block_size*chunk_size-block_size:(i+1)*block_size*chunk_size], block_size), ComputeCovDcovMatrixSerial)
-            elif train_mode == 'unlabeled':
-                #TODO: IMPLEMENT THIS
-                for i in range(num_chunks):
-                    print "Adding scheduler task //////////////////////"
-                    sys.stdout.flush()
-                    scheduler.add_task((x[i*block_size*chunk_size:(i+1)*block_size*chunk_size], block_size, 1.0), ComputeCovDcovMatrixClustered)
-                    print "Done Adding scheduler task ///////////////////"
-                    sys.stdout.flush()
-            else:
-                ex = "Unknown training method:", self.train_mode
-                raise Exception(ex)
-            
-            print "Getting results"
-            sys.stdout.flush()
-    
-            results = scheduler.get_results()
-    #        print "Shutting down scheduler"
-            sys.stdout.flush()
-    
-            for covdcovmtx in results:
-                self._covdcovmtx.addCovDCovMatrix(covdcovmtx)
 
-    def _train(self, x, block_size=None, train_mode = None, node_weights=None, edge_weights=None):
-        if train_mode == None:
-            train_mode = self.train_mode
-        if block_size == None:
-            er="SFA no block_size"
-            raise Exception(er)
-            block_size = self.block_size
-        
-        self._myvar=1
-        self.set_input_dim(x.shape[1])
-    
-        ## update the covariance matrices
-        # cut the final point to avoid a trivial solution in special cases
-        # WARNING: Force artificial training
-        print "train_mode=", train_mode
-        if train_mode == 'unlabeled':
-            print "updateUnlabeled"
-            self._covdcovmtx.updateUnlabeled(x, weight=0.00015) #Warning, set this weight appropiately!
-        elif train_mode == "regular":
-            print "updateRegular"
-            self._covdcovmtx.updateRegular(x, weight=1.0)
-        elif train_mode == 'clustered':
-            print "update_clustered_homogeneous_block_sizes"
-            self._covdcovmtx.update_clustered_homogeneous_block_sizes(x, weight=1.0, block_size=block_size)
-        elif train_mode == 'serial':
-            print "updateSerial"
-            self._covdcovmtx.updateSerial(x, Torify=False, block_size=block_size)
-        elif train_mode == 'mixed':
-            print "update mixed"
-            bs = block_size
-    # WARNING: THIS Generates degenerated solutions!!! Check code!! it should actually work fine??!!
-            self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[0:bs], weight=2.0, block_size=block_size)
-            self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[bs:-bs], weight=1.0, block_size=block_size)
-            self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[-bs:], weight=2.0, block_size=block_size)
-    #        self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[0:bs], weight=0.5, block_size=block_size)
-    #        self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[bs:-bs], weight=1.0, block_size=block_size)
-    #        self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[-bs:], weight=0.5, block_size=block_size)
-            self._covdcovmtx.updateSerial(x, Torify=False, block_size=block_size)            
-        elif train_mode[0:6] == 'window':
-            window_halfwidth = int(train_mode[6:])
-            print "Window (%d)"%window_halfwidth
-            self._covdcovmtx.updateSlidingWindow(x, weight=1.0, window_halfwidth=window_halfwidth)
-        elif train_mode[0:7] == 'fwindow':
-            window_halfwidth = int(train_mode[7:])
-            print "Fast Window (%d)"%window_halfwidth
-            self._covdcovmtx.updateFastSlidingWindow(x, weight=1.0, window_halfwidth=window_halfwidth)
-        elif train_mode[0:13] == 'mirror_window':
-            window_halfwidth = int(train_mode[13:])
-            print "Mirroring Window (%d)"%window_halfwidth
-            self._covdcovmtx.updateMirroringSlidingWindow(x, weight=1.0, window_halfwidth=window_halfwidth)
-        elif train_mode[0:14] == 'smirror_window':
-            window_halfwidth = int(train_mode[14:])
-            print "Slow Mirroring Window (%d)"%window_halfwidth
-            self._covdcovmtx.updateSlowMirroringSlidingWindow(x, weight=1.0, window_halfwidth=window_halfwidth)
-        elif train_mode == 'graph':
-            print "updateGraph"
-            self._covdcovmtx.updateGraph(x, weight=1.0, node_weights=node_weights, edge_weights=edge_weights)
-        else:
-            ex = "Unknown training method"
-            raise Exception(ex)
+def graph_delta_values(y, edge_weights):
+    R = 0
+    deltas = 0
+    for (i, j) in edge_weights.keys():
+        w_ij = edge_weights[(i,j)]
+        deltas += w_ij * (y[j]-y[i])**2
+        R += w_ij
+    return deltas/R
 
-    def _stop_training(self, debug=False, verbose=False, pca_term = 0.995, pca_exp=2.0):
-    #    self._myvar = self._myvar * 10
-    #    Warning, changed block_size to artificial_training
-    #    if (self.block_size == None) or (isinstance(self.block_size, int) and self.block_size == 1):
-    #   WARNING!!! WARNING!!!
-    #TODO: Define a proper way to fix training matrices... add training mode "regular" to SFA???
-        if ((self.block_size == None) or (isinstance(self.block_size, int) and self.block_size == 1)) and False:
-            ##### request the covariance matrices and clean up
-            self.cov_mtx, self.avg, self.tlen = self._cov_mtx.fix()
-            del self._cov_mtx
-            self.dcov_mtx, davg, dtlen = self._dcov_mtx.fix()
-            del self._dcov_mtx
-            print "Finishing training (regular2222). %d tlen, %d tlen of diff"%(self.tlen, dtlen)
-            print "Avg[0:3] is", self.avg[0:3]
-            print "Cov[0:3,0:3] is", self.cov_mtx[0:3,0:3]
-            print "DCov[0:3,0:3] is", self.dcov_mtx[0:3,0:3]
-        else:
-            if verbose or True:
-                print "stop_training: Warning, using experimental SFA training method, with self.block_size=", self.block_size
-            print "self._covdcovmtx.num_samples = ", self._covdcovmtx.num_samples 
-            print "self._covdcovmtx.num_diffs= ", self._covdcovmtx.num_diffs
-            self.cov_mtx, self.avg, self.dcov_mtx = self._covdcovmtx.fix()
-                   
-            print "Finishing SFA training: ",  self.num_samples, " num_samples, and ", self.num_diffs, " num_diffs"
-    #        print "Avg[0:3] is", self.avg[0:4]
-    #        print "Prod_avg_x[0:3,0:3] is", prod_avg_x[0:3,0:3]
-    #        print "Cov[0:3,0:3] is", self.cov_mtx[0:3,0:3]
-            print "DCov[0:3,0:3] is", self.dcov_mtx[0:3,0:3]
-    #        quit()
-    
-        if pca_term != 0.0 and False:
-            signs = numpy.sign(self.dcov_mtx)
-            self.dcov_mtx = ((1.0-pca_term) * signs * numpy.abs(self.dcov_mtx) ** (1.0/pca_exp) + pca_term * numpy.identity(self.dcov_mtx.shape[0])) ** pca_exp          
-            self.dcov_mtx = numpy.identity(self.dcov_mtx.shape[0])
-        rng = self._set_range()
-        
-            
-        #### solve the generalized eigenvalue problem
-        # the eigenvalues are already ordered in ascending order
-        #SUPERMEGAWARNING, moved dcov to the second argument!!!
-        #self.d, self.sf = self._symeig(self.dcov_mtx, self.cov_mtx, range=rng, overwrite=(not debug))
-        try:
-            print "***Range used=", rng
-            if self.sfa_expo != None and self.pca_expo!=None:
-                self.d, self.sf = _symeig_fake_regularized(self.dcov_mtx, self.cov_mtx, range=rng, overwrite=(not debug), sfa_expo=self.sfa_expo, pca_expo=self.pca_expo, magnitude_sfa_biasing=self.magnitude_sfa_biasing)
-            else:
-                self.d, self.sf = self._symeig(self.dcov_mtx, self.cov_mtx, range=rng, overwrite=(not debug))
-            d = self.d
-            # check that we get only *positive* eigenvalues
-            if d.min() < 0:
-                raise SymeigException("Got negative eigenvalues: %s." % str(d))
-        except SymeigException, exception:
-            errstr = str(exception)+"\n Covariance matrices may be singular."
-            raise Exception(errstr)
-    
-        # delete covariance matrix if no exception occurred
-        del self.cov_mtx
-        del self.dcov_mtx
-        del self._covdcovmtx
-        # store bias
-        self._bias = mult(self.avg, self.sf)
-        print "shape of SFANode.sf is=", self.sf.shape
+#TESTS:
+#All training modes should return something reasonable.
+#Regular mode can be compared with standard SFA
 
+# class OneTrainingPhaseFDANode(mdp.nodes.Node):
+#     def __init__(self, input_dim=None, output_dim=None, dtype=None):
+#         super(OneTrainingPhaseFDANode, self).__init__(input_dim, output_dim, dtype)
+#         n = mdp.nodes.FDANode(input_dim, output_dim, dtype)
+#         self.list_train_params = ["classes"] #Parameters accepted during training
+#     def _train(self, x, classes):
+#         n.train(x,classes)
+#         n.stop_training()
+#         n.train(x,classes)
+#         n.stop_training()
+
+def compute_regression_performance(data_training, correct_labels_training, data_test, correct_labels_test, size_feature_space, starting_point = None):
+    input_dim = data_training.shape[1]
+
+    #Generate functions used for regression
+    data_training_mean = data_training.mean(axis=0)
+    data_training_std = data_training.std(axis=0)
+    
+    data_training_norm = (data_training-data_training_mean)/data_training_std
+    data_test_norm = (data_test-data_training_mean)/data_training_std
+
+    c1, l1 = generate_random_sigmoid_weights(input_dim, size_feature_space)
+    if starting_point == "Identity":
+        #print "adding identity coefficients to expansion"
+        c1[0:input_dim, 0:input_dim] = numpy.identity(input_dim)
+        l1[0:input_dim] = numpy.ones(input_dim) * 1.0 #Code identity
+    elif starting_point == "Sigmoids":
+        print "Sigmoid starting point enabled",
+        #print "adding identity coefficients to expansion"
+        c1[0:input_dim, 0:input_dim] = numpy.identity(input_dim)
+        l1[0:input_dim] = numpy.ones(input_dim) * 0.0 # Sigmoids of each component will be computed later
+    elif starting_point == "08Exp": #identity included
+        #print "adding 08Exp coefficients to expansion"
+        c1[0:input_dim, 0:input_dim] = numpy.identity(input_dim)
+        c1[0:input_dim, input_dim:2*input_dim] = numpy.identity(input_dim)
+
+        l1[0:input_dim] = numpy.ones(input_dim) * 1.0 #Code identity
+        l1[input_dim:2*input_dim] = numpy.ones(input_dim) * 0.8 #Code 08exp  
+    else:
+        er = "starting_point unknown:", starting_point
+        raise Exception(er)
+
+    expanded_sl_training = extract_sigmoid_features(data_training_norm, c1, l1, scale=1.0, offset=0.0, use_special_features=True)
+    expanded_sl_test = extract_sigmoid_features(data_test_norm, c1, l1, scale=1.0, offset=0.0, use_special_features=True)
+     
+    
+    lr_node = mdp.nodes.LinearRegressionNode()
+    lr_node.train(expanded_sl_training, correct_labels_training.reshape((-1,1)))
+    lr_node.stop_training()  
+
+    estimated_labels_training = lr_node.execute(expanded_sl_training).flatten()
+    estimated_labels_test = lr_node.execute(expanded_sl_test).flatten()
+    #print "estimated_labels_training.shape=", estimated_labels_training.shape
+    #print "diff estimated vs training for training:", estimated_labels_training - correct_labels_training
+     
+    RMSE_expansion_training = (distance_squared_Euclidean(correct_labels_training, estimated_labels_training)/len(correct_labels_training)) ** 0.5
+    RMSE_expansion_test = (distance_squared_Euclidean(correct_labels_test, estimated_labels_test)/len(correct_labels_test)) ** 0.5
+
+    return RMSE_expansion_training, RMSE_expansion_test
+
+def correct_classif_rateC(ground_truth, classified, verbose=False):
+    """Computes a float value indicating the classification rate
+    
+        output = number of success classifications / total number of samples
+        both input arrays must have the same length and integer values
+    """
+    num = len(ground_truth)
+    if len(ground_truth) != len(classified):
+        ex = "ERROR in class sizes, in correct_classif_rate: len(ground_truth)=%d != len(classified)=%d"%(len(ground_truth), len(classified))
+        print ex
+        raise Exception(ex)
+
+    d1 = numpy.array(ground_truth, dtype="int")
+    d2 = numpy.array(classified, dtype="int")
+    if verbose:
+        print "ground_truth=", d1
+        print "classified=", d2
+    return (d1 == d2).sum() * 1.0 / num
+
+def compute_classification_performance(data_training, correct_classes_training, data_test, correct_classes_test, size_feature_space, starting_point = None):
+    input_dim = data_training.shape[1]
+    
+    #Generate functions used for regression
+    data_training_mean = data_training.mean(axis=0)
+    data_training_std = data_training.std(axis=0)
+    
+    data_training_norm = (data_training-data_training_mean)/data_training_std
+    data_test_norm = (data_test-data_training_mean)/data_training_std
+
+    c1, l1 = generate_random_sigmoid_weights(input_dim, size_feature_space)
+    if starting_point == "Identity":
+        print "adding identity coefficients to expansion"
+        c1[0:input_dim, 0:input_dim] = numpy.identity(input_dim)
+        l1[0:input_dim] = numpy.ones(input_dim) * 1.0 #Code identity
+    elif starting_point == "Sigmoids":
+        print "adding sigmoid of coefficients to expansion"
+        c1[0:input_dim, 0:input_dim] = 8.0*numpy.identity(input_dim)
+        l1[0:input_dim] = numpy.ones(input_dim) * 0.0 #Just set as 
+    elif starting_point == "08Exp":
+        print "adding 08Exp coefficients to expansion"
+        c1[0:input_dim, 0:input_dim] = numpy.identity(input_dim)
+        c1[0:input_dim, input_dim:2*input_dim] = numpy.identity(input_dim)
+
+        l1[0:input_dim] = numpy.ones(input_dim) * 1.0 #Code identity
+        l1[input_dim:2*input_dim] = numpy.ones(input_dim) * 0.8 #Code abs(x)**0.8  
+    else:
+        er= "Unknown starting_point", starting_point
+        print er
+        raise Exception(er)
+    expanded_data_training = extract_sigmoid_features(data_training_norm, c1, l1, scale=1.0, offset=0.0, use_special_features=False)
+    expanded_data_test = extract_sigmoid_features(data_test_norm, c1, l1, scale=1.0, offset=0.0, use_special_features=False)
+     
+    GC_node = mdp.nodes.GaussianClassifier()
+    GC_node.train(x=expanded_data_training, labels = correct_classes_training) #Functions for regression use class values!!!
+    GC_node.stop_training()
+      
+    estimated_classes_training = GC_node.label(expanded_data_training)
+    estimated_classes_test = GC_node.label(expanded_data_test)
+#    print "estimated_classes_training.shape=", estimated_classes_training.shape
+#    print "estimated_classes_training=", estimated_classes_training
+#    print "correct_classes_training=", correct_classes_training
+
+    CR_expansion_training = correct_classif_rateC(correct_classes_training, estimated_classes_training)
+    CR_expansion_test = correct_classif_rateC(correct_classes_test, estimated_classes_test)
+
+    return CR_expansion_training, CR_expansion_test
 

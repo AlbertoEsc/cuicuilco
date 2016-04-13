@@ -1,17 +1,42 @@
 import SystemParameters
 from SystemParameters import load_data_from_sSeq
 import numpy
+import scipy
 import mdp
 import sfa_libs 
 import more_nodes
+import more_nodes as he
 import patch_mdp
 import imageLoader
 from nonlinear_expansion import *
 import lattice
-import Image
+import PIL
+from PIL import Image
 import copy
 import os
 import string
+
+DAYS_IN_A_YEAR = 365.242
+
+experiment_seed = os.getenv("CUICUILCO_EXPERIMENT_SEED") #1112223339 #1112223339
+if experiment_seed:
+    experiment_seed = int(experiment_seed)
+else:
+    experiment_seed = 1112223334 #111222333
+    ex = "CUICUILCO_EXPERIMENT_SEED unset"
+    raise Exception(ex)
+print "PosXseed. experiment_seed=", experiment_seed
+numpy.random.seed(experiment_seed) #seed|-5789
+print "experiment_seed=", experiment_seed
+
+tuning_parameter = os.getenv("CUICUILCO_TUNING_PARAMETER") #1112223339 #1112223339
+if tuning_parameter==None:
+    ex = "CUICUILCO_TUNING_PARAMETER unset"
+    print ex
+    raise Exception(ex)
+print "tuning_parameter=", tuning_parameter
+
+
 
 #MEGAWARNING, remember that initialization overwrites these values!!!!!!!!!!
 #Therefore, the next section is useless unless class variables are read!!!!!!!!!!
@@ -45,26 +70,34 @@ def comp_layer_name(cloneLayer, exp_funcs, x_field_channels, y_field_channels, p
         name += "Homogeneous "
     else:
         name += "Inhomogeneous "
-    if exp_funcs == [identity,]:
+    if exp_funcs == "RandomSigmoids":
+        name += exp_funcs
+    elif exp_funcs == [identity,]:
         name += "Linear "
     else:
         name += "Non-Linear ("
         for fun in exp_funcs:
             name += fun.__name__ + ","
         name += ") "
-    name += "Layer: %dx%d => %d => %d"% (y_field_channels, x_field_channels, pca_out_dim, sfa_out_dim)
+    name += "Layer: %dx%d => %s => %s"% (y_field_channels, x_field_channels, str(pca_out_dim), str(sfa_out_dim))
     return name
 
 def comp_supernode_name(exp_funcs, pca_out_dim, sfa_out_dim):
     name = ""
-    if exp_funcs == [identity,]:
-        name += "Linear "
+    if exp_funcs == "RandomSigmoids":
+        name += exp_funcs
+    elif isinstance(exp_funcs, list):
+        if exp_funcs == [identity,]:
+            name += "Linear "
+        else:
+            name += "Non-Linear ("
+            for fun in exp_funcs:
+                name += fun.__name__ + ","
+            name += ") "
     else:
-        name += "Non-Linear ("
-        for fun in exp_funcs:
-            name += fun.__name__ + ","
-        name += ") "
-    name += "SFA Super Node:  all => %d => %d"% (pca_out_dim, sfa_out_dim)
+        ex = "Not recognized expansion functions:", exp_funcs
+        raise Exception(ex)
+    name += "SFA Super Node:  all => " + str(pca_out_dim) + " => " + str(sfa_out_dim)
     return name
 
 def NetworkSetExpFuncs(exp_funcs, network, include_L0=True):       
@@ -126,27 +159,272 @@ network.L3 = None
 network.L4 = None
 network.layers = [network.L0]
 
+
+network = HeadNetwork1L = copy.deepcopy(voidNetwork1L)
+network.layers[0].sfa_node_class = mdp.nodes.HeadNode
+network.layers[0].sfa_out_dim = 75
+
+def normalized_Q_terms(x):
+    return Q_N(x,k=1.0,d=2)
+
+def normalized_T_terms(x):
+    return T_N(x,k=1.0,d=3)
+
+def extract_sigmoid_features(x, c1, l1):
+    if x.shape[1] != c1.shape[0] or c1.shape[1] != len(l1):
+        er = "Array dimensions mismatch: x.shape =" + str(x.shape) + ", c1.shape =" + str(c1.shape) + ", l1.shape=" + str(l1.shape)
+        print er
+        raise Exception(er)   
+    s = numpy.dot(x,c1)+l1
+    f = numpy.tanh(s)
+    return f
+
+
+c35_to_800 = numpy.zeros((35,800))
+for i in range(800):
+    index_35_2 = numpy.random.randint(35)
+    c35_to_800[index_35_2,i]= numpy.random.normal(loc=0.0, scale=2.0, size=(1,))
+    index_35_2 = numpy.random.randint(35)
+    c35_to_800[index_35_2,i]= numpy.random.normal(loc=0.0, scale=2.0, size=(1,))
+
+print "c35_to_800=", c35_to_800
+print "c35_to_800.shape=", c35_to_800.shape
+l35_to_800 = numpy.random.normal(loc=0.0, scale=1.0, size=800)
+
+def random_sigmoids_pairwise_35_to_800(x):
+    return extract_sigmoid_features(x[:,0:35], c35_to_800, l35_to_800)
+
+
+c35_to_400 = numpy.zeros((35,400))
+for i in range(400):
+    index_35_2 = numpy.random.randint(35)
+    c35_to_400[index_35_2,i]= numpy.random.normal(loc=0.0, scale=4.0, size=(1,))
+    index_35_2 = numpy.random.randint(35)
+    c35_to_400[index_35_2,i]= numpy.random.normal(loc=0.0, scale=4.0, size=(1,))
+
+print "c35_to_400=", c35_to_400
+print "c35_to_400.shape=", c35_to_400.shape
+l35_to_400 = numpy.random.normal(loc=0.0, scale=0.05, size=400)
+
+def random_sigmoids_pairwise_35_to_400(x):
+    return extract_sigmoid_features(x, c35_to_400, l35_to_400)
+
+
+c35_to_200 = numpy.zeros((35,200))
+for i in range(200):
+    index_35_2 = numpy.random.randint(35)
+    c35_to_200[index_35_2,i]= numpy.random.normal(loc=0.0, scale=2.0, size=(1,))
+    index_35_2 = numpy.random.randint(35)
+    c35_to_200[index_35_2,i]= numpy.random.normal(loc=0.0, scale=2.0, size=(1,))
+
+print "c35_to_200=", c35_to_200
+print "c35_to_200.shape=", c35_to_200.shape
+l35_to_200 = numpy.random.normal(loc=0.0, scale=0.05, size=200)
+
+def random_sigmoids_pairwise_35_to_200(x):
+    return extract_sigmoid_features(x, c35_to_200, l35_to_200)
+
+def QE_10(x):
+    return QE(x[:,0:10])
+
+def QE_15(x):
+    return QE(x[:,0:15])
+
+def QE_20(x):
+    return QE(x[:,0:20])
+
+def QE_25(x):
+    return QE(x[:,0:25])
+
+def QE_30(x):
+    return QE(x[:,0:30])
+
+def QE_35(x):
+    return QE(x[:,0:35])
+
+def QE_40(x):
+    return QE(x[:,0:40])
+
+def QE_45(x):
+    return QE(x[:,0:45])
+
+def TE_15(x):
+    return TE(x[:,0:15])
+
+def TE_20(x):
+    return TE(x[:,0:20])
+
+def TE_25(x):
+    return TE(x[:,0:25])
+
+def TE_30(x):
+    return TE(x[:,0:30])
+
+def TE_35(x):
+    return TE(x[:,0:35])
+
+def TE_40(x):
+    return TE(x[:,0:40])
+
+def P4_5(x):
+    return P4(x[:,0:5])
+
+def P4_10(x):
+    return P4(x[:,0:10])
+
+def P4_15(x):
+    return P4(x[:,0:15])
+
+def P4_20(x):
+    return P4(x[:,0:20])
+
+def unsigned_08expo_100(x):
+    return unsigned_08expo(x[:,0:100])
+
+def encode_signal_p9(x):
+    dim = x.shape[1]
+    x_out = x+0.0
+    for i in range(9, dim): #9
+        yy = (-1.0) ** (numpy.floor(numpy.abs(x[:, i])*2.0)%2) # if a = (+/-)**.1*** then a=> -(+/-)a, otherwise a=>a        
+        print yy
+        x_out[:, i] = x_out[:, i]*yy
+    return x_out
+
+
+
+print "*******************************************************************"
+print "*******    MNIST DIRECT NETWORK                   *****************"
+print "*******************************************************************"
+layer = pSFADirectLayer = SystemParameters.ParamsSFASuperNode()
+layer.name = "Direct SFA Layer for MNIST"
+layer.pca_node_class = mdp.nodes.PCANode #None  #None
+layer.pca_args = {}
+layer.pca_out_dim = 40 # 35 #WARNING: 100 or None
+layer.exp_funcs = [identity]
+layer.sfa_node_class =  mdp.nodes.HeadNode #mdp.nodes.SFANode #mdp.nodes.SFANode
+layer.sfa_out_dim = 35 #3 #49*2 # *3 # None
+
+layer = pSFADirectLayer2 = SystemParameters.ParamsSFASuperNode()
+layer.name = "Direct SFA Layer2"
+layer.pca_node_class = None  #None
+layer.pca_args = {}
+#layer.exp_funcs = [identity, QE]
+layer.exp_funcs = [identity, QE, TE] #unsigned_08expo, signed_08expo
+layer.sfa_node_class = mdp.nodes.SFANode #mdp.nodes.SFANode
+layer.sfa_out_dim = 20 
+####################################################################
+#####terms_NL_expansion == 15:
+#        One-Layer Linear SFA NETWORK              ############
+####################################################################  
+network = MNIST_8C_DirectNetwork = SystemParameters.ParamsNetwork()
+network.name = "SFA Direct Network for MNIST"
+network.L0 = pSFADirectLayer
+network.L1 = pSFADirectLayer2
+network.L2 = None
+network.L3 = None
+network.L4 = None
+network.layers = [network.L0, network.L1]
+
+
+print "*******************************************************************"
+print "*******    Creating Direct Linear SFA Network     *****************"
+print "*******************************************************************"
+print "******** Setting Layer L0 Parameters          *********************"
+layer = pSFADirectLayer = SystemParameters.ParamsSFASuperNode()
+layer.name = "Direct SFA Layer"
+#layer.pca_node_class = None # mdp.nodes.SFANode
+#W
+layer.pca_node_class = mdp.nodes.PCANode #None  #None
+layer.pca_args = {}
+#layer.pca_out_dim = 35 #WARNING: 100 or None
+layer.pca_out_dim = 3000 # 35 #WARNING: 100 or None
+#layer.exp_funcs = [identity, QE]
+layer.exp_funcs = [identity,] #unsigned_08expo, signed_08expo
+#layer.exp_funcs = [he.cos_exp_mix8_F]
+#layer.exp_funcs = [encode_signal_p9,] #For next experiment: [encode_signal_p9,]
+#layer.red_node_class = mdp.nodes.HeadNode
+#layer.red_out_dim = int(tuning_parameter)
+layer.sfa_node_class =  mdp.nodes.HeadNode #mdp.nodes.SFANode #mdp.nodes.SFANode
+layer.sfa_out_dim = 200 #3 #49*2 # *3 # None
+
+
+layer = pSFADirectLayer2 = SystemParameters.ParamsSFASuperNode()
+layer.name = "Direct SFA Layer2"
+#layer.pca_node_class = None # mdp.nodes.SFANode
+#W
+layer.pca_node_class = mdp.nodes.SFANode
+layer.pca_args = {}
+layer.pca_out_dim = 3 #WARNING: 100 or None
+#layer.pca_out_dim = 35 #WARNING: 100 or None
+#layer.pca_out_dim = 200 # 35 #WARNING: 100 or None
+#layer.exp_funcs = [identity, QE]
+layer.exp_funcs = [identity, P5, P4, TE, QE, unsigned_08expo, signed_08expo] #unsigned_08expo, signed_08expo
+#layer.exp_funcs = [he.cos_exp_mix8_F]
+#layer.exp_funcs = [encode_signal_p9,] #For next experiment: [encode_signal_p9,]
+#layer.red_node_class = mdp.nodes.HeadNode
+#layer.red_out_dim = int(tuning_parameter)
+layer.sfa_node_class = mdp.nodes.SFANode #mdp.nodes.SFANode
+layer.sfa_out_dim = 3 
+####################################################################
+#####terms_NL_expansion == 15:
+#        One-Layer Linear SFA NETWORK              ############
+####################################################################  
+network = SFADirectNetwork1L = SystemParameters.ParamsNetwork()
+network.name = "SFA 1 Layer Direct Network"
+network.L0 = pSFADirectLayer
+network.L1 = None #pSFADirectLayer2
+network.L2 = None
+network.L3 = None
+network.L4 = None
+network.layers = [network.L0, network.L1]
+
 print "*******************************************************************"
 print "********    Creating One-Layer Linear SFA Network            ******************"
 print "*******************************************************************"
 print "******** Setting Layer L0 Parameters          *********************"
 layer = pSFAOneLayer = SystemParameters.ParamsSFASuperNode()
 layer.name = "One-Node SFA Layer"
-layer.pca_node_class = None # mdp.nodes.SFANode
+#layer.pca_node_class = None # mdp.nodes.SFANode
 #W
 layer.pca_node_class = mdp.nodes.PCANode
 layer.pca_args = {}
-layer.pca_out_dim = 100 #W None
-layer.exp_funcs = [identity,]
-layer.red_node_class = None
-layer.sfa_node_class = mdp.nodes.SFANode
-layer.sfa_args = {}
-#W
-#layer.sfa_out_dim = None
-layer.sfa_out_dim = 49*2 # *3
+layer.pca_out_dim = 35 #WARNING: 100 or None
+#layer.ord_node_class = mdp.nodes.IEVMLRecNode
+#layer.ord_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, QE],"max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999, "output_dim":35} #output_dim":40
+#layer.ord_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity],"max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999, "output_dim":35} #output_dim":40
+#layer.exp_funcs = [identity,]
+#layer.exp_funcs = [encode_signal_p9,] #For next experiment: [encode_signal_p9,]
+#layer.red_node_class = mdp.nodes.HeadNode
+#layer.red_out_dim = int(tuning_parameter)
+layer.sfa_node_class = mdp.nodes.IEVMLRecNode #mdp.nodes.SFANode
+#layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":"RandomSigmoids", "expansion_starting_point":"08Exp", "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999, "expansion_output_dim":4000} 
+#layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo],                       "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#QE10, TE10, QE15, TE15, QE20, TE20, QE25, TE25,
+terms_NL_expansion = int(tuning_parameter)
+if terms_NL_expansion == 15:
+    expansion = [identity, QE_15, TE_15]
+elif terms_NL_expansion == 20:
+    expansion = [identity, QE_20, TE_20]
+elif terms_NL_expansion == 25:
+    expansion = [identity, QE_25, TE_25]
+elif terms_NL_expansion == 30:
+    expansion = [identity, QE_30, TE_30]
+elif terms_NL_expansion == 35:
+    expansion = [identity, QE_35, TE_35]
+elif terms_NL_expansion == 40:
+    expansion = [identity, QE_40, TE_40]
+else:
+    er = "invalid size of NL expansion", terms_NL_expansion
+    raise Exception(er) 
+
+expansion = [identity, QE, TE_30] #TE_35
+
+layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":expansion,"max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999} 
+layer.sfa_out_dim = 9 #49*2 # *3 # None
 
 ####################################################################
-######        One-Layer Linear SFA NETWORK              ############
+#####terms_NL_expansion == 15:
+#        One-Layer Linear SFA NETWORK              ############
 ####################################################################  
 network = SFANetwork1L = SystemParameters.ParamsNetwork()
 network.name = "SFA 1 Layer Linear Network"
@@ -157,12 +435,41 @@ network.L3 = None
 network.L4 = None
 network.layers = [network.L0]
 
+
+
+
+
 network = PCANetwork1L = copy.deepcopy(SFANetwork1L)
 network.L0.pca_node_class = None
 network.L0.pca_args = {}
 network.L0.sfa_node_class = mdp.nodes.PCANode #WhiteningNode
-network.L0.sfa_out_dim = 49 * 2 # *3
+network.L0.sfa_out_dim = 75 #30 # 100 #49 * 2 # *3
 network.L0.sfa_args = {}
+
+
+network = CESFANetwork1L = copy.deepcopy(SFANetwork1L)
+network.L0.pca_node_class = mdp.nodes.PCANode
+network.L0.pca_out_dim = 200 # 100 #49 * 2 # *3
+network.L0.pca_args = {}
+network.L0.ord_node_class = he.NormalizeABNode #more_nodes.HistogramEqualizationNode #NormalizeABNode
+#network.L0.ord_args = {"num_pivots":200}
+network.L0.exp_funcs = [he.cos_exp_mix30_F] #[identity, sel30_QE, sel30_TE ] he.cos_exp_mix30_F] # sel60_QE # he.cos_exp_mix25_F # he.cos_exp_mix60q_F , sel25_QE, sel25_TE
+network.L0.sfa_node_class = mdp.nodes.GSFANode #IdentityNode #PCANode # mdp.nodes.NLIPCANode #WhiteningNode
+network.L0.sfa_out_dim = 60 # 100 #49 * 2 # *3
+network.L0.sfa_args = {}
+#network.L0.sfa_args = {"exp_func":he.cos_exp_mix8_F, "feats_at_once":60, "norm_class":he.NormalizeABNode,} #he.cos_exp_I_3D_F, smartD, he.cos_exp_I_smart2D_F, cos_exp_mix1_F
+
+
+network = NLIPCANetwork1L = copy.deepcopy(SFANetwork1L)
+network.L0.pca_node_class = mdp.nodes.PCANode
+network.L0.pca_out_dim = 300 # 100 #49 * 2 # *3
+network.L0.pca_args = {}
+network.L0.sfa_node_class = mdp.nodes.NLIPCANode #IdentityNode #PCANode # mdp.nodes.NLIPCANode #WhiteningNode
+network.L0.sfa_out_dim = 60 # 100 #49 * 2 # *3
+#network.L0.sfa_args = {"exp_func":he.cos_exp_mix8block25n20n15c_F, "factor_projection_out":0.72, "factor_mode"":"constant", "feats_at_once":10, "norm_class":he.NormalizeABNode,} #he.cos_exp_I_3D_F, smartD, he.cos_exp_I_smart2D_F, cos_exp_mix1_F
+network.L0.sfa_args = {"exp_func":he.cos_exp_mix8_F, "factor_projection_out":0.97, "factor_mode":"decreasing", "feats_at_once":2, "norm_class":he.NormalizeABNode,} #he.cos_exp_I_3D_F, smartD, he.cos_exp_I_smart2D_F, cos_exp_mix1_F
+#cos_exp_mix8block25n20n15c_F, he.cos_exp_mix8_F,
+
 
 network = HeuristicPaperNetwork = copy.deepcopy(SFANetwork1L)
 network.L0.pca_node_class = mdp.nodes.SFANode
@@ -170,7 +477,6 @@ network.L0.pca_out_dim = 60
 network.exp_funcs = [identity]
 network.L0.sfa_node_class = mdp.nodes.SFANode
 network.L0.sfa_out_dim = 60 # *3
-
 
 ####################################################################
 ######        2-Layer Linear SFA NETWORK TUBE           ############
@@ -209,9 +515,9 @@ u08expoNetwork1L = NetworkSetExpFuncs([identity, sel_exp(42, unsigned_2_08expo),
 #W
 u08expoNetwork1L.layers[0].pca_node_class = mdp.nodes.PCANode
 u08expoNetwork1L.layers[0].pca_out_dim = 500/3 #49
-u08expoNetwork1L.layers[0].ord_node_class = mdp.nodes.SFANode
-u08expoNetwork1L.layers[0].ord_args = {"output_dim": 400}
-u08expoNetwork1L.layers[0].sfa_out_dim = 100 #49
+u08expoNetwork1L.layers[0].ord_node_class = None #mdp.nodes.SFANode
+u08expoNetwork1L.layers[0].ord_args = {"output_dim": 100}
+u08expoNetwork1L.layers[0].sfa_out_dim = 30 #49
 
 #W for 1L network
 ##u08expoNetwork1L.layers[0].pca_node_class = None
@@ -236,7 +542,7 @@ u08expoNetwork2T.layers[1].sfa_out_dim = 49
 ####################################################################
 ######        One-Layer Quadratic SFA NETWORK          ############
 ####################################################################  
-quadraticNetwork1L = NetworkSetExpFuncs([identity, pair_prod_ex], copy.deepcopy(SFANetwork1L))
+quadraticNetwork1L = NetworkSetExpFuncs([identity, pair_prod_ex], copy.deepcopy(SFANetwork1L)) #QE? TE?
 quadraticNetwork1L.layers[0].pca_node_class = mdp.nodes.SFANode
 quadraticNetwork1L.layers[0].pca_out_dim = 16
 
@@ -261,17 +567,29 @@ quadraticNetwork1L.layers[0].pca_out_dim = 16
 ##GTSRBNetwork.L2.sfa_out_dim = 40 # 40 *1.5 = 60
 
 GTSRBNetwork = copy.deepcopy(SFANetwork1L)
-GTSRBNetwork.L0.pca_node_class = mdp.nodes.SFANode
+GTSRBNetwork.L0.pca_node_class = mdp.nodes.PCANode
+GTSRBNetwork.L0.pca_args = {}
+
 #GTSRBNetwork.L0.pca_node_class = None
 #W 150
-GTSRBNetwork.L0.pca_out_dim = 300/3 # 200 #WW 50  #32x32x3=1024x3 
+GTSRBNetwork.L0.pca_out_dim = 200 #627 # int(1568/2.5) #300/3 # 200 #WW 50  #32x32x3=1024x3 
 #GTSRBNetwork.L0.ord_node_class = mdp.nodes.SFANode
 #GTSRBNetwork.L0.ord_args = {"output_dim": 120} #75/3 = 25, This number of dimensions are not expanded! sel_exp(42, unsigned_08expo)
 #GTSRBNetwork.L0.exp_funcs = [identity, unsigned_08expo] #pair_prodsigmoid_04_adj2_ex, unsigned_08expo, unsigned_2_08expo
-GTSRBNetwork.L0.exp_funcs = [identity, unsigned_08expo]
+#GTSRBNetwork.L0.exp_funcs = [identity, unsigned_08expo, numpy.sign, pair_smax25_mix1_ex, pair_smax50_mix1_ex, pair_smax_mix1_ex], sel14_MaxE, pair_max_mix1_ex]
+
+GTSRBNetwork.L0.ord_node_class = mdp.nodes.HeadNode
+GTSRBNetwork.L0.ord_args = {"output_dim":120}
+
+GTSRBNetwork.L0.exp_funcs = [identity, QE] #, QE, maximum_99mix2_s08_ex, sel80_QE, QE] #maximum_99mix2_s08_ex, sel80_QE
+#maximum_75mix2_ex, media50_adj2_ex, pair_max90_mix1_ex, modulation50_adj1_08_ex, unsigned_08expo, sel90_unsigned_08expo
+#GTSRBNetwork.L0.exp_funcs = [identity,]
 #For SFA features on img: unsigned_08expo, for final system img+hog: unsigned_08expo also
+
 GTSRBNetwork.L0.sfa_node_class = mdp.nodes.SFANode     #SFANode
-GTSRBNetwork.L0.sfa_out_dim = 42/3 # WW 26*3 # 17*3 = 51 ## FOR RGB 26, for L/HOG/SFA
+GTSRBNetwork.L0.sfa_args = {}
+#GTSRBNetwork.L0.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":expansion,"max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999} 
+GTSRBNetwork.L0.sfa_out_dim = 75 # WW 26*3 # 17*3 = 51 ## FOR RGB 26, for L/HOG/SFA
 GTSRBNetwork.layers=[GTSRBNetwork.L0]
 
 Q_N_k1_d2_L = Q_N_L(k=1.0, d=2.0)
@@ -342,6 +660,548 @@ Q_N_k1_d2_L = Q_N_L(k=1.0, d=2.0)
 ##network.L3 = None
 ##network.L4 = None
 ##network.layers = [network.L0]
+
+print "*******************************************************************"
+print "********     Creating 2L Network for MNIST   ******************"
+print "*******************************************************************"
+print "******** Setting Layer L0 Parameters          *********************"
+pSFALayerL0 = SystemParameters.ParamsSFALayer()
+pSFALayerL0.name = "Homogeneous Linear Layer L0 6x6 2 Nodes"
+pSFALayerL0.x_field_channels=28
+pSFALayerL0.y_field_channels=28
+pSFALayerL0.x_field_spacing=28
+pSFALayerL0.y_field_spacing=28
+#pSFALayerL0.in_channel_dim=1
+
+pSFALayerL0.pca_node_class = mdp.nodes.PCANode
+pSFALayerL0.pca_out_dim = 120 #95
+#pSFALayerL0.pca_args = {"block_size": block_size}
+#pSFALayerL0.pca_args = {"block_size": -1, "train_mode": -1}
+pSFALayerL0.pca_args = {}
+
+pSFALayerL0.ord_node_class = mdp.nodes.HeadNode
+pSFALayerL0.pca_out_dim = 120
+
+pSFALayerL0.exp_funcs = [identity,]
+#pSFALayerL0.exp_funcs = "RandomSigmoids" #[identity,]
+#pSFALayerL0.exp_args = {output_dim:60} 
+
+pSFALayerL0.red_node_class = None
+pSFALayerL0.red_out_dim = 0
+pSFALayerL0.red_args = {}
+
+pSFALayerL0.sfa_node_class = mdp.nodes.IEVMLRecNode #mdp.nodes.SFANode
+pSFALayerL0.sfa_out_dim = 60
+pSFALayerL0.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":"RandomSigmoids", "expansion_starting_point":None, "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":4.99999, "expansion_output_dim":300} 
+
+#pSFALayerL0.sfa_args = {"block_size": -1, "train_mode": -1}
+
+pSFALayerL0.cloneLayer = False
+pSFALayerL0.name = comp_layer_name(pSFALayerL0.cloneLayer, pSFALayerL0.exp_funcs, pSFALayerL0.x_field_channels, pSFALayerL0.y_field_channels, pSFALayerL0.pca_out_dim, pSFALayerL0.sfa_out_dim)
+SystemParameters.test_object_contents(pSFALayerL0)
+
+
+pSFALayerL1 = SystemParameters.ParamsSFASuperNode()
+pSFALayerL1.name = "SFA Linear Super Node L3  all =>  9"
+#pSFALayerL1.in_channel_dim = pSFALayerL2.sfa_out_dim
+#pca_node_L3 = mdp.nodes.WhiteningNode(output_dim=pca_out_dim_L3) 
+pSFALayerL1.pca_node_class = None
+pSFALayerL1.ord_node_class = None
+
+pSFALayerL1.exp_funcs = [identity,]
+#pSFALayerL1.exp_args = {"output_dim":60}
+
+pSFALayerL1.red_node_class = None
+
+pSFALayerL1.sfa_node_class = mdp.nodes.IEVMLRecNode #mdp.nodes.SFANode
+pSFALayerL1.sfa_out_dim = 9
+expansion_output_dim = int(tuning_parameter)
+pSFALayerL1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":"RandomSigmoids", "expansion_starting_point":None, "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":4.99999, "expansion_output_dim":expansion_output_dim} 
+pSFALayerL1.cloneLayer = False
+pSFALayerL1.name = comp_supernode_name(pSFALayerL1.exp_funcs, pSFALayerL1.pca_out_dim, pSFALayerL1.sfa_out_dim)
+SystemParameters.test_object_contents(pSFALayerL1)
+
+network = SFANetworkMNIST2L = SystemParameters.ParamsNetwork()
+network.name = "2L network 6x6 pixels (4x4=16 Nodes) for MNIST"
+network.L0 = copy.deepcopy(pSFALayerL0)
+network.L1 = copy.deepcopy(pSFALayerL1)
+network.L2 = None
+network.L3 = None
+network.L4 = None
+network.layers = [network.L0]
+
+
+
+print "*******************************************************************"
+print "*****   Creating 7L MMNIST Network  MNISTNetwork_24x24_7L *********"
+print "*******************************************************************"
+print "******** Setting Layer L0 Parameters          *********************"
+pSFALayerL0 = SystemParameters.ParamsSFALayer()
+pSFALayerL0.name = "Homogeneous Linear Layer L0 3x3 8x8"
+pSFALayerL0.x_field_channels=3
+pSFALayerL0.y_field_channels=3
+pSFALayerL0.x_field_spacing=3
+pSFALayerL0.y_field_spacing=3
+#pSFALayerL0.in_channel_dim=1
+
+pSFALayerL0.pca_node_class = mdp.nodes.PCANode
+pSFALayerL0.pca_out_dim = 9
+pSFALayerL0.pca_args = {}
+
+#pSFALayerL0.ord_node_class = SystemParameters.ParamsSFALayer.ord_node_class
+pSFALayerL0.exp_funcs = [identity,]
+
+pSFALayerL0.red_node_class = None
+pSFALayerL0.red_out_dim = 0
+pSFALayerL0.red_args = {}
+
+pSFALayerL0.sfa_node_class = mdp.nodes.IEVMLRecNode #mdp.nodes.SFANode
+pSFALayerL0.sfa_out_dim = 16
+pSFALayerL0.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+
+#pSFALayerL0.sfa_args = {"block_size": -1, "train_mode": -1}
+pSFALayerL0.cloneLayer = False
+pSFALayerL0.name = comp_layer_name(pSFALayerL0.cloneLayer, pSFALayerL0.exp_funcs, pSFALayerL0.x_field_channels, pSFALayerL0.y_field_channels, pSFALayerL0.pca_out_dim, pSFALayerL0.sfa_out_dim)
+SystemParameters.test_object_contents(pSFALayerL0)
+
+pSFALayerL2H = SystemParameters.ParamsSFALayer()
+pSFALayerL2H.name = "Homogeneous Linear Layer LH 2x1 4x8 Nodes"
+pSFALayerL2H.x_field_channels=2
+pSFALayerL2H.y_field_channels=1
+pSFALayerL2H.x_field_spacing=2
+pSFALayerL2H.y_field_spacing=1
+
+pSFALayerL2H.pca_node_class = None
+
+pSFALayerL2H.exp_funcs = [identity,]
+
+pSFALayerL2H.red_node_class = None
+pSFALayerL2H.red_out_dim = 0
+pSFALayerL2H.red_args = {}
+
+pSFALayerL2H.sfa_node_class = mdp.nodes.IEVMLRecNode #mdp.nodes.SFANode
+pSFALayerL2H.sfa_out_dim = 16
+pSFALayerL2H.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+
+#pSFALayerL0.sfa_args = {"block_size": -1, "train_mode": -1}
+pSFALayerL2H.cloneLayer = False
+pSFALayerL2H.name = comp_layer_name(pSFALayerL2H.cloneLayer, pSFALayerL2H.exp_funcs, pSFALayerL2H.x_field_channels, pSFALayerL2H.y_field_channels, pSFALayerL2H.pca_out_dim, pSFALayerL2H.sfa_out_dim)
+SystemParameters.test_object_contents(pSFALayerL2H)
+
+
+pSFALayerL2V = SystemParameters.ParamsSFALayer()
+pSFALayerL2V.name = "Homogeneous Linear Layer LH 2x1 4x8 Nodes"
+pSFALayerL2V.x_field_channels=1
+pSFALayerL2V.y_field_channels=2
+pSFALayerL2V.x_field_spacing=1
+pSFALayerL2V.y_field_spacing=2
+
+pSFALayerL2V.pca_node_class = None
+
+pSFALayerL2V.exp_funcs = [identity,]
+
+pSFALayerL2V.red_node_class = None
+pSFALayerL2V.red_out_dim = 0
+pSFALayerL2V.red_args = {}
+
+pSFALayerL2V.sfa_node_class = mdp.nodes.IEVMLRecNode #mdp.nodes.SFANode
+pSFALayerL2V.sfa_out_dim = 16
+pSFALayerL2V.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+
+#pSFALayerL2V.sfa_args = {"block_size": -1, "train_mode": -1}
+pSFALayerL2V.cloneLayer = False
+pSFALayerL2V.name = comp_layer_name(pSFALayerL2V.cloneLayer, pSFALayerL2V.exp_funcs, pSFALayerL2V.x_field_channels, pSFALayerL2V.y_field_channels, pSFALayerL2V.pca_out_dim, pSFALayerL2V.sfa_out_dim)
+SystemParameters.test_object_contents(pSFALayerL2V)
+
+
+pSFALayerL1H = copy.deepcopy(pSFALayerL2H)
+pSFALayerL1V = copy.deepcopy(pSFALayerL2V)
+pSFALayerL2H = copy.deepcopy(pSFALayerL2H)
+pSFALayerL2V = copy.deepcopy(pSFALayerL2V)
+pSFALayerL3H = copy.deepcopy(pSFALayerL2H)
+pSFALayerL3V = copy.deepcopy(pSFALayerL2V)
+
+pSFALayerL0.sfa_out_dim = 14 # 9 + 5 
+pSFALayerL1H.sfa_out_dim = 28 # 2*9 + 10
+pSFALayerL1V.sfa_out_dim = 50 # 2*9 + 28
+pSFALayerL2H.sfa_out_dim = 75 # 2*9 + 25
+pSFALayerL2V.sfa_out_dim = 125 # 2*9 + 30
+pSFALayerL3H.sfa_out_dim = 160 # 2*9 + 35
+pSFALayerL3V.sfa_out_dim = 340 # 2*9 + 40
+pSFALayerL3V.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":"RandomSigmoids", "expansion_starting_point":"08Exp", "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999, "expansion_output_dim":800} 
+
+
+network = MNISTNetwork_24x24_7L = SystemParameters.ParamsNetwork()
+network.name = "MNIST Network 7L 24x24"
+network.L0 = copy.deepcopy(pSFALayerL0)
+network.L1 = copy.deepcopy(pSFALayerL1H)
+network.L2 = copy.deepcopy(pSFALayerL1V)
+network.L3 = copy.deepcopy(pSFALayerL2H)
+network.L4 = copy.deepcopy(pSFALayerL2V)
+network.L5 = copy.deepcopy(pSFALayerL3H)
+network.L6 = copy.deepcopy(pSFALayerL3V)
+network.layers = [network.L0, network.L1, network.L2, network.L3, network.L4, network.L5, network.L6]
+
+
+
+print "*******************************************************************"
+print "*****   Creating 7L MMNIST Network  MNISTNetwork_24x24_7L_B *********"
+print "*******************************************************************"
+
+def signed_03expo(x):
+    return signed_expo(x, 0.3)
+
+def signed_08expo(x):
+    return signed_expo(x, 0.8)
+
+
+def unsigned_08expo_p075(x):
+    return unsigned_08expo(x+0.75)
+
+def unsigned_08expo_m075(x):
+    return unsigned_08expo(x-0.75)
+
+def unsigned_08expo_p15(x):
+    return unsigned_08expo(x+1.5)
+
+def unsigned_08expo_m15(x):
+    return unsigned_08expo(x-1.5)
+
+def unsigned_08expo_75(x):
+    return unsigned_08expo(x[:,0:75])
+
+def unsigned_08expo_115(x):
+    return unsigned_08expo(x[:,0:115])
+
+def QE_50(x):
+    return QE(x[:,0:50])
+
+def QE_55(x):
+    return QE(x[:,0:55])
+
+def QE_60(x):
+    return QE(x[:,0:60])
+
+def QE_70(x):
+    return QE(x[:,0:70])
+
+def QE_50_AP03(x):
+    return Q_AP(x[:,0:50], d=0.3)
+
+def QE_50_AP06(x):
+    return Q_AP(x[:,0:50], d=0.6)
+
+def QE_50_AP08(x):
+    return Q_AP(x[:,0:50], d=0.8)
+
+def QE_60_AP08(x):
+    return Q_AP(x[:,0:60], d=0.8)
+
+def QE_70_AP08(x):
+    return Q_AP(x[:,0:70], d=0.8)
+
+def QE_90_AP08(x):
+    return Q_AP(x[:,0:90], d=0.8)
+
+def QE_2Split_25(x):
+    s = x.shape[1]/2
+    return numpy.concatenate((QE(x[:,0:25]), QE(x[:,s:s+25])), axis=1)
+
+def QE_2Split_15(x):
+    s = x.shape[1]/2
+    return numpy.concatenate((QE(x[:,0:15]), QE(x[:,s:s+15])), axis=1)
+
+def QE_2Split_35(x):
+    s = x.shape[1]/2
+    return numpy.concatenate((QE(x[:,0:35]), QE(x[:,s:s+35])), axis=1)
+
+def QE_2Split_40(x):
+    s = x.shape[1]/2
+    return numpy.concatenate((QE(x[:,0:40]), QE(x[:,s:s+40])), axis=1)
+
+def QE_2Split_45(x):
+    s = x.shape[1]/2
+    return numpy.concatenate((QE(x[:,0:45]), QE(x[:,s:s+45])), axis=1)
+
+def QE_2Split_50(x):
+    s = x.shape[1]/2
+    return numpy.concatenate((QE(x[:,0:50]), QE(x[:,s:s+50])), axis=1)
+
+def QE_2Split_55(x):
+    s = x.shape[1]/2
+    return numpy.concatenate((QE(x[:,0:55]), QE(x[:,s:s+55])), axis=1)
+
+def QE_2Split_60(x):
+    s = x.shape[1]/2
+    return numpy.concatenate((QE(x[:,0:60]), QE(x[:,s:s+60])), axis=1)
+
+def QE_2Split_65(x):
+    s = x.shape[1]/2
+    return numpy.concatenate((QE(x[:,0:65]), QE(x[:,s:s+65])), axis=1)
+
+def QE_2Split_70(x):
+    s = x.shape[1]/2
+    return numpy.concatenate((QE(x[:,0:70]), QE(x[:,s:s+70])), axis=1)
+
+def QE_2Split_15_AP08(x):
+    s = x.shape[1]/2
+    return numpy.concatenate((Q_AP(x[:,0:15], d=0.8), Q_AP(x[:,s:s+15],  d=0.8)), axis=1)
+
+def QE_2Split_50_AP02(x):
+    s = x.shape[1]/2
+    return numpy.concatenate((Q_AP(x[:,0:50], d=0.2), Q_AP(x[:,s:s+50],  d=0.2)), axis=1)
+
+def QE_2Split_50_AP03(x):
+    s = x.shape[1]/2
+    return numpy.concatenate((Q_AP(x[:,0:50], d=0.3), Q_AP(x[:,s:s+50],  d=0.3)), axis=1)
+
+def QE_2Split_50_AP06(x):
+    s = x.shape[1]/2
+    return numpy.concatenate((Q_AP(x[:,0:50], d=0.6), Q_AP(x[:,s:s+50],  d=0.6)), axis=1)
+
+def QE_2Split_50_AP08(x):
+    s = x.shape[1]/2
+    return numpy.concatenate((Q_AP(x[:,0:50], d=0.8), Q_AP(x[:,s:s+50],  d=0.8)), axis=1)
+
+def QE_2Split_60_AP08(x):
+    s = x.shape[1]/2
+    return numpy.concatenate((Q_AP(x[:,0:60], d=0.8), Q_AP(x[:,s:s+60],  d=0.8)), axis=1)
+
+def QE_2Split_70_AP08(x):
+    s = x.shape[1]/2
+    return numpy.concatenate((Q_AP(x[:,0:70], d=0.8), Q_AP(x[:,s:s+70],  d=0.8)), axis=1)
+
+def QE_2Split_55_AP08(x):
+    s = x.shape[1]/2
+    return numpy.concatenate((Q_AP(x[:,0:55], d=0.8), Q_AP(x[:,s:s+55],  d=0.8)), axis=1)
+
+def QE_3Split_10(x):
+    s = x.shape[1]/3
+    return numpy.concatenate((QE(x[:,0:10]), QE(x[:,s:s+10]), QE(x[:,2*s:2*s+10])), axis=1)
+
+def QE_3Split_15(x):
+    s = x.shape[1]/3
+    return numpy.concatenate((QE(x[:,0:15]), QE(x[:,s:s+15]), QE(x[:,2*s:2*s+15])), axis=1)
+
+def QE_3Split_15_AP02(x):
+    s = x.shape[1]/3
+    return numpy.concatenate((Q_AP(x[:,0:15], d=0.2), Q_AP(x[:,s:s+15], d=0.2), Q_AP(x[:,2*s:2*s+15], d=0.2)), axis=1)
+
+def QE_3Split_15_AP03(x):
+    s = x.shape[1]/3
+    return numpy.concatenate((Q_AP(x[:,0:15], d=0.3), Q_AP(x[:,s:s+15], d=0.3), Q_AP(x[:,2*s:2*s+15], d=0.3)), axis=1)
+
+def QE_3Split_15_AP06(x):
+    s = x.shape[1]/3
+    return numpy.concatenate((Q_AP(x[:,0:15], d=0.6), Q_AP(x[:,s:s+15], d=0.6), Q_AP(x[:,2*s:2*s+15], d=0.6)), axis=1)
+
+def QE_3Split_15_AP08(x):
+    s = x.shape[1]/3
+    return numpy.concatenate((Q_AP(x[:,0:15], d=0.8), Q_AP(x[:,s:s+15], d=0.8), Q_AP(x[:,2*s:2*s+15], d=0.8)), axis=1)
+
+
+def QE_3Split_20(x):
+    s = x.shape[1]/3
+    return numpy.concatenate((QE(x[:,0:20]), QE(x[:,s:s+20]), QE(x[:,2*s:2*s+20])), axis=1)
+
+
+def QE_3Split_25(x):
+    s = x.shape[1]/3
+    return numpy.concatenate((QE(x[:,0:25]), QE(x[:,s:s+25]), QE(x[:,2*s:2*s+25])), axis=1)
+
+def QE_3Split_35(x):
+    s = x.shape[1]/3
+    return numpy.concatenate((QE(x[:,0:35]), QE(x[:,s:s+35]), QE(x[:,2*s:2*s+35])), axis=1)
+
+def QE_3Split_35_AP08(x):
+    s = x.shape[1]/3
+    return numpy.concatenate((Q_AP(x[:,0:35], d=0.8), Q_AP(x[:,s:s+35], d=0.8), Q_AP(x[:,2*s:2*s+35], d=0.8)), axis=1)
+
+
+def QE_3Split_45(x):
+    s = x.shape[1]/3
+    return numpy.concatenate((QE(x[:,0:45]), QE(x[:,s:s+45]), QE(x[:,2*s:2*s+45])), axis=1)
+
+def QE_3Split_50(x):
+    s = x.shape[1]/3
+    return numpy.concatenate((QE(x[:,0:50]), QE(x[:,s:s+50]), QE(x[:,2*s:2*s+50])), axis=1)
+
+def TE_20_AP08(x):
+    return T_AP(x[:,0:20], d=0.8)
+
+def TE_25_AP08(x):
+    return T_AP(x[:,0:25], d=0.8)
+
+def TE_30_AP03(x):
+    return T_AP(x[:,0:30], d=0.3)
+
+def TE_30_AP06(x):
+    return T_AP(x[:,0:30], d=0.6)
+
+def TE_30_AP08(x):
+    return T_AP(x[:,0:30], d=0.8)
+
+def TE_35_AP03(x):
+    return T_AP(x[:,0:35], d=0.3)
+
+def TE_35_AP08(x):
+    return T_AP(x[:,0:35], d=0.8)
+
+def TE_40_AP08(x):
+    return T_AP(x[:,0:40], d=0.8)
+
+def TE_45_AP08(x):
+    return T_AP(x[:,0:45], d=0.8)
+
+def TE_50_AP08(x):
+    return T_AP(x[:,0:50], d=0.8)
+
+def TE_55_AP08(x):
+    return T_AP(x[:,0:55], d=0.8)
+
+def TE_9_39(x):
+    return TE(x[:,9:39])
+
+def TE_2Split_20(x):
+    s = x.shape[1]/2
+    return numpy.concatenate((TE(x[:,0:20]), TE(x[:,s:s+20])), axis=1)
+
+def TE_2Split_25(x):
+    s = x.shape[1]/2
+    return numpy.concatenate((TE(x[:,0:25]), TE(x[:,s:s+25])), axis=1)
+
+def TE_2Split_30(x):
+    s = x.shape[1]/2
+    return numpy.concatenate((TE(x[:,0:30]), TE(x[:,s:s+30])), axis=1)
+
+def TE_3Split_15(x):
+    s = x.shape[1]/3
+    return numpy.concatenate((TE(x[:,0:15]), TE(x[:,s:s+15]), TE(x[:,2*s:2*s+15])), axis=1)
+
+def TE_3Split_20(x):
+    s = x.shape[1]/3
+    return numpy.concatenate((TE(x[:,0:20]), TE(x[:,s:s+20]), TE(x[:,2*s:2*s+20])), axis=1)
+
+
+print "******** Setting Layer L0 Parameters          *********************"
+pSFALayerL0_4x4 = copy.deepcopy(pSFALayerL0) #L1
+pSFALayerL0_4x4.name = "Homogeneous Linear Layer L0 S=4x4 D=2x2"
+pSFALayerL0_4x4.x_field_channels=4 #4 for 24x24 and 28x28, 5 for 29x29
+pSFALayerL0_4x4.y_field_channels=4
+pSFALayerL0_4x4.x_field_spacing=2 #2 for 24x24and 28x28, 3 for 29x29
+pSFALayerL0_4x4.y_field_spacing=2
+pSFALayerL0_4x4.pca_out_dim = 13 #12 for 24x24and 28x28, 20 for 29x29
+pSFALayerL0_4x4.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+
+pSFALayerL1H_S3_D2 = copy.deepcopy(pSFALayerL1H) #L2
+pSFALayerL1H_S3_D2.name = "Homogeneous Linear Layer L1H S=3x1 D=2x1"
+pSFALayerL1H_S3_D2.x_field_channels=3
+pSFALayerL1H_S3_D2.y_field_channels=1
+pSFALayerL1H_S3_D2.x_field_spacing=2
+pSFALayerL1H_S3_D2.y_field_spacing=1
+#pSFALayerL1H_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QE_3Split_15], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+pSFALayerL1H_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+
+pSFALayerL2H_S3_D2 = copy.deepcopy(pSFALayerL1H) #L4
+pSFALayerL2H_S3_D2.name = "Homogeneous Linear Layer L2H S=3x1 D=2x1"
+pSFALayerL2H_S3_D2.x_field_channels=2 #3 for 24x24 and 29x29, 2 for 28x28
+pSFALayerL2H_S3_D2.y_field_channels=1
+pSFALayerL2H_S3_D2.x_field_spacing=2 #2 for 24x24, 1 for 29x29
+pSFALayerL2H_S3_D2.y_field_spacing=1
+#pSFALayerL2H_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QE_3Split_25, TE_3Split_20], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerL2H_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo,  QE_2Split_15_AP08], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+pSFALayerL2H_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+
+pSFALayerL3H_S2_D1 = copy.deepcopy(pSFALayerL1H) #L6
+pSFALayerL3H_S2_D1.name = "Homogeneous Linear Layer L3H S=2x1 D=1x1"
+pSFALayerL3H_S2_D1.x_field_channels=3 #2 for 24x24 and 29x29, 3 for 28x28
+pSFALayerL3H_S2_D1.y_field_channels=1
+pSFALayerL3H_S2_D1.x_field_spacing=1
+pSFALayerL3H_S2_D1.y_field_spacing=1
+#sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QE_2Split_25, TE_2Split_20], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerL3H_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QE_2Split_50], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerL3H_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo,  QE_3Split_35_AP08], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+pSFALayerL3H_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+
+#***************************************************************************
+pSFALayerL1V_S3_D2 = copy.deepcopy(pSFALayerL1H) #L3 
+pSFALayerL1V_S3_D2.name = "Homogeneous Linear Layer L1V S=1x3 D=1x2"
+pSFALayerL1V_S3_D2.x_field_channels=1
+pSFALayerL1V_S3_D2.y_field_channels=3
+pSFALayerL1V_S3_D2.x_field_spacing=1
+pSFALayerL1V_S3_D2.y_field_spacing=2
+#sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QE_3Split_20, TE_3Split_15], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+pSFALayerL1V_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+
+pSFALayerL2V_S3_D2 = copy.deepcopy(pSFALayerL1H) #L5
+pSFALayerL2V_S3_D2.name = "Homogeneous Linear Layer L2V S=1x3 D=1x2"
+pSFALayerL2V_S3_D2.x_field_channels=1
+pSFALayerL2V_S3_D2.y_field_channels=2
+pSFALayerL2V_S3_D2.x_field_spacing=1
+pSFALayerL2V_S3_D2.y_field_spacing=2 #2 for 24x24, 1 for 29x29
+#sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QE_3Split_25, TE_3Split_20], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+pSFALayerL2V_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+
+pSFALayerL3V_S2_D1 = copy.deepcopy(pSFALayerL1H) #L7
+pSFALayerL3V_S2_D1.name = "Homogeneous Linear Layer L3V S=1x2 D=1x1"
+pSFALayerL3V_S2_D1.x_field_channels=1
+pSFALayerL3V_S2_D1.y_field_channels=3
+pSFALayerL3V_S2_D1.x_field_spacing=1
+pSFALayerL3V_S2_D1.y_field_spacing=1
+#sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QE_2Split_25, TE_2Split_20], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QE_2Split_35, TE_2Split_25], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":1, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+
+pSFALayerL0_4x4.sfa_out_dim = 13 #Was 15 #Usually 16 L1 # 9 + 5 
+pSFALayerL1H_S3_D2.sfa_out_dim = 20 #Was 28 #Usually 30 L2 # 2*9 + 10
+pSFALayerL1V_S3_D2.sfa_out_dim = 50 #L3 # 2*9 + 28
+pSFALayerL2H_S3_D2.sfa_out_dim = 70 #L4 #60 # 2*9 + 25
+pSFALayerL2V_S3_D2.sfa_out_dim = 90 #L5 #70 # 2*9 + 30
+pSFALayerL3H_S2_D1.sfa_out_dim = 120 #L6 #70 #44 #265 # 2*9 + 35
+pSFALayerL3V_S2_D1.sfa_out_dim = 160 #L7 #130 #150 # 2*9 + 40
+#pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":"RandomSigmoids", "expansion_starting_point":"08Exp", "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999, "expansion_output_dim":2000} 
+#pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, QE, TE], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+pSFALayerL0_4x4.sfa_args["max_preserved_sfa"]=4
+pSFALayerL1H_S3_D2.sfa_args["max_preserved_sfa"]=4
+pSFALayerL1V_S3_D2.sfa_args["max_preserved_sfa"]=4
+pSFALayerL2H_S3_D2.sfa_args["max_preserved_sfa"]=4
+pSFALayerL2V_S3_D2.sfa_args["max_preserved_sfa"]=4
+pSFALayerL3H_S2_D1.sfa_args["max_preserved_sfa"]=4
+pSFALayerL3V_S2_D1.sfa_args["max_preserved_sfa"]=9
+
+
+pSFALayerSupernode = SystemParameters.ParamsSFASuperNode() #L8
+pSFALayerSupernode.name = "SFA Super Node Layer"
+pSFALayerSupernode.pca_node_class = None
+pSFALayerSupernode.ord_node_class = mdp.nodes.HeadNode
+pSFALayerSupernode.ord_args = {"output_dim":115}
+#pSFALayerSupernode.exp_funcs = [identity, unsigned_08expo, unsigned_08expo_p15, unsigned_08expo_m15, signed_08expo, QE_90_AP08, TE_30_AP08,] #signed_08expo
+pSFALayerSupernode.exp_funcs = [identity, unsigned_08expo, signed_08expo, QE_90_AP08, TE_30_AP08,] #signed_08expo
+#pSFALayerSupernode.exp_funcs = [identity, QE, TE]
+#pSFALayerSupernode.red_node_class = None
+pSFALayerSupernode.sfa_node_class = mdp.nodes.SFANode
+#pSFALayerSupernode.sfa_node_class = mdp.nodes.IEVMLRecNode #mdp.nodes.SFANode
+#pSFALayerSupernode.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QE_50, TE_30],                     "max_comp":1, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerSupernode.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo_75],                     "max_comp":1, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+pSFALayerSupernode.sfa_out_dim = 80
+
+
+
+network = MNISTNetwork_24x24_7L_B = SystemParameters.ParamsNetwork()
+network.name = "MNIST Network 7L 24x24_B"
+network.L0 = copy.deepcopy(pSFALayerL0_4x4)
+network.L1 = copy.deepcopy(pSFALayerL1H_S3_D2)
+network.L2 = copy.deepcopy(pSFALayerL1V_S3_D2)
+network.L3 = copy.deepcopy(pSFALayerL2H_S3_D2)
+network.L4 = copy.deepcopy(pSFALayerL2V_S3_D2)
+network.L5 = copy.deepcopy(pSFALayerL3H_S2_D1)
+network.L6 = copy.deepcopy(pSFALayerL3V_S2_D1)
+network.L7 = copy.deepcopy(pSFALayerSupernode)
+network.layers = [network.L0, network.L1, network.L2, network.L3, network.L4, network.L5, network.L6, network.L7]
+#network.L1 = network.L2 = network.L3 = network.L4 = network.L5 = network.L6 = None
+#network.layers = [network.L0, None, None, None, None, None, None]
+
 
 
 print "*******************************************************************"
@@ -1308,7 +2168,8 @@ for i, layer in enumerate(network.layers):
 network.layers[len(network.layers)-1].sfa_node_class = mdp.nodes.WhiteningNode
 
 network = linearPCANetworkU11L = copy.deepcopy(linearNetworkU11L)
-pca_in_dim=(4*1*2*1*2*1*2*1*2*1*2)**2
+network.name = "linearPCANetworkU11L"
+pca_in_dim=(4*1*2*1*2*1*2*1*2*1*2)**2 #
 pca_out_dim=120 #120 #200
 pca_num_layers = 11
 reduction_per_layer = (pca_out_dim *1.0 /pca_in_dim)**(1.0/pca_num_layers)
@@ -1342,7 +2203,7 @@ override_linearPCANetworkU11L_output_dims = True #and False
 if override_linearPCANetworkU11L_output_dims:
     print "WARNING!!!! Overriding output_dimensionalities of PCA Network, to fit SFA Network or exceed it"
     LN_PCA_out_dims = [ 13, 20,35,60,60,60,60,60,60,60,60 ]
-    LN_PCA_out_dims = [ 13, 20,35,60,100,120,120,120,120,120,120 ]
+    LN_PCA_out_dims = [ 13, 20,35,60,100,120,120,120,120,120,120 ]    
 
 print "linearPCANetworkU11L, L0-10_PCA_out_dim = ", LN_PCA_out_dims
 for i, layer in enumerate(network.layers):
@@ -1357,15 +2218,34 @@ for i, layer in enumerate(network.layers):
     layer.sfa_args = {}
 
 #network.layers[len(network.layers)-1].sfa_node_class = mdp.nodes.WhiteningNode
+rec_field_size = 4 #6 => 192x192, 5=> 160x160, 4=>128x128
+network.layers[0].x_field_channels = rec_field_size
+network.layers[0].y_field_channels = rec_field_size
+network.layers[0].x_field_spacing = rec_field_size
+network.layers[0].y_field_spacing = rec_field_size
 
+#******************************************************************************************
+#Network for age estimation, 11 layers: 160x160, 9 layers: 80x80
+network = linearPCANetworkU11L_5x5L0 = copy.deepcopy(linearPCANetworkU11L)
+rec_field_size = 5 #6 => 192x192, 5=> 160x160, 4=>128x128
+network.layers[0].x_field_channels = rec_field_size
+network.layers[0].y_field_channels = rec_field_size
+network.layers[0].x_field_spacing = rec_field_size
+network.layers[0].y_field_spacing = rec_field_size
+#LN_PCA_out_dims_5x5L0 = [ 22, 42, 76, 120, 150, 150, 150, 150, 150, 150, 150 ] #Base network 
+#Newer version, output has 200 features (SFA+PC has 100)
+LN_PCA_out_dims_5x5L0 = [ 17, 23, 31, 43, 58, 79, 108, 147, 200, 200, 200 ] #Base network 
 
+for i, layer in enumerate(network.layers):
+    layer.sfa_out_dim = LN_PCA_out_dims_5x5L0[i]
+    
 
 network = linearWhiteningNetwork11L = copy.deepcopy(linearPCANetworkU11L)
 for i, layer in enumerate(network.layers):
     layer.sfa_node_class = mdp.nodes.WhiteningNode
 
 
-network = IEVMLRecNetworkU11L = copy.deepcopy(linearPCANetworkU11L)
+network = IEVMLRecNetworkU11L_5x5L0 = copy.deepcopy(linearPCANetworkU11L)
 # Original:
 #IEVMLRecNet_out_dims = [ 13, 20,35,60,60,60,60,60,60,60,60 ]
 # Accomodating more space for principal components
@@ -1385,25 +2265,39 @@ if LRec_use_RGB_images:
 else:
     network.layers[0].pca_out_dim = 20 #20 #30 #28 #20 #22 more_feats2, 50 for RGB
 
+#print "network.layers[0].x_field_channels=", network.layers[0].x_field_channels
+#print "network.L0.x_field_channels=", network.L0.x_field_channels
+#quit()
+
 if LRec_use_RGB_images == False:
 #25+14=39 => 30 (16 PCA/25); 16+13=29 => 22 (9 PCA/16)
 #First 80x80 Network:
 #IEVMLRecNet_out_dims = [ 30, 42, 52,60,60,60,60,60,60,60,60 ] 
 #Improved 80x80 Network: (more feats 2) ******* TOP PARAMS for grayscale
-    IEVMLRecNet_out_dims = [ 31, 42, 60,70,70,70,70,70,70,70,70 ]
+#    IEVMLRecNet_out_dims = [ 31, 42, 60,70,70,70,70,70,70,70,70 ] #Official for SFA Net
+#    IEVMLRecNet_out_dims = [ 31, 42, 60,75,75,75,75,75,75,75,75 ] #OFFICIAL LRecNet
+#    IEVMLRecNet_out_dims = [ 31, 52, 75, 85, 90, 90, 85, 100, 75,75,75 ] #OFFICIAL FOR AGE ARTICLE HGSFA+PC, TOP NETWORK, 3 FEATS
+    IEVMLRecNet_out_dims = [ 28, 52, 75, 85, 90, 90, 85, 100, 75,75,75 ] #Experiment with control2: Dt=1.9999
+#    IEVMLRecNet_out_dims = [ 22, 49, 75, 85, 90, 90, 85, 100, 75,75,75 ] #Experiment with control2: Dt=1.999
+#    IEVMLRecNet_out_dims = [ 21, 43, 75, 85, 90, 90, 85, 100, 75,75,75 ] #Experiment with control2: Dt=1.99
+#    IEVMLRecNet_out_dims = [ 20, 40, 75, 85, 90, 90, 85, 100, 75,75,75 ] #Experiment with control2: Dt=1.9
+#    IEVMLRecNet_out_dims = [ 20, 30, 43, 70, 82, 76, 84, 82, 75, 75, 75] #CONTROL EXPERIMENT FOR AGE ARTICLE, HGSFA, PLAIN SFA ARCHITECTURE WITHOUT PRINCIPAL COMPONENTS, 3Feats
+    
+#    IEVMLRecNet_out_dims = [ 31, 42, 60,80,80,80,80,80,80,80,80 ] #Test F2
 #Even more features:
-#IEVMLRecNet_out_dims = [ 32, 46, 65,75,75,75,75,75,75,75,75 ]
+#IEVMLRecNet_out_dims = [ 32, 46, 65,75,75,75,75,75,75,75,75 ] #Is this official for IEVMLRec Net?
 #Base 96x96 Network: (more feats 4)
 #IEVMLRecNet_out_dims = [ 38, 48, 65,70,70,70,70,70,70,70,70 ]
 #Base 96x96 Network: (more feats 5)
 #IEVMLRecNet_out_dims = [ 40, 50, 70,70,70,70,70,70,70,70,70 ]
+    print "Number of network features set without RGB:", IEVMLRecNet_out_dims
 else:
 #Improved 80x80 Network, RGB version (more feats 2)
 #    IEVMLRecNet_out_dims = [ 48, 60, 70,70,70,70,70,70,70,70,70 ] #(Orig)
     IEVMLRecNet_out_dims = [ 39, 51, 65,70,70,70,70,70,70,70,70 ] #(less features)
+    print "Adjusting number of network features due to RGB:", IEVMLRecNet_out_dims
 
-
-print "IEVMLRecNetworkU11L L0-10_SFA_out_dim = ", IEVMLRecNet_out_dims
+print "IEVMLRecNetworkU11L_5x5L0 L0-10_SFA_out_dim = ", IEVMLRecNet_out_dims
 
 for i, layer in enumerate(network.layers):
     layer.sfa_node_class = mdp.nodes.IEVMLRecNode
@@ -1412,7 +2306,8 @@ for i, layer in enumerate(network.layers):
     #layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "max_preserved_sfa":2.0}
 #    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_comp":1, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based", "max_preserved_sfa":2.0}
 #    layer.sfa_args = {"pre_expansion_node_class":mdp.nodes.SFANode, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":2.0}
-    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999999} #2.0
+    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.9999} #AGE ARTICLE: 1.99999 official, 1.99999, 2.0. Control2: 1.9999
+    #sel60_unsigned_08expo sel_exp(60, unsigned_08expo), unsigned_08expo
 
     #"offsetting_mode": "QR_decomposition", "sensitivity_based_pure", "sensitivity_based_normalized", "max_comp features"
 #    layer.sfa_args = {"expansion_funcs":None, "use_pca":True, "operation":"lin_app", "max_comp":10, "max_num_samples_for_ev":1200, "max_test_samples_for_ev":1200, "k":200}
@@ -1420,17 +2315,558 @@ for i, layer in enumerate(network.layers):
 #network.layers[0].pca_node_class = mdp.nodes.PCANode
 #network.layers[0].pca_out_dim = 13
 
+#WARNING, ADDING AN ADDITIONAL SFA NODE IN THE LAST LAYER, 80x80 resolution (Node 9)
+double_SFA_top_node = True #and False
+if double_SFA_top_node:
+    layer = network.layers[8]
+    layer.pca_node_class = mdp.nodes.IEVMLRecNode
+    layer.pca_out_dim = IEVMLRecNet_out_dims[8]
+    layer.pca_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, div2_sel75_unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} #2.0
+    layer.sfa_node_class = mdp.nodes.IEVMLRecNode
+    layer.sfa_out_dim = IEVMLRecNet_out_dims[8]
+    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, sel8_04QE], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} #2.0
+    
+
 #WARNING, EXPERIMENTAL CODE TO TEST OTHER EXPANSIONS
 #network.layers[10].sfa_node_class = mdp.nodes.SFANode
 #network.layers[6].sfa_args = {"expansion_funcs":[Q_exp], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "max_preserved_sfa":2.0}
 
 
+
+
+
+#Networks for Age estimation MORPH-II
+
+################## NETWORK FOR TESTING ACCORDING TO GUO ET AL, USES 3 LABELS ######################################
+network = IEVMLRecNetworkU11L_Overlap6x6L0_GUO_3Labels = copy.deepcopy(linearPCANetworkU11L)
+rec_field_size = 6 #6 => 192x192, 5=> 160x160, 4=>128x128
+LRec_use_RGB_images = False #or True
+network.layers[0].x_field_channels = rec_field_size
+network.layers[0].y_field_channels = rec_field_size
+#overlapping L0
+network.layers[0].x_field_spacing = int(numpy.ceil(rec_field_size/2.0)) #rec_field_size rec_field_size/2
+network.layers[0].y_field_spacing = int(numpy.ceil(rec_field_size/2.0)) #rec_field_size rec_field_size/2
+network.layers[0].pca_node_class = mdp.nodes.PCANode
+if LRec_use_RGB_images:
+    network.layers[0].pca_out_dim = 56 #50 Problem, more color components also remove higher frequency ones = code image as intensity+color!!!
+else:
+    network.layers[0].pca_out_dim = 20 #16 #20 #30 #28 #20 #22 more_feats2, 50 for RGB
+
+#network.layers[0].red_node_class = mdp.nodes.HeadNode
+#network.layers[0].red_out_dim = 18 #18
+
+for i in range(1,len(network.layers),2):
+    network.layers[i].x_field_channels = 3
+    network.layers[i].y_field_channels = 1
+    network.layers[i].x_field_spacing = 2
+    network.layers[i].y_field_spacing = 1
+for i in range(2,len(network.layers),2):
+    network.layers[i].x_field_channels = 1
+    network.layers[i].y_field_channels = 3
+    network.layers[i].x_field_spacing = 1
+    network.layers[i].y_field_spacing = 2
+
+if LRec_use_RGB_images == False:
+    IEVMLRecNet_out_dims = [ 18, 27, 37, 66, 79, 88, 88, 93, 95, 75, 75 ] #New test
+    #IEVMLRecNet_out_dims = [ 16, 24, 33, 60, 72, 80, 80, 85, 75, 75, 75 ] #Experiment with control2: Dt=1.9999
+#    IEVMLRecNet_out_dims = [ 16, 24, 33, 60, 72, 80, 80, 75, 75, 50, 75 ] #Experiment with control2: Dt=1.9999
+    print "Number of network features set without RGB:", IEVMLRecNet_out_dims
+else:
+    print "unsupported"
+    quit()
+    IEVMLRecNet_out_dims = [ 39, 51, 65,70,70,70,70,70,70,70,70 ] #(less features)
+    print "Adjusting number of network features due to RGB:", IEVMLRecNet_out_dims
+
+print "IEVMLRecNetworkU11L_Overlap6x6L0 L0-10_SFA_out_dim = ", IEVMLRecNet_out_dims
+
+for i, layer in enumerate(network.layers):
+    layer.sfa_node_class = mdp.nodes.IEVMLRecNode
+    layer.sfa_out_dim = IEVMLRecNet_out_dims[i]
+    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.91} #1.85, 1.91 #only for tuning/experimentation, official is below 
+
+network.layers[0].sfa_args["expansion_funcs"]= [s18, s15u08ex, s17Max, s10QE] # ** s18, s15u08ex, s17Max, s10QE] #identity, s14u08ex, s14Max, s1QE, QE, s14u08ex, unsigned_08expo, s14QE, maximum_mix1_ex, s16QE, s10Max
+network.layers[0].sfa_args["max_preserved_sfa"]= 3 #T 2 #1 #! 2 # **1 #1 3
+
+network.layers[1].sfa_args["expansion_funcs"]= [ch3s20, ch3s20u08, ch3s20max, ch3o3s4QE, ch3o0s3QE] # ** ch3s16, ch3s16u08, ch3s16max, ch3o1s4QE #unsigned_08expo, ch3_O2_s3_QE, ch3_O3_s3_QE
+network.layers[1].sfa_args["max_preserved_sfa"]= 4 #T 3 #2 #! 3 # ** 2 #3
+
+network.layers[2].sfa_args["expansion_funcs"]= [ch3s28, ch3s28u08, ch3s16max, ch3o4s6QE, ch3o0s3QE] # ** ch3s24, ch3s24u08, ch3s12max, ch3o2s6QE
+network.layers[2].sfa_args["max_preserved_sfa"]= 1.933 + 0.003 + 0.0015 #T 1.9 #1.81 #! 1.9 # ** 1.81 1.91 #1.93 #(nothing) 3# (nothing)4
+
+network.layers[3].sfa_args["expansion_funcs"]= [ch3s37, ch3s37u08, ch3s19max, ch3o4s6QE, ch3o0s3QE]   # ** ch3s33, ch3s33u08, ch3s15max, ch3o2s6QE  # maximum_mix1_exp
+network.layers[3].sfa_args["max_preserved_sfa"]= 1.933 + 0.005 + 0.0015 #T 1.9 #1.81 #! 1.9  # ** 1.81 #1.91 #1.92 # (nothing) 5
+
+network.layers[4].sfa_args["expansion_funcs"]= [ch3s60, ch3s49u08, ch3s19max, ch3o4s6QE, ] # ** ch3s60, ch3s45u08, ch3s15max, ch3o2s6QE #ch3o3s5QE, maximum_mix1_ex,unsigned_08expo] #unsigned_08expo
+network.layers[4].sfa_args["max_preserved_sfa"]= 1.933 + 0.005 + 0.0023 #T 1.9 #1.81 #! 1.9 # **1.81
+
+network.layers[5].sfa_args["expansion_funcs"]= [ch3s72, ch3s40u08, ch3s11max, ch3o5s6QE, ch3o0s3QE] # ** ch3s72, ch3s35u08, ch3s6max, ch3o3s6QE #identity, ch3s50u08, ch3o3s3QE #maximum_mix1_ex,unsigned_08expo] #unsigned_08expo
+network.layers[5].sfa_args["max_preserved_sfa"]= 1.953 + 0.005 + 0.0031 #T 1.93 #1.86 #! 1.93 # ** 1.81
+
+network.layers[6].sfa_args["expansion_funcs"]= [ch3s80, ch3s25u08, ch3s15max, ch3o6s4QE,] # ** ch3s80, ch3s20u08, ch3s10max, ch3o4s4QE 
+network.layers[6].sfa_args["max_preserved_sfa"]= 1.973 + 0.000 #T 1.96 #1.89 #! 1.96 # ** 1.89
+
+network.layers[7].sfa_args["expansion_funcs"]= [ch3s80, ch3o6s20u08,] # ** ch3s80, ch3o5s20u08 # ch3o4s5QE #unsigned_08expo, ch3o5s4QE
+network.layers[7].sfa_args["max_preserved_sfa"]= 1.98 #T 1.97 #1.94 #! 1.97 # ** 1.81
+ 
+network.layers[8].sfa_args["expansion_funcs"]= [ch3s85, ch3o6s20u08, ch3o0s3QE] # ** ch3s85, ch3o4s20u08, #ch3o4s4QE #identity, ch3s70u08, unsigned_08expo, ch3_s25_max
+network.layers[8].sfa_args["max_preserved_sfa"]= 1.98 #T 1.97 #1.94 #! 1.97 # **1.81
+
+#WARNING, ADDING AN ADDITIONAL SFA NODE IN THE LAST LAYER, 80x80 resolution (Node 9)
+double_SFA_top_node = True #and False
+if double_SFA_top_node:
+    print "adding additional top node (two nodes in layer 8)"
+    layer = network.layers[8]
+    #NODE 19
+    layer.pca_node_class = mdp.nodes.IEVMLRecNode
+    layer.pca_out_dim = IEVMLRecNet_out_dims[8]
+    layer.pca_args = dict(layer.sfa_args)
+    #NODE 20 / layer[9]
+    layer.sfa_node_class = mdp.nodes.IEVMLRecNode
+    layer.sfa_out_dim = IEVMLRecNet_out_dims[9]
+    layer.sfa_args = dict(layer.sfa_args)
+    layer.sfa_args["expansion_funcs"]= [s75, s34u08, o7s15QE, s3QE] # ** s75, s30u08ex, o5s15QE #s50u08ex, o4s18QE , s3QE
+    layer.sfa_args["max_preserved_sfa"]= 1.9 #! 1.81 # ** 1.81
+
+my_DT=1.96 #=1.96, 3 Labels
+for i in range(2, 9):
+    network.layers[i].sfa_args["max_preserved_sfa"] = my_DT
+network.layers[8].pca_args["max_preserved_sfa"] = my_DT
+
+
+
+################## NETWORK FOR TESTING ACCORDING TO GUO ET AL, USES 1 LABEL ######################################
+network = IEVMLRecNetworkU11L_Overlap6x6L0_GUO_1Label = copy.deepcopy(IEVMLRecNetworkU11L_Overlap6x6L0_GUO_3Labels)
+if LRec_use_RGB_images:
+    network.layers[0].pca_out_dim = 56 #50 Problem, more color components also remove higher frequency ones = code image as intensity+color!!!
+else:
+    network.layers[0].pca_out_dim = 20 #16 #20 #30 #28 #20 #22 more_feats2, 50 for RGB
+
+#network.layers[0].red_node_class = mdp.nodes.HeadNode
+#network.layers[0].red_out_dim = 18 #18
+
+for i in range(1,len(network.layers),2):
+    network.layers[i].x_field_channels = 3
+    network.layers[i].y_field_channels = 1
+    network.layers[i].x_field_spacing = 2
+    network.layers[i].y_field_spacing = 1
+for i in range(2,len(network.layers),2):
+    network.layers[i].x_field_channels = 1
+    network.layers[i].y_field_channels = 3
+    network.layers[i].x_field_spacing = 1
+    network.layers[i].y_field_spacing = 2
+
+if LRec_use_RGB_images == False:
+    IEVMLRecNet_out_dims = [ 16, 25, 35, 64, 77, 86, 86, 92, 93, 75, 75 ] #
+#    IEVMLRecNet_out_dims = [ 18, 27, 37, 66, 79, 88, 88, 93, 95, 75, 75 ] #New test
+    #IEVMLRecNet_out_dims = [ 16, 24, 33, 60, 72, 80, 80, 85, 75, 75, 75 ] #Experiment with control2: Dt=1.9999
+#    IEVMLRecNet_out_dims = [ 16, 24, 33, 60, 72, 80, 80, 75, 75, 50, 75 ] #Experiment with control2: Dt=1.9999
+    print "Number of network features set without RGB:", IEVMLRecNet_out_dims
+else:
+    print "unsupported"
+    quit()
+    IEVMLRecNet_out_dims = [ 39, 51, 65,70,70,70,70,70,70,70,70 ] #(less features)
+    print "Adjusting number of network features due to RGB:", IEVMLRecNet_out_dims
+
+print "IEVMLRecNetworkU11L_Overlap6x6L0_GUO_1Label L0-10_SFA_out_dim = ", IEVMLRecNet_out_dims
+
+network.layers[0].sfa_args["expansion_funcs"]= [s18, s15u08ex, s17Max, s10QE] # ** s18, s15u08ex, s17Max, s10QE] #identity, s14u08ex, s14Max, s1QE, QE, s14u08ex, unsigned_08expo, s14QE, maximum_mix1_ex, s16QE, s10Max
+network.layers[0].sfa_args["max_preserved_sfa"]= 1 #T 2 #1 #! 2 # **1 #1 3
+
+network.layers[1].sfa_args["expansion_funcs"]= [ch3s20, ch3s20u08, ch3s20max, ch3o1s4QE] # ** ch3s16, ch3s16u08, ch3s16max, ch3o1s4QE #unsigned_08expo, ch3_O2_s3_QE, ch3_O3_s3_QE
+network.layers[1].sfa_args["max_preserved_sfa"]= 2 #T 3 #2 #! 3 # ** 2 #3
+
+network.layers[2].sfa_args["expansion_funcs"]= [ch3s28, ch3s28u08, ch3s16max, ch3o2s6QE] # ** ch3s24, ch3s24u08, ch3s12max, ch3o2s6QE
+network.layers[2].sfa_args["max_preserved_sfa"]= 1.933 + 0.003 + 0.0015 #T 1.9 #1.81 #! 1.9 # ** 1.81 1.91 #1.93 #(nothing) 3# (nothing)4
+
+network.layers[3].sfa_args["expansion_funcs"]= [ch3s37, ch3s37u08, ch3s19max, ch3o2s6QE]   # ** ch3s33, ch3s33u08, ch3s15max, ch3o2s6QE  # maximum_mix1_exp
+network.layers[3].sfa_args["max_preserved_sfa"]= 1.933 + 0.005 + 0.0015 #T 1.9 #1.81 #! 1.9  # ** 1.81 #1.91 #1.92 # (nothing) 5
+
+network.layers[4].sfa_args["expansion_funcs"]= [ch3s60, ch3s49u08, ch3s19max, ch3o2s6QE, ] # ** ch3s60, ch3s45u08, ch3s15max, ch3o2s6QE #ch3o3s5QE, maximum_mix1_ex,unsigned_08expo] #unsigned_08expo
+network.layers[4].sfa_args["max_preserved_sfa"]= 1.933 + 0.005 + 0.0023 #T 1.9 #1.81 #! 1.9 # **1.81
+
+network.layers[5].sfa_args["expansion_funcs"]= [ch3s72, ch3s40u08, ch3s11max, ch3o3s6QE] # ** ch3s72, ch3s35u08, ch3s6max, ch3o3s6QE #identity, ch3s50u08, ch3o3s3QE #maximum_mix1_ex,unsigned_08expo] #unsigned_08expo
+network.layers[5].sfa_args["max_preserved_sfa"]= 1.953 + 0.005 + 0.0031 #T 1.93 #1.86 #! 1.93 # ** 1.81
+
+network.layers[6].sfa_args["expansion_funcs"]= [ch3s80, ch3s25u08, ch3s15max, ch3o4s4QE,] # ** ch3s80, ch3s20u08, ch3s10max, ch3o4s4QE 
+network.layers[6].sfa_args["max_preserved_sfa"]= 1.973 + 0.000 #T 1.96 #1.89 #! 1.96 # ** 1.89
+
+network.layers[7].sfa_args["expansion_funcs"]= [ch3s80, ch3o6s20u08,] # ** ch3s80, ch3o5s20u08 # ch3o4s5QE #unsigned_08expo, ch3o5s4QE
+network.layers[7].sfa_args["max_preserved_sfa"]= 1.98 #T 1.97 #1.94 #! 1.97 # ** 1.81
+ 
+network.layers[8].sfa_args["expansion_funcs"]= [ch3s85, ch3o6s20u08, ] # ** ch3s85, ch3o4s20u08, #ch3o4s4QE #identity, ch3s70u08, unsigned_08expo, ch3_s25_max
+network.layers[8].sfa_args["max_preserved_sfa"]= 1.98 #T 1.97 #1.94 #! 1.97 # **1.81
+
+#WARNING, ADDING AN ADDITIONAL SFA NODE IN THE LAST LAYER, 80x80 resolution (Node 9)
+double_SFA_top_node = True #and False
+if double_SFA_top_node:
+    print "adding additional top node (two nodes in layer 8)"
+    layer = network.layers[8]
+    #NODE 19
+    layer.pca_node_class = mdp.nodes.IEVMLRecNode
+    layer.pca_out_dim = IEVMLRecNet_out_dims[8]
+    layer.pca_args = dict(layer.sfa_args)
+    #NODE 20 / layer[9]
+    layer.sfa_node_class = mdp.nodes.IEVMLRecNode
+    layer.sfa_out_dim = IEVMLRecNet_out_dims[9]
+    layer.sfa_args = dict(layer.sfa_args)
+    layer.sfa_args["expansion_funcs"]= [s75, s34u08, o7s15QE, ] # ** s75, s30u08ex, o5s15QE #s50u08ex, o4s18QE , s3QE
+    layer.sfa_args["max_preserved_sfa"]= 1.9 #! 1.81 # ** 1.81
+
+my_DT=1.91 #Definitive, 1 Label
+for i in range(2, 9):
+    network.layers[i].sfa_args["max_preserved_sfa"] = my_DT
+network.layers[8].pca_args["max_preserved_sfa"] = my_DT
+
+#########################      SFANetworkU11L_Overlap6x6L0_GUO_3Labels          ###################################################
+#SFANet_out_dims = [ 18, 27, 37, 66, 79, 88, 88, 93, 95, 75, 75 ]
+#SFANet_out_dims = [ 12, 18, 25, 46, 55, 61, 61, 65, 66, 75, 75 ]
+SFANet_out_dims = [ 14, 20, 27, 49, 60, 61, 65, 65, 66, 75, 75] #eedit
+#SFANet_out_dims = [ 14, 20, 27, 49, 60, 61, 65, 65, 66, 70, 75] #eedit WARNING, REDUCING FROM 75 TO 70 FEATS TO AVOID NUMERIC ERROR
+#SFANet_out_dims = [ 40, 20, 27, 49, 60, 61, 65, 65, 66, 70, 75] #eedit WARNING, REDUCING FROM 75 TO 70 FEATS TO AVOID NUMERIC ERROR
+#SFANet_out_dims = [ 14, 20, 27, 49, 60, 61, 65, 65, 70, 75, 75] #eedit WARNING, INCREASING FROM 66 to 70 FEATS TO AVOID NUMERIC ERROR
+factor_out_dim = 1.0
+
+use_sfapc_nodes = False #or True
+DT = [3, 4, 1.96, 1.96, 1.96, 1.96, 1.96, 1.96, 1.96, 1.96, 1.96] #last entry is not used
+#DT = [3, 4, 1.9375, 1.9395, 1.9403, 1.9611, 1.973, 1.98, 1.98, 1.9, 1.9] #last entry is not used
+#DT = [3, 4, 1.98, 1.98, 1.98, 1.98, 1.98, 1.98, 1.98, 1.98, 1.98] #last entry is not used
+
+network = SFANetworkU11L_Overlap6x6L0_GUO_3Labels = copy.deepcopy(IEVMLRecNetworkU11L_Overlap6x6L0_GUO_3Labels)
+for i, layer in enumerate(network.layers):
+    if use_sfapc_nodes:
+        layer.sfa_args["max_preserved_sfa"] = DT[i]
+    else:
+        layer.sfa_args["max_preserved_sfa"] = 4.0 # Preserve all slow features
+        layer.sfa_args["offsetting_mode"] = None
+        layer.sfa_args["reconstruct_with_sfa"] = False
+    layer.sfa_out_dim = int(SFANet_out_dims[i]*factor_out_dim)
+
+
+network.layers[8].pca_out_dim = int(SFANet_out_dims[8]*factor_out_dim)
+network.layers[8].sfa_out_dim = int(SFANet_out_dims[9]*factor_out_dim)
+
+if use_sfapc_nodes == False:
+    layer.pca_args["max_preserved_sfa"] = 4.0 # Preserve all slow features
+    layer.pca_args["offsetting_mode"] = None
+    layer.pca_args["reconstruct_with_sfa"] = False
+else:
+    network.layers[8].pca_args["max_preserved_sfa"] = DT[8] 
+    network.layers[8].sfa_args["max_preserved_sfa"] = DT[9]
+
+network.layers[0].sfa_args["expansion_funcs"]= [s17, s20u08ex, s17Max, s10QE, ] #s17, s20u08ex, s17Max, s10QE
+network.layers[1].sfa_args["expansion_funcs"]= [ch3s8, ch3s12u08, ch3s10max, ch3o0s3QE] #ch3s8, ch3s12u08, ch3s10max, ch3o0s3QE 
+network.layers[2].sfa_args["expansion_funcs"]= [ch3s18, ch3s18u08, ch3s16max] #ch3s18, ch3s18u08, ch3s16max
+network.layers[3].sfa_args["expansion_funcs"]= [ch3s25, ch3s23u08, ch3s19max, ch3o0s3QE]   #ch3s25, ch3s25u08, ch3s19max, ch3o0s3QE
+network.layers[4].sfa_args["expansion_funcs"]= [ch3s49, ch3s43u08, ch3s19max, ] #ch3s49, ch3s43u08, ch3s19max,
+network.layers[5].sfa_args["expansion_funcs"]= [ch3s58, ch3s37u08, ch3s13max, ch3o0s3QE] #ch3s58, ch3s37u08, ch3s13max, ch3o0s3QE
+network.layers[6].sfa_args["expansion_funcs"]= [ch3s61, ch3s21u08, ch3s17max, ] #ch3s61, ch3s21u08, ch3s17max
+network.layers[7].sfa_args["expansion_funcs"]= [ch3s49, ] #ch3s49,
+network.layers[8].pca_args["expansion_funcs"]= [ch3s59, ch3o0s3QE] #ch3s59, ch3o0s3QE
+network.layers[8].sfa_args["expansion_funcs"]= [s66, s34u08, s3QE] #s66, s34u08, s3QE
+
+#for i, layer in enumerate(network.layers):
+#    if i>0:
+#        layer.sfa_args["expansion_funcs"]= [identity]
+
+
+############################## NETWORK FOR AGE ESTIMATION, STANDAR ARQUITECTURE ######################
+network = IEVMLRecNetworkU11L_Overlap6x6L0_1Label = copy.deepcopy(linearPCANetworkU11L)
+rec_field_size = 6 #6 => 192x192, 5=> 160x160, 4=>128x128
+LRec_use_RGB_images = False #or True
+network.layers[0].x_field_channels = rec_field_size
+network.layers[0].y_field_channels = rec_field_size
+#overlapping L0
+network.layers[0].x_field_spacing = int(numpy.ceil(rec_field_size/2.0)) #rec_field_size rec_field_size/2
+network.layers[0].y_field_spacing = int(numpy.ceil(rec_field_size/2.0)) #rec_field_size rec_field_size/2
+network.layers[0].pca_node_class = mdp.nodes.PCANode
+if LRec_use_RGB_images:
+    network.layers[0].pca_out_dim = 56 #50 Problem, more color components also remove higher frequency ones = code image as intensity+color!!!
+else:
+    network.layers[0].pca_out_dim = 20 #16 #20 #30 #28 #20 #22 more_feats2, 50 for RGB
+
+network.layers[0].red_node_class = mdp.nodes.HeadNode
+network.layers[0].red_out_dim = 16 #WARNING ERROR EXPERIMENT 18 #18
+
+# network.layers[1].x_field_channels = 2
+# network.layers[1].y_field_channels = 1
+# network.layers[1].x_field_spacing = 1
+# network.layers[1].y_field_spacing = 1
+# 
+# network.layers[2].x_field_channels = 1
+# network.layers[2].y_field_channels = 2
+# network.layers[2].x_field_spacing = 1
+# network.layers[2].y_field_spacing = 1
+
+for i in range(1,len(network.layers),2):
+    network.layers[i].x_field_channels = 3
+    network.layers[i].y_field_channels = 1
+    network.layers[i].x_field_spacing = 2
+    network.layers[i].y_field_spacing = 1
+for i in range(2,len(network.layers),2):
+    network.layers[i].x_field_channels = 1
+    network.layers[i].y_field_channels = 3
+    network.layers[i].x_field_spacing = 1
+    network.layers[i].y_field_spacing = 2
+
+#WARNING, ADJUSTMENT FOR 72x72 net
+#network.layers[7].x_field_channels = 2
+#network.layers[7].y_field_channels = 1
+#network.layers[7].x_field_spacing = 2
+#network.layers[7].y_field_spacing = 1
+#network.layers[8].x_field_channels = 1
+#network.layers[8].y_field_channels = 2
+#network.layers[8].x_field_spacing = 1
+#network.layers[8].y_field_spacing = 2
+
+
+#print "network.layers[0].x_field_channels=", network.layers[0].x_field_channels
+#print "network.L0.x_field_channels=", network.L0.x_field_channels
+#quit()
+
+if LRec_use_RGB_images == False:
+    IEVMLRecNet_out_dims = [ 40, 24, 33, 60, 72, 80, 80, 85, 75, 75, 75 ] #WARNING 
+#    IEVMLRecNet_out_dims = [ 16, 24, 33, 60, 72, 80, 80, 85, 75, 75, 75 ] 
+#    IEVMLRecNet_out_dims = [ 16, 24, 33, 60, 72, 80, 80, 75, 75, 50, 75 ] #Experiment with control2: Dt=1.9999
+    print "Number of network features set without RGB:", IEVMLRecNet_out_dims
+else:
+    print "unsupported"
+    quit()
+    IEVMLRecNet_out_dims = [ 39, 51, 65,70,70,70,70,70,70,70,70 ] #(less features)
+    print "Adjusting number of network features due to RGB:", IEVMLRecNet_out_dims
+
+print "IEVMLRecNetworkU11L_Overlap6x6L0 L0-10_SFA_out_dim = ", IEVMLRecNet_out_dims
+
+for i, layer in enumerate(network.layers):
+    layer.sfa_node_class = mdp.nodes.IEVMLRecNode
+    layer.sfa_out_dim = IEVMLRecNet_out_dims[i]
+    #Q_AP_L(k=nan, d=0.8), Q_AN_exp
+    #layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "max_preserved_sfa":2.0}
+#    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_comp":1, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based", "max_preserved_sfa":2.0}
+#    layer.sfa_args = {"pre_expansion_node_class":mdp.nodes.SFANode, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":2.0}
+    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.91} #only for tuning/experimentation, official is below 
+    #layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99} #AGE ARTICLE: 1.99999 official, 1.99999, 2.0. Control2: 1.9999
+    #sel60_unsigned_08expo sel_exp(60, unsigned_08expo), unsigned_08expos14u08ex
+
+
+#network.layers[0].sfa_args["expansion_funcs"]= [identity, s14u08ex, s17Max, s9QE] #identity, s14u08ex, s14Max, s10QE, QE, s14u08ex, unsigned_08expo, s14QE, maximum_mix1_ex, s16QE, s10Max
+network.layers[0].sfa_args["expansion_funcs"]= [identity, s14u08ex, s12Max] #WARNING, EXPERIMENT Delta Values!
+network.layers[0].sfa_args["max_preserved_sfa"]= 40 #1#1 3
+#network.layers[0].sfa_args["expansion_funcs"]= [identity, QE] #unsigned_08expo
+
+#network.layers[0].sfa_args["expansion_funcs"]= [identity, maximum_mix1_ex,unsigned_08expo] #unsigned_08expo
+network.layers[1].sfa_args["expansion_funcs"]= [identity, ch3s16u08, ch3s10max, ch3o1s5QE] #ch3o1s3QE, ch3o1s5QE, unsigned_08expo, ch3_O2_s3_QE, ch3_O3_s3_QE
+network.layers[1].sfa_args["max_preserved_sfa"]= 2 #2 #3
+#network.layers[1].sfa_args["expansion_funcs"]= [identity, maximum_mix1_ex,unsigned_08expo] #unsigned_08expo
+
+network.layers[2].sfa_args["expansion_funcs"]= [identity, ch3s24u08, ch3s12max, ch3o2s3QE] #identity, ch3o2s3QE, ch3s16u08, ch3s12max, unsigned_08expo, ch3s20u08, ch3s12max, ch3o3s3QE
+network.layers[2].sfa_args["max_preserved_sfa"]= 1.91 #1.93 #(nothing) 3# (nothing)4
+
+network.layers[3].sfa_args["expansion_funcs"]= [identity, ch3s33u08, ch3o3s3QE]  #ch3o3s4QE, ch3o3s26u08, ch3o3s12max, unsigned_08expo, maximum_mix1_ex,
+#network.layers[3].sfa_args["expansion_funcs"]= [identity, ch3o3s26u08, ch3o3s16max,]  #ch3o3s26u08, ch3o3s12max, unsigned_08expo, maximum_mix1_ex,
+network.layers[3].sfa_args["max_preserved_sfa"]= 1.91 #1.92 # (nothing) 5
+
+network.layers[4].sfa_args["expansion_funcs"]= [identity, ch3s45u08, ch3o3s4QE] #ch3o3s5QE, maximum_mix1_ex,unsigned_08expo] #unsigned_08expo
+#network.layers[4].sfa_args["max_preserved_sfa"]= 6 #8
+
+network.layers[5].sfa_args["expansion_funcs"]= [identity, ch3s50u08, ch3o3s3QE] # maximum_mix1_ex,unsigned_08expo] #unsigned_08expo
+#network.layers[5].sfa_args["max_preserved_sfa"]= 7 #9
+
+network.layers[6].sfa_args["expansion_funcs"]= [identity, ch3s40u08, ch3o3s5QE] # ch3s40u08, ch3o3s5QE]  #unsigned_08expo, ch3o3s5QE
+#network.layers[6].sfa_args["max_preserved_sfa"]= 7 #(nothing) 10
+
+network.layers[7].sfa_args["expansion_funcs"]= [identity, ch3s40u08, ch3o4s5QE] #unsigned_08expo, ch3o5s4QE
+#network.layers[7].sfa_args["max_preserved_sfa"]= 9 # 11
+
+network.layers[8].sfa_args["expansion_funcs"]= [identity, ch3s30u08, ch3o4s4QE] # identity, ch3s70u08, unsigned_08expo, ch3_s25_max
+#network.layers[8].sfa_args["max_preserved_sfa"]= 5
+
+#noise_addition=0.000004
+#network.layers[1].ord_node_class = mdp.nodes.NoiseNode(noise_func=numpy.random.uniform, noise_args=(-(3**0.5)*noise_addition, (3**0.5)*noise_addition), noise_type='additive')
+
+#WARNING, ADDING AN ADDITIONAL SFA NODE IN THE LAST LAYER, 80x80 resolution (Node 9)
+double_SFA_top_node = True #and False
+if double_SFA_top_node:
+    print "adding additional top node (two nodes in layer 8)"
+    layer = network.layers[8]
+    #NODE 19
+    layer.pca_node_class = mdp.nodes.IEVMLRecNode
+    layer.pca_out_dim = IEVMLRecNet_out_dims[8]
+    layer.pca_args = dict(layer.sfa_args)
+    #NODE 20 / layer[9]
+    layer.sfa_node_class = mdp.nodes.IEVMLRecNode
+    layer.sfa_out_dim = IEVMLRecNet_out_dims[9]
+    layer.sfa_args = dict(layer.sfa_args)
+    layer.sfa_args["expansion_funcs"]= [identity, s40u08ex, o4s15QE] #s50u08ex, o4s18QE
+    
+
+for i, layer in enumerate(network.layers):
+    if i>0:
+        layer.sfa_args["expansion_funcs"]= [identity]
+    if i==9:
+        layer.pca_args["expansion_funcs"]= [identity]
+#********************************************************************************************************
+network = IEVMLRecNetworkU11L_Overlap6x6L0_3Labels = copy.deepcopy(IEVMLRecNetworkU11L_Overlap6x6L0_1Label)
+if LRec_use_RGB_images:
+    network.layers[0].pca_out_dim = 56 #50 Problem, more color components also remove higher frequency ones = code image as intensity+color!!!
+else:
+    network.layers[0].pca_out_dim = 20 #16 #20 #30 #28 #20 #22 more_feats2, 50 for RGB
+
+network.layers[0].red_node_class = mdp.nodes.HeadNode
+network.layers[0].red_out_dim = 18 #18
+
+if LRec_use_RGB_images == False:
+    IEVMLRecNet_out_dims = [ 18, 27, 35, 62, 74, 82, 82, 87, 77, 75, 75 ] #increased output dims by 2
+#    IEVMLRecNet_out_dims = [ 16, 24, 33, 60, 72, 80, 80, 85, 75, 75, 75 ] #Experiment with control2: Dt=1.9999
+#    IEVMLRecNet_out_dims = [ 16, 24, 33, 60, 72, 80, 80, 75, 75, 50, 75 ] #Experiment with control2: Dt=1.9999
+    print "Number of network features set without RGB:", IEVMLRecNet_out_dims
+else:
+    print "unsupported"
+    quit()
+    IEVMLRecNet_out_dims = [ 39, 51, 65,70,70,70,70,70,70,70,70 ] #(less features)
+    print "Adjusting number of network features due to RGB:", IEVMLRecNet_out_dims
+
+print "IEVMLRecNetworkU11L_Overlap6x6L0_3Labels L0-10_SFA_out_dim = ", IEVMLRecNet_out_dims
+for i, layer in enumerate(network.layers):
+    layer.sfa_node_class = mdp.nodes.IEVMLRecNode
+    layer.sfa_out_dim = IEVMLRecNet_out_dims[i]
+
+def delta_map(delta):
+    return delta
+#    return 1.97
+#    return 2.0 - (2.0 - delta)*3.0/2.0 #2.5
+#    return delta #+0.25 #delta
+#return 2.0 - (2.0 - delta)*3.0/3.0 #2.5
+
+network.layers[0].sfa_args["expansion_funcs"]= [s18, s14u08ex, s17Max, s10_d1_Q_N] #identity, s14u08ex, s17Max, s10QE/s10_d1_Q_N
+network.layers[0].sfa_args["max_preserved_sfa"]= 3 #3 
+
+network.layers[1].sfa_args["expansion_funcs"]= [ch3s18, ch3s16u08, ch3s10max, ch3_o3_s5_d1_Q_N, ch3_o0_s3_d1_Q_N] #identity, ch3s16u08, ch3s10max, ch3o3s5QE, ch3o0s3QE
+network.layers[1].sfa_args["max_preserved_sfa"]= 4 #4
+
+#network.layers[2].sfa_args["expansion_funcs"]= [ch3s26, ch3s24u08, ch3s12max, ch3_o4_s3_d1_Q_N, ch3_o0_s3_d1_Q_N] #identity, ch3s24u08, ch3s12max, ch3o4s3QE, ch3o0s3QE
+network.layers[2].sfa_args["expansion_funcs"]= [ch3s27, ch3s27u08, ch3s12max, ch3_o4_s3_d1_Q_N, ch3_o0_s3_d1_Q_N] #Experiment changed o4s5 to o4s3
+network.layers[2].sfa_args["max_preserved_sfa"]= delta_map(1.96) #1.97
+
+network.layers[3].sfa_args["expansion_funcs"]= [ch3s35, ch3s33u08, ch3_o5_s3_d1_Q_N, ch3_o0_s3_d1_Q_N] #identity, ch3s33u08, ch3o5s3QE, ch3o0s3QE
+#network.layers[3].sfa_args["expansion_funcs"]= [ch3s35, ch3s33u08, ch3o5s5QE, ch3_o0_s3_d1_Q_N] #Experiment
+network.layers[3].sfa_args["max_preserved_sfa"]= delta_map(1.96) #1.97
+
+network.layers[4].sfa_args["expansion_funcs"]= [ch3s62, ch3s45u08, ch3_o5_s4_d1_Q_N, ] #identity, ch3s45u08, ch3o5s4QE
+network.layers[4].sfa_args["max_preserved_sfa"]= delta_map(1.96) #1.975
+
+network.layers[5].sfa_args["expansion_funcs"]= [ch3s74, ch3s50u08, ch3_o5_s3_d1_Q_N] #identity, ch3s50u08, ch3o5s3QE
+network.layers[5].sfa_args["max_preserved_sfa"]= delta_map(1.97) #1.975
+
+network.layers[6].sfa_args["expansion_funcs"]= [ch3s82, ch3s40u08, ch3_o5_s5_d1_Q_N] #identity, ch3s40u08, ch3o5s5QE
+network.layers[6].sfa_args["max_preserved_sfa"]= delta_map(1.97) #1.975
+
+network.layers[7].sfa_args["expansion_funcs"]= [ch3s82, ch3s40u08, ch3_o6_s5_d1_Q_N, ] #identity, ch3s40u08, ch3o6s5QE/ch3_o6_s5_Q_N,
+network.layers[7].sfa_args["max_preserved_sfa"]= delta_map(1.97) #1.975
+
+network.layers[8].sfa_args["expansion_funcs"]= [ch3s87, ch3s30u08, ch3_o6_s4_d1_Q_N, ch3_o0_s3_d1_Q_N] #identity, ch3s30u08, ch3o6s4QE/ch3_o6_s4_d1_Q_N, ch3o0s3QE/ch3_o0_s3_d1_Q_N
+network.layers[8].sfa_args["max_preserved_sfa"]= delta_map(1.97) #1.975
+
+double_SFA_top_node = True #and False
+if double_SFA_top_node:
+    print "adding additional top node (two nodes in layer 8)"
+    layer = network.layers[8]
+    #NODE 19
+    layer.pca_node_class = mdp.nodes.IEVMLRecNode
+    layer.pca_out_dim = IEVMLRecNet_out_dims[8]
+    layer.pca_args = dict(layer.sfa_args)
+    #NODE 20 / layer[9]
+    layer.sfa_node_class = mdp.nodes.IEVMLRecNode
+    layer.sfa_out_dim = IEVMLRecNet_out_dims[9]
+    layer.sfa_args = dict(layer.sfa_args)
+    layer.sfa_args["expansion_funcs"]= [ch3s75, s40u08ex, o6_s15_d1_Q_N] #identity, s40u08ex, o6s15QE/o6_s15_d1_Q_N
+
+
+#********************************************************************************************************
+network = IEVMLRecNetworkU11L_Overlap6x6L0_2Labels = copy.deepcopy(IEVMLRecNetworkU11L_Overlap6x6L0_1Label)
+if LRec_use_RGB_images:
+    network.layers[0].pca_out_dim = 56 #50 Problem, more color components also remove higher frequency ones = code image as intensity+color!!!
+else:
+    network.layers[0].pca_out_dim = 20 #16 #20 #30 #28 #20 #22 more_feats2, 50 for RGB
+
+network.layers[0].red_node_class = mdp.nodes.HeadNode
+network.layers[0].red_out_dim = 18 #18
+
+if LRec_use_RGB_images == False:
+    IEVMLRecNet_out_dims = [ 16, 24, 33, 60, 72, 80, 80, 85, 75, 75, 75 ] #Experiment with control2: Dt=1.9999
+#    IEVMLRecNet_out_dims = [ 16, 24, 33, 60, 72, 80, 80, 75, 75, 50, 75 ] #Experiment with control2: Dt=1.9999
+    print "Number of network features set without RGB:", IEVMLRecNet_out_dims
+else:
+    print "unsupported"
+    quit()
+    IEVMLRecNet_out_dims = [ 39, 51, 65,70,70,70,70,70,70,70,70 ] #(less features)
+    print "Adjusting number of network features due to RGB:", IEVMLRecNet_out_dims
+
+print "IEVMLRecNetworkU11L_Overlap6x6L0_3Labels L0-10_SFA_out_dim = ", IEVMLRecNet_out_dims
+
+network.layers[0].sfa_args["expansion_funcs"]= [identity, s14u08ex, s17Max, s10_d1_Q_N] #identity, s14u08ex, s17Max, s10QE/s10_d1_Q_N
+network.layers[0].sfa_args["max_preserved_sfa"]= 2 #2 
+
+network.layers[1].sfa_args["expansion_funcs"]= [identity, ch3s16u08, ch3s10max, ch3_o2_s5_d1_Q_N, ch3_o0_s2_d1_Q_N] #identity, ch3s16u08, ch3s10max, ch3o3s5QE, ch3o0s3QE
+network.layers[1].sfa_args["max_preserved_sfa"]= 3 #3
+
+network.layers[2].sfa_args["expansion_funcs"]= [identity, ch3s24u08, ch3s12max, ch3_o3_s3_d1_Q_N, ch3_o0_s2_d1_Q_N] #identity, ch3s24u08, ch3s12max, ch3o4s3QE, ch3o0s3QE
+network.layers[2].sfa_args["max_preserved_sfa"]= 1.95 #1.95
+
+network.layers[3].sfa_args["expansion_funcs"]= [identity, ch3s33u08, ch3_o4_s3_d1_Q_N, ch3_o0_s2_d1_Q_N] #identity, ch3s33u08, ch3o5s3QE, ch3o0s3QE
+network.layers[3].sfa_args["max_preserved_sfa"]= 1.96 #1.955
+
+network.layers[4].sfa_args["expansion_funcs"]= [identity, ch3s45u08, ch3_o4_s4_d1_Q_N, ] #identity, ch3s45u08, ch3o5s4QE
+network.layers[4].sfa_args["max_preserved_sfa"]= 1.9625 #1.9625 
+
+network.layers[5].sfa_args["expansion_funcs"]= [identity, ch3s50u08, ch3o4s3QE] #identity, ch3s50u08, ch3o5s3QE
+network.layers[5].sfa_args["max_preserved_sfa"]= 1.9625 #1.9625 
+
+network.layers[6].sfa_args["expansion_funcs"]= [identity, ch3s40u08, ch3o4s5QE,] #identity, ch3s40u08, ch3o5s5QE
+network.layers[6].sfa_args["max_preserved_sfa"]= 1.9625 #1.9625 
+
+network.layers[7].sfa_args["expansion_funcs"]= [identity, ch3s40u08, ch3_o5_s5_d1_Q_N, ] #identity, ch3s40u08, ch3o6s5QE/ch3_o6_s5_Q_N,
+network.layers[7].sfa_args["max_preserved_sfa"]= 1.9625 #1.9625 
+
+network.layers[8].sfa_args["expansion_funcs"]= [identity, ch3s30u08, ch3_o5_s4_d1_Q_N, ch3_o0_s2_d1_Q_N] #identity, ch3s30u08, ch3o6s4QE/ch3_o6_s4_d1_Q_N, ch3o0s3QE/ch3_o0_s3_d1_Q_N
+network.layers[8].sfa_args["max_preserved_sfa"]= 1.9625 #1.9625 
+
+double_SFA_top_node = True #and False
+if double_SFA_top_node:
+    print "adding additional top node (two nodes in layer 8)"
+    layer = network.layers[8]
+    #NODE 19
+    layer.pca_node_class = mdp.nodes.IEVMLRecNode
+    layer.pca_out_dim = IEVMLRecNet_out_dims[8]
+    layer.pca_args = dict(layer.sfa_args)
+    #NODE 20 / layer[9]
+    layer.sfa_node_class = mdp.nodes.IEVMLRecNode
+    layer.sfa_out_dim = IEVMLRecNet_out_dims[9]
+    layer.sfa_args = dict(layer.sfa_args)
+    layer.sfa_args["expansion_funcs"]= [identity, s40u08ex, o5_s15_d1_Q_N] #identity, s40u08ex, o6s15QE/o6_s15_d1_Q_N
+
+
+
+##########################################################################################################################
+network = IEVMLRecNetworkU11L_Overlap4x4L0  = copy.deepcopy(IEVMLRecNetworkU11L_Overlap6x6L0_1Label)
+rec_field_size = 4 #6 => 192x192, 5=> 160x160, 4=>128x128
+network.layers[0].x_field_channels = rec_field_size
+network.layers[0].y_field_channels = rec_field_size
+network.layers[0].x_field_spacing = rec_field_size/2
+network.layers[0].y_field_spacing = rec_field_size/2
+network.layers[0].pca_out_dim = 16
+
+IEVMLRecNet4x4_out_dims = [ 16, 24, 33, 60, 72, 80, 80, 75, 75, 50, 75 ]
+for i, layer in enumerate(network.layers):
+    layer.sfa_out_dim = IEVMLRecNet4x4_out_dims[i]
+    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.9999} 
+
 network = IEMNetworkU11L = copy.deepcopy(linearPCANetworkU11L)
-IEMNet_out_dims = [ 13, 20,35,60,60,60,60,60,60,60,60 ]
+IEMNet_out_dims = [ 13, 20, 35, 60,60,60,60,60,60,60,60 ]
+IEMNet_out_dims = [ 30, 45, 60, 70,70,75,75,60,60,60,60 ]
 print "IEMNetworkU11L L0-10_SFA_out_dim = ", IEMNet_out_dims
 
 for i, layer in enumerate(network.layers):
-    layer.sfa_node_class = mdp.nodes.IEVMNode
+    layer.sfa_node_class = mdp.nodes.IEVMLRecNode
     layer.sfa_out_dim = IEMNet_out_dims[i]
  
 #    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "use_pca":True, "max_comp":1, "max_num_samples_for_ev":800, "max_test_samples_for_ev":200, "k":8}
@@ -1441,11 +2877,12 @@ for i, layer in enumerate(network.layers):
 ################## Default:
 #    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "use_pca":True, "use_sfa":True, "operation":"average", "max_comp":10, "max_num_samples_for_ev":600, "max_test_samples_for_ev":600, "k":48, "max_preserved_sfa":2.0, "out_sfa_filter":False}
 ################## Reconstruction only
-    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "use_pca":True, "use_sfa":False, "operation":"average", "max_comp":20, "max_num_samples_for_ev":1200, "max_test_samples_for_ev":1200, "k":92, "max_preserved_sfa":2.0, "out_sfa_filter":False}
+    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99} #2.0
+#    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "use_pca":True, "use_sfa":False, "operation":"average", "max_comp":20, "max_num_samples_for_ev":1200, "max_test_samples_for_ev":1200, "k":92, "max_preserved_sfa":1.99, "out_sfa_filter":False}
 #    layer.sfa_args = {"expansion_funcs":None, "use_pca":True, "operation":"lin_app", "max_comp":10, "max_num_samples_for_ev":1200, "max_test_samples_for_ev":1200, "k":200}
 #    layer.sfa_args = {"expansion_funcs":None, "use_pca":True, "max_comp":6, "max_num_samples_for_ev":600, "max_test_samples_for_ev":600, "k":16}
 network.layers[0].pca_node_class = mdp.nodes.PCANode
-network.layers[0].pca_out_dim = 13
+network.layers[0].pca_out_dim = 30 #adsfa 
 
 print "*******************************************************************"
 print "******** Creating Non-Linear Ultra Thin 11L SFA Network ******************"
@@ -1588,10 +3025,95 @@ network.layers = [network.L0, network.L1, network.L2, network.L3, network.L4, ne
 #
 
 
-
 #u08expoNetworkU11L
 u08expoNetworkU11L = NetworkSetExpFuncs([identity, unsigned_08expo], copy.deepcopy(nonlinearNetworkU11L))
 u08expoNetworkU11L.L0.pca_node_class = mdp.nodes.PCANode
+u08expoNetworkU11L.L0.pca_out_dim = 13 
+rec_field_size = 4 #6 => 192x192, 5=> 160x160, 4=>128x128
+u08expoNetworkU11L.L0.x_field_channels = rec_field_size
+u08expoNetworkU11L.L0.y_field_channels = rec_field_size
+u08expoNetworkU11L.L0.x_field_spacing = rec_field_size
+u08expoNetworkU11L.L0.y_field_spacing = rec_field_size
+u08expoNetworkU11L.L0.sfa_out_dim = 13 # was 13
+u08expoNetworkU11L.L1.sfa_out_dim = 20 # was 20
+u08expoNetworkU11L.L2.sfa_out_dim = 35 # was 35
+u08expoNetworkU11L.L3.sfa_out_dim = 60 # was 60
+u08expoNetworkU11L.L4.sfa_out_dim = 60 # was 60
+u08expoNetworkU11L.L5.sfa_out_dim = 60 # was 60   
+u08expoNetworkU11L.L6.sfa_out_dim = 60 # was 60     
+u08expoNetworkU11L.L7.sfa_out_dim = 60 # was 60
+u08expoNetworkU11L.L8.sfa_out_dim = 60 # was 60     
+u08expoNetworkU11L.L9.sfa_out_dim = 60
+
+
+#******************** GENDER NETWORK FOR ARTICLE ****************
+layer = Gender_top_layer = SystemParameters.ParamsSFASuperNode()
+layer.name = "top layer"
+#layer.pca_node_class = None # mdp.nodes.SFANode
+#W
+layer.pca_node_class = None
+#layer.pca_args = {}
+#layer.pca_out_dim = 35 #WARNING: 100 or None
+#layer.pca_out_dim = 4000 # 35 #WARNING: 100 or None
+#layer.exp_funcs = [identity, QE]
+layer.exp_funcs = [identity, unsigned_08expo] #unsigned_08expo, signed_08expo
+#layer.exp_funcs = [encode_signal_p9,] #For next experiment: [encode_signal_p9,]
+#layer.red_node_class = mdp.nodes.HeadNode
+#layer.red_out_dim = int(tuning_parameter)
+layer.sfa_node_class =  mdp.nodes.SFANode #mdp.nodes.SFANode #mdp.nodes.SFANode
+layer.sfa_out_dim = 10 #3 #49*2 # *3 # None
+
+
+network = NetworkGender_8x8L0 = copy.deepcopy(u08expoNetworkU11L)
+network.L0.pca_out_dim = 50 
+rec_field_size = 8 #6 => 192x192, 5=> 160x160, 4=>128x128
+network.L0.x_field_channels = rec_field_size
+network.L0.y_field_channels = rec_field_size
+network.L0.x_field_spacing = rec_field_size
+network.L0.y_field_spacing = rec_field_size
+network.L0.sfa_out_dim = 40 # was 13
+network.L1.sfa_out_dim = 40 # was 20
+network.L2.sfa_out_dim = 40 # was 35
+network.L3.sfa_out_dim = 40 # was 60
+network.L4.sfa_out_dim = 40 # was 60
+network.L5.sfa_out_dim = 40 # was 60   
+network.L6.sfa_out_dim = 40 # was 60     
+network.L7 = Gender_top_layer
+network.L8 = None 
+network.L9 = None
+network.layers = [network.L0, network.L1, network.L2, network.L3, network.L4, network.L5, network.L6, network.L7]
+#NetworkGender_8x8L0 = NetworkSetExpFuncs([identity, unsigned_08expo, signed_08expo], copy.deepcopy(NetworkGender_8x8L0))
+NetworkGender_8x8L0 = NetworkSetExpFuncs([identity, unsigned_08expo], copy.deepcopy(NetworkGender_8x8L0))
+#NetworkGender_8x8L0.L6.exp_funcs = [identity, QE]
+#NetworkGender_8x8L0.L7.exp_funcs = [identity, QE] #, TE, P4, P5, P6]
+
+#WARNING, TUNING FOR AGE EXPERIMENTS ONLY, BREAKS NETWORKS DERIVED FROM IT!
+network = u08expoNetworkU11L_5x5L0 = copy.deepcopy(u08expoNetworkU11L)
+network.L0.pca_out_dim = 20 #was 15?
+rec_field_size = 5 #6 => 192x192, 5=> 160x160, 4=>128x128
+network.L0.x_field_channels = rec_field_size
+network.L0.y_field_channels = rec_field_size
+network.L0.x_field_spacing = rec_field_size
+network.L0.y_field_spacing = rec_field_size
+network.L0.sfa_out_dim = 20 #was 13
+network.L1.sfa_out_dim = 30 #was 20
+network.L2.sfa_out_dim = 43 #was 35
+network.L3.sfa_out_dim = 70 #was 60
+network.L4.sfa_out_dim = 82 # 70 or 72 was 60
+network.L5.sfa_out_dim = 76 # was 60   
+network.L6.sfa_out_dim = 84 # was 60     
+network.L7.sfa_out_dim = 82 # was 60
+network.L8.sfa_out_dim = 75 # was 60     
+network.L9.sfa_out_dim = 70
+#Original run for Age experiments: 15, 20, 33, 65, 70, 70, 70, 70, 80
+#10 Percent larger:                16, 22, 36, 72, 77, 77, 77, 77, 80
+#20 Percent larger:                18, 24, 39, 78, 84, 84, 84, 84, 80
+#30 Percent larger:                19, 26, 43, 85, 85, 85, 85, 85, 80
+#40 Percent larger:                20, 28, 46, 90, 90, 90, 90, 90, 80
+#m10 Percent Smaller:              14, 18, 30, 59, 63, 63, 63, 63, 80
+#many1 PF:                          20, 30, 50, 90, 90, 90, 90, 90, 80 
+#many2 PF:                          20, 32, 54, 90, 90, 90, 90, 90, 80
+#smart try:                        17, 24, 37, 70, 75, 75, 75, 75, 80
 
 u08expoNetwork32x32U11L_NoTop = copy.deepcopy(u08expoNetworkU11L)
 network = u08expoNetwork32x32U11L_NoTop
@@ -1918,224 +3440,549 @@ else:
     print "Running on unknown host"
     quit()
 
+def repeat_list_elements(lista, rep):
+    return [element for it in range(rep) for element in lista]
 
+print "******** Setting Training Information Parameters for Gender (simulated faces) **********"
+def iSeqCreateGender(first_id = 0, num_ids = 25, user_base_dir=user_base_dir, data_dir="Alberto/RenderingsGender60x200", gender_continuous=True, seed=None):
+    if seed >= 0 or seed is None:
+        numpy.random.seed(seed)
+        print "Gender. Using seed", seed
 
+    print "******** Setting Training Information Parameters for Gender **********"
+    iSeq = SystemParameters.ParamsInput()
+        
+    iSeq.name = "Gender60x200"
+
+    iSeq.gender_continuous = gender_continuous     
+    iSeq.data_base_dir = user_base_dir + data_dir
+    iSeq.ids = numpy.arange(first_id,first_id+num_ids) #160, but 180 for paper!
+    iSeq.ages = [999]
+    iSeq.MIN_GENDER = -3
+    iSeq.MAX_GENDER = 3
+    iSeq.GENDER_STEP = 0.10000 #01. 0.20025 default. 0.4 fails, use 0.4005, 0.80075, 0.9005
+    #iSeq.GENDER_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
+    iSeq.real_genders = numpy.arange(iSeq.MIN_GENDER, iSeq.MAX_GENDER, iSeq.GENDER_STEP)
+    iSeq.genders = map(imageLoader.code_gender, iSeq.real_genders)
+    iSeq.racetweens = [999]
+    iSeq.expressions = [0]
+    iSeq.morphs = [0]
+    iSeq.poses = [0]
+    iSeq.lightings = [0]
+    iSeq.slow_signal = 2
+    iSeq.step = 1
+    iSeq.offset = 0
+    iSeq.input_files = imageLoader.create_image_filenames2(iSeq.data_base_dir, iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+                                                    iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
+                                                    iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset)
+    iSeq.num_images = len(iSeq.input_files)
+    iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
+                          iSeq.morphs, iSeq.poses, iSeq.lightings]
+        
+    if iSeq.gender_continuous:
+        iSeq.block_size = iSeq.num_images / len(iSeq.params[iSeq.slow_signal])  
+        iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.real_genders, iSeq.block_size)
+        iSeq.correct_classes = sfa_libs.wider_1Darray(iSeq.real_genders, iSeq.block_size)
+    else:
+        bs = iSeq.num_images / len(iSeq.params[iSeq.slow_signal])
+        bs1 = len(iSeq.real_genders[iSeq.real_genders<0]) * bs
+        bs2 = len(iSeq.real_genders[iSeq.real_genders>=0]) * bs
+            
+        iSeq.block_size = numpy.array([bs1, bs2])
+        iSeq.correct_labels = numpy.array([-1]*bs1 + [1]*bs2)
+        #iSeq.correct_classes = sfa_libs.wider_1Darray(iSeq.real_genders, iSeq.block_size)
+        iSeq.correct_classes = numpy.array([-1]*bs1 + [1]*bs2)
+            
+    SystemParameters.test_object_contents(iSeq)
+    return iSeq
+
+def sSeqCreateGender(iSeq, contrast_enhance, seed=-1):
+    if seed >= 0 or seed is None: 
+        numpy.random.seed(seed)
     
-print "******** Setting Training Information Parameters for Gender **********"
-gender_continuous = True and False
-
-iTrainGender = SystemParameters.ParamsInput()
-iTrainGender.name = "Gender60x200"
-iTrainGender.data_base_dir = user_base_dir + "Alberto/RenderingsGender60x200"
-iTrainGender.ids = numpy.arange(0,180) #160, but 180 for paper!
-iTrainGender.ages = [999]
-iTrainGender.MIN_GENDER = -3
-iTrainGender.MAX_GENDER = 3
-iTrainGender.GENDER_STEP = 0.10000 #01. 0.20025 default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-#iTrainGender.GENDER_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-iTrainGender.real_genders = numpy.arange(iTrainGender.MIN_GENDER, iTrainGender.MAX_GENDER, iTrainGender.GENDER_STEP)
-iTrainGender.genders = map(imageLoader.code_gender, iTrainGender.real_genders)
-iTrainGender.racetweens = [999]
-iTrainGender.expressions = [0]
-iTrainGender.morphs = [0]
-iTrainGender.poses = [0]
-iTrainGender.lightings = [0]
-iTrainGender.slow_signal = 2
-iTrainGender.step = 1
-iTrainGender.offset = 0
-iTrainGender.input_files = imageLoader.create_image_filenames2(iTrainGender.data_base_dir, iTrainGender.slow_signal, iTrainGender.ids, iTrainGender.ages, \
-                                            iTrainGender.genders, iTrainGender.racetweens, iTrainGender.expressions, iTrainGender.morphs, \
-                                            iTrainGender.poses, iTrainGender.lightings, iTrainGender.step, iTrainGender.offset)
-#MEGAWARNING!!!!
-#numpy.random.shuffle(iTrainGender.input_files)  
-#numpy.random.shuffle(iTrainGender.input_files)  
-
-iTrainGender.num_images = len(iTrainGender.input_files)
-#iTrainGender.params = [ids, expressions, morphs, poses, lightings]
-iTrainGender.params = [iTrainGender.ids, iTrainGender.ages, iTrainGender.genders, iTrainGender.racetweens, iTrainGender.expressions, \
-                  iTrainGender.morphs, iTrainGender.poses, iTrainGender.lightings]
-
-if gender_continuous:
-    iTrainGender.block_size = iTrainGender.num_images / len(iTrainGender.params[iTrainGender.slow_signal])  
-    iTrainGender.correct_labels = sfa_libs.wider_1Darray(iTrainGender.real_genders, iTrainGender.block_size)
-    iTrainGender.correct_classes = sfa_libs.wider_1Darray(iTrainGender.real_genders, iTrainGender.block_size)
-else:
-    bs = iTrainGender.num_images / len(iTrainGender.params[iTrainGender.slow_signal])
-    bs1 = len(iTrainGender.real_genders[iTrainGender.real_genders<0]) * bs
-    bs2 = len(iTrainGender.real_genders[iTrainGender.real_genders>=0]) * bs
+    if iSeq==None:
+        print "Gender: iSeq was None, this might be an indication that the data is not available"
+        sSeq = SystemParameters.ParamsDataLoading()
+        return sSeq
     
-    iTrainGender.block_size = numpy.array([bs1, bs2])
-    iTrainGender.correct_labels = numpy.array([-1]*bs1 + [1]*bs2)
-    #iTrainGender.correct_classes = sfa_libs.wider_1Darray(iTrainGender.real_genders, iTrainGender.block_size)
-    iTrainGender.correct_classes = numpy.array([-1]*bs1 + [1]*bs2)
+    print "******** Setting Training Data Parameters for Gender  ****************"
+    sSeq = SystemParameters.ParamsDataLoading()
+    sSeq.input_files = iSeq.input_files
+    sSeq.num_images = iSeq.num_images
+    sSeq.block_size = iSeq.block_size
+    sSeq.image_width = 256
+    sSeq.image_height = 192
+    sSeq.subimage_width = 135
+    sSeq.subimage_height = 135 
+    sSeq.pixelsampling_x = 1
+    sSeq.pixelsampling_y =  1
+    sSeq.subimage_pixelsampling = 2
+    sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2
+    sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
+    sSeq.add_noise_L0 = True
+    sSeq.convert_format = "L"
+    sSeq.background_type = "black"
+    sSeq.contrast_enhance = contrast_enhance
+    sSeq.translation = 2
+    sSeq.translations_x = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)
+    sSeq.translations_y = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)
+    sSeq.trans_sampled = False
+    if iSeq.gender_continuous:
+        sSeq.train_mode = 'serial' # ('mixed' for paper) regular, 'serial'
+    else:
+        sSeq.train_mode = 'clustered'
+    sSeq.load_data = load_data_from_sSeq
+    SystemParameters.test_object_contents(sSeq)
+    return sSeq
+
+# # print "******** Setting Training Information Parameters for Gender **********"
+# # gender_continuous = True #and False 
+# # 
+# # iTrainGender = SystemParameters.ParamsInput()
+# # iTrainGender.name = "Gender60x200"
+# # iTrainGender.data_base_dir = user_base_dir + "Alberto/RenderingsGender60x200"
+# # iTrainGender.ids = numpy.arange(0,25) #160, but 180 for paper!
+# # iTrainGender.ages = [999]
+# # iTrainGender.MIN_GENDER = -3
+# # iTrainGender.MAX_GENDER = 3
+# # iTrainGender.GENDER_STEP = 0.10000 #01. 0.20025 default. 0.4 fails, use 0.4005, 0.80075, 0.9005
+# # #iTrainGender.GENDER_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
+# # iTrainGender.real_genders = numpy.arange(iTrainGender.MIN_GENDER, iTrainGender.MAX_GENDER, iTrainGender.GENDER_STEP)
+# # iTrainGender.genders = map(imageLoader.code_gender, iTrainGender.real_genders)
+# # iTrainGender.racetweens = [999]
+# # iTrainGender.expressions = [0]
+# # iTrainGender.morphs = [0]
+# # iTrainGender.poses = [0]
+# # iTrainGender.lightings = [0]
+# # iTrainGender.slow_signal = 2
+# # iTrainGender.step = 1
+# # iTrainGender.offset = 0
+# # iTrainGender.input_files = imageLoader.create_image_filenames2(iTrainGender.data_base_dir, iTrainGender.slow_signal, iTrainGender.ids, iTrainGender.ages, \
+# #                                             iTrainGender.genders, iTrainGender.racetweens, iTrainGender.expressions, iTrainGender.morphs, \
+# #                                             iTrainGender.poses, iTrainGender.lightings, iTrainGender.step, iTrainGender.offset)
+# # #MEGAWARNING!!!!
+# # #numpy.random.shuffle(iTrainGender.input_files)  
+# # #numpy.random.shuffle(iTrainGender.input_files)  
+# # 
+# # iTrainGender.num_images = len(iTrainGender.input_files)
+# # #iTrainGender.params = [ids, expressions, morphs, poses, lightings]
+# # iTrainGender.params = [iTrainGender.ids, iTrainGender.ages, iTrainGender.genders, iTrainGender.racetweens, iTrainGender.expressions, \
+# #                   iTrainGender.morphs, iTrainGender.poses, iTrainGender.lightings]
+# # 
+# # if gender_continuous:
+# #     iTrainGender.block_size = iTrainGender.num_images / len(iTrainGender.params[iTrainGender.slow_signal])  
+# #     iTrainGender.correct_labels = sfa_libs.wider_1Darray(iTrainGender.real_genders, iTrainGender.block_size)
+# #     iTrainGender.correct_classes = sfa_libs.widees ist nicht zu kompliziertr_1Darray(iTrainGender.real_genders, iTrainGender.block_size)
+# # else:
+# #     bs = iTrainGender.num_images / len(iTrainGender.params[iTrainGender.slow_signal])
+# #     bs1 = len(iTrainGender.real_genders[iTrainGender.real_genders<0]) * bs
+# #     bs2 = len(iTrainGender.real_genders[iTrainGender.real_genders>=0]) * bs
+# #     
+# #     iTrainGender.block_size = numpy.array([bs1, bs2])
+# #     iTrainGender.correct_labels = numpy.array([-1]*bs1 + [1]*bs2)
+# #     #iTrainGender.correct_classes = sfa_libs.wider_1Darray(iTrainGender.real_genders, iTrainGender.block_size)
+# #     iTrainGender.correct_classes = numpy.array([-1]*bs1 + [1]*bs2)
+# #     
+# # SystemParameters.test_object_contents(iTrainGender)
+# # 
+# # #iTrainGender.correct_classes = sfa_libs.wider_1Darray(numpy.arange(iTrainGender.num_images / iTrainGender.block_size), iTrainGender.block_size)
+# # 
+# # print "******** Setting Training Data Parameters for Gender  ****************"
+# # sTrainGender = SystemParameters.ParamsDataLoading()
+# # sTrainGender.input_files = iTrainGender.input_files
+# # sTrainGender.num_images = iTrainGender.num_images
+# # sTrainGender.block_size = iTrainGender.block_size
+# # sTrainGender.image_width = 256
+# # sTrainGender.image_height = 192
+# # sTrainGender.subimage_width = 135
+# # sTrainGender.subimage_height = 135 
+# # sTrainGender.pixelsampling_x = 1
+# # sTrainGender.pixelsampling_y =  1
+# # sTrainGender.subimage_pixelsampling = 2
+# # sTrainGender.subimage_first_row =  sTrainGender.image_height/2-sTrainGender.subimage_height*sTrainGender.pixelsampling_y/2
+# # sTrainGender.subimage_first_column = sTrainGender.image_width/2-sTrainGender.subimage_width*sTrainGender.pixelsampling_x/2+ 5*sTrainGender.pixelsampling_x
+# # sTrainGender.add_noise_L0 = True
+# # sTrainGender.convert_format = "L"
+# # sTrainGender.background_type = "black"
+# # sTrainGender.translation = 2
+# # sTrainGender.translations_x = numpy.random.random_integers(-sTrainGender.translation, sTrainGender.translation, sTrainGender.num_images)
+# # sTrainGender.translations_y = numpy.random.random_integers(-sTrainGender.translation, sTrainGender.translation, sTrainGender.num_images)
+# # sTrainGender.trans_sampled = False
+# # if gender_continuous:
+# #     sTrainGender.train_mode = 'serial' # ('mixed' for paper)
+# # else:
+# #     sTrainGender.train_mode = 'clustered'
+# # SystemParameters.test_object_contents(sTrainGender)
+# # 
+# # print "****** Setting Seen Id Test Information Parameters for Gender ********"
+# # iSeenidGender = SystemParameters.ParamsInput()
+# # iSeenidGender.name = "Gender60x200Seenid"
+# # iSeenidGender.data_base_dir =user_base_dir + "Alberto/RenderingsGender60x200"
+# # iSeenidGender.ids = numpy.arange(0,180) # #160, (0,180) for paper!
+# # iSeenidGender.ages = [999]
+# # iSeenidGender.MIN_GENDER = -3
+# # iSeenidGender.MAX_GENDER = 3
+# # iSeenidGender.GENDER_STEP = 0.10000 #01. defaultes ist nicht zu kompliziert. 0.4 fails, use 0.4005, 0.80075, 0.9005
+# # #iSeenidGender.GENDER_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
+# # iSeenidGender.real_genders = numpy.arange(iSeenidGender.MIN_GENDER, iSeenidGender.MAX_GENDER, iSeenidGender.GENDER_STEP)
+# # iSeenidGender.genders = map(imageLoader.code_gender, iSeenidGender.real_genders)
+# # iSeenidGender.racetweens = [999]
+# # iSeenidGender.expressions = [0]
+# # iSeenidGender.morphs = [0]
+# # iSeenidGender.poses = [0]
+# # iSeenidGender.lightings = [0]
+# # iSeenidGender.slow_signal = 2
+# # iSeenidGender.step = 1
+# # iSeenidGender.offset = 0                             
+# # iSeenidGender.input_files = imageLoader.create_image_filenames2(iSeenidGender.data_base_dir, iSeenidGender.slow_signal, iSeenidGender.ids, iSeenidGender.ages, \
+# #                                             iSeenidGender.genders, iSeenidGender.racetweens, iSeenidGender.expressions, iSeenidGender.morphs, \
+# #                                             iSeenidGender.poses, iSeenidGender.lightings, iSeenidGender.step, iSeenidGender.offset)  
+# # iSeenidGender.num_images = len(iSeenidGender.input_files)
+# # #iSeenidGender.params = [ids, expressions, morphs, poses, lightings]
+# # iSeenidGender.params = [iSeenidGender.ids, iSeenidGender.ages, iSeenidGender.genders, iSeenidGender.racetweens, iSeenidGender.expressions, \
+# #                   iSeenidGender.morphs, iSeenidGender.poses, iSeenidGender.lightings]
+# # if gender_continuous:
+# #     iSeenidGender.block_size = iSeenidGender.num_images / len(iSeenidGender.params[iSeenidGender.slow_signal])
+# #     iSeenidGender.correct_labels = sfa_libs.wider_1Darray(iSeenidGender.real_genders, iSeenidGender.block_size)
+# #     iSeenidGender.correct_classes = sfa_libs.wider_1Darray(iSeenidGender.real_genders, iSeenidGender.block_size)
+# # else:
+# #     bs = iSeenidGender.num_images / len(iSeenidGender.params[iSeenidGender.slow_signal])
+# #     bs1 = len(iSeenidGender.real_genders[iSeenidGender.real_genders<0]) * bs
+# #     bs2 = len(iSeenidGender.real_genders[iSeenidGender.real_genders>=0]) * bs
+# #     iSeenidGender.block_size = numpy.array([bs1, bs2])
+# #     iSeenidGender.correct_labels = numpy.array([-1]*bs1 + [1]*bs2)
+# #     iSeenidGender.correct_classes = numpy.array([-1]*bs1 + [1]*bs2)
+# # 
+# # SystemParameters.test_object_contents(iSeenidGender)
+# # 
+# # 
+# # print "***** Setting Seen Id Sequence Parameters for Gender ****************"
+# # sSeenidGender = SystemParameters.ParamsDataLoading()
+# # sSeenidGender.input_files = iSeenidGender.input_files
+# # sSeenidGender.num_images = iSeenidGender.num_images
+# # sSeenidGender.image_width = 256
+# # sSeenidGender.image_height = 192
+# # sSeenidGender.subimage_width = 135
+# # sSeenidGender.subimage_height = 135 
+# # sSeenidGender.pixelsampling_x = 1
+# # sSeenidGender.pixelsampling_y =  1
+# # sSeenidGender.subimage_pixelsampling = 2
+# # sSeenidGender.subimage_first_row =  sSeenidGender.image_height/2-sSeenidGender.subimage_height*sSeenidGender.pixelsampling_y/2
+# # sSeenidGender.subimage_first_column = sSeenidGender.image_width/2-sSeenidGender.subimage_width*sSeenidGender.pixelsampling_x/2+ 5*sSeenidGender.pixelsampling_x
+# # sSeenidGender.add_noise_L0 = True
+# # sSeenidGender.convert_format = "L"
+# # sSeenidGender.background_type = "black"
+# # sSeenidGender.translation = 2
+# # sSeenidGender.translations_x = numpy.random.random_integers(-sSeenidGender.translation, sSeenidGender.translation, sSeenidGender.num_images)
+# # sSeenidGender.translations_y = numpy.random.random_integers(-sSeenidGender.translation, sSeenidGender.translation, sSeenidGender.num_images)
+# # sSeenidGender.trans_sampled = False
+# # sSeenidGender.load_data = load_data_from_sSeqes ist nicht zu kompliziert
+# # SystemParameters.test_object_contents(sSeenidGender)
+# # 
+# # 0
+# # print "** Setting New Id Test Information Parameters for Gender **********"
+# # iNewidGender = SystemParameters.ParamsInput()
+# # iNewidGender.name = "Gender60x200Newid"
+# # iNewidGender.data_base_dir =user_base_dir + "Alberto/RenderingsGender60x200"
+# # iNewidGender.ids = range(180,200)#160,200, 180-200 for paper!
+# # iNewidGender.ages = [999]
+# # iNewidGender.MIN_GENDER = -3
+# # iNewidGender.MAX_GENDER = 3
+# # iNewidGender.GENDER_STEP = 0.10000 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
+# # #iSeenidGender.GENDER_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
+# # iNewidGender.real_genders = numpy.arange(iNewidGender.MIN_GENDER, iNewidGender.MAX_GENDER, iNewidGender.GENDER_STEP)
+# # iNewidGender.genders = map(imageLoader.code_gender, iNewidGender.real_genders)
+# # iNewidGender.racetweens = [999]
+# # iNewidGender.expressions = [0]
+# # iNewidGender.morphs = [0]
+# # iNewidGender.poses = [0]
+# # iNewidGender.lightings = [0]
+# # iNewidGender.slow_signal = 2
+# # iNewidGender.step = 1
+# # iNewidGender.offset = 0                             
+# # iNewidGender.input_files = imageLoader.create_image_filenames2(iNewidGender.data_base_dir, iNewidGender.slow_signal, iNewidGender.ids, iNewidGender.ages, \
+# #                                             iNewidGender.genders, iNewidGender.racetweens, iNewidGender.expressions, iNewidGender.morphs, \
+# #                                             iNewidGender.poses, iNewidGender.lightings, iNewidGender.step, iNewidGender.offset)  
+# # iNewidGender.num_images = len(iNewidGender.inputes ist nicht zu kompliziert_files)
+# # #iNewidGender.params = [ids, expressions, morphs, poses, lightings]
+# # iNewidGender.params = [iNewidGender.ids, iNewidGender.ages, iNewidGender.genders, iNewidGender.racetweens, iNewidGender.expressions, \
+# #                   iNewidGender.morphs, iNewidGender.poses, iNewidGender.lightings]
+# # iNewidGender.block_size = iNewidGender.num_images / len(iNewidGender.params[iNewidGender.slow_signal])
+# # 
+# # iNewidGender.correct_labels = sfa_libs.wider_1Darray(iNewidGender.real_genders, iNewidGender.block_size)
+# # iNewidGender.correct_classes = sfa_libs.wider_1Darray(iNewidGender.real_genders, iNewidGender.block_size)
+# # #iNewidGender.correct_classes = sfa_libs.wider_1Darray(numpy.arange(iNewidGender.num_images / iNewidGender.block_size), iNewidGender.block_size)
+# # 
+# # if gender_continuous:
+# #     iNewidGender.block_size = iNewidGender.num_images / len(iNewidGender.params[iNewidGender.slow_signal])
+# #     iNewidGender.correct_labels = sfa_libs.wider_1Darray(iNewidGender.real_genders, iNewidGender.block_size)
+# #     iNewidGender.correct_classes = sfa_libs.wider_1Darray(iNewidGender.real_genders, iNewidGender.block_size)
+# # else:
+# #     bs = iNewidGender.num_images / len(iNewidGender.params[iNewidGender.slow_signal])
+# #     bs1 = len(iNewidGender.real_genders[iNewidGender.real_genders<0]) * bs
+# #     bs2 = len(iNewidGender.real_genders[iNewidGender.real_genders>=0]) * bs
+# #     iNewidGender.block_size = numpy.array([bs1, bs2])
+# #     iNewidGender.correct_labels = numpy.array([-1]*bs1 + [1]*bs2)
+# #     iNewidGender.correct_classes = numpy.array( [-1]*bs1 + [1]*bs2)
+# # 
+# # SystemParameters.test_object_contents(iNewidGendes ist nicht zu komplizierter)
+# # 
+# # 
+# # print "******** Setting New Id Data Parameters ******************************"
+# # sNewidGender = SystemParameters.ParamsDataLoading()
+# # sNewidGender.input_files = iNewidGender.input_files
+# # sNewidGender.num_images = iNewidGender.num_images
+# # sNewidGender.image_width = 256
+# # sNewidGender.image_height = 192
+# # sNewidGender.subimage_width = 135
+# # sNewidGender.subimage_height = 135 
+# # sNewidGender.pixelsampling_x = 1
+# # sNewidGender.pixelsampling_y =  1
+# # sNewidGender.subimage_pixelsampling = 2
+# # sNewidGender.subimage_first_row =  sNewidGender.image_height/2-sNewidGender.subimage_height*sNewidGender.pixelsampling_y/2
+# # sNewidGender.subimage_first_column = sNewidGender.image_width/2-sNewidGender.subimage_width*sNewidGender.pixelsampling_x/2+ 5*sNewidGender.pixelsampling_x
+# # sNewidGender.add_noise_L0 = True
+# # sNewidGender.convert_format = "L"
+# # sNewidGender.background_type = "black"
+# # sNewidGender.translation = 2
+# # sNewidGender.translations_x = numpy.random.random_integers(-sNewidGender.translation, sNewidGender.translation, sNewidGender.num_images)
+# # sNewidGender.translations_y = numpy.random.random_integers(-sNewidGender.translation, sNewidGender.translation, sNewidGender.num_images)
+# # sNewidGender.trans_sampled = False
+# # sNewidGender.load_data = load_data_from_sSeq
+# # SystemParameters.test_object_contents(sNewidGender)
+
+numpy.random.seed(experiment_seed+987987987)
+contrast_enhance = "ContrastGenderMultiply"
+#WARNING!!!
+#iTrainGender0 = iSeqCreateGender(first_id = 0, num_ids = 180, user_base_dir=user_base_dir, data_dir="Alberto/RenderingsGender60x200", gender_continuous=True, seed=-1)
+iTrainGender0 = iSeqCreateGender(first_id = 0, num_ids = 180, user_base_dir=user_base_dir, data_dir="Alberto/RenderingsGender60x200", gender_continuous=True, seed=-1)
+sTrainGender0 = sSeqCreateGender(iTrainGender0, contrast_enhance, seed=-1)
+
+iTrainGender1 = iSeqCreateGender(first_id = 0, num_ids = 10, user_base_dir=user_base_dir, data_dir="Alberto/RenderingsGender60x200", gender_continuous=True, seed=-1)
+sTrainGender1 = sSeqCreateGender(iTrainGender1, contrast_enhance, seed=-1)
+
+#iTrainGender2 = iSeqCreateGender(first_id = 40, num_ids = 150, user_base_dir=user_base_dir, data_dir="Alberto/RenderingsGender60x200", gender_continuous=True, seed=-1)
+#sTrainGender2 = sSeqCreateGender(iTrainGender2, seed=-1)
+#sTrainGender2.train_mode = "ignore_data"
+
+#iSeenidGender = iSeqCreateGender(first_id = 0, num_ids = 180, user_base_dir=user_base_dir, data_dir="Alberto/RenderingsGender60x200", gender_continuous=True, seed=-1)
+iSeenidGender = iSeqCreateGender(first_id = 0, num_ids = 180, user_base_dir=user_base_dir, data_dir="Alberto/RenderingsGender60x200", gender_continuous=True, seed=-1)
+sSeenidGender = sSeqCreateGender(iSeenidGender, contrast_enhance, seed=-1)
+
+iNewidGender = iSeqCreateGender(first_id = 180, num_ids = 20, user_base_dir=user_base_dir, data_dir="Alberto/RenderingsGender60x200", gender_continuous=True, seed=-1)
+sNewidGender = sSeqCreateGender(iNewidGender, contrast_enhance, seed=-1)
+
+#LABEL TRANSFORMATIONS FOR EXACT LABEL LEARNING
+random_labels = True and False
+discontinuous_labels = True and False
+if random_labels or discontinuous_labels:
+    labels = numpy.sort(list(set(iTrainGender0.correct_labels)))
+
+    if discontinuous_labels:
+        random_labels = (numpy.arange(-3,3,0.1)+3)%3 - 6
+    else:
+        random_labels = numpy.random.normal(size = len(labels))
+        random_labels = numpy.abs(numpy.random.normal(size = len(labels))).cumsum()
     
-SystemParameters.test_object_contents(iTrainGender)
+    print "labels =", labels
+    print "random_labels = ", random_labels
+    for i, label_val in enumerate(labels):
+        for correct_labels in (iTrainGender0.correct_labels, iTrainGender1.correct_labels, iSeenidGender.correct_labels, iNewidGender.correct_labels): #
+            correct_labels[correct_labels == label_val] = random_labels[i]
+else: #regular labels    
+    power = 1.0 #2.0 # 3.0 1.0
+    offset = 0.0 #3.0 # 0.0, 3.0
+    if power==2:
+        iTrainGender0.correct_labels = iTrainGender0.correct_labels ** power
+        iSeenidGender.correct_labels = iSeenidGender.correct_labels ** power
+        iNewidGender.correct_labels =  iNewidGender.correct_labels ** power
+    elif power==3 or power==1:
+        iTrainGender0.correct_labels = sgn_expo(iTrainGender0.correct_labels+offset, power) 
+        iTrainGender1.correct_labels = sgn_expo(iTrainGender1.correct_labels+offset, power) 
+        #iTrainGender2.correct_labels = sgn_expo(iTrainGender2.correct_labels, 1.0) 
+        iSeenidGender.correct_labels =  sgn_expo(iSeenidGender.correct_labels+offset, power)
+        iNewidGender.correct_labels = sgn_expo(iNewidGender.correct_labels+offset, power)
+    else:
+        er = "Dont know how to handle power properly, power=", power
+        raise Exception(er)
 
-#iTrainGender.correct_classes = sfa_libs.wider_1Darray(numpy.arange(iTrainGender.num_images / iTrainGender.block_size), iTrainGender.block_size)
+def extract_gender_from_filename(filename):
+    if "M" in filename:
+        return -1
+    elif "F" in filename:
+        return 1
+    else:
+        print "gender from filename %s not recognized"%filename
+    quit()
 
-print "******** Setting Training Data Parameters for Gender  ****************"
-sTrainGender = SystemParameters.ParamsDataLoading()
-sTrainGender.input_files = iTrainGender.input_files
-sTrainGender.num_images = iTrainGender.num_images
-sTrainGender.block_size = iTrainGender.block_size
-sTrainGender.image_width = 256
-sTrainGender.image_height = 192
-sTrainGender.subimage_width = 135
-sTrainGender.subimage_height = 135 
-sTrainGender.pixelsampling_x = 1
-sTrainGender.pixelsampling_y =  1
-sTrainGender.subimage_pixelsampling = 2
-sTrainGender.subimage_first_row =  sTrainGender.image_height/2-sTrainGender.subimage_height*sTrainGender.pixelsampling_y/2
-sTrainGender.subimage_first_column = sTrainGender.image_width/2-sTrainGender.subimage_width*sTrainGender.pixelsampling_x/2+ 5*sTrainGender.pixelsampling_x
-sTrainGender.add_noise_L0 = True
-sTrainGender.convert_format = "L"
-sTrainGender.background_type = "black"
-sTrainGender.translation = 2
-sTrainGender.translations_x = numpy.random.random_integers(-sTrainGender.translation, sTrainGender.translation, sTrainGender.num_images)
-sTrainGender.translations_y = numpy.random.random_integers(-sTrainGender.translation, sTrainGender.translation, sTrainGender.num_images)
-sTrainGender.trans_sampled = False
-if gender_continuous:
-    sTrainGender.train_mode = 'mixed'
+
+def load_GT_labels(labels_filename, age_included=True, rAge_included=False, gender_included=True, race_included=False, avgColor_included=False):
+    fd = open(labels_filename, 'r')
+
+    c_age = 1
+    if age_included:
+        c_rAge = c_age + 1
+    else:
+        c_rAge = c_age
+    if rAge_included:
+        c_gender = c_rAge + 1
+    else:
+        c_gender = c_rAge
+    if gender_included:
+        c_race = c_gender + 1
+    else:
+        c_race = c_gender
+    if race_included:
+        c_avgColor = c_race + 1
+    else:
+        c_avgColor = c_race
+    
+    labels = {}
+    for line in fd.readlines():
+        all_labels = string.split(line, " ")
+        filename = all_labels[0]        
+        this_labels = []
+        if age_included:
+            age = float(all_labels[c_age])
+            this_labels.append(age)
+        if rAge_included:
+            rAge = float(all_labels[c_rAge])
+            this_labels.append(rAge)
+        if gender_included:
+            gender = all_labels[c_gender][0]
+            if gender == "M":
+                gender = -1
+            elif gender == "F":                
+                gender = 1
+            else:
+                er = "Gender *%s* not recognized"%str(gender)
+                raise Exception(er)
+            this_labels.append(gender)
+        if race_included:
+            race = all_labels[c_race][0]
+            if race == "B":
+                race = -2
+            elif race == "O":
+                race = -1
+            elif race == "A":
+                race = 0
+            elif race == "H":
+                race = 1
+            elif race == "W":
+                race = 2
+            else:
+                er = "Race *%s* not recognized"%str(race)
+                raise Exception(er)
+            this_labels.append(race)
+        if avgColor_included:
+            avgColor = float(all_labels[c_avgColor])
+            this_labels.append(avgColor)       
+        labels[filename] = this_labels
+    fd.close()
+    return labels
+    
+add_skin_color_label_classes = True and False
+multiple_labels = add_skin_color_label_classes and False 
+first_gender_label = True #and False
+sampled_by_gender = True #and False
+
+#True, False, False, False => learn only skin color
+#True, True, True, True  => learn both gender and skin color, gender is first label and determines ordering
+#True, True, True, False => learn both gender and skin color, gender is first label but skin color determines ordering
+#False, False, True, True => learn only gender 
+
+if add_skin_color_label_classes:
+    skin_color_labels_map = load_GT_labels(user_base_dir+"Alberto/RenderingsGender60x200"+"/GT_average_color_labels.txt", age_included=False, rAge_included=False, gender_included=False, race_included=False, avgColor_included=True)
+    
+    example_filename = "output133_a999_g362_rt999_e0_c0_p0_i0.tif"
+    filename_len = len(example_filename)
+    
+    skin_color_labels_TrainGender0 =[]   
+    for input_file in iTrainGender0.input_files:
+        input_file_short =  input_file[-filename_len:]
+        skin_color_labels_TrainGender0.append(skin_color_labels_map[input_file_short])  
+    skin_color_labels_TrainGender0 = numpy.array(skin_color_labels_TrainGender0).reshape((-1,1))
+    
+    skin_color_labels_SeenidGender =[]   
+    for input_file in iSeenidGender.input_files:
+        input_file_short =  input_file[-filename_len:]
+        skin_color_labels_SeenidGender.append(skin_color_labels_map[input_file_short])
+    skin_color_labels_SeenidGender = numpy.array(skin_color_labels_SeenidGender).reshape((-1,1))
+
+    skin_color_labels_NewidGender =[]   
+    for input_file in iNewidGender.input_files:
+        input_file_short =  input_file[-filename_len:]
+        skin_color_labels_NewidGender.append(skin_color_labels_map[input_file_short])
+    skin_color_labels_NewidGender = numpy.array(skin_color_labels_NewidGender).reshape((-1,1))
+
+    skin_color_labels = skin_color_labels_SeenidGender.flatten()
+    sorting = numpy.argsort(skin_color_labels)
+    num_classes = 60
+    skin_color_classes_SeenidGender = numpy.zeros(iSeenidGender.num_images)
+    skin_color_classes_SeenidGender[sorting] = numpy.arange(iSeenidGender.num_images)*num_classes/iSeenidGender.num_images
+    avg_labels = more_nodes.compute_average_labels_for_each_class(skin_color_classes_SeenidGender, skin_color_labels)
+    all_classes = numpy.unique(skin_color_classes_SeenidGender)
+    print "skin color avg_labels=", avg_labels 
+    skin_color_classes_TrainGender0 = more_nodes.map_labels_to_class_number(all_classes, avg_labels, skin_color_labels_TrainGender0.flatten())
+    skin_color_classes_NewidGender = more_nodes.map_labels_to_class_number(all_classes, avg_labels, skin_color_labels_NewidGender.flatten())
+
+    skin_color_classes_TrainGender0 = skin_color_classes_TrainGender0.reshape((-1,1))
+    skin_color_classes_SeenidGender = skin_color_classes_SeenidGender.reshape((-1,1))
+    skin_color_classes_NewidGender = skin_color_classes_NewidGender.reshape((-1,1))
+
+if multiple_labels==True:
+    if first_gender_label == True:
+        print "Learning both skin color and gender, gender is first label"
+        iTrainGender0.correct_labels = numpy.concatenate((iTrainGender0.correct_labels.reshape(-1,1), skin_color_labels_TrainGender0), axis=1)
+        iSeenidGender.correct_labels = numpy.concatenate((iSeenidGender.correct_labels.reshape(-1,1), skin_color_labels_SeenidGender), axis=1)
+        iNewidGender.correct_labels = numpy.concatenate((iNewidGender.correct_labels.reshape(-1,1), skin_color_labels_NewidGender), axis=1)
+    
+        iTrainGender0.correct_classes = numpy.concatenate((iTrainGender0.correct_classes.reshape(-1,1), skin_color_classes_TrainGender0), axis=1)
+        iSeenidGender.correct_classes = numpy.concatenate((iSeenidGender.correct_classes.reshape(-1,1), skin_color_classes_SeenidGender), axis=1)
+        iNewidGender.correct_classes = numpy.concatenate((iNewidGender.correct_classes.reshape(-1,1), skin_color_classes_NewidGender), axis=1)
+    else:
+        print "Learning both skin color and gender, color is first label"
+        iTrainGender0.correct_labels = numpy.concatenate((skin_color_labels_TrainGender0, iTrainGender0.correct_labels.reshape(-1,1)), axis=1)
+        iSeenidGender.correct_labels = numpy.concatenate((skin_color_labels_SeenidGender, iSeenidGender.correct_labels.reshape(-1,1)), axis=1)
+        iNewidGender.correct_labels = numpy.concatenate((skin_color_labels_NewidGender, iNewidGender.correct_labels.reshape(-1,1)), axis=1)
+    
+        iTrainGender0.correct_classes = numpy.concatenate((skin_color_classes_TrainGender0, iTrainGender0.correct_classes.reshape(-1,1)), axis=1)
+        iSeenidGender.correct_classes = numpy.concatenate((skin_color_classes_SeenidGender, iSeenidGender.correct_classes.reshape(-1,1)), axis=1)
+        iNewidGender.correct_classes = numpy.concatenate((skin_color_classes_NewidGender, iNewidGender.correct_classes.reshape(-1,1)), axis=1)
 else:
-    sTrainGender.train_mode = 'clustered'
-SystemParameters.test_object_contents(sTrainGender)
+    if add_skin_color_label_classes:
+        print "Learning skin color instead of gender"
+        iTrainGender0.correct_labels = skin_color_labels_TrainGender0.flatten()
+        iSeenidGender.correct_labels = skin_color_labels_SeenidGender.flatten()
+        iNewidGender.correct_labels = skin_color_labels_NewidGender.flatten()
+        iTrainGender0.correct_classes = skin_color_classes_TrainGender0.flatten()
+        iSeenidGender.correct_classes = skin_color_classes_SeenidGender.flatten()
+        iNewidGender.correct_classes = skin_color_classes_NewidGender.flatten()
+    else:
+        print "Learning gender only"
 
-print "****** Setting Seen Id Test Information Parameters for Gender ********"
-iSeenidGender = SystemParameters.ParamsInput()
-iSeenidGender.name = "Gender60x200Seenid"
-iSeenidGender.data_base_dir =user_base_dir + "Alberto/RenderingsGender60x200"
-iSeenidGender.ids = numpy.arange(0,180)#160, (0,180) for paper!
-iSeenidGender.ages = [999]
-iSeenidGender.MIN_GENDER = -3
-iSeenidGender.MAX_GENDER = 3
-iSeenidGender.GENDER_STEP = 0.10000 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-#iSeenidGender.GENDER_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-iSeenidGender.real_genders = numpy.arange(iSeenidGender.MIN_GENDER, iSeenidGender.MAX_GENDER, iSeenidGender.GENDER_STEP)
-iSeenidGender.genders = map(imageLoader.code_gender, iSeenidGender.real_genders)
-iSeenidGender.racetweens = [999]
-iSeenidGender.expressions = [0]
-iSeenidGender.morphs = [0]
-iSeenidGender.poses = [0]
-iSeenidGender.lightings = [0]
-iSeenidGender.slow_signal = 2
-iSeenidGender.step = 1
-iSeenidGender.offset = 0                             
-iSeenidGender.input_files = imageLoader.create_image_filenames2(iSeenidGender.data_base_dir, iSeenidGender.slow_signal, iSeenidGender.ids, iSeenidGender.ages, \
-                                            iSeenidGender.genders, iSeenidGender.racetweens, iSeenidGender.expressions, iSeenidGender.morphs, \
-                                            iSeenidGender.poses, iSeenidGender.lightings, iSeenidGender.step, iSeenidGender.offset)  
-iSeenidGender.num_images = len(iSeenidGender.input_files)
-#iSeenidGender.params = [ids, expressions, morphs, poses, lightings]
-iSeenidGender.params = [iSeenidGender.ids, iSeenidGender.ages, iSeenidGender.genders, iSeenidGender.racetweens, iSeenidGender.expressions, \
-                  iSeenidGender.morphs, iSeenidGender.poses, iSeenidGender.lightings]
-if gender_continuous:
-    iSeenidGender.block_size = iSeenidGender.num_images / len(iSeenidGender.params[iSeenidGender.slow_signal])
-    iSeenidGender.correct_labels = sfa_libs.wider_1Darray(iSeenidGender.real_genders, iSeenidGender.block_size)
-    iSeenidGender.correct_classes = sfa_libs.wider_1Darray(iSeenidGender.real_genders, iSeenidGender.block_size)
-else:
-    bs = iSeenidGender.num_images / len(iSeenidGender.params[iSeenidGender.slow_signal])
-    bs1 = len(iSeenidGender.real_genders[iSeenidGender.real_genders<0]) * bs
-    bs2 = len(iSeenidGender.real_genders[iSeenidGender.real_genders>=0]) * bs
-    iSeenidGender.block_size = numpy.array([bs1, bs2])
-    iSeenidGender.correct_labels = numpy.array([-1]*bs1 + [1]*bs2)
-    iSeenidGender.correct_classes = numpy.array([-1]*bs1 + [1]*bs2)
-
-SystemParameters.test_object_contents(iSeenidGender)
+if sampled_by_gender == False:
+    print "reordering by increasing skin color label"
+    for (iSeq, labels) in ((iTrainGender0, skin_color_labels_TrainGender0), 
+                           (iSeenidGender, skin_color_labels_SeenidGender), 
+                            (iNewidGender, skin_color_labels_NewidGender)):    
+        all_labels = labels.flatten()
+        reordering = numpy.argsort(all_labels)
+        if multiple_labels:
+            iSeq.correct_labels = iSeq.correct_labels[reordering,:]
+            iSeq.correct_classes = iSeq.correct_classes[reordering,:]
+        else:
+            iSeq.correct_labels = iSeq.correct_labels[reordering]
+            iSeq.correct_classes = iSeq.correct_classes[reordering]            
+        reordered_files = []
+        for i in range(len(iSeq.input_files)):
+            reordered_files.append(iSeq.input_files[reordering[i]])
+        iSeq.input_files = reordered_files
+        #print "reordered_files=", reordered_files
+    print "labels/classes reordered, skin color is the first one"
 
 
-print "***** Setting Seen Id Sequence Parameters for Gender ****************"
-sSeenidGender = SystemParameters.ParamsDataLoading()
-sSeenidGender.input_files = iSeenidGender.input_files
-sSeenidGender.num_images = iSeenidGender.num_images
-sSeenidGender.image_width = 256
-sSeenidGender.image_height = 192
-sSeenidGender.subimage_width = 135
-sSeenidGender.subimage_height = 135 
-sSeenidGender.pixelsampling_x = 1
-sSeenidGender.pixelsampling_y =  1
-sSeenidGender.subimage_pixelsampling = 2
-sSeenidGender.subimage_first_row =  sSeenidGender.image_height/2-sSeenidGender.subimage_height*sSeenidGender.pixelsampling_y/2
-sSeenidGender.subimage_first_column = sSeenidGender.image_width/2-sSeenidGender.subimage_width*sSeenidGender.pixelsampling_x/2+ 5*sSeenidGender.pixelsampling_x
-sSeenidGender.add_noise_L0 = True
-sSeenidGender.convert_format = "L"
-sSeenidGender.background_type = "black"
-sSeenidGender.translation = 2
-sSeenidGender.translations_x = numpy.random.random_integers(-sSeenidGender.translation, sSeenidGender.translation, sSeenidGender.num_images)
-sSeenidGender.translations_y = numpy.random.random_integers(-sSeenidGender.translation, sSeenidGender.translation, sSeenidGender.num_images)
-sSeenidGender.trans_sampled = False
-sSeenidGender.load_data = load_data_from_sSeq
-SystemParameters.test_object_contents(sSeenidGender)
 
-0
-print "** Setting New Id Test Information Parameters for Gender **********"
-iNewidGender = SystemParameters.ParamsInput()
-iNewidGender.name = "Gender60x200Newid"
-iNewidGender.data_base_dir =user_base_dir + "Alberto/RenderingsGender60x200"
-iNewidGender.ids = range(180,200)#160,200, 180-200 for paper!
-iNewidGender.ages = [999]
-iNewidGender.MIN_GENDER = -3
-iNewidGender.MAX_GENDER = 3
-iNewidGender.GENDER_STEP = 0.10000 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-#iSeenidGender.GENDER_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-iNewidGender.real_genders = numpy.arange(iNewidGender.MIN_GENDER, iNewidGender.MAX_GENDER, iNewidGender.GENDER_STEP)
-iNewidGender.genders = map(imageLoader.code_gender, iNewidGender.real_genders)
-iNewidGender.racetweens = [999]
-iNewidGender.expressions = [0]
-iNewidGender.morphs = [0]
-iNewidGender.poses = [0]
-iNewidGender.lightings = [0]
-iNewidGender.slow_signal = 2
-iNewidGender.step = 1
-iNewidGender.offset = 0                             
-iNewidGender.input_files = imageLoader.create_image_filenames2(iNewidGender.data_base_dir, iNewidGender.slow_signal, iNewidGender.ids, iNewidGender.ages, \
-                                            iNewidGender.genders, iNewidGender.racetweens, iNewidGender.expressions, iNewidGender.morphs, \
-                                            iNewidGender.poses, iNewidGender.lightings, iNewidGender.step, iNewidGender.offset)  
-iNewidGender.num_images = len(iNewidGender.input_files)
-#iNewidGender.params = [ids, expressions, morphs, poses, lightings]
-iNewidGender.params = [iNewidGender.ids, iNewidGender.ages, iNewidGender.genders, iNewidGender.racetweens, iNewidGender.expressions, \
-                  iNewidGender.morphs, iNewidGender.poses, iNewidGender.lightings]
-iNewidGender.block_size = iNewidGender.num_images / len(iNewidGender.params[iNewidGender.slow_signal])
-
-iNewidGender.correct_labels = sfa_libs.wider_1Darray(iNewidGender.real_genders, iNewidGender.block_size)
-iNewidGender.correct_classes = sfa_libs.wider_1Darray(iNewidGender.real_genders, iNewidGender.block_size)
-#iNewidGender.correct_classes = sfa_libs.wider_1Darray(numpy.arange(iNewidGender.num_images / iNewidGender.block_size), iNewidGender.block_size)
-
-if gender_continuous:
-    iNewidGender.block_size = iNewidGender.num_images / len(iNewidGender.params[iNewidGender.slow_signal])
-    iNewidGender.correct_labels = sfa_libs.wider_1Darray(iNewidGender.real_genders, iNewidGender.block_size)
-    iNewidGender.correct_classes = sfa_libs.wider_1Darray(iNewidGender.real_genders, iNewidGender.block_size)
-else:
-    bs = iNewidGender.num_images / len(iNewidGender.params[iNewidGender.slow_signal])
-    bs1 = len(iNewidGender.real_genders[iNewidGender.real_genders<0]) * bs
-    bs2 = len(iNewidGender.real_genders[iNewidGender.real_genders>=0]) * bs
-    iNewidGender.block_size = numpy.array([bs1, bs2])
-    iNewidGender.correct_labels = numpy.array([-1]*bs1 + [1]*bs2)
-    iNewidGender.correct_classes = numpy.array( [-1]*bs1 + [1]*bs2)
-
-SystemParameters.test_object_contents(iNewidGender)
-
-
-print "******** Setting New Id Data Parameters ******************************"
-sNewidGender = SystemParameters.ParamsDataLoading()
-sNewidGender.input_files = iNewidGender.input_files
-sNewidGender.num_images = iNewidGender.num_images
-sNewidGender.image_width = 256
-sNewidGender.image_height = 192
-sNewidGender.subimage_width = 135
-sNewidGender.subimage_height = 135 
-sNewidGender.pixelsampling_x = 1
-sNewidGender.pixelsampling_y =  1
-sNewidGender.subimage_pixelsampling = 2
-sNewidGender.subimage_first_row =  sNewidGender.image_height/2-sNewidGender.subimage_height*sNewidGender.pixelsampling_y/2
-sNewidGender.subimage_first_column = sNewidGender.image_width/2-sNewidGender.subimage_width*sNewidGender.pixelsampling_x/2+ 5*sNewidGender.pixelsampling_x
-sNewidGender.add_noise_L0 = True
-sNewidGender.convert_format = "L"
-sNewidGender.background_type = "black"
-sNewidGender.translation = 2
-sNewidGender.translations_x = numpy.random.random_integers(-sNewidGender.translation, sNewidGender.translation, sNewidGender.num_images)
-sNewidGender.translations_y = numpy.random.random_integers(-sNewidGender.translation, sNewidGender.translation, sNewidGender.num_images)
-sNewidGender.trans_sampled = False
-sNewidGender.load_data = load_data_from_sSeq
-SystemParameters.test_object_contents(sNewidGender)
 
 
 ####################################################################
@@ -2144,22 +3991,28 @@ SystemParameters.test_object_contents(sNewidGender)
 ParamsGender = SystemParameters.ParamsSystem()
 ParamsGender.name = "Network that extracts gender information"
 ParamsGender.network = None
-ParamsGender.iTrain = [[iTrainGender]] #[]
-ParamsGender.sTrain = [[sTrainGender]] #[]
+semi_supervised_learning = False
+if semi_supervised_learning:
+    ParamsGender.iTrain = [[iTrainGender0], [iTrainGender1,]] #[]
+    ParamsGender.sTrain = [[sTrainGender0], [sTrainGender1,]] #[]
+else:
+    ParamsGender.iTrain = [[iTrainGender0]] #[]
+    ParamsGender.sTrain = [[sTrainGender0]] #[]    
 ParamsGender.iSeenid = iSeenidGender
 ParamsGender.sSeenid = sSeenidGender
 ParamsGender.iNewid = [[iNewidGender]] #[]
 ParamsGender.sNewid = [[sNewidGender]] #[]
-ParamsGender.block_size = iTrainGender.block_size
-if gender_continuous:
-    ParamsGender.train_mode = 'mixed'
-else:
-    ParamsGender.train_mode = 'clustered'
+
+# ParamsGender.block_size = iTrainGender1.block_size
+# if gender_continuous:
+#     ParamsGender.train_mode = 'mixed'
+# else:
+#     ParamsGender.train_mode = 'clustered'
     
 ParamsGender.analysis = None
-ParamsGender.enable_reduced_image_sizes = False
-ParamsGender.reduction_factor = 1.0
-ParamsGender.hack_image_size = 128
+ParamsGender.enable_reduced_image_sizes = True #(False paper)
+ParamsGender.reduction_factor = 2.0 # 8.0 # 2.0 #1.0 #(1.0 paper)
+ParamsGender.hack_image_size  = 64  # 16 # 64 #128 #(128 paper)
 ParamsGender.enable_hack_image_size = True
 
 print "******** Setting Train Information Parameters for Identity ***********"
@@ -2750,7 +4603,7 @@ ParamsTransX.analysis = None
 
 
 
-print "***** Setting Training Information Parameters for Age ******"
+print "***** Setting Training Information Parameters for Age (simulated faces) ******"
 iTrainAge = SystemParameters.ParamsInput()
 iTrainAge.name = "Age: 23 Ages x 200 identities"
 iTrainAge.data_base_dir =user_base_dir + "Alberto/RendersAge200x23"
@@ -4587,7 +6440,7 @@ robject_up_base_dir = "/local/escalafl/Alberto/FaubelSet_01/Up"
 
 #Dirty function to deal with filename convention obj#-##__#-##_ ... and  to acces several directories at once
 def find_filenames_beginning_with_numbers(base_dirs=[""], base_filename="obj", base_numbers=None, extension=".png"):
-    if base_numbers == None:
+    if base_numbers is None:
         return cache.find_filenames_beginning_with(base_dirs, base_filename, recursion=False, extension=extension)
     else:
         filenames = []
@@ -6075,7 +7928,7 @@ ParamsREyeTransY.enable_hack_image_size = True
 ########## Function Defined Data Sources ###################
 ############################################################
 def iSeqCreateRFaceCentering(num_images, alldbnormalized_available_images, alldb_noface_available_images, first_image=0, repetition_factor=1, seed=-1):
-    if seed >= 0 or seed == None: #also works for 
+    if seed >= 0 or seed is None: #also works for 
         numpy.random.seed(seed)
     #else seed <0 then, do not change seed
     
@@ -6148,7 +8001,7 @@ def iSeqCreateRFaceCentering(num_images, alldbnormalized_available_images, alldb
 
 
 def sSeqCreateRFaceCentering(iSeq, seed=-1):
-    if seed >= 0 or seed == None: #also works for 
+    if seed >= 0 or seed is None: #also works for 
         numpy.random.seed(seed)
     #else seed <0 then, do not change seed
     
@@ -6292,7 +8145,7 @@ pipeline_fd = dict(dx0 = 45, dy0 = 20, smin0 = 0.55, smax0 = 1.1,
                 dx1 = 20, dy1 = 10, smin1 = 0.775, smax1 = 1.05)
 #7965, 8
 def iSeqCreateRTransX(num_images, alldbnormalized_available_images, first_image=0, repetition_factor=1, seed=-1):
-    if seed >= 0 or seed == None: #also works for 
+    if seed >= 0 or seed is None: #also works for 
         numpy.random.seed(seed)
 
     if num_images > len(alldbnormalized_available_images):
@@ -6341,7 +8194,7 @@ def iSeqCreateRTransX(num_images, alldbnormalized_available_images, first_image=
     return iSeq
 
 def sSeqCreateRTransX(iSeq, seed=-1):
-    if seed >= 0 or seed == None: #also works for 
+    if seed >= 0 or seed is None: #also works for 
         numpy.random.seed(seed)
     #else seed <0 then, do not change seed
     
@@ -6485,7 +8338,7 @@ ParamsRTransXFunc.enable_hack_image_size = True
 #This network actually supports images in the closed intervals: [-dx1, dx1], [smin0, smax0]
 #but halb-open [-dy0, dy0)
 def iSeqCreateRTransY(num_images, alldbnormalized_available_images, first_image=0, repetition_factor=1, seed=-1): 
-    if seed >= 0 or seed == None: #also works for 
+    if seed >= 0 or seed is None: #also works for 
         numpy.random.seed(seed)
 
     if num_images > len(alldbnormalized_available_images):
@@ -6534,7 +8387,7 @@ def iSeqCreateRTransY(num_images, alldbnormalized_available_images, first_image=
     return iSeq
 
 def sSeqCreateRTransY(iSeq, seed=-1):
-    if seed >= 0 or seed == None: #also works for 
+    if seed >= 0 or seed is None: #also works for 
         numpy.random.seed(seed)
     #else seed <0 then, do not change seed
 
@@ -6712,7 +8565,7 @@ import csv
 # function for reading the image annotations and labels
 # arguments: path to the traffic sign data, for example './GTSRB/Training'
 # returns: list of image filenames, list of all tracks, list of all image annotations, list of all labels, 
-def readTrafficSignsAnnotations(rootpath, shrink_signs=True, shrink_factor = 0.8, correct_sizes=True, include_labels=False):
+def readTrafficSignsAnnotations(rootpath, shrink_signs=True, shrink_factor = 0.8, correct_sizes=True, include_labels=False, sign_selection=None):
     '''Reads traffic sign data for German Traffic Sign Recognition Benchmark.
 
     Arguments: path to the traffic sign data, for example './GTSRB/Training'
@@ -6725,9 +8578,12 @@ def readTrafficSignsAnnotations(rootpath, shrink_signs=True, shrink_factor = 0.8
     delta_rand_scale=0.0
     repetition_factors=None
     
-    if repetition_factors == None:
+    if sign_selection==None:
+        sign_selection = numpy.arange(43)
+    
+    if repetition_factors is None:
         repetition_factors = [1]*43
-    for c in range(0,43):
+    for c in sign_selection:
         prefix = rootpath + '/' + "%05d"%c + '/' # subdirectory for class. format(c, '05d')
         gtFile = open(prefix + 'GT-'+ "%05d"%c + '.csv') # annotations file. format(c, '05d')
         gtReader = csv.reader(gtFile, delimiter=';') # csv parser for annotations file
@@ -6765,15 +8621,29 @@ def readTrafficSignsAnnotations(rootpath, shrink_signs=True, shrink_factor = 0.8
             for i in range(repetition_factors[c]):
                 annotations.append(extended_row)
         gtFile.close()
-
+    
+#     #Correct class indices, so that only consecutive classes appear
+#     if correct_classes:
+#         all_classes=[]
+#         for row in annotations:
+#             all_classes.append(row[8])
+#         unique, corrected_classes = numpy.unique(all_classes, return_inverse=True) 
+#         print "unique classes:", unique
+#         for ii, row in enumerate(annotations):
+#             row[8] = corrected_classes[ii]
+    
     return annotations
 
 
-def readTrafficSignsAnnotationsOnline(prefix, csv_file, shrink_signs=True, correct_sizes=True, include_labels=False):
+def readTrafficSignsAnnotationsOnline(prefix, csv_file, shrink_signs=True, correct_sizes=True, include_labels=False, sign_selection=None):
     '''Reads traffic sign data for German Traffic Sign Recognition Benchmark.
 
     Arguments: path to the traffic sign data, for example './GTSRB/Training'
     Returns:   list of images, list of corresponding labels'''
+    
+    if sign_selection==None:
+        sign_selection = numpy.arange(43)
+        
     images = [] # image filenames
     annotations =  [] #annotations for each image
     labels = [] # corresponding labels
@@ -6810,11 +8680,15 @@ def readTrafficSignsAnnotationsOnline(prefix, csv_file, shrink_signs=True, corre
             row[6] = center_y + height/2
         extended_row = extended_row + map(float, row[1:7])
         if include_labels:
-            extended_row.append(int(row[7])) # the 8th column is the label, not available on online test
+            label = int(row[7])
+            if label in sign_selection:
+                extended_row.append(label) # the 8th column is the label, not available in online test
+                annotations.append(extended_row)
         else:
-            extended_row.append(ii*43/12569)
-        annotations.append(extended_row)
+            extended_row.append(0)
+            annotations.append(extended_row)
     gtFile.close()
+   
     return annotations
 
 
@@ -6825,57 +8699,65 @@ def count_annotation_classes(annotations):
         classes.append(row[8])
     classes = numpy.array(classes)
     for c in range(0,43):
-        print "  class %d :"%c, (classes[:]==c).sum(),
+        #print "  class %d appears:"%c, (classes[:]==c).sum(),
         count.append((classes[:]==c).sum())
     return numpy.array(count)
 
+def enforce_max_samples_per_class(annotations, max_samples=150, repetition=1):
+    annot_list = [None]*43 
+    for i in range(len(annot_list)):
+        annot_list[i] = []
 
-def sample_annotations(annotations, flag=None, passing=1.0):
-    num_annot = len(annotations)
-    #W!!! why 2 here!!!?? 
-    w = numpy.random.uniform(0.0, 1.0, size=num_annot)
-    mask = (w <= passing)
+    if isinstance(repetition, int):
+        repetition = [repetition]*43
 
-    t=0
-    out_annotations = []    
-    for ii, row in enumerate(annotations):
-        if (flag=="Test" or flag==None):
-            if mask[ii] and 2 <= row[1] < 4: # Keep only track 0 and 1 for testing
-                out_annotations.append(row)
-                t += 1
-        elif flag=="Even":
-            if mask[ii] and row[1]%2==0: # and (row[1]<2 or row[1]>=4): # row[1] >= 2
-                out_annotations.append(row)
-        elif flag=="Odd":
-            if mask[ii] and row[1]%2==1: # and (row[1]<2 or row[1]>=4): #row[1]>=2:
-                out_annotations.append(row)
-        elif flag=="2/3":
-            if mask[ii] and (row[1]%3==1 or row[1]%3==2): # and (row[1]<2 or row[1]>=4): # row[1] >= 2
-                out_annotations.append(row)
-        elif flag=="4/3":
-            if mask[ii] and (row[1]%3==0 or row[1]%3==1): # and (row[1]<2 or row[1]>=4): # row[1] >= 2
-                out_annotations.append(row)
-        elif flag=="1/3":
-            if mask[ii] and row[1]%3==0: # and (row[1]<2 or row[1]>=4): # row[1] >= 2
-                out_annotations.append(row)
-        elif flag=="AllP":
-            if mask[ii] and (row[1]<2 or row[1]>=4): #row[1]>=2:
-                out_annotations.append(row)
-        elif flag=="Univ":
-            if mask[ii]:
-                out_annotations.append(row)
-        else:
-            quit()
-    print "Track 0: ", t
+    for row in annotations:
+        c = int(row[8])
+        for i in range(repetition[c]):
+            annot_list[c] += [copy.deepcopy(row)]
+    
+    print "fixing max number of samples per class"
+    for c in range(43):
+        if len(annot_list[c])>max_samples:
+#            print "len(class[%d])=%d"%(c, len(annot_list[c])),
+            numpy.random.shuffle(annot_list[c])
+            annot_list[c] = annot_list[c][0:max_samples]
+    new_annotations = []
+    for c in range(43):
+#        print " len(class[%d])="%c, len(annot_list[c]), 
+        new_annotations += annot_list[c]
+    return new_annotations
+        
+def sample_annotations(annotations, first_sample=0, num_samples=None):
+    if len(annotations[0]) < 8 or (first_sample==None and num_samples==None):
+        return annotations
+
+    c_annotations = []
+    for c in range(43):        
+        c_annotations.append([])
+    for row in annotations:
+        c_annotations[row[8]].append(row)
+
+    out_annotations = []
+    for c in range(43):        
+        if num_samples is None:
+            num_samples = len(c_annotations[c]) - first_sample
+        #print "Add", first_sample, first_sample+num_samples, len(c_annotations[c]),          
+        out_annotations += c_annotations[c][first_sample:first_sample+num_samples]
+#    print "out_annotations=", out_annotations
     return out_annotations
 
-GTSRB_Images_dir_training = "/local/escalafl/Alberto/GTSRB/Training"
-GTSRB_HOG_dir_training = "/local/escalafl/Alberto/GTSRB/GTSRB_Features_HOG/training"
-GTSRB_SFA_dir_training = "/local/escalafl/Alberto/GTSRB/GTSRB_Features_SFA/training"
+GTSRB_Images_dir_training = "/local/escalafl/Alberto/GTSRB/Final_Training/Images"
+GTSRB_HOG_dir_training = "/local/escalafl/Alberto/GTSRB/Final_Training/HOG"
+GTSRB_SFA_dir_training = "/local/escalafl/Alberto/GTSRB/Final_Training/HOG"
 
-GTSRB_Images_dir_Online = "/local/escalafl/Alberto/GTSRB/Online-Test-sort/Images"
-GTSRB_HOG_dir_Online = "/local/escalafl/Alberto/GTSRB/Online-Test-sort/HOG"
-GTSRB_SFA_dir_Online = "/local/escalafl/Alberto/GTSRB/Online-Test-sort/SFA"
+GTSRB_Images_dir_test = "/local/escalafl/Alberto/GTSRB/Final_Test/Images"
+GTSRB_HOG_dir_test = "/local/escalafl/Alberto/GTSRB/Final_Test/HOG"
+GTSRB_SFA_dir_test = "/local/escalafl/Alberto/GTSRB/Final_Test/SFA"
+
+GTSRB_Images_dir_Online = "/local/escalafl/Alberto/GTSRB/Final_Test/Images"
+GTSRB_HOG_dir_Online = "/local/escalafl/Alberto/GTSRB/Final_Test/HOG"
+GTSRB_SFA_dir_Online = "/local/escalafl/Alberto/GTSRB/Final_Test/SFA"
 
 GTSRB_Images_dir_UnlabeledOnline = "/local/escalafl/Alberto/GTSRB/Online-Test/Images"
 GTSRB_HOG_dir_UnlabeledOnline = "/local/escalafl/Alberto/GTSRB/Online-Test/HOG"
@@ -6886,11 +8768,11 @@ GTSRB_SFA_dir_UnlabeledOnline = "/local/escalafl/Alberto/GTSRB/Online-Test/SFA"
 def load_HOG_data(base_GTSRB_dir="/home/eban/GTSRB", filenames=None, switch_SFA_over_HOG="HOG02", feature_noise = 0.0, padding=False):
     all_data = []
     print "HOG DATA LOADING %d images..."%len(filenames)
-    online_base_dir = GTSRB_Images_dir_UnlabeledOnline #Unlabeled data dir
+    #online_base_dir = GTSRB_HOG_dir_testing #GTSRB_Images_dir_UnlabeledOnline #Unlabeled data dir
 
     #warning, assumes all filenames belong to same directory!!!
     #make this a good function and apply it to every file
-    if filenames[0][0:len(online_base_dir)] == online_base_dir: #or final data base dir
+    if filenames[0][0:len(GTSRB_Images_dir_UnlabeledOnline)] == GTSRB_Images_dir_UnlabeledOnline: #or final data base dir
         if switch_SFA_over_HOG in ["HOG01", "HOG02", "HOG03"]:     
             base_hog_dir = GTSRB_HOG_dir_UnlabeledOnline
         elif switch_SFA_over_HOG in ["SFA"]:
@@ -6908,6 +8790,15 @@ def load_HOG_data(base_GTSRB_dir="/home/eban/GTSRB", filenames=None, switch_SFA_
             er = "Incorrect 2 switch_SFA_over_HOG value:", switch_SFA_over_HOG
             raise Exception(er)
         unlabeled_data = False
+    elif filenames[0][0:len(GTSRB_Images_dir_test)] == GTSRB_Images_dir_test:
+        if switch_SFA_over_HOG in ["HOG01", "HOG02", "HOG03"]:     
+            base_hog_dir = GTSRB_HOG_dir_test
+        elif switch_SFA_over_HOG in ["SFA02"]:
+            base_hog_dir = GTSRB_SFA_dir_training ##undefined, 
+        else:
+            er = "Incorrect 2 switch_SFA_over_HOG value:", switch_SFA_over_HOG
+            raise Exception(er)
+        unlabeled_data = True
     elif filenames[0][0:len(GTSRB_Images_dir_Online)] == GTSRB_Images_dir_Online:
         if switch_SFA_over_HOG in ["HOG01", "HOG02", "HOG03"]:     
             base_hog_dir = GTSRB_HOG_dir_Online
@@ -6922,9 +8813,11 @@ def load_HOG_data(base_GTSRB_dir="/home/eban/GTSRB", filenames=None, switch_SFA_
         raise Exception(er)
 
     feat_set = switch_SFA_over_HOG[-2:]
-    sample_hog_filename = "00000/00001_00000.txt"
-    print filenames[0], filenames[-1]
+    sample_hog_filename = "00000/00001_00000.txt" #"00000/00001_00000.txt" (Older)
+    print "HOG loading...", feat_set, filenames[0], filenames[-1]
     for ii, image_filename in enumerate(filenames):
+        if ii==0:
+            print "image_filename=", image_filename
         if unlabeled_data:
             if switch_SFA_over_HOG in ["HOG01", "HOG02", "HOG03"]:   
                 hog_filename = base_hog_dir + "/HOG_" + feat_set + "/" + image_filename[-9:-3]+"txt"
@@ -6942,7 +8835,7 @@ def load_HOG_data(base_GTSRB_dir="/home/eban/GTSRB", filenames=None, switch_SFA_
                 er = "Incorrect 4 switch_SFA_over_HOG value:", switch_SFA_over_HOG
                 raise Exception(er)               
         if ii==0:
-            print hog_filename
+            print "first hogh_filename:", hog_filename
         data_file = open(hog_filename, "rb") 
         data = [float(line) for line in data_file.readlines()]
         data_file.close( )
@@ -6978,8 +8871,8 @@ def load_HOG_data(base_GTSRB_dir="/home/eban/GTSRB", filenames=None, switch_SFA_
 
 
 #Real last_track is num_tracks - skip_end_tracks -1
-def iSeqCreateRGTSRB_Labels(annotations, first_track=0, last_track=500, labels_available=True, repetition_factors=1, seed=-1): 
-    if seed >= 0 or seed == None:
+def iSeqCreateRGTSRB_Labels(annotations, labels_available=True, repetition_factors=1, seed=-1): 
+    if seed >= 0 or seed is None:
         numpy.random.seed(seed)
 
     print "***** Setting Training Information Parameters for German Traffic Sign Recognition Benchmark ******"
@@ -6988,34 +8881,43 @@ def iSeqCreateRGTSRB_Labels(annotations, first_track=0, last_track=500, labels_a
 
     iSeq.data_base_dir = ""
 #
-    num_classes = 43
-    c_filenames = []
-    c_info = []
-    c_labels = []
-    for c in range(num_classes):
-        c_filenames.append([])
-        c_info.append([])
-        c_labels.append([])
+    all_classes = []
+    for row in annotations:
+        all_classes.append(row[8])
+        #print "adding ", row[8], 
+    print "all_classes=", all_classes
+    all_classes = numpy.unique(all_classes) 
+    print "all_classes=", all_classes
+
+    c_filenames = {}
+    c_info = {}
+    c_labels = {}
+    for c in all_classes:
+        c_filenames[c] = []
+        c_info[c] = []
+        c_labels[c] = []
 
     counter = 0
     for row in annotations:
-#        print "T=%d"%row[1],
-        if row[1] >= first_track and row[1] < last_track:
-            c = row[8] #extract class number
-#            print c, len(c_filenames)
-            c_filenames[c].append(row[0])
-            c_info[c].append(row[2:8])
-            c_labels[c].append(c)
-            counter += 1
+        c = row[8] #extract class number
+        c_filenames[c].append(row[0])
+        c_info[c].append(row[2:8])
+        c_labels[c].append(c)
+        counter += 1
     print "Sample counter before repetition=", counter
 
-    if repetition_factors == None:
+    if repetition_factors is None:
         repetition_factors = 1
     if isinstance(repetition_factors, int):
+        num_classes = len(all_classes)
         repetition_factors = [repetition_factors]*num_classes
+    if isinstance(repetition_factors, list):
+        dic = {}
+        for i, c in enumerate(all_classes):
+            dic[c] = repetition_factors[i]
     print repetition_factors
-    for c in range(num_classes):  
-        print "c=", c, len(c_info[c]), len(c_info), len(c_info[0]), len(c_info[1])
+    for c in all_classes:  
+        #print "c=", c, len(c_info[c]), len(c_info), len(c_info[0]), len(c_info[1])
         c_filenames[c] = (c_filenames[c]) * (repetition_factors[c])
         c_info[c] = (c_info[c]) * (repetition_factors[c])
         c_labels[c] = (c_labels[c]) * (repetition_factors[c])  
@@ -7037,23 +8939,27 @@ def iSeqCreateRGTSRB_Labels(annotations, first_track=0, last_track=500, labels_a
 #    print c_filenames[0][1], c_filenames[1][1]
     
     conc_c_info = []
-    for entry in c_info:
-        conc_c_info += entry
-    #Avoids void entries
+    for c in all_classes:
+        conc_c_info += c_info[c]
+    
+    #print "conc_c_info is", conc_c_info
+#Avoids void entries
     iSeq.c_info = numpy.array(conc_c_info)
 
-    print len(iSeq.c_info)
+    print "len(iSeq.c_info)", len(iSeq.c_info)
     #zeros((counter, 6))
 
     iSeq.ids = []
     iSeq.input_files = []
     iSeq.block_size = []
-    for c in range(num_classes):
-        iSeq.block_size.append(len(c_filenames[c]))
-        print "iSeq.block_size[%d]="%c, iSeq.block_size[c]
-        for filename in c_filenames[c]:
-            iSeq.ids.append(c)
-            iSeq.input_files.append(filename)
+
+    for c in all_classes:
+        if len(c_filenames[c]) > 0:
+            iSeq.block_size.append(len(c_filenames[c]))
+            print "iSeq.block_size[%d]="%c, iSeq.block_size[-1],
+            for filename in c_filenames[c]:
+                iSeq.ids.append(c)
+                iSeq.input_files.append(filename)
 
     iSeq.block_size = numpy.array(iSeq.block_size)
 #    print iSeq.block_size
@@ -7064,7 +8970,7 @@ def iSeqCreateRGTSRB_Labels(annotations, first_track=0, last_track=500, labels_a
 #    quit()
       
     iSeq.ids = numpy.array(iSeq.ids)
-    print "iSeq.ids", iSeq.ids
+    #print "iSeq.ids", iSeq.ids
 #    quit()
     iSeq.ages = [None]
     iSeq.genders = [None]
@@ -7082,7 +8988,7 @@ def iSeqCreateRGTSRB_Labels(annotations, first_track=0, last_track=500, labels_a
     iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
                       iSeq.morphs, iSeq.poses, iSeq.lightings]
     if labels_available:
-        iSeq.train_mode = "clustered"    
+        iSeq.train_mode = "clustered" #"compact_classes+5" #"clustered" #"compact_classes+31"
     else:
         iSeq.train_mode = "unlabeled"
     print "BLOCK SIZE =", iSeq.block_size 
@@ -7094,7 +9000,7 @@ def iSeqCreateRGTSRB_Labels(annotations, first_track=0, last_track=500, labels_a
 
 
 def sSeqCreateRGTSRB(iSeq, delta_translation = 2.0, delta_scaling = 0.1, delta_rotation = 4.0, contrast_enhance=True, activate_HOG=False, switch_SFA_over_HOG="HOG02", feature_noise = 0.0, seed=-1):
-    if seed >= 0 or seed == None: #also works for 
+    if seed >= 0 or seed is None: #also works for 
         numpy.random.seed(seed)
     #else seed <0 then, do not change seed
 
@@ -7104,6 +9010,7 @@ def sSeqCreateRGTSRB(iSeq, delta_translation = 2.0, delta_scaling = 0.1, delta_r
     sSeq.num_images = iSeq.num_images
     sSeq.block_size = iSeq.block_size
     sSeq.train_mode = iSeq.train_mode
+    print "iSec.c_info is", iSeq.c_info
     sSeq.image_width = iSeq.c_info[:, 0]
     sSeq.image_height = iSeq.c_info[:,1]
     sSeq.subimage_width = 32
@@ -7183,7 +9090,7 @@ def sSeqCreateRGTSRB(iSeq, delta_translation = 2.0, delta_scaling = 0.1, delta_r
             sSeq.convert_format = switch_SFA_over_HOG
         else:
             quit()
-    sSeq.train_mode = 'clustered'
+    sSeq.train_mode = iSeq.train_mode
     SystemParameters.test_object_contents(sSeq)
     return sSeq
 
@@ -7228,50 +9135,151 @@ def sSeqCreateRGTSRB(iSeq, delta_translation = 2.0, delta_scaling = 0.1, delta_r
 #  2, 4, 1, 3, 3, 3,
 #  3]
 
-GTSRB_present = os.path.lexists("/local/escalafl/Alberto/GTSRB/") and False
+GTSRB_present = os.path.lexists("/local/escalafl/Alberto/GTSRB/") and False #and os.path.lexists("/local/escalafl/on_lux10")
 if GTSRB_present:
+    GTSRBTrain_base_dir = "/local/escalafl/Alberto/GTSRB/Final_Training/Images" #"/local/escalafl/Alberto/GTSRB/Final_Training/Images"
     GTSRBTrain_base_dir = "/local/escalafl/Alberto/GTSRB/Final_Training/Images" #"/local/escalafl/Alberto/GTSRB/Final_Training/Images"
     GTSRBOnline_base_dir = "/local/escalafl/Alberto/GTSRB/Online-Test-sort/Images" #"/local/escalafl/Alberto/GTSRB/Online-Test-sort/Images"
     repetition_factorsTrain = None
     
 #TODO:Repetition factors should not be at this level, also randomization of scales does not belong here.
 #TODO:Update the databases used to the final system
-      
-    GTSRB_annotationsTrain_Train = readTrafficSignsAnnotations(GTSRBTrain_base_dir, include_labels=True) #delta_rand_scale=0.07
-    print "Len GTSRB_annotationsTrain_Train=,", len(GTSRB_annotationsTrain_Train)
-    GTSRB_annotationsTrain_Seenid = readTrafficSignsAnnotations(GTSRBTrain_base_dir, include_labels=True) #delta_rand_scale=0.07
-    GTSRB_annotationsTrain_Newid = readTrafficSignsAnnotations(GTSRBTrain_base_dir, include_labels=True)
+    sign_selection = numpy.arange(43)
     
+    sign_selection = list(set(sign_selection)-set([ 0, 19, 21, 24, 27, 29, 32, 37, 39, 41, 42]))
+    
+    GTSRB_annotationsTrain_Train = readTrafficSignsAnnotations(GTSRBTrain_base_dir, include_labels=True, sign_selection=sign_selection) #delta_rand_scale=0.07
+    print "Len GTSRB_annotationsTrain_Train=,", len(GTSRB_annotationsTrain_Train)
+    GTSRB_annotationsTrain_Seenid = readTrafficSignsAnnotations(GTSRBTrain_base_dir, include_labels=True, sign_selection=sign_selection) #delta_rand_scale=0.07
+    GTSRB_annotationsTrain_Newid = readTrafficSignsAnnotations(GTSRBTrain_base_dir, include_labels=True, sign_selection=sign_selection)
+    
+   
 #    GTSRB_annotationsOnline_Train = readTrafficSignsAnnotations(GTSRBOnline_base_dir, include_labels=True)
 #    GTSRB_annotationsOnline_Seenid = readTrafficSignsAnnotations(GTSRBOnline_base_dir, include_labels=True)
 #    GTSRB_annotationsOnline_Newid = readTrafficSignsAnnotations(GTSRBOnline_base_dir, include_labels=True)
 #    print "Len GTSRB_annotationsOnline_Newid=", len(GTSRB_annotationsOnline_Newid)
 #    quit()
+
+    activate_HOG = True and False #for direct image processing, true for SFA/HOG features
+    #TODO: HOG set selection HOG02, SFA, 
+    switch_SFA_over_HOG = "HOG02" #"SFA" # "HOG02", "SFA"
+
+    print "fixing max_samples_per_class"
+    GTSRB_rep=1#6
+    GTSRB_constant_block_size = 360*GTSRB_rep
+    GTSRB_annotationsTrain_Train = enforce_max_samples_per_class(GTSRB_annotationsTrain_Train, GTSRB_constant_block_size, repetition=GTSRB_rep)
+    GTSRB_annotationsTrain_Seenid = enforce_max_samples_per_class(GTSRB_annotationsTrain_Seenid, GTSRB_constant_block_size, repetition=GTSRB_rep)
+    GTSRB_annotationsTrain_Newid = enforce_max_samples_per_class(GTSRB_annotationsTrain_Newid, GTSRB_constant_block_size)
+
+
+    count = count_annotation_classes(GTSRB_annotationsTrain_Train)
+    print "number of samples per each class A (GTSRB_annotationsTrain_Train): ", count
     
-    #count = count_annotation_classes(GTSRB_annotationsTest)
-    #print count
+    #Correct class indices, so that only consecutive classes appear
+    consequtive_classes = True
+    if consequtive_classes:
+        all_classes=[]
+        for row in GTSRB_annotationsTrain_Train:
+            all_classes.append(row[8])
+        unique, corrected_classes = numpy.unique(all_classes, return_inverse=True) 
+        correction_c = {}
+        for i, c in enumerate(unique):
+            correction_c[c] = i
+
+        print "unique classes in GTSRB_annotationsTrain_Train:", unique
+
+        for ii, row in enumerate(GTSRB_annotationsTrain_Train):
+            row[8] = correction_c[row[8]]
+        for row in GTSRB_annotationsTrain_Seenid:
+            row[8] = correction_c[row[8]]
+        for row in GTSRB_annotationsTrain_Newid:
+            row[8] = correction_c[row[8]]
+        print "class consequtive correction mapping", correction_c
+        
+        
+    count = count_annotation_classes(GTSRB_annotationsTrain_Train)
+    print "number of samples per each class B (GTSRB_annotationsTrain_Train): ", count
+        
+    shuffle_classes = True
+    if shuffle_classes:
+        all_classes=[]
+        for row in GTSRB_annotationsTrain_Train:
+            all_classes.append(row[8])
+        unique_c = numpy.unique(all_classes)
+        print "unique_c=", unique_c
+
+        shuffled_c = unique_c.copy()
+        numpy.random.shuffle(shuffled_c)
+        print "shuffled_c=", shuffled_c
+        
+        shuffling_c={}
+        for i, c in enumerate(unique_c):
+            shuffling_c[c] = shuffled_c[i]
+        print "shuffling_c=", shuffling_c
+
+        for row in GTSRB_annotationsTrain_Train:
+            row[8] = shuffling_c[row[8]]
+
+        for row in GTSRB_annotationsTrain_Seenid:
+            row[8] = shuffling_c[row[8]]
+        
+        for row in GTSRB_annotationsTrain_Newid:
+            row[8] = shuffling_c[row[8]]
+        
+        print "class shuffling mapping", shuffling_c
+        
+    count = count_annotation_classes(GTSRB_annotationsTrain_Train)
+    print "number of samples per each class C (GTSRB_annotationsTrain_Train): ", count
+
+#    count = count_annotation_classes(GTSRB_annotationsTrain_Seenid)
+#    print "number of samples per each class (GTSRB_annotationsTrain_Seenid): ", count
+
+
+#    count = count_annotation_classes(GTSRB_annotationsTrain_Newid)
+#    print "number of samples per each class (GTSRB_annotationsTrain_Newid): ", count
+
     #print 500.0/count+0.99
     #print 700/count
     #print GTSRB_annotationsTrain[0]
+    #
+    #TODO:Add a first_sample parameter
     
-    #     
-    GTSRB_annotationsTrain_Train = sample_annotations(GTSRB_annotationsTrain_Train, flag="2/3", passing=1.0) #W 0.6, 0.5, Odd, AllP, Univ, 2/3
-    GTSRB_annotationsTrain_Seenid = sample_annotations(GTSRB_annotationsTrain_Seenid, flag="1/3", passing=1.0) #W 1.0, 0.3, Even, 1/3
-    GTSRB_annotationsTrain_Newid = sample_annotations(GTSRB_annotationsTrain_Newid, flag="Test", passing=1.0) #make testing faster for now, 0.3 , 1.0
-    
- #   GTSRB_annotationsOnline_Train = sample_annotations(GTSRB_annotationsOnline_Train, flag="Univ", passing=0.25) #W 0.6, 0.5, Odd, AllP, Univ
- #   GTSRB_annotationsOnline_Seenid = sample_annotations(GTSRB_annotationsOnline_Seenid, flag="Univ", passing=0.25) #W 1.0, 0.3, Even
- #   GTSRB_annotationsOnline_Newid = sample_annotations(GTSRB_annotationsOnline_Newid, flag="Univ", passing=1.0) #make testing faster for now, 0.3 , 1.0
+    GTSRB_annotationsTrain_TrainOrig = GTSRB_annotationsTrain_Train
+    GTSRB_annotationsTrain_Train = sample_annotations(GTSRB_annotationsTrain_TrainOrig, first_sample = 0, num_samples=360*GTSRB_rep) #W 0.6, 0.5, Odd, AllP, Univ, 2/3
+    GTSRB_annotationsTrain_Seenid = sample_annotations(GTSRB_annotationsTrain_TrainOrig, first_sample = 0*GTSRB_rep, num_samples=360*GTSRB_rep ) #W 1.0, 0.3, Even, 1/3
+    GTSRB_annotationsTrain_Newid = sample_annotations(GTSRB_annotationsTrain_TrainOrig, first_sample = 240*GTSRB_rep, num_samples=120*GTSRB_rep ) #make testing faster for now, 0.3 , 1.0
+
+#    GTSRB_annotationsTrain_Train = sample_annotations(GTSRB_annotationsTrain_TrainOrig, first_sample = 0, num_samples=360*GTSRB_rep) #W 0.6, 0.5, Odd, AllP, Univ, 2/3
+#    GTSRB_annotationsTrain_Seenid = sample_annotations(GTSRB_annotationsTrain_TrainOrig, first_sample = 0*GTSRB_rep, num_samples=360*GTSRB_rep ) #W 1.0, 0.3, Even, 1/3
+#    GTSRB_annotationsTrain_Newid = sample_annotations(GTSRB_annotationsTrain_TrainOrig, first_sample = 240*GTSRB_rep, num_samples=10*GTSRB_rep ) #make testing faster for now, 0.3 , 1.0
+   
+
+    #GTSRB_annotationsOnline_Train = sample_annotations(GTSRB_annotationsOnline_Train, flag="Univ", passing=0.25) #W 0.6, 0.5, Odd, AllP, Univ
+    #GTSRB_annotationsOnline_Seenid = sample_annotations(GTSRB_annotationsOnline_Seenid, flag="Univ", passing=0.25) #W 1.0, 0.3, Even
+    #GTSRB_annotationsOnline_Newid = sample_annotations(GTSRB_annotationsOnline_Newid, flag="Univ", passing=1.0) #make testing faster for now, 0.3 , 1.0
     
     #count = count_annotation_classes(GTSRB_annotationsTest)      
     #print count    
     #quit()
-    
+#    
     GTSRB_Unlabeled_base_dir = "/local/escalafl/Alberto/GTSRB/Final_Test/Images" # "/local/escalafl/Alberto/GTSRB/Online-Test/Images"
     GTSRB_Unlabeled_csvfile =  "GT-final_test.csv" #  "GT-final_test.csv" / "GT-final_test.test.csv" / "GT-online_test.test.csv"
-    GTSRB_UnlabeledAnnotations = readTrafficSignsAnnotationsOnline(GTSRB_Unlabeled_base_dir, GTSRB_Unlabeled_csvfile, shrink_signs=True, correct_sizes=True, include_labels=True) #include_labels=False
-    GTSRB_UnlabeledAnnotations = sample_annotations(GTSRB_UnlabeledAnnotations, flag="Univ", passing=1.0) #make testing faster for now, 0.3 , 1.0
-    print GTSRB_UnlabeledAnnotations[0], len(GTSRB_UnlabeledAnnotations)
+    GTSRB_UnlabeledAnnotations = readTrafficSignsAnnotationsOnline(GTSRB_Unlabeled_base_dir, GTSRB_Unlabeled_csvfile, shrink_signs=True, correct_sizes=True, include_labels=True, sign_selection=sign_selection) #include_labels=False
+  
+  
+    if consequtive_classes:
+        for ii, row in enumerate(GTSRB_UnlabeledAnnotations):
+            if row[8] in correction_c.keys():
+                row[8] = correction_c[row[8]]
+            
+    if shuffle_classes:
+        for row in GTSRB_UnlabeledAnnotations:
+            if row[8] in shuffling_c.keys():
+                row[8] = shuffling_c[row[8]]
+            
+    
+    GTSRB_UnlabeledAnnotations = sample_annotations(GTSRB_UnlabeledAnnotations) #make testing faster for now, 0.3 , 1.0
+    #print GTSRB_UnlabeledAnnotations[0], len(GTSRB_UnlabeledAnnotations)
     #quit() 
     
     GTSRB_annotationsTrain = GTSRB_annotationsTrain_Train
@@ -7281,9 +9289,6 @@ if GTSRB_present:
     ## CASE [[F]]
     #WARNING!
     ##############################'''WAAAAAARNNNNIIINNNNNNGGGG TRTRAAAACKKKKSSSSSS 1111
-    activate_HOG = True and False #for direct image processing, true for SFA/HOG features
-    #TODO: HOG set selection HOG02, SFA, 
-    switch_SFA_over_HOG = "SFA" # "HOG02", "SFA"
     #W first track=1
     ##iSeq_set = iTrainRGTSRB_Labels = [[iSeqCreateRGTSRB_Labels(GTSRB_annotationsTrain, first_track = 0, last_track=100, seed=-1),
     ##                                   iSeqCreateRGTSRB_Labels(GTSRB_annotationsTestData, first_track = 0, last_track=4, labels_available=False, seed=-1)]]
@@ -7299,17 +9304,43 @@ if GTSRB_present:
 ##                                sSeqCreateRGTSRB(iSeq_set[0][1], enable_translation=True, enable_rotation=True, contrast_enhance=True, activate_HOG=activate_HOG, switch_SFA_over_HOG= switch_SFA_over_HOG, feature_noise=0.0,  seed=-1)]]
 
     #delta_translation=0.0, delta_scaling=0.1, delta_rotation=4.0
-    contrast_enhance=False or True
-    iSeq_set = iTrainRGTSRB_Labels = [[iSeqCreateRGTSRB_Labels(GTSRB_annotationsTrain, first_track = 0, last_track=100, repetition_factors=4, seed=-1)]] #last_track=100
+    contrast_enhance = "GTSRBContrastEnhancement"
+#    delta_translation_t= 1.25 #1.5 #1.25
+#    delta_scaling_t= 0.070 #0.075 #0.065
+#    delta_rotation_t = 3.5 #2.5 pointer
+#
+#    delta_translation_s= 2.0 #RETUNE! # 1.0 #1.5 #1.25
+#    delta_scaling_s= 0.110 # Retune! 0.056 #0.075 #0.065
+#    delta_rotation_s = 2.75 #2.8 #2.5 pointer
+#NOTE: TUNED PARAMS: 2.0, 0.11 and 2.75, however strange results, so reverting to same parameters used for training
+
+    delta_translation_t= 1.5 
+    delta_scaling_t= 0.090 
+    delta_rotation_t = 3.15 
+
+# #WARNING, ONLY FOR PLOT!
+#     delta_translation_t= 0.0001 
+#     delta_scaling_t= 0.0001 
+#     delta_rotation_t = 0.0001
+
+    delta_translation_s= 1.5 
+    delta_scaling_s= 0.090 
+    delta_rotation_s = 3.15 
+
+#NOTE: TUNED PARAMS: 2.0, 0.11 and 2.75, however strange results, so reverting to same parameters used for training
+
+#    factor_seenid = 0.80 #2.5/3.5
+
+    iSeq_set = iTrainRGTSRB_Labels = [[iSeqCreateRGTSRB_Labels(GTSRB_annotationsTrain, repetition_factors=6, seed=-1)]] #repetition_factors=4 ##last_track=100
 #    sSeq_set = sTrainRGTSRB = [[sSeqCreateRGTSRB(iSeq_set[0][0], delta_translation=0.0, delta_scaling=0.0, delta_rotation=0.0, contrast_enhance=contrast_enhance, activate_HOG=activate_HOG, switch_SFA_over_HOG= switch_SFA_over_HOG, feature_noise=0.00, seed=-1) ]] #feature_noise=0.04
-    sSeq_set = sTrainRGTSRB = [[sSeqCreateRGTSRB(iSeq_set[0][0], delta_translation=1.5, delta_scaling=0.1, delta_rotation=3.5, contrast_enhance=contrast_enhance, activate_HOG=activate_HOG, switch_SFA_over_HOG= switch_SFA_over_HOG, feature_noise=0.00, seed=-1) ]] #feature_noise=0.04
-    
-    iSeq_set = iSeenidRGTSRB_Labels = iSeqCreateRGTSRB_Labels(GTSRB_annotationsSeenid, first_track = 0, last_track=100, repetition_factors=2,  seed=-1)
+    sSeq_set = sTrainRGTSRB = [[sSeqCreateRGTSRB(iSeq_set[0][0], delta_translation=delta_translation_t, delta_scaling=delta_scaling_t, delta_rotation=delta_rotation_t, contrast_enhance=contrast_enhance, activate_HOG=activate_HOG, switch_SFA_over_HOG= switch_SFA_over_HOG, feature_noise=0.00, seed=-1) ]] #feature_noise=0.04
+
+    iSeq_set = iSeenidRGTSRB_Labels = iSeqCreateRGTSRB_Labels(GTSRB_annotationsSeenid, repetition_factors=6,  seed=-1) #repetition_factors=2
 #    sSeq_set = sSeenidRGTSRB = sSeqCreateRGTSRB(iSeq_set, delta_translation=0.0, delta_scaling=0.00, delta_rotation=0.0, contrast_enhance=contrast_enhance, activate_HOG=activate_HOG, switch_SFA_over_HOG= switch_SFA_over_HOG, feature_noise=0.00, seed=-1) #feature_noise=0.07
-    sSeq_set = sSeenidRGTSRB = sSeqCreateRGTSRB(iSeq_set, delta_translation=1.25, delta_scaling=0.075, delta_rotation=2.5, contrast_enhance=contrast_enhance, activate_HOG=activate_HOG, switch_SFA_over_HOG= switch_SFA_over_HOG, feature_noise=0.00, seed=-1) #feature_noise=0.07
-    
+    sSeq_set = sSeenidRGTSRB = sSeqCreateRGTSRB(iSeq_set, delta_translation=delta_translation_s, delta_scaling=delta_scaling_s, delta_rotation=delta_rotation_s, contrast_enhance=contrast_enhance, activate_HOG=activate_HOG, switch_SFA_over_HOG= switch_SFA_over_HOG, feature_noise=0.00, seed=-1) #feature_noise=0.07
+
     #GTSRB_onlineAnnotations, GTSRB_annotationsTest
-    iSeq_set = iNewidRGTSRB_Labels = iSeqCreateRGTSRB_Labels(GTSRB_annotationsTest, first_track = 0, last_track=4, repetition_factors=1, seed=-1)
+    iSeq_set = iNewidRGTSRB_Labels = iSeqCreateRGTSRB_Labels(GTSRB_annotationsTest, repetition_factors=1, seed=-1)
     sSeq_set = sNewidRGTSRB = sSeqCreateRGTSRB(iSeq_set, delta_translation=0.0, delta_scaling=0.0, delta_rotation=0.0, contrast_enhance=contrast_enhance, activate_HOG=activate_HOG, switch_SFA_over_HOG= switch_SFA_over_HOG, feature_noise=0.0, seed=-1)
     #sSeq_set.add_noise_L0 = False
     #sSeq_set.rotation = 0.0              
@@ -7317,6 +9348,10 @@ if GTSRB_present:
 #    print iTrainRGTSRB_Labels[0][0].input_files[0:5]
 #    print iSeenidRGTSRB_Labels.input_files[0:5]
 #    quit()
+    print iTrainRGTSRB_Labels[0][0].correct_labels
+    print iSeenidRGTSRB_Labels.correct_labels
+    print iNewidRGTSRB_Labels.correct_labels
+    #quit()
     
     ParamsRGTSRBFunc = SystemParameters.ParamsSystem()
     ParamsRGTSRBFunc.name = "Function Based Data Creation for GTSRB"
@@ -7331,14 +9366,14 @@ if GTSRB_present:
     ParamsRGTSRBFunc.sNewid = sNewidRGTSRB
     
     ParamsRGTSRBFunc.block_size = iTrainRGTSRB_Labels[0][0].block_size
-    ParamsRGTSRBFunc.train_mode = 'clustered' #Identity recognition task
+    ParamsRGTSRBFunc.train_mode = "ignored" #clustered, #Identity recognition task
     ParamsRGTSRBFunc.analysis = None
     ParamsRGTSRBFunc.activate_HOG = activate_HOG
     
     if activate_HOG==False:
         ParamsRGTSRBFunc.enable_reduced_image_sizes = True #and False #Set to false if network is a cascade
-        ParamsRGTSRBFunc.reduction_factor = 1.0 # WARNING 0.5, 1.0, 2.0, 4.0, 8.0
-        ParamsRGTSRBFunc.hack_image_size = 32 # WARNING    64,  32,  16,   8
+        ParamsRGTSRBFunc.reduction_factor = 32.0/48 #1.0 # WARNING   0.5, 1.0, 2.0, 4.0, 8.0
+        ParamsRGTSRBFunc.hack_image_size = 48            # WARNING    64,  32,  16,   8
         ParamsRGTSRBFunc.enable_hack_image_size = True #and False #Set to false if network is a cascade
     else:
         if switch_SFA_over_HOG == "HOG02":
@@ -7448,16 +9483,8 @@ else:
 #sSeq.name = "RTans X Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f)"%(sSeq.trans_x_min, 
 #    sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.min_sampling*100, sSeq.max_sampling*100)
 #SystemParameters.test_object_contents(sSeq)
-experiment_seed = os.getenv("CUICUILCO_EXPERIMENT_SEED") #1112223339 #1112223339
-if experiment_seed:
-    experiment_seed = int(experiment_seed)
-else:
-    experiment_seed = 1112223334 #111222333
-    ex = "CUICUILCO_EXPERIMENT_SEED unset"
-    raise Exception(ex)
-print "PosXseed. experiment_seed=", experiment_seed
-numpy.random.seed(experiment_seed) #seed|-5789
-print "experiment_seed=", experiment_seed
+
+                           
 
 #This subsumes RTransX, RTransY, RTrainsScale
 #pipeline_fd:
@@ -7465,7 +9492,7 @@ print "experiment_seed=", experiment_seed
 #dy0 = 20, 20 Steps,
 #smin0 = 0.55, smax0 = 1.1, 40 Steps
 def iSeqCreateRTransXYScale(dx=45, dy=20, smin=0.55, smax=1.1, num_steps=20, slow_var = "X", continuous=False, pre_mirroring="none", num_images_used=10000, images_base_dir= alldbnormalized_base_dir, normalized_images = alldbnormalized_available_images, first_image_index=0, repetition_factor=1, seed=-1):
-    if seed >= 0 or seed == None: #also works for 
+    if seed >= 0 or seed is None: #also works for 
         numpy.random.seed(seed)
 
     if first_image_index + num_images_used > len(alldbnormalized_available_images):
@@ -7579,10 +9606,10 @@ def iSeqCreateRTransXYScale(dx=45, dy=20, smin=0.55, smax=1.1, num_steps=20, slo
 #    if continuous == False:
 #        iSeq.train_mode = "serial" # = "serial" "mixed", None
 #    else:
-#        iSeq.train_mode = "mirror_window64" # "mirror_window32" # None, "regular", "window32", "fwindow16", "fwindow32", "fwindow64", "fwindow128", 
+#        iSeq.train_mode = "mirror_window64" # "mirror_window32" "smirror_window32" # None, "regular", "window32", "fwindow16", "fwindow32", "fwindow64", "fwindow128", 
 
 #        quit()
-    iSeq.train_mode = "serial" # = "regular", "fwindow16" "serial" "mixed", None
+    iSeq.train_mode = "mirror_window256" #"mirror_window32" # "mirror_window32", "regular", "fwindow16" "serial" "mixed", None
 #        iSeq.train_mode = None 
 
     print "BLOCK SIZE =", iSeq.block_size
@@ -7596,7 +9623,7 @@ def iSeqCreateRTransXYScale(dx=45, dy=20, smin=0.55, smax=1.1, num_steps=20, slo
     return iSeq
 
 def sSeqCreateRTransXYScale(iSeq, seed=-1):
-    if seed >= 0 or seed == None: #also works for 
+    if seed >= 0 or seed is None: #also works for 
         numpy.random.seed(seed)
     #else seed <0 then, do not change seed
     
@@ -7636,8 +9663,8 @@ def sSeqCreateRTransXYScale(iSeq, seed=-1):
     if iSeq.slow_var == "X":
         sSeq.translations_x = iSeq.trans
         #sSeq.translations_x = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
-        print "sSeq.translations_x=", sSeq.translations_x
-        print "len( sSeq.translations_x)=",  len(sSeq.translations_x)
+        #print "sSeq.translations_x=", sSeq.translations_x
+        #print "len( sSeq.translations_x)=",  len(sSeq.translations_x)
     else:
         sSeq.translations_x = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, sSeq.num_images)
         
@@ -7683,7 +9710,7 @@ continuous = True #and False
 
 iSeq_set = iTrainRTransXYScale = [[iSeqCreateRTransXYScale(dx=45, dy=20, smin=0.55, smax=1.1, num_steps=50, slow_var = "X", continuous=continuous, num_images_used=30000, #30000 
                                                       images_base_dir=alldbnormalized_base_dir, normalized_images = alldbnormalized_available_images, 
-                                                      first_image_index=0, pre_mirroring="none", repetition_factor=1, seed=-1)]]
+                                                      first_image_index=0, pre_mirroring="none", repetition_factor=2, seed=-1)]]
 #Experiment below is just for display purposes!!! comment it out!
 #iSeq_set = iTrainRTransXYScale = [[iSeqCreateRTransXYScale(dx=45, dy=2, smin=0.85, smax=0.95, num_steps=50, slow_var = "X", continuous=continuous, num_images_used=15000, #30000 
 #                                                      images_base_dir=alldbnormalized_base_dir, normalized_images = alldbnormalized_available_images, 
@@ -7704,13 +9731,13 @@ sSeq_set = sTrainRTransXYScale = [[sSeqCreateRTransXYScale(iSeq_set[0][0], seed=
 
 iSeq_set = iSeenidRTransXYScale = iSeqCreateRTransXYScale(dx=45, dy=20, smin=0.55, smax=1.1, num_steps=50, slow_var = "X", continuous=True, num_images_used=25000, #20000
                                                       images_base_dir=alldbnormalized_base_dir, normalized_images = alldbnormalized_available_images, 
-                                                      first_image_index=30000, pre_mirroring="none", repetition_factor=1, seed=-1)
+                                                      first_image_index=30000, pre_mirroring="none", repetition_factor=2, seed=-1)
 sSeq_set = sSeenidRTransXYScale = sSeqCreateRTransXYScale(iSeq_set, seed=-1)
 
 #WARNING, here continuous=continuous was wrong!!! we should always use the same test data!!!
 iSeq_set = iNewidRTransXYScale = [[iSeqCreateRTransXYScale(dx=45, dy=20, smin=0.55, smax=1.1, num_steps=50, slow_var = "X", continuous=True, num_images_used=9000, #9000 
                                                       images_base_dir=alldbnormalized_base_dir, normalized_images = alldbnormalized_available_images, 
-                                                      first_image_index=55000, pre_mirroring="none", repetition_factor=1, seed=-1)]]      #repetition_factor=4
+                                                      first_image_index=55000, pre_mirroring="none", repetition_factor=2, seed=-1)]]      #repetition_factor=4
 #WARNING, code below is for display purposes only, it should be commented out!
 #iSeq_set = iNewidRTransXYScale = [[iSeqCreateRTransXYScale(dx=45, dy=2, smin=0.85, smax=0.95, num_steps=50, slow_var = "X", continuous=True, num_images_used=2000, #9000 
 #                                                      images_base_dir=alldbnormalized_base_dir, normalized_images = alldbnormalized_available_images, 
@@ -7754,8 +9781,8 @@ ParamsRTransXYScaleFunc.block_size = iTrainRTransXYScale[0][0].block_size
     
 ParamsRTransXYScaleFunc.analysis = None
 ParamsRTransXYScaleFunc.enable_reduced_image_sizes = True
-ParamsRTransXYScaleFunc.reduction_factor = 4.0 # WARNING 1.0, 2.0, 4.0, 8.0
-ParamsRTransXYScaleFunc.hack_image_size = 32 # WARNING   128,  64,  32 , 16
+ParamsRTransXYScaleFunc.reduction_factor = 1.0 # WARNING 1.0, 2.0, 4.0, 8.0  / 1.0 2.0 ... 
+ParamsRTransXYScaleFunc.hack_image_size = 128 # WARNING   128,  64,  32 , 16 / 160  80 ...
 ParamsRTransXYScaleFunc.enable_hack_image_size = True
 
 #quit()
@@ -7779,9 +9806,10 @@ def find_available_images(base_dir, from_subdirs=None, verbose=False):
     else:
         dirList = []
     for subdir in dirList:
-        if from_subdirs == None or subdir in from_subdirs:
+        if from_subdirs is None or subdir in from_subdirs:
             subdir_full = os.path.join(base_dir, subdir)
             subdirList = os.listdir(subdir_full)
+            subdirList.sort()
             if subdir in ["Male","Female", "Unknown"]:
                 if  subdir == "Male":
                     label=1
@@ -7795,9 +9823,150 @@ def find_available_images(base_dir, from_subdirs=None, verbose=False):
                 label = float(subdir)
             files_dict[subdir] = (len(subdirList), label, subdirList)
     return files_dict      
-    
 
-def cluster_images(files_dict, smallest_number_images=1400):
+def list_available_images(base_dir, from_subdirs=None, verbose=False):
+    """Finds the files in all subdirectory.
+    Returns a list l, with entries: l[k] = (file_name, subfolder)
+    where the file names have a relative path w.r.t. the base directory """    
+
+    if os.path.lexists(base_dir):
+        dirList=os.listdir(base_dir)
+#        dirList.append("")
+    else:
+        dirList = []
+        print "WARNING! base_dir", base_dir, " does not exist!"
+
+    files_list=[]   
+    for filename in dirList:
+        file_full = os.path.join(base_dir, filename)
+        if os.path.isdir(file_full):
+            subdir = filename
+            if from_subdirs is None or subdir in from_subdirs:
+                subdir_full = os.path.join(base_dir, subdir)
+                subdirList = os.listdir(subdir_full)
+                subdirList.sort()
+        
+                for filename in subdirList:
+                    files_list.append((os.path.join(subdir, filename), subdir))            
+        else:
+            if verbose:
+                print "filename", filename
+            files_list.append((filename, "100"))
+
+#    for subdir in dirList:
+#%        if from_subdirs is None or subdir in from_subdirs:
+#            subdir_full = os.path.join(base_dir, subdir)
+#            if os.path.isdir(subdir_full):
+#                subdirList = os.listdir(subdir_full)
+#                subdirList.sort()
+#    
+#                for filename in subdirList:
+#                    files_list.append((os.path.join(subdir, filename), subdir))             
+    
+    return files_list
+
+age_all_labels_map_MORPH = load_GT_labels("/local/escalafl/Alberto/MORPH_setsS1S2S3_seed12345/GT_MORPH_AgeRAgeGenderRace.txt", age_included=True, rAge_included=True, gender_included=True, race_included=True, avgColor_included=False)
+age_all_labels_map_INI = load_GT_labels("/home/escalafl/Databases/faces/INIBilder/GT_INI_AgeRAgeGenderRace.txt", age_included=True, rAge_included=True, gender_included=True, race_included=True, avgColor_included=False)
+age_all_labels_map_FGNet = load_GT_labels("/home/escalafl/workspace4/FaceDetectSFA/FGNet_FD/GT_FGNet_AgeRAgeGenderRace.txt", age_included=True, rAge_included=True, gender_included=True, race_included=True, avgColor_included=False)
+
+#print age_all_labels_map_FGNet
+#quit()
+
+def append_GT_labels_to_files(files_list, age_all_labels_map, min_age=0.0, max_age=365000.0, select_races=[-2,-1,0,1,2], verbose=False):
+#min_age and max_age in days
+    print "age_all_labels_map has %d entries"%(len(age_all_labels_map.keys()))
+#    rAge_labels_TrainRAge = []
+#    gender_labels_TrainRAge = []
+#    race_labels_TrainRAge = []   
+    labeled_files_list = []
+    for (input_file, subdir) in files_list:
+        input_file_short = string.split(input_file,"/")[-1]
+#        rAge_labels_TrainRAge.append(age_all_labels_map[input_file_short][1]) 
+#        gender_labels_TrainRAge.append(age_all_labels_map[input_file_short][2]) 
+#        race_labels_TrainRAge.append(age_all_labels_map[input_file_short][3]) 
+#               (input_file, age, rAge, race, gender)
+        iage = int(subdir)
+        if iage == 100:
+            iage = age_all_labels_map[input_file_short][0]
+
+        entry = (input_file, int(subdir), age_all_labels_map[input_file_short][1], age_all_labels_map[input_file_short][3], age_all_labels_map[input_file_short][2])
+        if entry[2] < min_age or entry[2] > max_age:
+            if verbose:
+                print "entry ", entry, " discarded due to age out of range: ", entry[2]
+        elif entry[3] not in select_races:
+            if verbose:
+                print "entry ", entry, " discarded due to race not in select_races: ", entry[3]	    
+        else:
+            labeled_files_list.append(entry)
+    print "after appending label and filtering samples, the number of original filenames is:", len(labeled_files_list)
+#    rAge_labels_TrainRAge = numpy.array(rAge_labels_TrainRAge).reshape((-1,1))
+#    race_labels_TrainRAge = numpy.array(race_labels_TrainRAge).reshape((-1,1))
+#    gender_labels_TrainRAge = numpy.array(gender_labels_TrainRAge).reshape((-1,1))
+
+    return labeled_files_list
+
+def age_cluster_labeled_files(labeled_files_list, repetition=1, num_clusters=1, trim_number=None, shuffle_each_cluster=False):
+    """ clusters/joins the entries of files_dict, so that
+        each cluster has the same size  
+        The set of clusters is represented as a list of clusters [cluster1, cluster2, ...],
+        and each cluster is a list of one tuples [(num_files, label, files_with_subdir_dict, ages, rAges, races, genders)]  
+        """
+    labeled_files_list = sorted(labeled_files_list, key = lambda labeled_file: labeled_file[2])
+    num_files = len(labeled_files_list)
+    print "num_files =", num_files
+    
+    cluster_size = num_files/num_clusters
+    if cluster_size * num_clusters != num_files:
+        print "Number of files %d is not a multiple of num_clusters %d. Fixing this discarding first few samples"%(num_files, num_clusters) 
+        labeled_files_list = labeled_files_list[-cluster_size * num_clusters:]
+        num_files = len(labeled_files_list)
+        print "new num_files=", num_files
+
+    if num_files == 0:
+        num_clusters = 0
+
+    clusters = []
+    for c in range(num_clusters):
+        cluster_labeled_files_list = labeled_files_list[c*cluster_size:(c+1)*cluster_size]
+
+        cluster_files_list = [labeled_file[0] for rep in range(repetition) for labeled_file in cluster_labeled_files_list]
+        
+        cluster_ages_rAges_races_genders_list = [(labeled_file[1], labeled_file[2], labeled_file[3], labeled_file[4]) for rep in range(repetition) for labeled_file in cluster_labeled_files_list]
+        cluster_ages_rAges_races_genders_list = numpy.array(cluster_ages_rAges_races_genders_list)
+                
+#        cluster_ages_list = [labeled_file[1] for labeled_file in cluster_labeled_files_list]
+#        cluster_rAges_list = [labeled_file[2] for labeled_file in cluster_labeled_files_list]
+#        cluster_races_list = [labeled_file[3] for labeled_file in cluster_labeled_files_list]
+#        cluster_genders_list = [labeled_file[4] for labeled_file in cluster_labeled_files_list]
+        
+#        cluster_files_list = sfa_libs.repeat_list_elements(cluster_files_list, rep=repetition)
+#        cluster_ages_list = sfa_libs.repeat_list_elements(cluster_ages_list, rep=repetition)
+#        cluster_rAges_list = sfa_libs.repeat_list_elements(cluster_rAges_list, rep=repetition)
+#        cluster_races_list = sfa_libs.repeat_list_elements(cluster_races_list, rep=repetition)
+#        cluster_genders_list = sfa_libs.repeat_list_elements(cluster_genders_list, rep=repetition)
+
+        if trim_number > 0:
+            cluster_num_files = trim_number
+        else:
+            cluster_num_files = cluster_size*repetition
+
+        if shuffle_each_cluster:
+            ordering = numpy.arange(cluster_size*repetition)
+            numpy.random.shuffle(ordering)
+            cluster_files_list = cluster_files_list[ordering][0:cluster_num_files]
+            cluster_ages_rAges_races_genders_list = cluster_ages_rAges_races_genders_list[ordering,:]
+#            cluster_rAges_list = cluster_rAges_list[ordering][0:cluster_num_files]
+#            cluster_races_list = cluster_races_list[ordering][0:cluster_num_files]
+#            cluster_genders_list = cluster_genders_list[ordering][0:cluster_num_files]
+
+        #print "cluster_ages_rAges_races_genders_list=",cluster_ages_rAges_races_genders_list
+        cluster_label = cluster_ages_rAges_races_genders_list[:,0].mean()
+
+        cluster = [cluster_num_files, cluster_label, cluster_files_list, cluster_ages_rAges_races_genders_list]
+        clusters.append(cluster)
+    return clusters
+
+def age_cluster_list(files_dict, repetition=1, smallest_number_images=None, largest_number_images=None):
     """ clusters/joins the entries of files_dict, so that
         each cluster has at least smallest_number_images images. 
         The set of clusters is represented as a list of clusters [cluster1, cluster2, ...],
@@ -7812,17 +9981,26 @@ def cluster_images(files_dict, smallest_number_images=1400):
     cluster_size = 0
     for subdir in subdirs:
         num_files_subdir, label, files_subdir = files_dict[subdir]
-        files_subdir_with_subdir = []
-        for file_name in files_subdir:
-            files_subdir_with_subdir.append(os.path.join(subdir,file_name))
-        cluster.append( (num_files_subdir, label, files_subdir_with_subdir) )
-        cluster_size += num_files_subdir
-        if smallest_number_images==None or cluster_size >=  smallest_number_images:
-            #Save cluster
-            clusters.append(cluster)
-            #Start a new cluster
-            cluster = []
-            cluster_size=0
+        if num_files_subdir > 0:
+            if largest_number_images != None:
+                max_repetition = int(numpy.min((numpy.ceil(largest_number_images*1.0/num_files_subdir), repetition)))
+            else:
+                max_repetition = repetition
+            print "max_repetition=", max_repetition, "from ", num_files_subdir, " to ", num_files_subdir*max_repetition
+            num_files_subdir *= max_repetition
+            files_subdir *= max_repetition   
+                 
+            files_subdir_with_subdir = []
+            for file_name in files_subdir:
+                files_subdir_with_subdir.append(os.path.join(subdir,file_name))
+            cluster.append( (num_files_subdir, label, files_subdir_with_subdir) )
+            cluster_size += num_files_subdir
+            if smallest_number_images==None or cluster_size >=  smallest_number_images:
+                #Save cluster
+                clusters.append(cluster)
+                #Start a new cluster
+                cluster = []
+                cluster_size=0
     if cluster_size != 0: #Something has not reached proper size, add it to lastly created cluster
         if len(clusters)>0:
             clusters[-1].extend(cluster)      
@@ -7830,7 +10008,7 @@ def cluster_images(files_dict, smallest_number_images=1400):
             clusters.append(cluster)
     return clusters
 
-def cluster_to_filenames(clusters, trim_number=None, shuffle_each_cluster=True, verbose=False):
+def cluster_to_labeled_samples(clusters, trim_number=None, shuffle_each_cluster=True, verbose=False):
     """ Reads a cluster structure in a nested list, generates representative labels, 
     joins filenames and trims them.
     If trim_number is None, no trimming is done. 
@@ -7883,44 +10061,267 @@ def cluster_to_filenames(clusters, trim_number=None, shuffle_each_cluster=True, 
     return new_clusters
 
 
-def MORPH_leave_k_identities_out(available_images_dict, k=0):
-    # available_images_dict[subdir] = (num_files_in_subfolder, label, [file names])
+def MORPH_leave_k_identities_out_list(available_images_list, k=0):
     if k==0:
-        return available_images_dict, {}
+        return available_images_list, []
     
-    subdirs = available_images_dict.keys()
-    all_filenames = []
-    for subdir in subdirs:
-        all_filenames.extend(available_images_dict[subdir][2])
-    all_identities = set()
-    for filename in all_filenames:
-        all_identities.add(string.split(filename, "_")[0])
-    all_identities_list = list(all_identities)
-    numpy.random.shuffle(all_identities_list)
+    #subdirs = available_images_dict.keys()
+    #all_filenames = []
+    #for subdir in subdirs:
+    #    all_filenames.extend(available_images_dict[subdir][2])
+    all_identities_list = []
+    for (filename, subdir) in available_images_list:
+        identity = string.split(filename, "_")[0]
+        identity = string.split(identity, "/")[-1]
+        all_identities_list.append(identity)
+    
+    all_identities = set(all_identities_list)
+    all_identities_unique = list(all_identities)
+    print "%d unique identities detected"%len(all_identities_unique)
 
-    separated_identities = all_identities_list[0:k]
-    print "separated_identities=", separated_identities
+    num_identities = numpy.arange(len(all_identities_unique))
+    numpy.random.shuffle(num_identities)
+    separated_identities = all_identities_unique[0:k]
+
+    #print "separated_identities=", separated_identities
     
     #now create two dictionaries
-    available_images_dict_orig = {}
-    available_images_dict_separated = {}
-    for subdir in subdirs:
-        num_files_in_subfolder, label, filenames = available_images_dict[subdir]
-        filenames_orig = []
-        filenames_separated = []
-        for file_name in filenames:
-            sid = string.split(file_name, "_")[0]
-            if sid in separated_identities:
-                filenames_separated.append(file_name)
-            else:
-                filenames_orig.append(file_name)
-        if len(filenames_separated)+len(filenames_orig) != num_files_in_subfolder:
-            er = "Unexpected error in the sizes of the filename arrays"
-            raise Exception(er)
-        available_images_dict_orig[subdir]=(len(filenames_orig), label, filenames_orig)
-        available_images_dict_separated[subdir]=(len(filenames_separated), label, filenames_separated)
-        print "Separating %d/%d"%(len(filenames_orig), len(filenames_separated)),
-    return available_images_dict_orig, available_images_dict_separated
+    available_images_list_orig = []
+    available_images_list_separated = []
+    num_separated = 0
+    num_orig = 0
+    for current_index, (filename, subdir) in enumerate(available_images_list):
+        if all_identities_list[current_index] in separated_identities:
+            available_images_list_separated.append((filename, subdir))
+            num_separated +=1
+        else:
+            available_images_list_orig.append((filename, subdir))
+            num_orig +=1
+        
+    print "Separating %d/%d (LKO)"%(num_orig, num_separated)
+    print "available_images_list_orig[0]=", available_images_list_orig[0]
+    print "available_images_list_separated[0]=", available_images_list_separated[0]
+    return available_images_list_orig, available_images_list_separated
+
+# # def MORPH_leave_k_identities_out(available_images_dict, k=0):
+# #     # available_images_dict[subdir] = (num_files_in_subfolder, label, [file names])
+# #     if k==0:
+# #         return available_images_dict, {}
+# #     
+# #     subdirs = available_images_dict.keys()
+# #     all_filenames = []
+# #     for subdir in subdirs:
+# #         all_filenames.extend(available_images_dict[subdir][2])
+# #     all_identities_list = []
+# #     for filename in all_filenames:
+# #         all_identities_list.append(string.split(filename, "_")[0])
+# #     
+# #     all_identities = set(all_identities_list)
+# #     all_identities_unique = list(all_identities)
+# # 
+# #     num_identities = numpy.arange(len(all_identities_unique))
+# #     numpy.random.shuffle(num_identities)
+# #     separated_identities = all_identities_unique[0:k]
+# #     #print "separated_identities=", separated_identities
+# #     
+# #     #now create two dictionaries
+# #     available_images_dict_orig = {}
+# #     available_images_dict_separated = {}
+# #     current_index = 0
+# #     for subdir in subdirs:
+# #         num_files_in_subfolder, label, filenames = available_images_dict[subdir]
+# #         filenames_orig = []
+# #         filenames_separated = []
+# #         num_orig = 0
+# #         num_separated = 0
+# #         for file_name in filenames:
+# #             sid = all_identities_list[current_index]
+# #             #sid = string.split(file_name, "_")[0]
+# #             if sid in separated_identities:
+# #                 filenames_separated.append(file_name)
+# #                 num_separated +=1
+# #             else:
+# #                 filenames_orig.append(file_name)
+# #                 num_orig +=1
+# #             current_index +=1
+# #         if num_separated+num_orig != num_files_in_subfolder:
+# #             er = "Unexpected error in the sizes of the filename arrays"
+# #             raise Exception(er)
+# #         available_images_dict_orig[subdir]=(num_orig, label, filenames_orig)
+# #         available_images_dict_separated[subdir]=(num_separated, label, filenames_separated)
+# #         print "Separating %d/%d (LKO)"%(num_orig, num_separated),
+# #     return available_images_dict_orig, available_images_dict_separated
+
+# # def MORPH_leave_k_identities_out_old(available_images_dict, k=0):
+# #     # available_images_dict[subdir] = (num_files_in_subfolder, label, [file names])
+# #     if k==0:
+# #         return available_images_dict, {}
+# #     
+# #     subdirs = available_images_dict.keys()
+# #     all_filenames = []
+# #     for subdir in subdirs:
+# #         all_filenames.extend(available_images_dict[subdir][2])
+# #     all_identities = set()
+# #     for filename in all_filenames:
+# #         all_identities.add(string.split(filename, "_")[0])
+# #     all_identities_list = list(all_identities)
+# #     numpy.random.shuffle(all_identities_list)
+# # 
+# #     separated_identities = all_identities_list[0:k]
+# #     #print "separated_identities=", separated_identities
+# #     
+# #     #now create two dictionaries
+# #     available_images_dict_orig = {}
+# #     available_images_dict_separated = {}
+# #     for subdir in subdirs:
+# #         num_files_in_subfolder, label, filenames = available_images_dict[subdir]
+# #         filenames_orig = []
+# #         filenames_separated = []
+# #         num_orig = 0
+# #         num_separated = 0
+# #         for file_name in filenames:
+# #             sid = string.split(file_name, "_")[0]
+# #             if sid in separated_identities:
+# #                 filenames_separated.append(file_name)
+# #                 num_separated +=1
+# #             else:
+# #                 filenames_orig.append(file_name)
+# #                 num_orig +=1
+# #         if len(filenames_separated)+len(filenames_orig) != num_files_in_subfolder:
+# #             er = "Unexpected error in the sizes of the filename arrays"
+# #             raise Exception(er)
+# #         available_images_dict_orig[subdir]=(num_orig, label, filenames_orig)
+# #         available_images_dict_separated[subdir]=(num_separated, label, filenames_separated)
+# #         print "Separating %d/%d (LKO)"%(num_orig, num_separated),
+# #     return available_images_dict_orig, available_images_dict_separated
+
+
+def MORPH_select_k_images_list(available_images_list, k=0, replacement=False):
+    # available_images_dict[subdir] = (num_files_in_subfolder, label, [file names])
+    if k==0:
+        return available_images_list, []
+    
+    num_filenames = len(available_images_list)
+    if k > num_filenames:
+        er = "selecting too many images k=%d, but available=%d"%(k,num_filenames)
+        raise Exception(er)
+    
+    selection = numpy.arange(num_filenames)
+    numpy.random.shuffle(selection)
+    selection = selection[0:k]
+    separated = numpy.zeros(num_filenames)
+    separated[selection] = 1
+    available_images_list_orig = []
+    available_images_list_separated = []
+    num_orig = 0
+    num_separated = 0
+    for current_index, filename_subdir in enumerate(available_images_list):
+        if separated[current_index]:
+            available_images_list_separated.append(filename_subdir)
+            num_separated +=1
+        else:
+            available_images_list_orig.append(filename_subdir)
+            num_orig +=1
+    if num_separated+num_orig != num_filenames:
+        er = "Unexpected error in the sizes of the filename lists"
+        raise Exception(er)
+    print "Separating %d/%d (selecting k=%d) ..."%(num_orig, num_separated, k)
+    #print "available_images_list_separated=", available_images_list_separated
+    if replacement:
+        available_images_list_orig = available_images_list
+
+    print "available_images_list_orig[0]=", available_images_list_orig[0]
+    print "available_images_list_separated[0]=", available_images_list_separated[0]
+    
+    return available_images_list_orig, available_images_list_separated
+
+# # #TODO: Test function. Do the same for LkPO out??
+# # def MORPH_select_k_images(available_images_dict, k=0, replacement=False):
+# #     # available_images_dict[subdir] = (num_files_in_subfolder, label, [file names])
+# #     if k==0:
+# #         return available_images_dict, {}
+# #     
+# #     subdirs = available_images_dict.keys() #any order should be fine
+# #     num_filenames = 0
+# #     for subdir in subdirs:
+# #         num_filenames += available_images_dict[subdir][0]
+# # 
+# #     selection = numpy.arange(num_filenames)
+# #     numpy.random.shuffle(selection)
+# #     selection = selection[0:k]
+# #     separated = numpy.zeros(num_filenames)
+# #     separated[selection] = 1
+# #     
+# #     available_images_dict_orig = {}
+# #     available_images_dict_separated = {}
+# #     current_index = 0
+# #     for subdir in subdirs:
+# #         num_files_in_subfolder, label, filenames = available_images_dict[subdir]
+# #         filenames_orig = []
+# #         filenames_separated = []
+# #         num_orig = 0
+# #         num_separated = 0
+# #         for filename in filenames:
+# #             if separated[current_index]:
+# #                 filenames_separated.append(filename)
+# #                 num_separated +=1
+# #             else:
+# #                 filenames_orig.append(filename)
+# #                 num_orig +=1
+# #             current_index +=1
+# #         if num_separated+num_orig != num_files_in_subfolder:
+# #             er = "Unexpected error in the sizes of the filename arrays"
+# #             raise Exception(er)
+# #         if num_orig > 0:
+# #             available_images_dict_orig[subdir]=(num_orig, label, filenames_orig)
+# #         if num_separated > 0:
+# #             available_images_dict_separated[subdir]=(num_separated, label, filenames_separated)
+# #         print "Separating %d/%d (select k)"%(num_orig, num_separated),
+# # 
+# #     if replacement:
+# #         available_images_dict_orig = available_images_dict
+# #     return available_images_dict_orig, available_images_dict_separated
+
+# # def MORPH_select_k_images_old(available_images_dict, k=0, replacement=False):
+# #     # available_images_dict[subdir] = (num_files_in_subfolder, label, [file names])
+# #     if k==0:
+# #         return available_images_dict, {}
+# #     
+# #     subdirs = available_images_dict.keys()
+# #     all_filenames = []
+# #     for subdir in subdirs:
+# #         all_filenames.extend(available_images_dict[subdir][2])
+# # 
+# #     num_filenames = len(all_filenames)
+# #     selection = numpy.arange(num_filenames)
+# #     numpy.random.shuffle(selection)
+# #     separated_filenames = [all_filenames[d] for d in selection[0:k]] #WARNING; PATH IS RELATIVE, NOT ABSOLUTE; THERE MIGHT BE COLISIONS!!!
+# # 
+# #     available_images_dict_orig = {}
+# #     available_images_dict_separated = {}
+# #     for subdir in subdirs:
+# #         num_files_in_subfolder, label, filenames = available_images_dict[subdir]
+# #         filenames_orig = []
+# #         filenames_separated = []
+# #         num_orig = 0
+# #         num_separated = 0
+# #         for file_name in filenames:
+# #             if file_name in separated_filenames: #THIS IS TOO SLOW!!! OPTIMIZE THIS USING SELECTION?
+# #                 filenames_separated.append(file_name)
+# #                 num_separated +=1
+# #             else:
+# #                 filenames_orig.append(file_name)
+# #                 num_orig +=1
+# #         if num_separated+num_orig != num_files_in_subfolder:
+# #             er = "Unexpected error in the sizes of the filename arrays"
+# #             raise Exception(er)
+# #         available_images_dict_orig[subdir]=(num_orig, label, filenames_orig)
+# #         available_images_dict_separated[subdir]=(num_separated, label, filenames_separated)
+# #         print "Separating %d/%d (select k)"%(num_orig, num_separated),
+# # 
+# #     if replacement:
+# #         available_images_dict_orig = available_images_dict
+# #     return available_images_dict_orig, available_images_dict_separated
 
 #numpy.random.seed(111222333)
 #r_age_clusters = [[21,22,23],[24,25,26],[27,28,29],[30,31],[32,33],[34,35],[36,37],[38,39],
@@ -7933,21 +10334,21 @@ def MORPH_leave_k_identities_out(available_images_dict, k=0):
 ####r_age_all_clustered_available_images = TODO: write this part. 
 
 def iSeqCreateRAge(dx=2, dy=2, smin=0.95, smax=1.05, delta_rotation=0.0, pre_mirroring="none", 
-                   contrast_enhance=False, obj_avg_std=0.0, obj_std_min=0.20, obj_std_max=0.20, clusters=None, num_images_per_cluster_used=10, 
-                   images_base_dir="wrong dir", first_image_index=0, repetition_factor=1, seed=-1, use_orig_label_as_class=False, use_orig_label=False):
-    if seed >= 0 or seed == None: #also works for 
+                   contrast_enhance=False, obj_avg_std=0.0, obj_std_min=0.20, obj_std_max=0.20, new_clusters=None, num_images_per_cluster_used=10, 
+                   images_base_dir="wrong dir", first_image_index=0, repetition_factor=1, seed=-1, use_orig_label_as_class=False, use_orig_label=True, increasing_orig_label=True):
+    if seed >= 0 or seed is None: #also works for 
         numpy.random.seed(seed)
 
-    if len(clusters)>0:
-        min_cluster_size = clusters[0][0]
+    if len(new_clusters)>0:
+        min_cluster_size = new_clusters[0][0]
     else:
         return None
         
-    for cluster in clusters:
+    for cluster in new_clusters:
         min_cluster_size = min(min_cluster_size, cluster[0])
 
-    if first_image_index + num_images_per_cluster_used > min_cluster_size:
-        err = "Images to be used exceeds the number of available images of at least one cluster"
+    if first_image_index + num_images_per_cluster_used > min_cluster_size and num_images_per_cluster_used>0:
+        err = "Images to be used %d + %d exceeds the number of available images %d of at least one cluster"%(first_image_index, num_images_per_cluster_used, min_cluster_size)
         raise Exception(err) 
 
     print "***** Setting Information Parameters for Real Translation XYScale ******"
@@ -7958,20 +10359,39 @@ def iSeqCreateRAge(dx=2, dy=2, smin=0.95, smax=1.05, delta_rotation=0.0, pre_mir
     iSeq.ids = []
     iSeq.input_files = []
     iSeq.orig_labels = []
-    for cluster in clusters:
+    for cluster in new_clusters:
         cluster_id = [cluster[1]] * repetition_factor * num_images_per_cluster_used #avg_label. The average label of the current cluster being considered
         iSeq.ids.extend(cluster_id)
 
-        cluster_labels = (cluster[3][first_image_index:first_image_index+num_images_per_cluster_used])*repetition_factor #orig_label
+        increasing_indices = numpy.arange(num_images_per_cluster_used*repetition_factor)/repetition_factor
+        cluster_labels = (cluster[3][first_image_index:first_image_index+num_images_per_cluster_used,:])[increasing_indices, :] #orig_label
         if len(cluster_id) != len(cluster_labels):
             print "ERROR: Wrong number of cluster labels and original labels"
             print "len(cluster_id)=", len(cluster_id)
             print "len(cluster_labels)=", len(cluster_labels)
             quit()
         iSeq.orig_labels.extend(cluster_labels)
-
-        selected_image_filenames = (cluster[2][first_image_index:first_image_index + num_images_per_cluster_used])*repetition_factor #filenames
+        selected_image_filenames = repeat_list_elements(cluster[2][first_image_index:first_image_index + num_images_per_cluster_used], repetition_factor) #filenames
         iSeq.input_files.extend(selected_image_filenames)
+    if len(iSeq.orig_labels) > 1:
+        iSeq.orig_labels = numpy.vstack(iSeq.orig_labels)
+        print "iSeq.orig_labels.shape=",iSeq.orig_labels.shape
+
+    if use_orig_label and increasing_orig_label:
+        if iSeq.orig_labels.shape[1] > 1:
+            original_label_index = 1 #rAge
+        else:
+            original_label_index = 0 #age     
+        print "Reordering image filenames of data set according to the original labels"
+        ordering = numpy.argsort(iSeq.orig_labels[:,original_label_index])
+        ordered_input_files = [iSeq.input_files[i] for i in ordering]
+        ordered_orig_labels = iSeq.orig_labels[ordering,:]
+        ordered_ids = [iSeq.ids[i] for i in ordering]
+        iSeq.input_files = ordered_input_files
+        iSeq.orig_labels = ordered_orig_labels
+        iSeq.ids = ordered_ids
+    else:
+        print "Image filenames of data set not reordered according to the original labels"
 
     iSeq.num_images = len(iSeq.input_files)
     iSeq.pre_mirroring = pre_mirroring
@@ -7985,7 +10405,8 @@ def iSeqCreateRAge(dx=2, dy=2, smin=0.95, smax=1.05, delta_rotation=0.0, pre_mir
     elif iSeq.pre_mirroring == "duplicate":
         iSeq.input_files = sfa_libs.repeat_list_elements(iSeq.input_files, rep=2)
         iSeq.ids = sfa_libs.repeat_list_elements(iSeq.ids)
-        iSeq.orig_labels = sfa_libs.repeat_list_elements(iSeq.orig_labels)
+        increasing_indices = numpy.arange(iSeq.num_images*repetition_factor)/repetition_factor
+        iSeq.orig_labels = iSeq.orig_labels[increasing_indices,:]
         tmp_pre_mirror_flags = more_nodes.random_boolean_array(iSeq.num_images) #e.g., [T, T, F, F, T, F]
         iSeq.pre_mirror_flags = numpy.array([item^val for item in tmp_pre_mirror_flags for val in (False,True)]) #e.g., [T,F, T,F, F,T, F,T, T,F, F,T])
         iSeq.num_images *= 2
@@ -8004,7 +10425,7 @@ def iSeqCreateRAge(dx=2, dy=2, smin=0.95, smax=1.05, delta_rotation=0.0, pre_mir
     iSeq.delta_rotation = delta_rotation
     if contrast_enhance == True:
         contrast_enhance = "AgeContrastEnhancement_Avg_Std" # "PostEqualizeHistogram" # "AgeContrastEnhancement"
-    if contrast_enhance in ["AgeContrastEnhancement_Avg_Std", "AgeContrastEnhancement25", "AgeContrastEnhancement20", "AgeContrastEnhancement15", "AgeContrastEnhancement", "PostEqualizeHistogram", "SmartEqualizeHistogram", False]:
+    if contrast_enhance in ["AgeContrastEnhancement_Avg_Std", "AgeContrastEnhancement25", "AgeContrastEnhancement20", "AgeContrastEnhancement15", "AgeContrastEnhancement", "PostEqualizeHistogram", "SmartEqualizeHistogram", False, ]:
         iSeq.contrast_enhance = contrast_enhance
     else:
         ex = "Contrast method unknown"
@@ -8034,25 +10455,27 @@ def iSeqCreateRAge(dx=2, dy=2, smin=0.95, smax=1.05, delta_rotation=0.0, pre_mir
 
     iSeq.block_size = num_images_per_cluster_used * repetition_factor
 
-    iSeq.train_mode = "serial" # = "serial" "mixed", None
+    iSeq.train_mode = "serial" #"regular" #"serial" # = "serial" "mixed", None
 # None, "regular", "fwindow16", "fwindow32", "fwindow64", "fwindow128"
 #        quit()
 #        iSeq.train_mode = None 
 
     print "BLOCK SIZE =", iSeq.block_size 
-    if use_orig_label_as_class == False: #Use cluster (average) labels as classes, or the true original labels
-        unique_ids, iSeq.correct_classes = numpy.unique(iSeq.ids, return_inverse=True)
-#        iSeq.correct_classes_from_zero = iSeq.correct_classes
-#        iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(clusters)),  iSeq.block_size)
-    else:
-        unique_labels, iSeq.correct_classes = numpy.unique(iSeq.orig_labels, return_inverse=True)
-#        iSeq.correct_classes_from_zero = iSeq.correct_classes
+#     if use_orig_label_as_class == False: #Use cluster (average) labels as classes, or the true original labels
+#         unique_ids, iSeq.correct_classes = numpy.unique(iSeq.ids, return_inverse=True)
+# #        iSeq.correct_classes_from_zero = iSeq.correct_classes
+# #        iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(clusters)),  iSeq.block_size)
+#     else:
+#         unique_labels, iSeq.correct_classes = numpy.unique(iSeq.orig_labels, return_inverse=True)
+# #        iSeq.correct_classes_from_zero = iSeq.correct_classes
 
-        
+           
     if use_orig_label == False: #Use cluster (average) labels as labels, or the true original labels
         iSeq.correct_labels = numpy.array(iSeq.ids)
     else:
-        iSeq.correct_labels = numpy.array(iSeq.orig_labels)        
+        iSeq.correct_labels = numpy.array(iSeq.orig_labels[:,1])
+    unique_labels, iSeq.correct_classes = numpy.unique(iSeq.correct_labels, return_inverse=True)
+    #iSeq.correct_classes_from_zero = iSeq.correct_labels[:,1]
 
 
     if len(iSeq.ids) != len(iSeq.orig_labels) or len(iSeq.orig_labels) != len(iSeq.input_files):
@@ -8064,7 +10487,7 @@ def iSeqCreateRAge(dx=2, dy=2, smin=0.95, smax=1.05, delta_rotation=0.0, pre_mir
     return iSeq
 
 def sSeqCreateRAge(iSeq, seed=-1, use_RGB_images=False):
-    if seed >= 0 or seed == None: #also works for 
+    if seed >= 0 or seed is None: #also works for 
         numpy.random.seed(seed)
     #else seed <0 then, do not change seed
     
@@ -8075,6 +10498,9 @@ def sSeqCreateRAge(iSeq, seed=-1, use_RGB_images=False):
     
     print "******** Setting Training Data Parameters for Real Age  ****************"
     sSeq = SystemParameters.ParamsDataLoading()
+    #print "iSeq.input_files=", iSeq.input_files
+    #print "iSeq.input_files[0]=", iSeq.input_files[0]
+    #print "iSeq.data_base_dir", iSeq.data_base_dir
     sSeq.input_files = [ os.path.join(iSeq.data_base_dir, file_name) for file_name in iSeq.input_files]
     sSeq.num_images = iSeq.num_images
     sSeq.block_size = iSeq.block_size
@@ -8082,8 +10508,8 @@ def sSeqCreateRAge(iSeq, seed=-1, use_RGB_images=False):
     sSeq.include_latest = iSeq.include_latest
     sSeq.image_width = 256
     sSeq.image_height = 260 #192
-    sSeq.subimage_width = 160 #192 # 160 #128 
-    sSeq.subimage_height = 160 #192 # 160 #128 
+    sSeq.subimage_width = 160 #(article 160) #192 # 160 #128 
+    sSeq.subimage_height = 160 #(article 160) #192 # 160 #128 
     sSeq.pre_mirror_flags = iSeq.pre_mirror_flags
     
     sSeq.trans_x_max = iSeq.dx
@@ -8121,10 +10547,17 @@ def sSeqCreateRAge(iSeq, seed=-1, use_RGB_images=False):
 #    sSeq.translations_x = numpy.random.uniform(low=sSeq.trans_x_min, high=sSeq.trans_x_max, size=sSeq.num_images)
 #    sSeq.translations_y = numpy.random.uniform(low=sSeq.trans_y_min, high=sSeq.trans_y_max, size=sSeq.num_images) 
     #Or alternatively, discrete ofsets:  
-    sSeq.offset_translation_x = -15.0 
-    sSeq.offset_translation_y = -10.0
-    sSeq.translations_x = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, sSeq.num_images) + sSeq.offset_translation_x
-    sSeq.translations_y = numpy.random.random_integers(sSeq.trans_y_min, sSeq.trans_y_max, sSeq.num_images) + sSeq.offset_translation_y
+    sSeq.offset_translation_x = 0.0 #WARNING, experimental recentering!!!
+    sSeq.offset_translation_y = -6.0 #-6.0
+#    sSeq.offset_translation_x = -15.0 
+#    sSeq.offset_translation_y = -10.0
+    integer_translations = True and False
+    if integer_translations:
+        sSeq.translations_x = numpy.random.randint(sSeq.trans_x_min, sSeq.trans_x_max+1, sSeq.num_images) + sSeq.offset_translation_x
+        sSeq.translations_y = numpy.random.randint(sSeq.trans_y_min, sSeq.trans_y_max+1, sSeq.num_images) + sSeq.offset_translation_y
+    else:
+        sSeq.translations_x = numpy.random.uniform(sSeq.trans_x_min, sSeq.trans_x_max, sSeq.num_images) + sSeq.offset_translation_x
+        sSeq.translations_y = numpy.random.uniform(sSeq.trans_y_min, sSeq.trans_y_max, sSeq.num_images) + sSeq.offset_translation_y
 
     print "GSP: sSeq.translations_x=", sSeq.translations_x
 
@@ -8132,15 +10565,22 @@ def sSeqCreateRAge(iSeq, seed=-1, use_RGB_images=False):
     sSeq.pixelsampling_y = sSeq.pixelsampling_x + 0.0
 
     sSeq.rotation = numpy.random.uniform(-sSeq.delta_rotation, sSeq.delta_rotation, sSeq.num_images)
-    if iSeq.obj_avg_std > 0:
-        sSeq.obj_avgs = numpy.random.normal(0.0, iSeq.obj_avg_std, size=sSeq.num_images)
+    if iSeq.obj_avg_std is None:
+        sSeq.obj_avgs = [None,]*sSeq.num_images
+        print "Good 1/3"
+    elif iSeq.obj_avg_std > 0:
+        sSeq.obj_avgs = numpy.random.normal(0.0, iSeq.obj_avg_std, size=sSeq.num_images) #mean intensity, centered at zero here
     else:
         sSeq.obj_avgs = numpy.zeros(sSeq.num_images)
-    sSeq.obj_stds = numpy.random.uniform(sSeq.obj_std_min, sSeq.obj_std_max, sSeq.num_images)
+    sSeq.obj_stds = numpy.random.uniform(sSeq.obj_std_min, sSeq.obj_std_max, sSeq.num_images) #contrast
 
-    #BUG1: image center is not computed that way!!! also half(width-1) computation is wrong!!!
-    sSeq.subimage_first_row =  sSeq.image_height/2.0-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
-    sSeq.subimage_first_column = sSeq.image_width/2.0-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
+    #BUG1 fix
+    sSeq.subimage_first_row =  (sSeq.image_height-sSeq.subimage_height*sSeq.pixelsampling_y)/2.0
+    sSeq.subimage_first_column = (sSeq.image_width-sSeq.subimage_width*sSeq.pixelsampling_x)/2.0
+
+    ##BUG1: image center is not computed that way!!! also half(width-1) computation is wrong!!!
+    #sSeq.subimage_first_row =  sSeq.image_height/2.0-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
+    #sSeq.subimage_first_column = sSeq.image_width/2.0-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
 
     sSeq.trans_sampled = True #TODO:check semantics, when is sampling/translation done? why does this value matter?
     sSeq.name = "RAge Dx in (%d, %d) Dy in (%d, %d), sampling in (%d perc, %d perc)"%(sSeq.trans_x_min, 
@@ -8166,38 +10606,106 @@ print "experiment_seed=", experiment_seed
 
 age_use_RGB_images = LRec_use_RGB_images
 #TODO: Repeat computation of blind levels for MORPH, FG_Net and MORPH+FGNet. (orig labels, no rep, all images)
-min_cluster_size_MORPH = 60000 # 1400 # 60000
-max_cluster_size_MORPH = None  # 1400 # None
-age_trim_number_MORPH = 1400 # 1400
-leave_k_out_MORPH = 0 #1000 #1000 #
+#min_cluster_size_MORPH = 60000 # 1400 # 60000
+#max_cluster_size_MORPH = None  # 1400 # None
+#age_trim_number_MORPH = 1400 # 1400
+leave_k_out_MORPH = 2000 #2000 #1000 #0 #Number of subjects left out for testing
+if leave_k_out_MORPH == 0:
+    select_k_images_newid = 8000
+#select_k_images_seenid = 1500 #16000 #4000 #3000 #3750
+
+option_setup_CNN = 1 # 1=CNN setup, 0=my setup
+if option_setup_CNN: 
+    leave_k_out_MORPH = 0 #to speed on unnecessary computation 
+    select_k_images_newid = 1000
+    select_k_images_seenid = 1000 #4000 #3000 #3750 
 
 if age_use_RGB_images:
-    age_eyes_normalized_base_dir_MORPH = "/local/escalafl/Alberto/MORPH_normalizedEyesZ2_horiz_RGB_ByAge" #RGB: "/local/escalafl/Alberto/MORPH_normalizedEyesZ2_horiz_RGB_ByAge"
+    age_eyes_normalized_base_dir_MORPH = "/local/escalafl/Alberto/MORPH_normalizedEyesZ4_horiz_RGB_ByAge" #RGB: "/local/escalafl/Alberto/MORPH_normalizedEyesZ3_horiz_RGB_ByAge"
 else:
-    age_eyes_normalized_base_dir_MORPH = "/local/escalafl/Alberto/MORPH_normalizedEyesZ2_horiz_ByAge"
-age_files_dict_MORPH = find_available_images(age_eyes_normalized_base_dir_MORPH, from_subdirs=None) #change from_subdirs to select a subset of all ages!
+    age_eyes_normalized_base_dir_MORPH = "/local/escalafl/Alberto/MORPH_normalizedEyesZ4_horiz_ByAge"
+age_files_list_MORPH = list_available_images(age_eyes_normalized_base_dir_MORPH, from_subdirs=None) #change from_subdirs to select a subset of all ages!
 
 if leave_k_out_MORPH:
-    age_files_dict_MORPH, age_files_dict_MORPH_out = MORPH_leave_k_identities_out(age_files_dict_MORPH, k=leave_k_out_MORPH)
-    age_trim_number_MORPH = 1270 #age_trim_number_MORPH = 1270
-    print "age_files_dict_MORPH_out=", age_files_dict_MORPH_out
+    print "LKO enabled, k=%d"%leave_k_out_MORPH
+    age_files_list_MORPH, age_files_list_MORPH_out = MORPH_leave_k_identities_out_list(age_files_list_MORPH, k=leave_k_out_MORPH)
+# #     if leave_k_out_MORPH == 1000:
+# #         age_trim_number_MORPH = 1270 #age_trim_number_MORPH = 1270. This might be important to preserve the number of clusters
+# #     else:
+# #         age_trim_number_MORPH = 1160
+# #     #print "age_files_dict_MORPH_out=", age_files_dict_MORPH_out
 else:
-    age_files_dict_MORPH_out = {}
+    age_files_list_MORPH, age_files_list_MORPH_out = MORPH_select_k_images_list(age_files_list_MORPH, k=select_k_images_newid)
 
-counter = 0
-for subdir in age_files_dict_MORPH.keys():
-    counter += age_files_dict_MORPH[subdir][0]
-print "age_files_dict_MORPH contains %d images", counter
-counter = 0
-for subdir in age_files_dict_MORPH_out.keys():
-    counter += age_files_dict_MORPH_out[subdir][0]
-print "age_files_dict_MORPH_out contains %d images", counter
-    
-age_clusters_MORPH = cluster_images(age_files_dict_MORPH, smallest_number_images=age_trim_number_MORPH) #Cluster so that all clusters have size at least 1400 
-age_clusters_MORPH = cluster_to_filenames(age_clusters_MORPH, trim_number=age_trim_number_MORPH)
+select_k_images_seenid = len(age_files_list_MORPH)
+age_files_list_MORPH, age_files_list_MORPH_seenid = MORPH_select_k_images_list(age_files_list_MORPH, k=select_k_images_seenid, replacement=True)
 
-age_clusters_MORPH_out = cluster_images(age_files_dict_MORPH_out, smallest_number_images=80000) #A single cluster for all images
-age_clusters_MORPH_out = cluster_to_filenames(age_clusters_MORPH_out, trim_number=None, shuffle_each_cluster=False)
+#counter = 0
+#for subdir in age_files_dict_MORPH.keys():
+#    counter += age_files_dict_MORPH[subdir][0]
+#print "age_files_dict_MORPH contains %d images"%counter
+#counter = 0
+#for subdir in age_files_dict_MORPH_seenid.keys():
+#    counter += age_files_dict_MORPH_seenid[subdir][0]
+#print "age_files_dict_MORPH_seenid contains %d images"%counter
+#counter = 0
+#for subdir in age_files_dict_MORPH_out.keys():
+#    counter += age_files_dict_MORPH_out[subdir][0]
+#print "age_files_dict_MORPH_out (LKO) contains %d images"%counter
+
+age_labeled_files_list_MORPH = append_GT_labels_to_files(age_files_list_MORPH, age_all_labels_map_MORPH, select_races=[-2,-1,0,1,2], verbose=True)
+age_labeled_files_list_MORPH_seenid = append_GT_labels_to_files(age_files_list_MORPH_seenid, age_all_labels_map_MORPH, select_races=[-2,-1,0,1,2], verbose=True)
+#age_labeled_files_list_MORPH_seenid = age_labeled_files_list_MORPH #WARNING!!!!!
+age_labeled_files_list_MORPH_out = append_GT_labels_to_files(age_files_list_MORPH_out, age_all_labels_map_MORPH, select_races=[-2,-1,0,1,2], verbose=True)
+
+print "age_labeled_files_list_MORPH contains %d images"%len(age_labeled_files_list_MORPH)
+print "age_labeled_files_list_MORPH_seenid contains %d images"%len(age_labeled_files_list_MORPH_seenid)
+print "age_labeled_files_list_MORPH_out contains %d images"%len(age_labeled_files_list_MORPH_out)
+
+print "age_labeled_files_list_MORPH_seenid[0,1,2]=", age_labeled_files_list_MORPH_seenid[0], age_labeled_files_list_MORPH_seenid[1], age_labeled_files_list_MORPH_seenid[2]
+
+# # if option_setup_CNN: #just to speed this up
+# #     pre_repetitions=1
+# #     age_trim_number_MORPH = (pre_repetitions*1075)
+# # else:
+# #     pre_repetitions = 4 #4
+# #     age_trim_number_MORPH = (pre_repetitions*1075)
+# #     age_trim_number_MORPH = (pre_repetitions*1250) #When replacement=True in seenid selection from training and L1K0
+# #     #age_trim_number_MORPH = (pre_repetitions*1180) #When replacement=True in seenid selection from training and L2K0
+# #     
+#pre_repetitions = 1
+#age_trim_number_MORPH = (pre_repetitions*1250) #When replacement=True in seenid selection from training
+ 
+num_clusters_MORPH_serial = 32
+age_trim_number_MORPH = None
+
+#print "age_labeled_files_list_INIBilder", age_labeled_files_list_INIBilder
+#age_trim_number_MORPH = 200
+age_clusters_MORPH = age_cluster_labeled_files(age_labeled_files_list_MORPH, repetition=2, num_clusters=num_clusters_MORPH_serial, trim_number=None, shuffle_each_cluster=False) #r=5, r=6, trim_number=None
+#age_clusters_MORPH = age_cluster_list(age_files_dict_MORPH, repetition=pre_repetitions, smallest_number_images=age_trim_number_MORPH, largest_number_images=age_trim_number_MORPH) #Cluster so that all clusters have size at least 1400 or 1270 for L1KPO
+print "len(age_clusters_MORPH)=", len(age_clusters_MORPH)
+num_images_per_cluster_used_MORPH = age_clusters_MORPH[0][0]
+#len(age_labeled_files_list_MORPH) / num_clusters_MORPH_serial
+
+print "num_images_per_cluster_used_MORPH=", num_images_per_cluster_used_MORPH
+#age_clusters_MORPH = cluster_to_labeled_samples(age_clusters_MORPH, trim_number=age_trim_number_MORPH)
+
+age_clusters_MORPH_seenid = age_cluster_labeled_files(age_labeled_files_list_MORPH_seenid, repetition=1, num_clusters=1, trim_number=None, shuffle_each_cluster=False) #trim_number=None
+#age_clusters_MORPH_seenid = age_cluster_list(age_files_dict_MORPH_seenid, repetition=1, smallest_number_images=800000, largest_number_images=None) #A single cluster for all images, WARNING, was 800000!!!!
+#age_clusters_MORPH_seenid = cluster_to_labeled_samples(age_clusters_MORPH_seenid, trim_number=None, shuffle_each_cluster=False)
+
+age_clusters_MORPH_out = age_cluster_labeled_files(age_labeled_files_list_MORPH_out, repetition=1, num_clusters=1, trim_number=None, shuffle_each_cluster=False) #trim_number=None
+#age_clusters_MORPH_out = age_cluster_list(age_files_dict_MORPH_out, smallest_number_images=800000) #A single cluster for all images
+#age_clusters_MORPH_out = cluster_to_labeled_samples(age_clusters_MORPH_out, trim_number=None, shuffle_each_cluster=False)
+
+if len(age_clusters_MORPH_seenid) > 0:
+    num_images_per_cluster_used_MORPH_seenid =  age_clusters_MORPH_seenid[0][0]
+else:
+    print "???"
+    quit()
+    num_images_per_cluster_used_MORPH_seenid = 0
+print "num_images_per_cluster_used_MORPH_seenid=", num_images_per_cluster_used_MORPH_seenid
+
 
 if len(age_clusters_MORPH_out) > 0:
     num_images_per_cluster_used_MORPH_out =  age_clusters_MORPH_out[0][0]
@@ -8206,22 +10714,27 @@ else:
 print "num_images_per_cluster_used_MORPH_out=", num_images_per_cluster_used_MORPH_out
 
 
-
-
-min_cluster_size_FGNet = 5000 # 32 #5000
-max_cluster_size_FGNet = None # 32 #None
+numpy.random.seed(experiment_seed+123123)
+#min_cluster_size_FGNet = 5000 # 32 #5000
+#max_cluster_size_FGNet = None # 32 #None
 if age_use_RGB_images:
-    age_eyes_normalized_base_dir_FGNet = "/local/escalafl/Alberto/FGNet/FGNet_normalizedEyesZ2_horiz_RGB_ByAge"
+    age_eyes_normalized_base_dir_FGNet = "/local/escalafl/Alberto/FGNet/FGNet_normalizedEyesZ4_horiz_RGB_2015_08_25"
 else:
-    age_eyes_normalized_base_dir_FGNet = "/local/escalafl/Alberto/FGNet/FGNet_normalizedEyesZ2_horiz_ByAge"
+    age_eyes_normalized_base_dir_FGNet = "/local/escalafl/Alberto/FGNet/FGNet_normalizedEyesZ4_horiz_2015_08_25"
 subdirs_FGNet=None
-subdirs_FGNet=["%d"%i for i in range(16, 77)] #70 77
-age_files_dict_FGNet = find_available_images(age_eyes_normalized_base_dir_FGNet, from_subdirs=subdirs_FGNet) #change from_subdirs to select a subset of all ages!
-age_clusters_FGNet = cluster_images(age_files_dict_FGNet, smallest_number_images=min_cluster_size_FGNet) #Cluster so that all clusters have size at least 1400 
+subdirs_FGNet=["%d"%i for i in range(16, 77)] #70 77 #OBSOLETE: all images are in a single directory
+
+age_files_list_FGNet = list_available_images(age_eyes_normalized_base_dir_FGNet, from_subdirs=None, verbose=False)
+#age_files_dict_FGNet = find_available_images(age_eyes_normalized_base_dir_FGNet, from_subdirs=subdirs_FGNet) #change from_subdirs to select a subset of all ages!
+
+age_labeled_files_list_FGNet = append_GT_labels_to_files(age_files_list_FGNet, age_all_labels_map_FGNet, min_age=15.99*DAYS_IN_A_YEAR, max_age = 77.01*DAYS_IN_A_YEAR, verbose=True)
+#age_clusters_FGNet = age_cluster_list(age_files_dict_FGNet, smallest_number_images=min_cluster_size_FGNet) #Cluster so that all clusters have size at least 1400 
 #print "******************"
 #print len(age_clusters_FGNet), age_clusters_FGNet[0], ":)"
 #print "******************"
-age_clusters_FGNet = cluster_to_filenames(age_clusters_FGNet, trim_number=max_cluster_size_FGNet)
+
+age_clusters_FGNet = age_cluster_labeled_files(age_labeled_files_list_FGNet, repetition=1, num_clusters=1, trim_number=None, shuffle_each_cluster=False)
+#age_clusters_FGNet = cluster_to_labeled_samples(age_clusters_FGNet, trim_number=max_cluster_size_FGNet)
 
 if len(age_clusters_FGNet) > 0:
     num_images_per_cluster_used_FGNet =  age_clusters_FGNet[0][0]
@@ -8233,37 +10746,153 @@ else:
 print "num_images_per_cluster_used_FGNet=", num_images_per_cluster_used_FGNet
 #quit()
 
-age_trim_number_INIBilder = None
+
+
+numpy.random.seed(experiment_seed+432432432)
+#age_trim_number_INIBilder = None
 if age_use_RGB_images:
-    age_eyes_normalized_base_dir_INIBilder = "/local/escalafl/Alberto/INIBilder/INIBilder_normalizedEyesZ2_horiz_RGB"
+    age_eyes_normalized_base_dir_INIBilder = "/local/escalafl/Alberto/INIBilder/INIBilder_normalizedEyesZ4_horiz_RGB"
 else:
-    age_eyes_normalized_base_dir_INIBilder = "/local/escalafl/Alberto/INIBilder/INIBilder_normalizedEyesZ2_horiz"
-age_files_dict_INIBilder = find_available_images(age_eyes_normalized_base_dir_INIBilder, from_subdirs=None) #change from_subdirs to select a subset of all ages!
-age_clusters_INIBilder = cluster_images(age_files_dict_INIBilder, smallest_number_images=age_trim_number_INIBilder) #Cluster so that all clusters have size at least 1400 
-age_clusters_INIBilder = cluster_to_filenames(age_clusters_INIBilder, trim_number=age_trim_number_INIBilder, shuffle_each_cluster=False) 
+    age_eyes_normalized_base_dir_INIBilder = "/local/escalafl/Alberto/INIBilder/INIBilder_normalizedEyesZ4_horiz_byAge"
+#age_files_dict_INIBilder = find_available_images(age_eyes_normalized_base_dir_INIBilder, from_subdirs=None) #change from_subdirs to select a subset of all ages!
+#age_clusters_INIBilder = age_cluster_list(age_files_dict_INIBilder, smallest_number_images=age_trim_number_INIBilder) #Cluster so that all clusters have size at least 1400 
+#age_clusters_INIBilder = cluster_to_labeled_samples(age_clusters_INIBilder, trim_number=age_trim_number_INIBilder, shuffle_each_cluster=False) 
+age_files_list_INIBilder = list_available_images(age_eyes_normalized_base_dir_INIBilder, from_subdirs=None, verbose=False)
+#print "age_files_list_INIBilder=",age_files_list_INIBilder
+age_labeled_files_list_INIBilder = append_GT_labels_to_files(age_files_list_INIBilder, age_all_labels_map_INI)
+#print "age_labeled_files_list_INIBilder", age_labeled_files_list_INIBilder
+age_clusters_INIBilder = age_cluster_labeled_files(age_labeled_files_list_INIBilder, repetition=1, num_clusters=1, trim_number=None, shuffle_each_cluster=False)
+
+
 if len(age_clusters_INIBilder) > 0:
     num_images_per_cluster_used_INIBilder =  age_clusters_INIBilder[0][0]
 else:
     num_images_per_cluster_used_INIBilder = 0
 print "num_images_per_cluster_used_INIBilder=", num_images_per_cluster_used_INIBilder
+#quit()
 
+numpy.random.seed(experiment_seed+654654654)
 age_trim_number_MORPH_FGNet = 1400
 if age_use_RGB_images:
-    age_eyes_normalized_base_dir_MORPH_FGNet = "/local/escalafl/Alberto/MORPH_FGNet_normalizedEyesZ2_horiz_ByAge"
+    age_eyes_normalized_base_dir_MORPH_FGNet = "/local/escalafl/Alberto/MORPH_FGNet_normalizedEyesZ3_horiz_ByAge"
 else:
-    age_eyes_normalized_base_dir_MORPH_FGNet = "/local/escalafl/Alberto/MORPH_FGNet_normalizedEyesZ2_horiz"
+    age_eyes_normalized_base_dir_MORPH_FGNet = "/local/escalafl/Alberto/MORPH_FGNet_normalizedEyesZ3_horiz"
 age_files_dict_MORPH_FGNet = find_available_images(age_eyes_normalized_base_dir_MORPH_FGNet, from_subdirs=None) #change from_subdirs to select a subset of all ages!
-age_clusters_MORPH_FGNet = cluster_images(age_files_dict_MORPH_FGNet, smallest_number_images=age_trim_number_MORPH_FGNet) #Cluster so that all clusters have size at least 1400 
-age_clusters_MORPH_FGNet = cluster_to_filenames(age_clusters_MORPH_FGNet, trim_number=age_trim_number_MORPH_FGNet)
+age_clusters_MORPH_FGNet = age_cluster_list(age_files_dict_MORPH_FGNet, smallest_number_images=age_trim_number_MORPH_FGNet) #Cluster so that all clusters have size at least 1400 
+age_clusters_MORPH_FGNet = cluster_to_labeled_samples(age_clusters_MORPH_FGNet, trim_number=age_trim_number_MORPH_FGNet)
 if len(age_clusters_MORPH_FGNet) > 0:
     num_images_per_cluster_used_MORPH_FGNet =  age_clusters_MORPH_FGNet[0][0]
 else:
     num_images_per_cluster_used_MORPH_FGNet = 0
 print "num_images_per_cluster_used_MORPH_FGNet=", num_images_per_cluster_used_MORPH_FGNet
 
+################################################ CRUCIAL FOR MCNN TESTING ################
+#age_all_labels_map = load_GT_labels("/local/escalafl/Alberto/MORPH_setsS1S2S3_seed12345/GT_MORPH_AgeRAgeGenderRace.txt", age_included=True, rAge_included=True, gender_included=True, race_included=True, avgColor_included=False)
 
-age_clusters = age_clusters_MORPH  #_MORPH #_FGNet
-age_eyes_normalized_base_dir = age_eyes_normalized_base_dir_MORPH #_MORPH #_FGNet
+numpy.random.seed(experiment_seed+432432432)
+##pre_repetitions = 2 #16 # 24 #18 # ** 16 #2, 4, 4*4
+##age_trim_number_set1 = (pre_repetitions*250)
+
+MORPH_base_dir = "/local/escalafl/Alberto/MORPH_splitted_GUO_2015_09_02/"
+#MORPH_base_dir = "/local/escalafl/Alberto/MORPH_setsS1S2S3_seed12345/"   #WARNING!!!
+if age_use_RGB_images:
+    age_eyes_normalized_base_dir_set1 = "/local/escalafl/Alberto/MORPH_splitted_GUO_2015_09_02/nonexistent"
+else:
+    age_eyes_normalized_base_dir_set1 = MORPH_base_dir + "Fs1" #F s 1 ot F s 2 #WARNING!
+#age_files_dict_set1 = find_available_images(age_eyes_normalized_base_dir_set1, from_subdirs=None) #change from_subdirs to select a subset of all ages!
+age_files_list_set1 = list_available_images(age_eyes_normalized_base_dir_set1, from_subdirs=None, verbose=False)
+age_labeled_files_list_set1 = append_GT_labels_to_files(age_files_list_set1, age_all_labels_map_MORPH)
+age_clusters_set1 = age_cluster_labeled_files(age_labeled_files_list_set1, repetition=22, num_clusters=32, trim_number=None, shuffle_each_cluster=False) #r=22
+#age_clusters_set1 = age_cluster_labeled_files(age_labeled_files_list_set1, repetition=16, num_clusters=33, trim_number=None, shuffle_each_cluster=False)
+  
+#age_clusters_set1 = age_cluster_list(age_files_dict_set1, repetition=pre_repetitions, smallest_number_images=age_trim_number_set1, largest_number_images=age_trim_number_set1) #Cluster so that all clusters have size at least 1400 
+#age_clusters_set1 = cluster_to_labeled_samples(age_clusters_set1, trim_number=age_trim_number_set1, shuffle_each_cluster=True) 
+if len(age_clusters_set1) > 0:
+    num_images_per_cluster_used_set1 =  age_clusters_set1[0][0]
+else:
+    num_images_per_cluster_used_set1 =  0   
+print "num_images_per_cluster_used_set1=", num_images_per_cluster_used_set1
+print "num clusters: ", len(age_clusters_set1)
+#print "len(age_files_dict_set1)=", len(age_files_dict_set1)
+
+if age_use_RGB_images:
+    age_eyes_normalized_base_dir_set1b = "/local/escalafl/Alberto/MORPH_setsS1S2S3_seed12345/nonexistent/s1_byAge_mcnn"
+else:
+    age_eyes_normalized_base_dir_set1b = MORPH_base_dir + "Fs1"
+#age_files_dict_set1b = find_available_images(age_eyes_normalized_base_dir_set1b, from_subdirs=None) #change from_subdirs to select a subset of all ages!
+age_files_list_set1b = list_available_images(age_eyes_normalized_base_dir_set1b, from_subdirs=None, verbose=False)
+age_labeled_files_list_set1b = append_GT_labels_to_files(age_files_list_set1b, age_all_labels_map_MORPH, select_races=[-2,-1,0,1,2], verbose=True)
+age_clusters_set1b = age_cluster_labeled_files(age_labeled_files_list_set1b, repetition=3, num_clusters=1, trim_number=None, shuffle_each_cluster=False) #r=3
+#age_clusters_set1b = age_cluster_labeled_files(age_labeled_files_list_set1b, repetition=2, num_clusters=1, trim_number=None, shuffle_each_cluster=False)
+
+
+#print "len(age_files_dict_set1b)=", len(age_files_dict_set1b)
+#pre_repetitions = 2 # 2
+#age_clusters_set1b = age_cluster_list(age_files_dict_set1b, repetition=pre_repetitions, smallest_number_images=800000, largest_number_images=None) #Cluster so that all clusters have size at least 1400 
+#age_clusters_set1b = cluster_to_labeled_samples(age_clusters_set1b, trim_number=None, shuffle_each_cluster=True) 
+if len(age_clusters_set1b) > 0:
+    num_images_per_cluster_used_set1b =  age_clusters_set1b[0][0]
+else:
+    num_images_per_cluster_used_set1b =  0   
+print "num_images_per_cluster_used_set1b=", num_images_per_cluster_used_set1b
+
+
+#pre_repetitions = 1 
+if age_use_RGB_images:
+    age_eyes_normalized_base_dir_set1test = "/local/escalafl/Alberto/MORPH_setsS1S2S3_seed12345/s1-test_byAge_mcnn/nonexistent"
+else:
+    age_eyes_normalized_base_dir_set1test = MORPH_base_dir + "Fs1-test" # s2-test_byAge_mcnn2
+    #age_files_dict_set1test = find_available_images(age_eyes_normalized_base_dir_set1test, from_subdirs=None) #change from_subdirs to select a subset of all ages!
+age_files_list_set1test = list_available_images(age_eyes_normalized_base_dir_set1test, from_subdirs=None, verbose=False)
+age_labeled_files_list_set1test = append_GT_labels_to_files(age_files_list_set1test, age_all_labels_map_MORPH, select_races=[-2,-1,0,1,2], verbose=True)
+age_clusters_set1test = age_cluster_labeled_files(age_labeled_files_list_set1test, repetition=1, num_clusters=1, trim_number=None, shuffle_each_cluster=False)
+
+#age_clusters_set1test = age_cluster_list(age_files_dict_set1test, repetition=1, smallest_number_images=800000, largest_number_images=None) #Cluster so that all clusters have size at least 1400 
+#age_clusters_set1test = cluster_to_labeled_samples(age_clusters_set1test, trim_number=None, shuffle_each_cluster=False) 
+if len(age_clusters_set1test) > 0:
+    num_images_per_cluster_used_set1test =  age_clusters_set1test[0][0]
+else:
+    num_images_per_cluster_used_set1test =  0   
+print "num_images_per_cluster_used_set1test=", num_images_per_cluster_used_set1test
+
+numpy.random.seed(experiment_seed+987987987)
+if option_setup_CNN==0: #MY MORPH SETUP
+    age_clusters = age_clusters_MORPH  #_MORPH #_FGNet
+    age_clusters_seenid = age_clusters_MORPH_seenid
+    age_clusters_newid = age_clusters_MORPH_out
+    
+    age_eyes_normalized_base_dir_train = age_eyes_normalized_base_dir_MORPH
+    age_eyes_normalized_base_dir_seenid = age_eyes_normalized_base_dir_MORPH
+    age_eyes_normalized_base_dir_newid = age_eyes_normalized_base_dir_MORPH
+elif option_setup_CNN==1: #CNN SETUP
+    age_clusters = age_clusters_set1  #_MORPH #_FGNet
+    age_clusters_seenid = age_clusters_set1b
+    age_clusters_newid = age_clusters_set1test
+    
+#    age_trim_number_MORPH = num_images_per_cluster_used_set1 #age_trim_number_set1
+    num_images_per_cluster_used_MORPH = num_images_per_cluster_used_set1
+    num_images_per_cluster_used_MORPH_seenid = num_images_per_cluster_used_set1b
+    num_images_per_cluster_used_MORPH_out = num_images_per_cluster_used_set1test
+    #age_clusters_newid = age_clusters_set1b #WARNING!!!
+    #num_images_per_cluster_used_MORPH_out = 15000 #num_images_per_cluster_used_set1b #WARNING!!!
+
+    age_eyes_normalized_base_dir_train = MORPH_base_dir + "Fs1"
+    age_eyes_normalized_base_dir_seenid = MORPH_base_dir + "Fs1"
+    age_eyes_normalized_base_dir_newid = MORPH_base_dir + "Fs1-test" #s2-test_byAge_mcnn
+       
+    if num_images_per_cluster_used_set1 == 0:
+        ex = "error: num_images_per_cluster_used_set1 = 0"
+        raise Exception(ex)
+    if num_images_per_cluster_used_set1b == 0:
+        ex = "error: num_images_per_cluster_used_set1b = 0"
+        raise Exception(ex)
+    if num_images_per_cluster_used_set1test == 0:
+        ex = "error: num_images_per_cluster_used_set1test = 0"
+        raise Exception(ex)
+    #quit()
+age_all_labels_map_newid = age_all_labels_map_MORPH
+
+print "age_eyes_normalized_base_dir_newid=", age_eyes_normalized_base_dir_newid
 
 verbose=False or True
 if verbose:
@@ -8275,29 +10904,96 @@ if verbose:
         print "filenames[-1]=", age_cluster[2][-1],
         print "orig_labels[0]=", age_cluster[3][-1]
 #quit()
-if leave_k_out_MORPH == 1000 and len(age_clusters) != 30:
+if leave_k_out_MORPH > 0 and len(age_clusters) != 30 and len(age_clusters)!=0 and False: #WARNING! 33 clusters now!
     er = "leave_k_out_MORPH is changing the number of clusters (%d clusters instead of 30)"%len(age_clusters)
     raise Exception(er)
 
-use_seenid_classes_to_generate_knownid_and_seenid_classes = True
+use_seenid_classes_to_generate_knownid_and_newid_classes = True #and False #WARNING
+
+if option_setup_CNN==0: #WARNING!!!!!  ERROR!!! #MY MORPH SETUP, eventually use only one setup? why, nooo! # warning!!!
+    base_scale = 1.14 #1.155 # 1.125 # 1.14 * (37.5/37.0) #1.14  #* 1.1 #*0.955 #*1.05 # 1.14 WARNING!!!
+    factor_training = 1.03573 #1.04 #1.03573 (article) # 1.032157 #1.0393 # 1.03573
+    factor_seenid = 1.01989 #1.021879 #1.018943  #1.020885         # 1.01989  
+    scale_offset = 0.00 #0.08 0.04  
+    delta_rotation = 2.0 #** 2.0 #2.0
+    factor_rotation = 1.65 / 3.0
+    delta_pos = 1.0 # ** 1.0 #1.2 #0.75 #eedit
+    factor_pos = 0.5
+    obj_avg_std = 0.0 # ** 0.0
+    obj_std_base = 0.16 # ** 0.16
+    obj_std_dif = 0.01 #WARNING! # ** 0.00
+    
+    obj_std_min=obj_std_base-obj_std_dif # ** 0.16
+    obj_std_max=obj_std_base+obj_std_dif # ** 0.16    
+else: #GUO MORPH SETUP
+    #0.825 #0.55 # 1.1
+    #smin=0.575, smax=0.625 (orig images) 
+    # (zoomed images)     
+    # smin=1.25, smax=1.40, 1.325
+    base_scale = 1.14 #1.155 # 1.125 # 1.14 * (37.5/37.0) #1.14  #* 1.1 #*0.955 #*1.05 # 1.14 WARNING!!!
+    factor_training = 1.04 # 1.04! #*** 1.03573 #1.04 #1.03573 (article) # 1.032157 #1.0393 # 1.03573
+    factor_seenid = 1.01989 #1.021879 #1.018943  #1.020885         # 1.01989  
+    scale_offset = 0.00 #0.08 0.04  
+    delta_rotation = 2.0 #** 2.0 #2.0
+    factor_rotation = 1.65 / 3.0
+    delta_pos = 2.3 #2.5! # ** 1.0 #1.2 #0.75 #eedit
+    factor_pos = 0.5
+    obj_avg_std = 0.165 #0.17! # ** 0.0
+    obj_std_base = 0.16 # ** 0.16
+    obj_std_dif = 0.081 #0.096! # ** 0.00 #WARNING!!! WHY min can be smaller than zero???!!!
+    
+    obj_std_min=obj_std_base - obj_std_dif # ** 0.16
+    obj_std_max=obj_std_base + obj_std_dif # ** 0.16
+
+obj_avg_std_seenid = obj_avg_std * 0.0
+obj_std_dif_seenid = obj_std_dif * 0.0
+obj_std_min_seenid = obj_std_base - obj_std_dif_seenid # ** 0.16
+obj_std_max_seenid = obj_std_base + obj_std_dif_seenid # ** 0.16
 
 #0.825 #0.55 # 1.1
 #smin=0.575, smax=0.625 (orig images) 
 # (zoomed images)   
 # smin=1.25, smax=1.40, 1.325
-base_scale = 1.14
-factor_training = 1.03573 # 1.032157 #1.0393 # 1.03573
-factor_seenid = 1.01989 #1.021879 #1.018943  #1.020885         # 1.01989  
-scale_offset = 0.00 #0.08 0.04  
+###base_scale = 1.14 #1.155 # 1.125 # 1.14 * (37.5/37.0) #1.14  #* 1.1 #*0.955 #*1.05 # 1.14 WARNING!!!
+###factor_training = 1.03573 #1.04 #1.03573 (article) # 1.032157 #1.0393 # 1.03573
+###factor_seenid = 1.01989 #1.021879 #1.018943  #1.020885         # 1.01989  
+###scale_offset = 0.00 #0.08 0.04  
+###delta_rotation = 2.0 #2.0
+###factor_rotation = 1.65 / 3.0
+###delta_pos = 1.0 #1.0 #1.2 #0.75 #eedit
+###factor_pos = 0.5
+
+print "Randomization parameters base_scale=%f, factor_training=%f, factor_seenid=%f, scale_offset=%f"%(base_scale, factor_training, factor_seenid, scale_offset)
+print "Randomization parameters delta_rotation=%f, factor_rotation=%f, delta_pos=%f, factor_pos=%f"%(delta_rotation, factor_rotation, delta_pos, factor_pos)  
+
+# if leave_k_out_MORPH == 1000:
+#     extra_images_LKO_train = (age_trim_number_MORPH - 1200)*2/3 # (1270-1200)=70, 70/3 = 23
+#     extra_images_LKO_seenid = (age_trim_number_MORPH - 1200)/3
+#     images_after_LKO_train = 1075 + extra_images_LKO_train # (1270-1200)=70, 70/3 = 23
+#     images_after_LKO_seenid = 125 + extra_images_LKO_seenid
+#     print "Effective number of images for Train appears to be:", images_after_LKO_train
+#     print "Effective number of images for SeenId appears to be:", images_after_LKO_seenid
+# elif leave_k_out_MORPH == 2000:
+#     extra_images_LKO_train = (age_trim_number_MORPH - 1100)*2/3 # (1270-1200)=70, 70/3 = 23
+#     extra_images_LKO_seenid = (age_trim_number_MORPH - 1100)/3
+#     images_after_LKO_train = 975 + extra_images_LKO_train # (1270-1200)=70, 70/3 = 23
+#     images_after_LKO_seenid = 125 + extra_images_LKO_seenid
+#     print "Effective number of images for Train appears to be:", images_after_LKO_train
+#     print "Effective number of images for SeenId appears to be:", images_after_LKO_seenid
+# 
+# else:
+#     images_after_LKO_train = 1075 # (1270-1200)=70, 70/3 = 23
+#     images_after_LKO_seenid = 125
+
 #DEFINITIVE:
-#128x128: iSeq_set = iTrainRAge = [[iSeqCreateRAge(dx=0.0, dy=0.0, smin=1.275, smax=1.375, delta_rotation=3.0, pre_mirroring="none", contrast_enhance=True, 
+#128x128: iSeq_set = iTrainRAge = [[iSeqCreateRAge(dx=0.0, dy=0.0, smin=1.275, smax=1.375, delta_rotation=3.0, pre_mirroring="none" "duplicate", contrast_enhance=True, 
 #160x160:
-iSeq_set = iTrainRAge = [[iSeqCreateRAge(dx=0.0, dy=0.0, smin=(base_scale+scale_offset) / factor_training, smax=(base_scale+scale_offset) * factor_training, delta_rotation=3.0, pre_mirroring="none", contrast_enhance=True, 
+iSeq_set = iTrainRAge = [[iSeqCreateRAge(dx=delta_pos, dy=delta_pos, smin=(base_scale+scale_offset) / factor_training, smax=(base_scale+scale_offset) * factor_training, delta_rotation=delta_rotation, pre_mirroring="none", contrast_enhance=True, #WARNING!!! pre_mirroring="none"
 #-0.05
 #192x192: iSeq_set = iTrainRAge = [[iSeqCreateRAge(dx=0.0, dy=0.0, smin=0.85+scale_offset, smax=0.91666+scale_offset, delta_rotation=3.0, pre_mirroring="none", contrast_enhance=True, 
-                                         obj_avg_std=0.00, obj_std_min=0.20, obj_std_max=0.20, clusters=age_clusters, num_images_per_cluster_used=1000,  #1000 #1000, 900=>27000
-                                         images_base_dir=age_eyes_normalized_base_dir, first_image_index=0, repetition_factor=8, seed=-1, use_orig_label_as_class=False, use_orig_label=True)]] #repetition_factor=6 or at least 4 #T: dx=2, dy=2, smin=1.25, smax=1.40, repetition_factor=5
-#Experimental:
+                                         obj_avg_std=obj_avg_std, obj_std_min=obj_std_min, obj_std_max=obj_std_max, new_clusters=age_clusters, num_images_per_cluster_used=num_images_per_cluster_used_MORPH,  #=>=>=>1075 #1000 #1000, 900=>27000
+                                         images_base_dir=age_eyes_normalized_base_dir_train, first_image_index=0, repetition_factor=1, seed=-1, use_orig_label_as_class=False, use_orig_label=True)]] #repetition_factor=8 (article 8), 6 or at least 4 #T: dx=2, dy=2, smin=1.25, smax=1.40, repetition_factor=5
+#Experimental: 
 #iSeq_set = iTrainRAge = [[iSeqCreateRAge(dx=0, dy=0, smin=1.0, smax=1.0, delta_rotation=0.0, pre_mirroring="none", contrast_enhance=True, 
 #                                         obj_avg_std=0.00, obj_std_min=0.20, obj_std_max=0.20, clusters=age_clusters, num_images_per_cluster_used=1000,  #1000 #1000, 900=>27000
 #                                         images_base_dir=age_eyes_normalized_base_dir, first_image_index=0, repetition_factor=1, seed=-1, use_orig_label=True)]] #repetition_factor=6 or at least 4 #T: dx=2, dy=2, smin=1.25, smax=1.40, repetition_factor=5
@@ -8310,30 +11006,34 @@ sSeq_set = sTrainRAge = [[sSeqCreateRAge(iSeq_set[0][0], seed=-1, use_RGB_images
 #                                         images_base_dir=age_eyes_normalized_base_dir, first_image_index=0, repetition_factor=5, seed=-1, use_orig_label=False)]] #rep=5
 #sSeq_set = sTrainRAge = [[sSeqCreateRAge(iSeq_set[0][0], seed=-1)]] 
 #smin=0.595, smax=0.605 (orig images)
-#128x128: iSeq_set = iSeenidRAge = iSeqCreateRAge(dx=0.0, dy=0.0, smin=1.3, smax=1.35, delta_rotation=1.5, pre_mirroring="none", contrast_enhance=True, 
-#160x160: 
-iSeq_set = iSeenidRAge = iSeqCreateRAge(dx=0.0, dy=0.0, smin=(base_scale+scale_offset) / factor_seenid, smax=(base_scale+scale_offset) * factor_seenid, delta_rotation=0.65, pre_mirroring="none", contrast_enhance=True, 
+#128x128: iSeq_set = iSeenidRAge = iSeqCreateRAge(dx=0.0, dy=0.0, smin=1.3, smax=1.35, delta_rotation=1.5, pre_mirroring="none", contrast_enhance=True, 160x160: WARNING!!! WHY OBJ_STD_MIN/MAX is fixed???
+#WARNING! USED age_clusters instead of age_clusters_seenid
+iSeq_set = iSeenidRAge = iSeqCreateRAge(dx=delta_pos * factor_pos, dy=delta_pos * factor_pos, smin=(base_scale+scale_offset) / factor_seenid, smax=(base_scale+scale_offset) * factor_seenid, delta_rotation=delta_rotation*factor_rotation, pre_mirroring="none", contrast_enhance=True, 
 #192x192:iSeq_set = iSeenidRAge = iSeqCreateRAge(dx=0.0, dy=0.0, smin=0.86667+scale_offset, smax=0.9+scale_offset, delta_rotation=1.5, pre_mirroring="none", contrast_enhance=True, 
-                                        obj_avg_std=0.00, obj_std_min=0.20, obj_std_max=0.20,clusters=age_clusters, num_images_per_cluster_used=200,   #200 #300=>9000
-                                        images_base_dir=age_eyes_normalized_base_dir, first_image_index=1000, repetition_factor=8, seed=-1, 
-                                        use_orig_label_as_class=use_seenid_classes_to_generate_knownid_and_seenid_classes, use_orig_label=True) #repetition_factor=4 #T=repetition_factor=3
+                                        obj_avg_std=obj_avg_std_seenid, obj_std_min=obj_std_min_seenid, obj_std_max=obj_std_max_seenid,new_clusters=age_clusters_seenid, num_images_per_cluster_used=num_images_per_cluster_used_MORPH_seenid, #125+extra_images_LKO_third  #200 #300=>9000
+                                        images_base_dir=age_eyes_normalized_base_dir_seenid, first_image_index=0, repetition_factor=1, seed=-1,  #repetition_factor= 6 (article 6), 12,8,4
+                                        use_orig_label_as_class=use_seenid_classes_to_generate_knownid_and_newid_classes and False, use_orig_label=True) #repetition_factor=8, 4 #T=repetition_factor=3
 sSeq_set = sSeenidRAge = sSeqCreateRAge(iSeq_set, seed=-1, use_RGB_images=age_use_RGB_images)
 ###Testing Original MORPH:
 #128x128: iSeq_set = iNewidRAge = [[iSeqCreateRAge(dx=0, dy=0, smin=1.325, smax=1.326, delta_rotation=0.0, pre_mirroring="none", contrast_enhance=True, 
 #192x192: 
 #iSeq_set = iNewidRAge = [[iSeqCreateRAge(dx=0, dy=0, smin=0.8833+scale_offset, smax=0.8833+scale_offset, delta_rotation=0.0, pre_mirroring="none", contrast_enhance=True, 
-#160x160: 
+#160x160: use_orig_label_as_class 
 #TODO:get rid of this conditional. Add Leave-k-out for MORPH+FGNet
-
-if leave_k_out_MORPH==0:
-    iSeq_set = iNewidRAge = [[iSeqCreateRAge(dx=0, dy=0, smin=(base_scale+scale_offset), smax=(base_scale+scale_offset), delta_rotation=0.0, pre_mirroring="none", contrast_enhance=True, 
-                                             obj_avg_std=0.0, obj_std_min=0.20, obj_std_max=0.20, clusters=age_clusters, num_images_per_cluster_used=200,   #200=>6000
-                                             images_base_dir=age_eyes_normalized_base_dir, first_image_index=1200, repetition_factor=1, seed=-1, use_orig_label_as_class=False, use_orig_label=True)]]
-else:
-    iSeq_set = iNewidRAge = [[iSeqCreateRAge(dx=0, dy=0, smin=(base_scale+scale_offset), smax=(base_scale+scale_offset), delta_rotation=0.0, pre_mirroring="none", contrast_enhance=True, 
-                                             obj_avg_std=0.0, obj_std_min=0.20, obj_std_max=0.20, clusters=age_clusters_MORPH_out, num_images_per_cluster_used=num_images_per_cluster_used_MORPH_out,   #200=>6000
-                                             images_base_dir=age_eyes_normalized_base_dir, first_image_index=0, repetition_factor=1, seed=-1, use_orig_label_as_class=False, use_orig_label=True)]]
-sSeq_set = sNewidRAge = [[sSeqCreateRAge(iSeq_set[0][0], seed=-1, use_RGB_images=age_use_RGB_images)]]
+testing_INIBilder = (num_images_per_cluster_used_INIBilder > 0) and False
+testing_FGNet = True and False
+if (not testing_INIBilder) and (not testing_FGNet): 
+    if leave_k_out_MORPH==0 and option_setup_CNN==0:
+        print "Selecting NewId without using leave_k_out_strategy" ###WARNING!!!! HERE 0.16 instead of 0.2 should be used???
+        iSeq_set = iNewidRAge = [[iSeqCreateRAge(dx=0, dy=0, smin=(base_scale+scale_offset), smax=(base_scale+scale_offset), delta_rotation=0.0, pre_mirroring="none", contrast_enhance=True, 
+                                                 obj_avg_std=0.0, obj_std_min=obj_std_base, obj_std_max=obj_std_base, new_clusters=age_clusters, num_images_per_cluster_used=200,   #200=>6000 pre_mirroring="none"
+                                                 images_base_dir=age_eyes_normalized_base_dir_newid, first_image_index=1200, repetition_factor=1, seed=-1, use_orig_label_as_class=False, use_orig_label=True,increasing_orig_label=True)]]
+    else:
+        print "Selecting NewId data using leave_k_out_strategy, with k=", leave_k_out_MORPH
+        iSeq_set = iNewidRAge = [[iSeqCreateRAge(dx=0, dy=0, smin=(base_scale+scale_offset), smax=(base_scale+scale_offset), delta_rotation=0.0, pre_mirroring="none", contrast_enhance=True, 
+                                                 obj_avg_std=0.0, obj_std_min=obj_std_base, obj_std_max=obj_std_base, new_clusters=age_clusters_newid, num_images_per_cluster_used=num_images_per_cluster_used_MORPH_out,   #200=>6000
+                                                 images_base_dir=age_eyes_normalized_base_dir_newid, first_image_index=0, repetition_factor=1, seed=-1, use_orig_label_as_class=False, use_orig_label=True, increasing_orig_label=True)]]
+    sSeq_set = sNewidRAge = [[sSeqCreateRAge(iSeq_set[0][0], seed=-1, use_RGB_images=age_use_RGB_images)]]
 
 
 #iSeenidRAge = iTrainRAge[0][0]
@@ -8341,21 +11041,26 @@ sSeq_set = sNewidRAge = [[sSeqCreateRAge(iSeq_set[0][0], seed=-1, use_RGB_images
 #iNewidRAge = iTrainRAge
 #sNewidRAge = sTrainRAge
 #Testing with INI Bilder:
-#iSeq_set = iNewidRAge = [[iSeqCreateRAge(dx=0, dy=0, smin=(base_scale+scale_offset), smax=(base_scale+scale_offset), delta_rotation=0.0, pre_mirroring="duplicate", contrast_enhance=True,
-#                                         obj_avg_std=0.0, obj_std_min=0.20, obj_std_max=0.20, clusters=age_clusters_INIBilder, num_images_per_cluster_used=num_images_per_cluster_used_INIBilder,   
-#                                         images_base_dir=age_eyes_normalized_base_dir_INIBilder, first_image_index=0, repetition_factor=1, seed=-1, use_orig_label_as_class=False, use_orig_label=True)]]
-#sSeq_set = sNewidRAge = [[sSeqCreateRAge(iSeq_set[0][0], seed=-1, use_RGB_images=age_use_RGB_images)]]
+if testing_INIBilder:
+    print "Using INI Bilder for testing"
+    iSeq_set = iNewidRAge = [[iSeqCreateRAge(dx=0, dy=0, smin=(base_scale+scale_offset), smax=(base_scale+scale_offset), delta_rotation=0.0, pre_mirroring="none", contrast_enhance=True, #pre_mirroring="none",
+                                             obj_avg_std=0.0, obj_std_min=obj_std_base, obj_std_max=obj_std_base, new_clusters=age_clusters_INIBilder, num_images_per_cluster_used=num_images_per_cluster_used_INIBilder,   
+                                             images_base_dir=age_eyes_normalized_base_dir_INIBilder, first_image_index=0, repetition_factor=1, seed=-1, use_orig_label_as_class=False, use_orig_label=True)]]
+    sSeq_set = sNewidRAge = [[sSeqCreateRAge(iSeq_set[0][0], seed=-1, use_RGB_images=age_use_RGB_images)]]
+    age_all_labels_map_newid = age_all_labels_map_INI
 #Testing with FGNet:
-#iSeq_set = iNewidRAge = [[iSeqCreateRAge(dx=0, dy=0, smin=(base_scale+scale_offset), smax=(base_scale+scale_offset), delta_rotation=0.0, pre_mirroring="none", contrast_enhance=True,
-#                                         obj_avg_std=0.0, obj_std_min=0.20, obj_std_max=0.20, clusters=age_clusters_FGNet, num_images_per_cluster_used=num_images_per_cluster_used_FGNet,  
-#                                         images_base_dir=age_eyes_normalized_base_dir_FGNet, first_image_index=0, repetition_factor=1, seed=-1, use_orig_label_as_class=False, use_orig_label=True)]]
-#sSeq_set = sNewidRAge = [[sSeqCreateRAge(iSeq_set[0][0], seed=-1, use_RGB_images=age_use_RGB_images)]]
-#quit()
+if testing_FGNet:
+    print "Using FGNet for testing"
+    iSeq_set = iNewidRAge = [[iSeqCreateRAge(dx=0, dy=0, smin=(base_scale+scale_offset), smax=(base_scale+scale_offset), delta_rotation=0.0, pre_mirroring="none", contrast_enhance=True,
+                                             obj_avg_std=0.0, obj_std_min=obj_std_base, obj_std_max=obj_std_base, new_clusters=age_clusters_FGNet, num_images_per_cluster_used=num_images_per_cluster_used_FGNet,  
+                                             images_base_dir=age_eyes_normalized_base_dir_FGNet, first_image_index=0, repetition_factor=1, seed=-1, use_orig_label_as_class=False, use_orig_label=True, increasing_orig_label=True)]]
+    sSeq_set = sNewidRAge = [[sSeqCreateRAge(iSeq_set[0][0], seed=-1, use_RGB_images=age_use_RGB_images)]]
+    age_all_labels_map_newid = age_all_labels_map_FGNet
 
 ParamsRAgeFunc = SystemParameters.ParamsSystem()
 ParamsRAgeFunc.name = "Function Based Data Creation for RAge"
 ParamsRAgeFunc.network = linearNetwork4L #Default Network, but ignored
-ParamsRAgeFunc.iTrain =iTrainRAge
+ParamsRAgeFunc.iTrain = iTrainRAge
 ParamsRAgeFunc.sTrain = sTrainRAge
 
 ParamsRAgeFunc.iSeenid = iSeenidRAge
@@ -8369,8 +11074,8 @@ if iTrainRAge != None and iTrainRAge[0][0]!=None:
 ParamsRAgeFunc.train_mode = "Weird Mode" #Ignored for the moment 
 ParamsRAgeFunc.analysis = None
 ParamsRAgeFunc.enable_reduced_image_sizes = True
-ParamsRAgeFunc.reduction_factor = 2.0 # T=2.0 WARNING 1.0, 2.0, 4.0, 8.0
-ParamsRAgeFunc.hack_image_size = 80 # T=64 WARNING  96, 80, 128,  64,  32 , 16
+ParamsRAgeFunc.reduction_factor = 160.0/96 #160.0/72 ## 160.0/96 # (article 2.0) T=2.0 WARNING 1.0, 2.0, 4.0, 8.0
+ParamsRAgeFunc.hack_image_size = 96 #72 ## 96 # (article 80) # T=80 T=64 WARNING  96, 80, 128,  64,  32 , 16
 ParamsRAgeFunc.enable_hack_image_size = True
 ParamsRAgeFunc.patch_network_for_RGB = False #
 
@@ -8379,46 +11084,773 @@ ParamsRAgeFunc.patch_network_for_RGB = False #
 #print sNewidRAge[0][0].translations_x
 #quit()
 
-all_classes = numpy.unique(iSeenidRAge.correct_classes)
-smallest_number_of_samples_per_class = 30 #14
-current_count = 0
-current_class = 0
-class_list = []
-for classnr in all_classes: #[::-1]:
-    class_list.append(current_class)
-    current_count += (iSeenidRAge.correct_classes==classnr).sum()    
-    if current_count >= smallest_number_of_samples_per_class:
+#TODO:This code seems broken, fix it!
+if iSeenidRAge != None:
+    all_classes = numpy.unique(iSeenidRAge.correct_classes)
+    min_num_classes = 7 #40
+    max_num_classes = 42 #42
+
+    num_classes = len(all_classes)
+    print "Updating num_classes in Seenid. Originally %d classes. Afterwards at least %d and at most %d."%(num_classes, min_num_classes, max_num_classes)
+
+    if min_num_classes > num_classes:
+        ex = "insufficient number of classes in seenid data: %d >= %d "%(min_num_classes, num_classes)
+        raise Exception(ex)
+
+    smallest_number_of_samples_per_class = 30
+    class_list = list(all_classes) #This is the actual mapping from orig. classes to final classes
+    #print "Original class list: ", class_list
+    num_classes = len(class_list)
+    factor_increment_samples = 1.1
+    
+    if num_classes > 1000:
+        print "using optimized parameters for faster class partitioning for Seenid"
+        min_num_classes = max_num_classes = 39 
+        smallest_number_of_samples_per_class = len(iSeenidRAge.correct_classes) / (max_num_classes+0.3) #780
+        factor_increment_samples = 1.02
+    while num_classes > max_num_classes:
         current_count = 0
-        current_class += 1
-if current_count >= smallest_number_of_samples_per_class:
-    print "fine"
-elif current_count > 0:
-    print "fixing"
-    class_list = numpy.array(class_list)
-    class_list[class_list == current_class] = current_class-1
+        current_class = 0
+        class_list = []
+        for classnr in all_classes: #[::-1]:
+            class_list.append(current_class)
+            current_count += (iSeenidRAge.correct_classes==classnr).sum()    
+            if current_count >= smallest_number_of_samples_per_class:
+                current_count = 0
+                current_class += 1
+        if current_count >= smallest_number_of_samples_per_class:
+            print "last class cluster is fine"
+        elif current_count > 0:
+            print "fixing last class cluster by adding it to its predecesor"
+            class_list = numpy.array(class_list)
+            class_list[class_list == current_class] = current_class-1
+        num_classes = len(numpy.unique(class_list))
+        print "In iteration with smallest_number_of_samples_per_class=%d, we have %d clases"%(smallest_number_of_samples_per_class,num_classes)
+        smallest_number_of_samples_per_class = factor_increment_samples * smallest_number_of_samples_per_class + 1
 #class_list.reverse()
 #class_list = numpy.array(class_list)
 #class_list = class_list.max()-class_list
+    if min_num_classes > num_classes:
+        ex = "Resulting number of classes %d is smaller than min_num_classes %d"%(num_classes, min_num_classes)
+        raise Exception(ex)
 
-print "class_list=", class_list
-for i, classnr in enumerate(all_classes):
-    iSeenidRAge.correct_classes[iSeenidRAge.correct_classes==classnr] = class_list[i]
-        
+    print "class_list=", class_list
+    for i, classnr in enumerate(all_classes):
+        iSeenidRAge.correct_classes[iSeenidRAge.correct_classes==classnr] = class_list[i]
+#quit()        
 
-if use_seenid_classes_to_generate_knownid_and_seenid_classes:
-    print "Orig iSeenidRTransXYScale.correct_labels=", iSeenidRAge.correct_labels
-    print "Orig len(iSeenidRAge.correct_labels)=", len(iSeenidRAge.correct_labels)
-    print "Orig len(iSeenidRAge.correct_classes)=", len(iSeenidRAge.correct_classes)
-    all_classes = numpy.unique(iSeenidRAge.correct_classes)
-    print "all_classes=", all_classes
-    avg_labels = more_nodes.compute_average_labels_for_each_class(iSeenidRAge.correct_classes, iSeenidRAge.correct_labels)
-    print "avg_labels=", avg_labels 
-    iTrainRAge[0][0].correct_classes = more_nodes.map_labels_to_class_number(all_classes, avg_labels, iTrainRAge[0][0].correct_labels)
-    iNewidRAge[0][0].correct_classes = more_nodes.map_labels_to_class_number(all_classes, avg_labels, iNewidRAge[0][0].correct_labels)
+    if use_seenid_classes_to_generate_knownid_and_newid_classes:
+        print "Orig iSeenidRAge.correct_labels=", iSeenidRAge.correct_labels
+        print "Orig len(iSeenidRAge.correct_labels)=", len(iSeenidRAge.correct_labels)
+        print "Orig len(iSeenidRAge.correct_classes)=", len(iSeenidRAge.correct_classes)
+        all_classes = numpy.unique(iSeenidRAge.correct_classes)
+        print "all_classes=", all_classes
+        avg_labels = more_nodes.compute_average_labels_for_each_class(iSeenidRAge.correct_classes, iSeenidRAge.correct_labels)
+        print "avg_labels=", avg_labels 
+        iTrainRAge[0][0].correct_classes = more_nodes.map_labels_to_class_number(all_classes, avg_labels, iTrainRAge[0][0].correct_labels)
+        iNewidRAge[0][0].correct_classes = more_nodes.map_labels_to_class_number(all_classes, avg_labels, iNewidRAge[0][0].correct_labels)
 
-    for classnr in all_classes:
-        print "class %d appears %d times"%(classnr, (iSeenidRAge.correct_classes==classnr).sum())
+        for classnr in all_classes:
+            print "|class %d| = %d,"%(classnr, (iSeenidRAge.correct_classes==classnr).sum()),
     #quit()
 
+    print "Verifying that train and test image filenames are disjoint (not verifying leave-k-out here)"
+    input_files_network = set(iTrainRAge[0][0].input_files)
+    input_files_supervised = set(iSeenidRAge.input_files)
+    input_files_testing = set(iNewidRAge[0][0].input_files)
+    intersection_network = input_files_testing.intersection(input_files_network)
+    intersection_supervised = input_files_testing.intersection(input_files_supervised)
+    if len(intersection_network) > 0:
+        ex = "Test data and training data have %d non disjoint input images!: "%len(intersection_network)+str(intersection_network)
+        raise Exception(ex)
+    elif len(intersection_supervised) > 0: #WARNING!!!!
+        ex = "Test data and supervised data have %d non disjoint input images!: "%len(intersection_supervised)+str(intersection_supervised)
+        raise Exception(ex)
+    else:
+        print "Test data is disjoint to training data and supervised data"
+
+
+age_add_other_label_classes = True #and False
+age_multiple_labels = age_add_other_label_classes #and False 
+#age_first_age_label = True and False
+age_label_ordering ="AgeRaceGenderIAge"
+age_ordered_by_increasing_label = 0 #0=Age,1=Race, 2=Gender
+age_subordered_by_increasing_color = True and False 
+append_gender_classification = True #and False
+append_race_classification = True #and False
+
+#False, *, *, * => learn only age
+#True, True, True, False, True  => learn both age and skin color, age is first label and determines ordering, color determines subordering inside the clusters
+#True, True, True, False, False => learn both age and skin color, age is first label and determines ordering
+#True, True, True, True, False => learn both age and skin color, color is first label and determines ordering
+#True, False, *, *  => learn only color
+
+#WARNING!!!! THERE SEEMS TO BE A BUG WITH THE FUNCTION load_skin_color_labels or with python get_lines()!!!!!! Fixed by repeating first line twice!!!
+if age_add_other_label_classes:
+    #age_all_labels_map = load_GT_labels("/local/escalafl/Alberto/MORPH_setsS1S2S3_seed12345/GT_MORPH_AgeRAgeGenderRace.txt", age_included=True, rAge_included=True, gender_included=True, race_included=True, avgColor_included=False)
+    
+#     if "EyeNZ4292740_05M30.JPG" not in age_skin_color_labels_map.keys():
+#         print "key EyeNZ4292740_05M30.JPG still missing 1"
+#         quit()
+#     else:
+#         print "OK 1"
+#         print 'age_skin_color_labels_map["EyeNZ4292740_05M30.JPG"] =', age_skin_color_labels_map["EyeNZ4292740_05M30.JPG"]
+         
+    #print "age_skin_color_labels_map= ", age_skin_color_labels_map
+    print "has %d entries"%(len(age_all_labels_map_MORPH.keys()))
+#    for keys in age_skin_color_labels_map.keys():
+#        if keys.startswith("EyeNZ4292740"):
+#            print "Key <%s><%f>"%(keys, age_skin_color_labels_map[keys])
+    iAge_labels_TrainRAge = []
+    rAge_labels_TrainRAge = []
+    gender_labels_TrainRAge = []
+    race_labels_TrainRAge = []   
+    for input_file in iTrainRAge[0][0].input_files:
+        input_file_short = string.split(input_file,"/")[-1]
+        all_labels = age_all_labels_map_MORPH[input_file_short]
+        iAge_labels_TrainRAge.append(all_labels[0]) 
+        rAge_labels_TrainRAge.append(all_labels[1]) 
+        gender_labels_TrainRAge.append(all_labels[2]) 
+        race_labels_TrainRAge.append(all_labels[3]) 
+    iAge_labels_TrainRAge = numpy.array(iAge_labels_TrainRAge).reshape((-1,1))
+    rAge_labels_TrainRAge = numpy.array(rAge_labels_TrainRAge).reshape((-1,1))
+    race_labels_TrainRAge = numpy.array(race_labels_TrainRAge).reshape((-1,1))
+    gender_labels_TrainRAge = numpy.array(gender_labels_TrainRAge).reshape((-1,1))
+
+#    if "EyeNZ4292740_05M30.JPG" not in age_skin_color_labels_map.keys():
+#        print "key EyeNZ4292740_05M30.JPG still missing 2"
+#        #quit()
+#    else:
+#        print "OK 2"
+
+    iAge_labels_SeenidRAge =[]
+    rAge_labels_SeenidRAge =[]
+    gender_labels_SeenidRAge =[]
+    race_labels_SeenidRAge =[]   
+    for input_file in iSeenidRAge.input_files:
+        input_file_short =  string.split(input_file,"/")[-1]
+        all_labels = age_all_labels_map_MORPH[input_file_short]
+        iAge_labels_SeenidRAge.append(all_labels[0])   
+        rAge_labels_SeenidRAge.append(all_labels[1])   
+        gender_labels_SeenidRAge.append(all_labels[2])   
+        race_labels_SeenidRAge.append(all_labels[3])
+    iAge_labels_SeenidRAge = numpy.array(iAge_labels_SeenidRAge).reshape((-1,1))
+    rAge_labels_SeenidRAge = numpy.array(rAge_labels_SeenidRAge).reshape((-1,1))
+    gender_labels_SeenidRAge = numpy.array(gender_labels_SeenidRAge).reshape((-1,1))
+    race_labels_SeenidRAge = numpy.array(race_labels_SeenidRAge).reshape((-1,1))
+#    if "EyeNZ4292740_05M30.JPG" not in age_skin_color_labels_map.keys():
+#        print "key EyeNZ4292740_05M30.JPG still missing 3"
+#        #quit()
+#    else:
+#        print "OK 3"
+    iAge_labels_NewidRAge=[]
+    rAge_labels_NewidRAge =[]
+    gender_labels_NewidRAge =[]
+    race_labels_NewidRAge =[]
+    for input_file in iNewidRAge[0][0].input_files:
+        input_file_short = string.split(input_file,"/")[-1]
+#       if "EyeNZ4292740_05M30.JPG" == input_file_short:
+#           print "FOUND but not found?"
+#        if input_file_short in age_skin_color_labels_map.keys():
+#        xx = age_skin_color_labels_map[input_file_short]
+        all_labels = age_all_labels_map_newid[input_file_short]
+        iAge_labels_NewidRAge.append(all_labels[0])
+        rAge_labels_NewidRAge.append(all_labels[1])
+        gender_labels_NewidRAge.append(all_labels[2])
+        race_labels_NewidRAge.append(all_labels[3])  
+#        else:
+#            print "entry-", input_file_short, "not found!!!", ":("
+    iAge_labels_NewidRAge = numpy.array(iAge_labels_NewidRAge).reshape((-1,1))
+    rAge_labels_NewidRAge = numpy.array(rAge_labels_NewidRAge).reshape((-1,1))
+    gender_labels_NewidRAge = numpy.array(gender_labels_NewidRAge).reshape((-1,1))
+    race_labels_NewidRAge = numpy.array(race_labels_NewidRAge).reshape((-1,1))
+
+    print "comparing integer age vs. int(rAge/365.242+0.0006)"
+    riAge_labels_NewidRAge = (rAge_labels_NewidRAge/DAYS_IN_A_YEAR+0.0006).astype(int)
+    print "riAge_labels_NewidRAge=", riAge_labels_NewidRAge.flatten()
+    print "iAge_labels_NewidRAge=", iAge_labels_NewidRAge.flatten()
+    print "rAge_labels_NewidRAge=", rAge_labels_NewidRAge.flatten()
+    print "Same: %d"%((riAge_labels_NewidRAge == iAge_labels_NewidRAge).sum())
+    print "Diff: %d"%((riAge_labels_NewidRAge != iAge_labels_NewidRAge).sum())
+    indices = numpy.arange(len(iAge_labels_NewidRAge))[riAge_labels_NewidRAge.flatten() != iAge_labels_NewidRAge.flatten()]
+    print "Different indices:", indices
+    print "iAge[indices]=", iAge_labels_NewidRAge.flatten()[indices]
+    print "riAge[indices]=", riAge_labels_NewidRAge.flatten()[indices]
+    print "rAge[indices]=", rAge_labels_NewidRAge.flatten()[indices]
+   
+#    race_labels = race_labels_SeenidRAge.flatten()
+#    sorting = numpy.argsort(race_labels)
+#    num_classes = 10
+#    skin_color_classes_SeenidRAge = numpy.zeros(iSeenidRAge.num_images)
+#    skin_color_classes_SeenidRAge[sorting] = numpy.arange(iSeenidRAge.num_images)*num_classes/iSeenidRAge.num_images
+#    avg_labels = more_nodes.compute_average_labels_for_each_class(skin_color_classes_SeenidRAge, skin_color_labels)
+#    all_classes = numpy.unique(skin_color_classes_SeenidRAge)
+#    print "skin color avg_labels=", avg_labels 
+#    skin_color_classes_TrainRAge = more_nodes.map_labels_to_class_number(all_classes, avg_labels, skin_color_labels_TrainRAge.flatten())
+#    skin_color_classes_NewidRAge = more_nodes.map_labels_to_class_number(all_classes, avg_labels, skin_color_labels_NewidRAge.flatten())
+
+#    skin_color_classes_TrainRAge = skin_color_classes_TrainRAge.reshape((-1,1))
+#    skin_color_classes_SeenidRAge = skin_color_classes_SeenidRAge.reshape((-1,1))
+#    skin_color_classes_NewidRAge = skin_color_classes_NewidRAge.reshape((-1,1))
+
+    age_classes_TrainRAge = iTrainRAge[0][0].correct_classes.reshape((-1,1))
+    age_classes_SeenidRAge = iSeenidRAge.correct_classes.reshape((-1,1))
+    age_classes_NewidRAge = iNewidRAge[0][0].correct_classes.reshape((-1,1))
+
+    #TODO: FIX class assignment for rAge
+    min_rAge = int(rAge_labels_SeenidRAge.min()/DAYS_IN_A_YEAR)
+    max_rAge = int(rAge_labels_SeenidRAge.max()/DAYS_IN_A_YEAR)
+
+    rAge_classes_TrainRAge = (rAge_labels_TrainRAge/DAYS_IN_A_YEAR+0.0006).astype(int)
+    rAge_classes_SeenidRAge = (rAge_labels_SeenidRAge/DAYS_IN_A_YEAR+0.0006).astype(int)
+    rAge_classes_NewidRAge = (rAge_labels_NewidRAge/DAYS_IN_A_YEAR+0.0006).astype(int)
+   
+
+    #race_classes_tmp = numpy.ones_like(race_labels_TrainRAge) #B=-2, O=-1, A=0, H=1, W=2
+    #race_classes_tmp[race_labels_TrainRAge == -2] = 0 #B
+    #race_classes_tmp[race_labels_TrainRAge == 1] = 0  #H
+    #race_classes_TrainRAge = race_classes_tmp
+
+    #race_classes_tmp = numpy.ones_like(race_labels_SeenidRAge) #B=-2, O=-1, A=0, H=1, W=2
+    #race_classes_tmp[race_labels_SeenidRAge == -2] = 0 #B
+    #race_classes_tmp[race_labels_SeenidRAge == 1] = 0  #H
+    #race_classes_SeenidRAge = race_classes_tmp 
+
+    #race_classes_tmp = numpy.ones_like(race_labels_NewidRAge) #B=-2, O=-1, A=0, H=1, W=2
+    #race_classes_tmp[race_labels_NewidRAge == -2] = 0 #B
+    #race_classes_tmp[race_labels_NewidRAge == 1] = 0  #H
+    #race_classes_NewidRAge = race_classes_tmp
+
+    race_classes_TrainRAge = (race_labels_TrainRAge + 2+3).astype(int)/4 # B=0 O=1 A=1 H=1 W=1 
+    race_classes_SeenidRAge = (race_labels_SeenidRAge + 2+3).astype(int)/4
+    race_classes_NewidRAge = (race_labels_NewidRAge + 2+3).astype(int)/4
+    
+    gender_classes_TrainRAge = gender_labels_TrainRAge.reshape((-1,1))
+    gender_classes_SeenidRAge = gender_labels_SeenidRAge.reshape((-1,1))
+    gender_classes_NewidRAge = gender_labels_NewidRAge.reshape((-1,1))
+    
+    print "average gender_labels for training data:", gender_labels_TrainRAge.mean()
+    num_males_TrainRAge = (gender_classes_TrainRAge == 0).sum()
+    num_females_TrainRAge = iTrainRAge[0][0].num_images - num_males_TrainRAge
+
+    print "average race_labels for training data:", race_labels_TrainRAge.mean()
+    num_BO_TrainRAge = (race_classes_TrainRAge == 0).sum()
+    num_AHW_TrainRAge = (race_classes_TrainRAge == 1).sum()
+
+
+age_labels_TrainRAge = rAge_labels_TrainRAge
+age_labels_SeenidRAge = rAge_labels_SeenidRAge
+age_classes_NewidRAge_test = iAge_labels_NewidRAge
+
+pure_integer_years = True #and False #DEFAULT: TRUE
+if pure_integer_years:
+#    age_labels_TrainRAge = iAge_labels_TrainRAge
+#    age_labels_SeenidRAge = iAge_labels_SeenidRAge
+    print "newid/test age labels are integers (integer years coded in days)"
+    age_labels_NewidRAge_test = iAge_labels_NewidRAge * DAYS_IN_A_YEAR
+else:
+    print "newid/test age labels are real valued (in exact number of days)"
+    age_labels_NewidRAge_test = rAge_labels_NewidRAge
+
+print "age_labels_SeenidRAge =", age_labels_SeenidRAge
+print "age_labels_NewidRAge_test =", age_labels_NewidRAge_test
+
+if age_multiple_labels==True:
+    list_all_labels = [[age_labels_TrainRAge,  race_labels_TrainRAge,  gender_labels_TrainRAge, iAge_labels_TrainRAge],
+                       [age_labels_SeenidRAge, race_labels_SeenidRAge, gender_labels_SeenidRAge, iAge_labels_SeenidRAge],
+                       [age_labels_NewidRAge_test,  race_labels_NewidRAge,  gender_labels_NewidRAge, iAge_labels_NewidRAge]]
+
+    list_all_classes = [[age_classes_TrainRAge,  race_classes_TrainRAge,  gender_classes_TrainRAge, iAge_labels_TrainRAge],
+                        [age_classes_SeenidRAge, race_classes_SeenidRAge, gender_classes_SeenidRAge, iAge_labels_SeenidRAge],
+                        [age_classes_NewidRAge_test,  race_classes_NewidRAge,  gender_classes_NewidRAge, iAge_labels_NewidRAge]]
+
+    if age_label_ordering == "AgeRaceGenderIAge":
+        label_ordering = [0, 1, 2, 3]
+    elif age_label_ordering == "RaceAgeGenderIAge":
+        label_ordering = [1, 0, 2, 3]
+    elif age_label_ordering == "GenderAgeRaceIAge":
+        label_ordering = [2, 0, 1, 3]
+    elif age_label_ordering == "AgeGenderRaceIAge":
+        label_ordering = [0, 2, 1, 3]
+    elif age_label_ordering == "RaceGenderAgerIAge":
+        label_ordering = [1, 2, 0, 3]
+    elif age_label_ordering == "GenderRaceAgeIAge":
+        label_ordering = [2, 1, 0, 3]
+    else:
+        print "age_label_ordering unknown: ", age_label_ordering
+        quit()
+
+    print "iAge_labels_TrainRAge=",iAge_labels_TrainRAge
+    print "iAge_labels_TrainRAge.shape=",iAge_labels_TrainRAge.shape
+    iTrainRAge[0][0].correct_labels = numpy.concatenate((list_all_labels[0][label_ordering[0]], list_all_labels[0][label_ordering[1]], list_all_labels[0][label_ordering[2]], list_all_labels[0][label_ordering[3]]), axis=1)
+    iSeenidRAge.correct_labels      = numpy.concatenate((list_all_labels[1][label_ordering[0]], list_all_labels[1][label_ordering[1]], list_all_labels[1][label_ordering[2]], list_all_labels[1][label_ordering[3]]), axis=1)
+    iNewidRAge[0][0].correct_labels = numpy.concatenate((list_all_labels[2][label_ordering[0]], list_all_labels[2][label_ordering[1]], list_all_labels[2][label_ordering[2]], list_all_labels[2][label_ordering[3]]), axis=1)
+
+    iTrainRAge[0][0].correct_classes = numpy.concatenate((list_all_classes[0][label_ordering[0]], list_all_classes[0][label_ordering[1]], list_all_classes[0][label_ordering[2]], list_all_classes[0][label_ordering[3]]), axis=1)
+    iSeenidRAge.correct_classes      = numpy.concatenate((list_all_classes[1][label_ordering[0]], list_all_classes[1][label_ordering[1]], list_all_classes[1][label_ordering[2]], list_all_classes[1][label_ordering[3]]), axis=1)
+    iNewidRAge[0][0].correct_classes = numpy.concatenate((list_all_classes[2][label_ordering[0]], list_all_classes[2][label_ordering[1]], list_all_classes[2][label_ordering[2]], list_all_classes[2][label_ordering[3]]), axis=1)
+
+else:
+    print "Learning only a single label"
+    single_label = "Gender"
+    if single_label == "Age":
+        print "Learning age only"
+    elif single_label == "Race":
+        print "Learning race instead of age"
+        iTrainRAge[0][0].correct_labels = race_labels_TrainRAge.flatten()
+        iSeenidRAge.correct_labels = race_labels_SeenidRAge.flatten()
+        iNewidRAge[0][0].correct_labels = race_labels_NewidRAge.flatten()
+        iTrainRAge[0][0].correct_classes = race_classes_TrainRAge.flatten()
+        iSeenidRAge.correct_classes = race_classes_SeenidRAge.flatten()
+        iNewidRAge[0][0].correct_classes = race_classes_NewidRAge.flatten()
+    elif single_label == "Gender":
+        print "Learning gender instead of age"
+        iTrainRAge[0][0].correct_labels = gender_labels_TrainRAge.flatten()
+        iSeenidRAge.correct_labels = gender_labels_SeenidRAge.flatten()
+        iNewidRAge[0][0].correct_labels = gender_labels_NewidRAge.flatten()
+        iTrainRAge[0][0].correct_classes = gender_classes_TrainRAge.flatten()
+        iSeenidRAge.correct_classes = gender_classes_SeenidRAge.flatten()
+        iNewidRAge[0][0].correct_classes = gender_classes_NewidRAge.flatten()
+    else:
+        print "single_label has unknown value:", single_label
+        quit()
+    
+if age_ordered_by_increasing_label > 0 and age_add_other_label_classes:
+    if age_ordered_by_increasing_label == 1: 
+        print "reordering by increasing race label"
+        iSeqs_labels = [[iTrainRAge[0][0], race_labels_TrainRAge],
+                         [iSeenidRAge, race_labels_SeenidRAge],
+                         [iNewidRAge[0][0], race_labels_NewidRAge]]
+    elif age_ordered_by_increasing_label == 2:
+        print "reordering by increasing gender (male then female)"        
+        iSeqs_labels = [[iTrainRAge[0][0], gender_labels_TrainRAge],
+                         [iSeenidRAge, gender_labels_SeenidRAge],
+                         [iNewidRAge[0][0], gender_labels_NewidRAge]]
+    else:
+        print "age_ordered_by_increasing_label has unknown value: ", age_ordered_by_increasing_label
+        quit()
+    for iSeq, labels in iSeqs_labels:
+        all_labels = labels.flatten()
+        reordering = numpy.argsort(all_labels)
+        if age_multiple_labels:
+            iSeq.correct_labels = iSeq.correct_labels[reordering,:]
+            iSeq.correct_classes = iSeq.correct_classes[reordering,:]
+        else:
+            iSeq.correct_labels = iSeq.correct_labels[reordering]
+            iSeq.correct_classes = iSeq.correct_classes[reordering]            
+        reordered_files = []
+        for i in range(len(iSeq.input_files)):
+            reordered_files.append(iSeq.input_files[reordering[i]])
+        iSeq.input_files = reordered_files
+        #print "reordered_files=", reordered_files
+        print "iSeq.input_files[0] =", iSeq.input_files[0]
+        print "iSeq.input_files[-1] =", iSeq.input_files[-1]
+    #quit()
+
+# if age_subordered_by_increasing_color == True and age_add_other_label_classes and age_label_ordering=="AgeRaceGender":
+#     print "subordering training data by increasing skin color label"
+#     iSeq = iTrainRAge[0][0]
+#     race_labels = race_labels_TrainRAge
+#     age_labels = iSeq.correct_labels[:,0]
+#     block_size = iTrainRAge[0][0].block_size
+#     
+#     color_labels = color_labels.flatten()
+#     age_labels = age_labels.flatten()
+#     reordered_files = []
+#     for block in range(iTrainRAge[0][0].num_images/block_size):
+#         block_color_labels = color_labels[block*block_size:(block+1)*block_size]
+# #        block_age_labels = color_labels[block*block_size:(block+1)*block_size]
+#         block_reordering = numpy.argsort(block_color_labels)
+#         if age_multiple_labels:
+#             iSeq.correct_labels[block*block_size:(block+1)*block_size] = iSeq.correct_labels[block*block_size:(block+1)*block_size,:][block_reordering,:]
+#             iSeq.correct_classes[block*block_size:(block+1)*block_size] = iSeq.correct_classes[block*block_size:(block+1)*block_size,:][block_reordering,:]
+#         else:
+#             iSeq.correct_labels[block*block_size:(block+1)*block_size] = iSeq.correct_labels[block*block_size:(block+1)*block_size,:][block_reordering]
+#             iSeq.correct_classes[block*block_size:(block+1)*block_size] = iSeq.correct_classes[block*block_size:(block+1)*block_size,:][block_reordering]
+#         block_files = iSeq.input_files[block*block_size:(block+1)*block_size]
+#         for i in range(block_size):
+#             reordered_files.append(block_files[block_reordering[i]])
+#     iSeq.input_files = reordered_files
+#         #print "reordered_files=", reordered_files
+#     print "labels/classes subreordered, age is primary label, and skin color is the secondary"
+# 
+#     sTrainRAge[0][0].train_mode = "DualSerial4" #"DualSerial10"
+    
+print "iTrainRAge[0][0].input_files[0]=", iTrainRAge[0][0].input_files[0]
+print "iTrainRAge[0][0].input_files[1]=", iTrainRAge[0][0].input_files[1]
+print "iTrainRAge[0][0].input_files[-2]=", iTrainRAge[0][0].input_files[-2]
+print "iTrainRAge[0][0].input_files[-1]=", iTrainRAge[0][0].input_files[-1]
+
+#quit()
+
+#Update input_files in sSeqs
+for (iSeq, sSeq) in ((iTrainRAge[0][0], sTrainRAge[0][0]), 
+                     (iSeenidRAge, sSeenidRAge), 
+                     (iNewidRAge[0][0], sNewidRAge[0][0])):
+    sSeq.input_files = [ os.path.join(iSeq.data_base_dir, file_name) for file_name in iSeq.input_files]
+
+
+if age_ordered_by_increasing_label == 2: #Gender
+    sTrainRAge[0][0].train_mode = "clustered"
+    iTrainRAge[0][0].block_size = [num_males_TrainRAge, num_females_TrainRAge]
+    sTrainRAge[0][0].block_size = [num_males_TrainRAge, num_females_TrainRAge]
+
+if age_ordered_by_increasing_label == 1: #Race
+    sTrainRAge[0][0].train_mode = "clustered"
+    iTrainRAge[0][0].block_size = [num_BO_TrainRAge, num_AHW_TrainRAge]
+    sTrainRAge[0][0].block_size = [num_BO_TrainRAge, num_AHW_TrainRAge]
+  
+
+#WARNING, EXPERIMENTING WITH WEIGHT=2.0, it should be 1.0 
+if append_gender_classification and append_race_classification and age_label_ordering == "AgeRaceGenderIAge" and age_add_other_label_classes:
+    sTrainRAge[0][0].train_mode = [sTrainRAge[0][0].train_mode, ("classification", iTrainRAge[0][0].correct_classes[:,1], 1.0), ("classification", iTrainRAge[0][0].correct_classes[:,2], 1.0)]
+elif append_gender_classification and age_label_ordering == "AgeRaceGenderIAge" and age_add_other_label_classes:
+    sTrainRAge[0][0].train_mode = [sTrainRAge[0][0].train_mode, ("classification", iTrainRAge[0][0].correct_classes[:,2], 1.0)]
+elif append_race_classification and age_label_ordering == "AgeRaceGenderIAge" and age_add_other_label_classes:
+    sTrainRAge[0][0].train_mode = [sTrainRAge[0][0].train_mode, ("classification", iTrainRAge[0][0].correct_classes[:,1], 1.0)]
+else:
+    print "Not adding any graph to the current train_mode"
+
+
+#######################################################################################################################
+#################                   MNIST Number Database Experiments                     #############################
+#######################################################################################################################
+import mnist
+
+def load_MNIST_clusters(digits_used=[2,8], image_set='training', images_base_dir='/home/escalafl/Databases/MNIST'):
+    images, labels = mnist.read(digits_used, image_set, images_base_dir)
+    #print images
+    #print images.shape
+    
+    num_images = len(labels)
+    all_indices = numpy.arange(num_images)
+    
+    clusters = {}
+    for i, digit in enumerate(digits_used):
+        #print "cluster ", i, " for digit ", digits_used
+        cluster_indices = all_indices[(labels==digit)]
+        clusters[digit] = cluster_indices
+        numpy.random.shuffle(clusters[digit])
+        print "cluster %d for digit %d has %d images"%(i, digit, len(cluster_indices))
+    return clusters, images
+
+def iSeqCreateMNIST(dx=0, dy=0, smin=1.0, smax=1.00, delta_rotation=0.0, pre_mirroring="none", contrast_enhance=False, obj_avg_std=0.0, obj_std_min=0.20, obj_std_max=0.20,
+                    clusters={}, first_image_index=0, num_images_per_cluster_used=0, repetition_factor=1, seed=-1, use_orig_label=False, increasing_orig_label=False):
+    if seed >= 0 or seed is None:
+        numpy.random.seed(seed)
+        print "MNIST. Using seed", seed
+
+    if num_images_per_cluster_used > 0:
+        for digit in clusters.keys():
+            if first_image_index + num_images_per_cluster_used > len(clusters[digit]):
+                err = "first_image_index + num_images_per_digit_used > len(cluster_indices)." + "%d + %d > %d"%(first_image_index, num_images_per_cluster_used, len(clusters[digit]))
+                raise Exception(err)
+        
+    print "***** Setting Information Parameters for MNIST ******"
+    iSeq = SystemParameters.ParamsInput()
+    #iSeq.name = "MNISTReal Translation " + slow_var + ": (%d, %d, %d, %d) numsteps %d"%(dx, dy, smin, smax, num_steps)
+    iSeq.data_base_dir = "wrong dir"
+    #TODO: create clusters here. 
+    iSeq.ids = []
+    iSeq.orig_labels = []
+    iSeq.block_sizes = []
+    for digit in clusters.keys():
+        cluster = clusters[digit]
+        if num_images_per_cluster_used >= 0:
+            cluster_id =  cluster[first_image_index:first_image_index+num_images_per_cluster_used]*repetition_factor #image numbers
+        else:
+            cluster_id = cluster[first_image_index:] * repetition_factor
+        iSeq.ids.extend(cluster_id)
+
+        if num_images_per_cluster_used >= 0:
+            cluster_labels = [digit] * repetition_factor * num_images_per_cluster_used
+        else:
+            cluster_labels = [digit] * repetition_factor *  (len(cluster) - first_image_index)
+        if len(cluster_id) != len(cluster_labels):
+            print "ERROR: Wrong number of cluster labels and original labels"
+            print "len(cluster_id)=", len(cluster_id)
+            print "len(cluster_labels)=", len(cluster_labels)
+            quit()
+        iSeq.orig_labels.extend(cluster_labels)
+        
+    iSeq.input_files = iSeq.ids
+    
+    if use_orig_label and increasing_orig_label:
+        print "Reordering image filenames of data set according to the original labels"
+        ordering = numpy.argsort(iSeq.orig_labels)
+        ordered_orig_labels = [iSeq.orig_labels[i] for i in ordering]
+        ordered_ids = [iSeq.ids[i] for i in ordering]
+        iSeq.orig_labels = ordered_orig_labels
+        iSeq.ids = ordered_ids
+    else:
+        print "Image filenames of data set not reordered according to the original labels"
+
+    iSeq.num_images = len(iSeq.ids)
+
+    iSeq.dx = dx
+    iSeq.dy = dy
+    iSeq.smin = smin
+    iSeq.smax = smax
+    iSeq.delta_rotation = delta_rotation
+
+    iSeq.contrast_enhance = contrast_enhance
+        
+    iSeq.pre_mirror_flags = False
+
+#    if contrast_enhance == True:
+#        contrast_enhance = "AgeContrastEnhancement_Avg_Std" # "PostEqualizeHistogram" # "AgeContrastEnhancement"
+#    if contrast_enhance in ["AgeContrastEnhancement_Avg_Std", "AgeContrastEnhancement25", "AgeContrastEnhancement20", "AgeContrastEnhancement15", "AgeContrastEnhancement", "PostEqualizeHistogram", "SmartEqualizeHistogram", False]:
+#        iSeq.contrast_enhance = contrast_enhance
+#    else:
+#        ex = "Contrast method unknown"
+#        raise Exception(ex)
+
+    iSeq.obj_avg_std=obj_avg_std
+    iSeq.obj_std_min=obj_std_min
+    iSeq.obj_std_max=obj_std_max
+        
+#    if len(iSeq.ids) % len(iSeq.trans) != 0 and continuous == False:
+#        ex="Here the number of translations/scalings must be a divisor of the number of identities"
+#        raise Exception(ex)
+    iSeq.ages = [None]
+    iSeq.genders = [None]
+    iSeq.racetweens = [None]
+    iSeq.expressions = [None]
+    iSeq.morphs = [None]
+    iSeq.poses = [None]
+    iSeq.lightings = [None]
+    iSeq.slow_signal = 0 #real slow signal is the translation in the x axis (correlated to identity), added during image loading
+    iSeq.step = 1
+    iSeq.offset = 0
+
+    #iSeq.params = [ids, expressions, morphs, poses, lightings]
+    iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
+                      iSeq.morphs, iSeq.poses, iSeq.lightings]
+
+    diff_labels = numpy.unique(iSeq.orig_labels)
+    iSeq.block_size = [ (iSeq.orig_labels == label).sum() for label in diff_labels ]
+    print "iSeq.block_size =", iSeq.block_size
+
+#    if num_images_per_cluster_used >= 0:
+#        iSeq.block_size = num_images_per_cluster_used * repetition_factor
+#    else:
+#        iSeq.block_size = 1
+    iSeq.train_mode = "clustered" #compact_classes+7" #"compact_classes+7" #"compact_classes3" #"serial" #"clustered" #"serial" #"mixed", None, "regular", "fwindow16", "fwindow32", "fwindow64", "fwindow128"
+
+    unique_labels, iSeq.correct_classes = numpy.unique(iSeq.orig_labels, return_inverse=True)
+    print "unique labels = ", unique_labels
+    #quit()
+    iSeq.correct_labels = numpy.array(iSeq.orig_labels)
+    
+    if len(iSeq.ids) != len(iSeq.orig_labels):
+        er = "Computation of orig_labels failed:"+str(iSeq.ids)+str(iSeq.orig_labels)
+        er += "len(iSeq.ids)=%d"%len(iSeq.ids) + "len(iSeq.orig_labels)=%d"%len(iSeq.orig_labels)+"len(iSeq.input_files)=%d"%len(iSeq.input_files)
+        raise Exception(er)
+
+    SystemParameters.test_object_contents(iSeq)
+    return iSeq
+
+def sSeqCreateMNIST(iSeq, images_array, seed=-1, use_RGB_images=False):
+    if seed >= 0 or seed is None: #also works for 
+        numpy.random.seed(seed)
+    #else seed <0 then, do not change seed
+    
+    if iSeq==None:
+        print "iSeq was None, this might be an indication that the data is not available"
+        sSeq = SystemParameters.ParamsDataLoading()
+        return sSeq
+    
+    print "******** Setting Training Data Parameters for MNIST  ****************"
+    sSeq = SystemParameters.ParamsDataLoading()
+    sSeq.input_files = iSeq.input_files
+    sSeq.images_array = images_array
+    sSeq.num_images = iSeq.num_images
+    sSeq.block_size = iSeq.block_size
+    sSeq.train_mode = iSeq.train_mode
+    sSeq.include_latest = iSeq.include_latest
+    sSeq.image_width = 28
+    sSeq.image_height = 28 #192
+    sSeq.subimage_width = 28 #192 # 160 #128 
+    sSeq.subimage_height = 28 #192 # 160 #128 
+    sSeq.pre_mirror_flags = iSeq.pre_mirror_flags
+    
+    sSeq.trans_x_max = iSeq.dx
+    sSeq.trans_x_min = -1 * iSeq.dx
+    sSeq.trans_y_max = iSeq.dy
+    sSeq.trans_y_min = -1 * iSeq.dy
+    sSeq.min_sampling = iSeq.smin
+    sSeq.max_sampling = iSeq.smax
+    sSeq.delta_rotation = iSeq.delta_rotation
+    sSeq.contrast_enhance = iSeq.contrast_enhance
+    sSeq.obj_avg_std = iSeq.obj_avg_std
+    sSeq.obj_std_min = iSeq.obj_std_min
+    sSeq.obj_std_max = iSeq.obj_std_max
+            
+    sSeq.add_noise_L0 = True
+    if use_RGB_images:
+        sSeq.convert_format = "RGB" # "RGB", "L"
+    else:
+        sSeq.convert_format = "L"
+    sSeq.background_type = None
+
+    sSeq.offset_translation_x = 0.0 
+    sSeq.offset_translation_y = 0.0
+    sSeq.translations_x = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, sSeq.num_images) + sSeq.offset_translation_x
+    sSeq.translations_y = numpy.random.random_integers(sSeq.trans_y_min, sSeq.trans_y_max, sSeq.num_images) + sSeq.offset_translation_y
+    #print "sSeq.translations_x=", sSeq.translations_x 
+
+    sSeq.pixelsampling_x = numpy.random.uniform(low=sSeq.min_sampling, high=sSeq.max_sampling, size=sSeq.num_images)
+    sSeq.pixelsampling_y = sSeq.pixelsampling_x + 0.0
+
+    if sSeq.delta_rotation != None:
+        sSeq.rotation = numpy.random.uniform(-sSeq.delta_rotation, sSeq.delta_rotation, sSeq.num_images)
+    else:
+        sSeq.rotation = None
+    if iSeq.obj_avg_std > 0:
+        sSeq.obj_avgs = numpy.random.normal(0.0, iSeq.obj_avg_std, size=sSeq.num_images)
+    else:
+        sSeq.obj_avgs = numpy.zeros(sSeq.num_images)
+    sSeq.obj_stds = numpy.random.uniform(sSeq.obj_std_min, sSeq.obj_std_max, sSeq.num_images)
+
+    #BUG1: image center is not computed that way!!! also half(width-1) computation is wrong!!!
+    sSeq.subimage_first_row =  sSeq.image_height/2.0-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
+    sSeq.subimage_first_column = sSeq.image_width/2.0-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
+
+    sSeq.trans_sampled = True #TODO:check semantics, when is sampling/translation done? why does this value matter?
+    sSeq.name = "MNIST Dx in (%d, %d) Dy in (%d, %d), sampling in (%d perc, %d perc)"%(sSeq.trans_x_min, 
+        sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, int(sSeq.min_sampling*100), int(sSeq.max_sampling*100))
+
+    print "Mean in correct_labels is:", iSeq.correct_labels.mean()
+    print "Var in correct_labels is:", iSeq.correct_labels.var()
+    sSeq.load_data = load_data_from_sSeq
+    SystemParameters.test_object_contents(sSeq)
+    return sSeq
+
+print "MNIST: starting with experiment_seed=", experiment_seed
+numpy.random.seed(experiment_seed+123451313)
+shuffle_digits = True #and False
+num_digits_used = 8 # 10
+digits_used = numpy.arange(10) #(8) numpy.arange(10) #[4,9] #(4,9) or (9,7) or numpy.arange(10)
+if shuffle_digits:
+    numpy.random.shuffle(digits_used)
+digits_used = digits_used[0:num_digits_used]
+
+mnist_enabled=False or True
+if mnist_enabled:
+    clusters_MNIST, images_array_MNIST = load_MNIST_clusters(digits_used=digits_used, image_set='training', images_base_dir='/home/escalafl/Databases/MNIST')
+    clusters_MNIST_test, images_array_MNIST_test = load_MNIST_clusters(digits_used=digits_used, image_set='testing', images_base_dir='/home/escalafl/Databases/MNIST')
+else:
+    clusters_MNIST = clusters_MNIST_test = {}
+    images_array_MNIST =  images_array_MNIST_test = []
+
+numpy.random.seed(experiment_seed+987987987)
+
+base_scale = 1.0
+factor_training = 1.0 
+factor_seenid = 1.0  
+scale_offset = 0.00  
+
+#5421 images for digit 5 WARNING, here use only 5000!!!!
+iSeq_set1 = iSeqCreateMNIST(dx=0.0, dy=0.0, smin=1.0, smax=1.0, delta_rotation=None, pre_mirroring="none", contrast_enhance=None, obj_avg_std=0.0, obj_std_min=0.20, obj_std_max=0.20,
+                    clusters=clusters_MNIST, first_image_index=421, num_images_per_cluster_used=5000, repetition_factor=1, seed=-1, use_orig_label=True, increasing_orig_label=True) #5000, num_images_per_cluster_used=-1
+sSeq_set1 = sSeqCreateMNIST(iSeq_set1, images_array_MNIST, seed=-1, use_RGB_images=age_use_RGB_images)
+
+semi_supervised_learning = True and False
+if semi_supervised_learning == False:
+    iSeq_set = iTrainMNIST = [[iSeq_set1]]
+    sSeq_set = sTrainMNIST= [[sSeq_set1]]
+else:
+    iSeq_set2 = iSeqCreateMNIST(dx=0.0, dy=0.0, smin=1.0, smax=1.0, delta_rotation=None, pre_mirroring="none", contrast_enhance=None, obj_avg_std=0.0, obj_std_min=0.20, obj_std_max=0.20,
+                    clusters=clusters_MNIST, first_image_index=921, num_images_per_cluster_used=4500, repetition_factor=1, seed=-1, use_orig_label=True, increasing_orig_label=True) #5000, num_images_per_cluster_used=-1
+    iSeq_set2.train_mode = "smart_unlabeled2" #smart_unlabeled2" #"ignore_data" #"smart_unlabeled3"
+    sSeq_set2 = sSeqCreateMNIST(iSeq_set2, images_array_MNIST, seed=-1, use_RGB_images=age_use_RGB_images)
+    iSeq_set = iTrainMNIST = [[iSeq_set1,iSeq_set2]]
+    sSeq_set = sTrainMNIST = [[sSeq_set1,sSeq_set2]]    
+    
+#print "iSeq_set.input_files=",iSeq_set[0][0].input_files
+print "len(iSeq_set.input_files)=",len(iSeq_set[0][0].input_files)
+#print "sSeq_set.input_files=",sSeq_set[0][0].input_files
+print "len(sSeq_set.input_files)=",len(sSeq_set[0][0].input_files)
+
+#WARNING HERE USE index 5000 and 421 images per cluster!!!
+iSeq_set = iSeenidMNIST = iSeqCreateMNIST(dx=0.0, dy=0.0, smin=1.0, smax=1.0, delta_rotation=None, pre_mirroring="none", contrast_enhance=None, obj_avg_std=0.0, obj_std_min=0.20, obj_std_max=0.20,
+                    clusters=clusters_MNIST, first_image_index=0, num_images_per_cluster_used=421, repetition_factor=1, seed=-1, use_orig_label=True, increasing_orig_label=True) #421
+                           
+sSeq_set = sSeenidMNIST = sSeqCreateMNIST(iSeq_set, images_array_MNIST, seed=-1, use_RGB_images=age_use_RGB_images)
+
+
+iSeq_set = iNewidMNIST = [[iSeqCreateMNIST(dx=0.0, dy=0.0, smin=1.0, smax=1.0, delta_rotation=None, pre_mirroring="none", contrast_enhance=None, obj_avg_std=0.0, obj_std_min=0.20, obj_std_max=0.20,
+                    clusters=clusters_MNIST_test, first_image_index=0, num_images_per_cluster_used=-1, repetition_factor=1, seed=-1, use_orig_label=True, increasing_orig_label=True) ]]
+                           
+sSeq_set = sNewidMNIST = [[sSeqCreateMNIST(iSeq_set[0][0], images_array_MNIST_test, seed=-1, use_RGB_images=age_use_RGB_images)]]
+
+ParamsMNISTFunc = SystemParameters.ParamsSystem()
+ParamsMNISTFunc.name = "Function Based Data Creation for MNIST"
+ParamsMNISTFunc.network = linearNetwork4L #Default Network, but ignored
+ParamsMNISTFunc.iTrain =iTrainMNIST
+ParamsMNISTFunc.sTrain = sTrainMNIST
+
+ParamsMNISTFunc.iSeenid = iSeenidMNIST
+ParamsMNISTFunc.sSeenid = sSeenidMNIST
+images_array_MNIST_test
+ParamsMNISTFunc.iNewid = iNewidMNIST
+ParamsMNISTFunc.sNewid = sNewidMNIST
+
+if iTrainMNIST != None and iTrainMNIST[0][0]!=None:
+    ParamsMNISTFunc.block_size = iTrainMNIST[0][0].block_size
+ParamsMNISTFunc.train_mode = "Weird Mode" #Ignored for the moment 
+ParamsMNISTFunc.analysis = None
+ParamsMNISTFunc.enable_reduced_image_sizes = True
+ParamsMNISTFunc.reduction_factor = 1.0 # T=1.0 WARNING 1.0, 2.0, 3, 4
+ParamsMNISTFunc.hack_image_size = 28 # T=24 WARNING      24, 12, 8, 6 #IS IT 24 or 28!!!!! 28=2*2*7, 24=2*2*2*3
+ParamsMNISTFunc.enable_hack_image_size = True
+ParamsMNISTFunc.patch_network_for_RGB = False # 
+
+
+#TODO: IS a mapping from classes to zero-starting classes needed????
+# all_classes = numpy.unique(iSeenidRAge.correct_classes)
+# 
+# min_num_classes = 7 #40
+# max_num_classes = 42 #42
+# 
+# num_classes = len(all_classes)
+# if min_num_classes > num_classes:
+#     ex = "insufficient number of classes in seenid data: %d >= %d "%(min_num_classes, num_classes)
+#     raise Exception(ex)
+# 
+# smallest_number_of_samples_per_class = 30
+# class_list = list(all_classes) #This is the actual mapping from orig. classes to final classes
+# num_classes = len(class_list)    IEVMLRecNet_out_dims = [ 28, 52, 75, 85, 90, 90, 85, 100, 75,75,75 ] #Experiment with control2: Dt=1.9999
+
+# while num_classes > max_num_classes:
+#     current_count = 0
+#     current_class = 0
+#     class_list = []
+#     for classnr in all_classes: #[::-1]:
+#         class_list.append(current_class)
+#         current_count += (iSeenidRAge.correct_classes==classnr).sum()    
+#         if current_count >= smallest_number_of_samples_per_class:
+#             current_count = 0
+#             current_class += 1
+#     if current_count >= smallest_number_of_samples_per_class:
+#         print "last class cluster is fine"
+#     elif current_count > 0:
+#         print "fixing last class cluster by adding it to its predecesor"
+#         class_list = numpy.array(class_list)
+#         class_list[class_list == current_class] = current_class-1
+#     num_classes = len(numpy.unique(class_list))
+#     print "In iteration with smallest_number_of_samples_per_class=%diSeenidGender = iSeqCreateGender(first_id = 0, num_ids = 25, user_base_dir=user_base_dir, data_dir="Alberto/RenderingsGender60x200", gender_continuous=True, seed=None)
+####, we have %d clases"%(smallest_number_of_samples_per_class,num_classes)
+#     smallest_number_of_samples_per_class = 1.1 * smallest_number_of_samples_per_class + 1
+# #class_list.reverse()
+# #class_list = numpy.array(class_list)
+# #class_list = class_list.max()-class_list
+# if min_num_classes > num_classes:pirate
+#     ex = "Resulting number of classes %d is smaller than min_num_classes %d"%(num_classes, min_num_classes)
+#     raise Exception(ex)
+# 
+# print "class_list=", class_list
+# for i, classnr in enumerate(all_classes):
+#     iSeenidRAge.correct_classes[iSeenidRAge.correct_classes==classnr] = class_list[i]
 
 

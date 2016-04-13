@@ -208,7 +208,21 @@ def comp_variance(x):
     delta = delta / (t)
     return delta
 
+#Returns zero-mean unit-variance samples for data in MDP format
+def zero_mean_unit_var(x):
+    return (x-x.mean(axis=0))/x.std(axis=0)
+
+#Delta = (1/(N-1)) * sum (x(i+1)-x(i))**2 
 def comp_delta(x):
+    xderiv = x[1:, :]-x[:-1, :]
+    return (xderiv**2).mean(axis=0)
+
+def comp_delta_normalized(x):
+    xn = zero_mean_unit_var(x)
+    xderiv = xn[1:, :]-xn[:-1, :]
+    return (xderiv**2).mean(axis=0)
+    
+def comp_delta_old(x):
     t, num_vars = x.shape
     delta = numpy.zeros(num_vars)
     xderiv = x[1:, :]-x[:-1, :]
@@ -217,16 +231,19 @@ def comp_delta(x):
     delta = delta / (t-1)
     return delta
 
+def comp_eta_from_t_and_delta(t, delta):
+    return t/(2*numpy.pi) * numpy.sqrt(delta)
+
 def comp_eta(x):
-    t, num_vars = x.shape
-    return t/(2*numpy.pi) * numpy.sqrt(comp_delta(x))
+    t = x.shape[0]
+    return comp_eta_from_t_and_delta(t, comp_delta(x))
 
 #TODO: Inspect this code and clean
-#For complete mode, a sequence has length num_reps, for each block...
-def comp_typical_delta_eta(x, block_size, num_reps=10, training_mode='sequence'):
+#For clustered mode, a sequence has length num_reps, for each block...
+def comp_typical_delta_eta(x, block_size, num_reps=10, training_mode='serial'):
     t, num_vars = x.shape
 
-    if block_size == None:
+    if block_size is None:
         return (None, None)
 #TODO: support non-homogeneous block sizes, and training modes
     if isinstance(block_size, int):
@@ -245,11 +262,14 @@ def comp_typical_delta_eta(x, block_size, num_reps=10, training_mode='sequence')
 
 #        return (numpy.nan, numpy.nan)
 
-    delta = numpy.zeros(num_vars)
-    eta = numpy.zeros(num_vars)
-    test = numpy.zeros((num_blocks, num_vars))
+    delta = None
+    eta = None
 
-    if training_mode in ["sequence", "mixed"]:
+    if training_mode in ['serial', "mixed"]:
+        delta = numpy.zeros(num_vars)
+        eta = numpy.zeros(num_vars)
+        test = numpy.zeros((num_blocks, num_vars))
+
         if isinstance(block_size, int):
             for i in range(num_reps):
                 for j in range(num_blocks):
@@ -267,24 +287,34 @@ def comp_typical_delta_eta(x, block_size, num_reps=10, training_mode='sequence')
                 eta += comp_eta(test)
         delta = delta / num_reps
         eta = eta / num_reps       
-    elif training_mode in ["complete"]: #verify this... and make exact computation
+    elif training_mode == "clustered"  or training_mode == "compact_classes": #verify this... and make exact computation
+        print "exact computation of delta value for clustered graph..."
+        #print "x.std(axis=0)=", x.std(axis=0)
         if isinstance(block_size, int):
-            for j in range(num_blocks):
-                for i in range(num_reps):
-                    w = numpy.random.randint(block_size)
-                    test[j] = x[j * block_size + w]
-                delta += comp_delta(test)
-                eta += comp_eta(test)
+            block_sizes = [block_size] * (t / block_size)
         else:
-            for j in range(num_blocks):
-                for i in range(num_reps):
-                    w = numpy.random.randint(block_size[j])
-    #                print "block_origins[%d]="%j,block_origins[j]
-                    test[j] = x[block_origins[j] + w]
-                delta += comp_delta(test)
-                eta += comp_eta(test)        
-        delta = delta / num_blocks
-        eta = eta / num_blocks                 
+            block_sizes = block_size
+        delta = 0.0
+        current_pos = 0
+        for block_size in block_sizes:
+            #print "delta=", delta
+            #print "block_size=", block_size
+            #print "current_pos=", current_pos
+            x_cluster = x[current_pos:current_pos+block_size,:]
+            x_cluster_avg = x_cluster.mean(axis=0)
+            x_cluster_ene = (x_cluster**2).sum(axis=0)
+            delta += (1.0/t)*(1.0/(block_size-1))*(2*block_size*x_cluster_ene - 2*block_size**2 * x_cluster_avg**2)
+            current_pos += block_size
+    elif training_mode is None or training_mode == "regular":
+        delta = comp_delta(x)    
+    else:
+        er = "Training mode unknown:", training_mode, "still, computing delta as a sequence"
+        delta = comp_delta(x)    
+
+    if eta is None:
+        eta = comp_eta_from_t_and_delta(t, delta)
+    
+    #print "(delta, eta)=", delta, eta
     return (delta, eta) 
 
 def str2(x):
@@ -351,7 +381,7 @@ def product(*args):
 #x = numpy.ones((2,5))
 #pairwise_adjacent_expansion(x, 3, multiply, reflexive=False)
 
-def select_rows_from_matrix(M, sel, mode=4):
+def select_rows_from_matrix(M, sel, mode=2):
     if mode == 1:
         return select_rows_from_matrix1(M, sel)
     elif mode == 2:
@@ -481,7 +511,7 @@ def cutoff(x, min, max):
 ##It flattens the array on beforehand, and is limited by the resolution of str
 #def hash_arrayxxxx(x, m=None): 
 #    y = x.flatten()
-#    if m == None:
+#    if m is None:
 #        m = hashlib.md5() # or sha1 etc
 #
 #    for value in y: # array contains the data
@@ -491,7 +521,7 @@ def cutoff(x, min, max):
 ##This hashes any list of scalar values (or values printable by str), and returns a hash object
 ##be aware that the uniqueness is limited by the representation capabilities of str
 #def hash_listxxxx(x, m=None, recursion=False): 
-#    if m == None:
+#    if m is None:
 #        m = hashlib.md5() # or sha1 etc
 #
 #    for value in x: # array contains the data
@@ -518,7 +548,7 @@ def cutoff(x, min, max):
 #def hash_objectxxxx(obj, m=None, recursion=True, verbose=True): 
 #    print "Hashing ", obj
 #    
-#    if m == None:
+#    if m is None:
 #        m = hashlib.md5() # or sha1 etc
 #
 #    #Case 0: obj is enumerable

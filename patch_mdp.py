@@ -4,7 +4,7 @@ from mdp import numx
 from mdp.utils import (mult, pinv, symeig, CovarianceMatrix, SymeigException)
 import more_nodes
 from more_nodes import CovDCovMatrix, ComputeCovDcovMatrixMixed, ComputeCovDcovMatrixSerial, ComputeCovDcovMatrixClustered, ComputeCovMatrix
-
+import histogram_equalization
 from sfa_libs import select_rows_from_matrix
 import inversion
 #import mdp.parallel.makeparallel
@@ -25,6 +25,10 @@ mdp.nodes.IEVMNode = more_nodes.IEVMNode
 mdp.nodes.IEVMLRecNode = more_nodes.IEVMLRecNode
 mdp.nodes.SFAAdaptiveNLNode = more_nodes.SFAAdaptiveNLNode
 mdp.nodes.GSFANode = more_nodes.GSFANode
+
+mdp.nodes.NLIPCANode = histogram_equalization.NLIPCANode
+mdp.nodes.NormalizeABNode = histogram_equalization.NormalizeABNode
+mdp.nodes.HistogramEqualizationNode = histogram_equalization.HistogramEqualizationNode
 
 #print "Adding localized inverse support..."
 mdp.Flow.localized_inverse = inversion.localized_inverse
@@ -156,7 +160,7 @@ def SFANode_train_scheduler(self, x, block_size=None, train_mode = None, node_we
                     
             self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[-bs:], weight=0.5)
 
-#           xxxx self._covdcovmtx.updateSerial(x, Torify=False)            
+#           xxxx self._covdcovmtx.updateSerial(x, torify=False)            
             for i in range(num_chunks):
                 if i==0:
                     scheduler.add_task((x[i*block_size*chunk_size:(i+1)*block_size*chunk_size], block_size), ComputeCovDcovMatrixSerial)
@@ -186,7 +190,8 @@ def SFANode_train_scheduler(self, x, block_size=None, train_mode = None, node_we
         for covdcovmtx in results:
             self._covdcovmtx.addCovDCovMatrix(covdcovmtx)
 
-               
+#TODO: There might be several errors due to incorrect computation of sum_prod_x as mdp.mult(sum_x.T,sum_x) WARNING!!!! CHECK ALL CODE!!!
+#WARNING, why the repetition of this code w.r.t the code in more_nodes and GSFA_node??? fix this!!!
 def SFANode_train(self, x, block_size=None, train_mode = None, node_weights=None, edge_weights=None):
     if train_mode == None:
         train_mode = self.train_mode
@@ -202,55 +207,236 @@ def SFANode_train(self, x, block_size=None, train_mode = None, node_weights=None
     # cut the final point to avoid a trivial solution in special cases
     # WARNING: Force artificial training
     print "train_mode=", train_mode
-    if train_mode == 'unlabeled':
-        print "updateUnlabeled"
-        self._covdcovmtx.updateUnlabeled(x, weight=0.00015) #Warning, set this weight appropiately!
-    elif train_mode == "regular":
-        print "updateRegular"
-        self._covdcovmtx.updateRegular(x, weight=1.0)
-    elif train_mode == 'clustered':
-        print "update_clustered_homogeneous_block_sizes"
-        self._covdcovmtx.update_clustered_homogeneous_block_sizes(x, weight=1.0, block_size=block_size)
-    elif train_mode == 'serial':
-        print "updateSerial"
-        self._covdcovmtx.updateSerial(x, Torify=False, block_size=block_size)
-    elif train_mode == 'mixed':
-        print "update mixed"
-        bs = block_size
-# WARNING: THIS Generates degenerated solutions!!! Check code!! it should actually work fine??!!
-        self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[0:bs], weight=2.0, block_size=block_size)
-        self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[bs:-bs], weight=1.0, block_size=block_size)
-        self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[-bs:], weight=2.0, block_size=block_size)
-#        self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[0:bs], weight=0.5, block_size=block_size)
-#        self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[bs:-bs], weight=1.0, block_size=block_size)
-#        self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[-bs:], weight=0.5, block_size=block_size)
-        self._covdcovmtx.updateSerial(x, Torify=False, block_size=block_size)            
-    elif train_mode[0:6] == 'window':
-        window_halfwidth = int(train_mode[6:])
-        print "Window (%d)"%window_halfwidth
-        self._covdcovmtx.updateSlidingWindow(x, weight=1.0, window_halfwidth=window_halfwidth)
-    elif train_mode[0:7] == 'fwindow':
-        window_halfwidth = int(train_mode[7:])
-        print "Fast Window (%d)"%window_halfwidth
-        self._covdcovmtx.updateFastSlidingWindow(x, weight=1.0, window_halfwidth=window_halfwidth)
-    elif train_mode[0:13] == 'mirror_window':
-        window_halfwidth = int(train_mode[13:])
-        print "Mirroring Window (%d)"%window_halfwidth
-        self._covdcovmtx.updateMirroringSlidingWindow(x, weight=1.0, window_halfwidth=window_halfwidth)
-    elif train_mode[0:14] == 'smirror_window':
-        window_halfwidth = int(train_mode[14:])
-        print "Slow Mirroring Window (%d)"%window_halfwidth
-        self._covdcovmtx.updateSlowMirroringSlidingWindow(x, weight=1.0, window_halfwidth=window_halfwidth)
-    elif train_mode == 'graph':
-        print "updateGraph"
-        self._covdcovmtx.updateGraph(x, weight=1.0, node_weights=node_weights, edge_weights=edge_weights)
+
+    if isinstance(train_mode, list):
+        train_modes = train_mode
     else:
-        ex = "Unknown training method"
-        raise Exception(ex)
+        train_modes = [train_mode]
+
+    for train_mode in train_modes:
+        if isinstance(train_mode, tuple):
+            method = train_mode[0]
+            labels = train_mode[1]
+            weight = train_mode[2]
+            if method == "classification":
+                print "update classification"
+                ordering = numpy.argsort(labels)
+                x2 = x[ordering,:]
+                block_sizes = ""
+                unique_labels = numpy.unique(labels)
+                unique_labels.sort()
+                block_sizes = []
+                for label in unique_labels:
+                    block_sizes.append((labels==label).sum())
+                self._covdcovmtx.update_clustered(x2, block_sizes=block_sizes, weight=weight)
+            else:
+                er = "method unknown: %s"%(str(method))
+                raise Exception(er)
+        else:
+            if train_mode == 'unlabeled':
+                print "updateUnlabeled"
+                self._covdcovmtx.updateUnlabeled(x, weight=0.00015) #Warning, set this weight appropiately!
+            elif train_mode == "regular":
+                print "updateRegular"
+                self._covdcovmtx.updateRegular(x, weight=1.0)
+            elif train_mode == 'clustered':
+                print "update_clustered"
+                self._covdcovmtx.update_clustered(x, block_sizes=block_size, weight=1.0)
+            elif train_mode.startswith('compact_classes'):
+                print "update_compact_classes:", train_mode
+                J = int(train_mode[len('compact_classes'):])
+                self._covdcovmtx.update_compact_classes(x, block_sizes=block_size, Jdes=J, weight=1.0)
+            elif train_mode == 'serial':
+                print "updateSerial"
+                self._covdcovmtx.updateSerial(x, torify=False, block_size=block_size)
+            elif train_mode.startswith('DualSerial'):
+                print "updateDualSerial"
+                num_blocks = len(x)/block_size
+                dual_num_blocks = int(train_mode[len("DualSerial"):])
+                dual_block_size = len(x) / dual_num_blocks
+                chunk_size = block_size / dual_num_blocks
+                print "dual_num_blocks = ", dual_num_blocks
+                self._covdcovmtx.updateSerial(x, torify=False, block_size=block_size)
+                x2 = numpy.zeros_like(x)
+                for i in range(num_blocks):
+                    for j in range(dual_num_blocks):
+                        x2[j*dual_block_size+i*chunk_size:j*dual_block_size+(i+1)*chunk_size] = x[i*block_size+j*chunk_size:i*block_size+(j+1)*chunk_size]            
+                self._covdcovmtx.updateSerial(x2, torify=False, block_size=dual_block_size, weight=0.0)         
+            elif train_mode == 'mixed':
+                print "update mixed"
+                bs = block_size
+                weight=1.0/3
+        # WARNING: THIS Generates degenerated solutions!!! Check code!! it should actually work fine??!!
+                self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[0:bs], weight=2.0*weight, block_size=block_size)
+                self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[bs:-bs], weight=1.0*weight, block_size=block_size)
+                self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[-bs:], weight=2.0*weight, block_size=block_size)
+        #        self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[0:bs], weight=0.5, block_size=block_size)
+        #        self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[bs:-bs], weight=1.0, block_size=block_size)
+        #        self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[-bs:], weight=0.5, block_size=block_size)
+                self._covdcovmtx.updateSerial(x, torify=False, block_size=block_size, weight=weight)            
+            elif train_mode[0:6] == 'window':
+                window_halfwidth = int(train_mode[6:])
+                print "Window (%d)"%window_halfwidth
+                self._covdcovmtx.updateSlidingWindow(x, weight=1.0, window_halfwidth=window_halfwidth)
+            elif train_mode[0:7] == 'fwindow':
+                window_halfwidth = int(train_mode[7:])
+                print "Fast Window (%d)"%window_halfwidth
+                self._covdcovmtx.updateFastSlidingWindow(x, weight=1.0, window_halfwidth=window_halfwidth)
+            elif train_mode[0:13] == 'mirror_window':
+                window_halfwidth = int(train_mode[13:])
+                print "Mirroring Window (%d)"%window_halfwidth
+                self._covdcovmtx.updateMirroringSlidingWindow(x, weight=1.0, window_halfwidth=window_halfwidth)
+            elif train_mode[0:14] == 'smirror_window':
+                window_halfwidth = int(train_mode[14:])
+                print "Slow Mirroring Window (%d)"%window_halfwidth
+                self._covdcovmtx.updateSlowMirroringSlidingWindow(x, weight=1.0, window_halfwidth=window_halfwidth)
+            elif train_mode == 'graph':
+                print "updateGraph"
+                self._covdcovmtx.updateGraph(x, node_weights=node_weights, edge_weights=edge_weights, weight=1.0)
+            elif train_mode == 'smart_unlabeled2':
+                print "smart_unlabeled2"
+                N2 = x.shape[0]
+               
+                N1 = Q1 = self._covdcovmtx.num_samples*1.0
+                R1 = self._covdcovmtx.num_diffs*1.0
+                sum_x_labeled_2D = self._covdcovmtx.sum_x.reshape((1,-1))+0.0       
+                sum_prod_x_labeled = self._covdcovmtx.sum_prod_x+0.0              
+                print "Original sum_x[0]/num_samples=", self._covdcovmtx.sum_x[0]/self._covdcovmtx.num_samples
+        
+                weight_fraction_unlabeled = 0.2 #0.1, 0.25
+                additional_weight_unlabeled = -0.025 # 0.02 0.25, 0.65?
+        
+                w1 = Q1*1.0/R1 * (1.0-weight_fraction_unlabeled)
+                print "weight_fraction_unlabeled=", weight_fraction_unlabeled
+                print "N1=Q1=", Q1, "R1=", R1, "w1=", w1
+                print ""
+                
+                self._covdcovmtx.sum_prod_diffs *= w1      
+                self._covdcovmtx.num_diffs *= w1
+                print "After diff scaling: num_samples=", self._covdcovmtx.num_samples, "num_diffs=", self._covdcovmtx.num_diffs
+                print ""
+        
+                #print "Updated self._covdcovmtx.num_diffs=", self._covdcovmtx.num_diffs, "Updated self._covdcovmtx.sum_prod_diffs=", self._covdcovmtx.sum_prod_diffs
+        
+                node_weights2 = Q1*weight_fraction_unlabeled/N2 #w2*N1
+                w12 = node_weights2 / N1 # One directional weights 
+                print "w12 (one dir)", w12
+                
+                sum_x_unlabeled_2D = x.sum(axis=0).reshape((1,-1))
+                sum_prod_x_unlabeled = mdp.utils.mult(x.T, x)
+        #        self._covdcovmtx.sum_prod_x += sum_prod_x_unlabeled
+        #        self._covdcovmtx.sum_x += sum_x_unlabeled
+        #        self._covdcovmtx.num_samples += node_weights2*N2
+                
+                self._covdcovmtx.AddSamples(sum_prod_x_unlabeled, sum_x_unlabeled_2D.flatten(), num_samples=N2, weight=node_weights2)
+                print "After adding unlabeled nodes: num_samples=", self._covdcovmtx.num_samples, "num_diffs=", self._covdcovmtx.num_diffs
+                print "sum_x[0]/num_samples=" , self._covdcovmtx.sum_x[0] / self._covdcovmtx.num_samples
+                print ""
+        
+                print "N2=", N2, "node_weights2=", node_weights2, 
+                #print "self._covdcovmtx.sum_x=", self._covdcovmtx.sum_x, "self._covdcovmtx.sum_prod_x=", self._covdcovmtx.sum_prod_x
+                
+                #TODO: WARNING: Unclear if I should put here the node weights?
+                #print "T1=", sum_prod_x_unlabeled*N1
+                #print "T2=", mdp.utils.mult(sum_x_labeled.T, sum_x_unlabeled)
+                #print "T3=", mdp.utils.mult(sum_x_unlabeled.T, sum_x_labeled)
+                #print "T4=", sum_prod_x_labeled*N2
+                
+                additional_diffs = sum_prod_x_unlabeled*N1 - mdp.utils.mult(sum_x_labeled_2D.T, sum_x_unlabeled_2D) - mdp.utils.mult(sum_x_unlabeled_2D.T, sum_x_labeled_2D) + sum_prod_x_labeled*N2       
+                print "w12=", w12, "additional_diffs=",additional_diffs
+                self._covdcovmtx.AddDiffs(2*additional_diffs, 2*N1*N2, weight=w12) #to account for both directions                
+                print "After mixed diff addition: num_samples=", self._covdcovmtx.num_samples, "num_diffs=", self._covdcovmtx.num_diffs
+                print "sum_x[0]/num_samples=" , self._covdcovmtx.sum_x[0]/self._covdcovmtx.num_samples
+        
+                print "\n Adding complete graph for unlabeled data"
+                self._covdcovmtx.update_clustered_homogeneous_block_sizes(x, weight=additional_weight_unlabeled, block_size=N2)
+                print "After complete x2 addition: num_samples=", self._covdcovmtx.num_samples, "num_diffs=", self._covdcovmtx.num_diffs
+                print "sum_x[0]/num_samples=" , self._covdcovmtx.sum_x[0]/self._covdcovmtx.num_samples
+        
+        #        print "\n Removing node weights of unlabeled data"
+        #        self._covdcovmtx.AddSamples(sum_prod_x_unlabeled, sum_x_unlabeled, N2, -1*(node_weights2+additional_weight_unlabeled) )
+        #        print "self._covdcovmtx.num_samples=", self._covdcovmtx.num_samples, "self._covdcovmtx.num_diffs=", self._covdcovmtx.num_diffs
+            elif train_mode == 'smart_unlabeled3':
+                print "smart_unlabeled3"
+                N2 = x.shape[0]
+               
+                N1 = Q1 = self._covdcovmtx.num_samples*1.0
+                R1 = self._covdcovmtx.num_diffs*1.0
+                print "N1=Q1=", Q1, "R1=", R1, "N2=", N2
+                
+                v = 2.0 ** (-9.5) #500.0/4500 #weight of unlabeled samples (making it "500" vs "500")
+                C = 10.0 #10.0 #Clustered graph assumed, with C classes, and each one having N1/C samples
+                print "v=", v, "C=", C
+        
+                v_norm = v/C
+                N1_norm = N1/C
+        
+                ###Store original values of important data                
+                sum_x_labeled = self._covdcovmtx.sum_x.reshape((1,-1))+0.0       
+                sum_prod_x_labeled = self._covdcovmtx.sum_prod_x+0.0       
+        
+                print "Original (Diag(C')/num_diffs.avg)**0.5 =", ((numpy.diagonal(self._covdcovmtx.sum_prod_diffs)/self._covdcovmtx.num_diffs).mean())**0.5
+        
+                ###Adjust connections within labeled data        
+                weight_adjustment = (N1_norm-1) / (N1_norm - 1 + v_norm*N2)
+                print "weight_adjustment =",weight_adjustment, "w11=", 1/(N1_norm - 1 + v_norm*N2)
+                #w1 = Q1*1.0/R1 * (1.0-weight_fraction_unlabeled)
+                
+                self._covdcovmtx.sum_x *= weight_adjustment  
+                self._covdcovmtx.sum_prod_x *= weight_adjustment  
+                self._covdcovmtx.num_samples *= weight_adjustment
+                self._covdcovmtx.sum_prod_diffs *= weight_adjustment      
+                self._covdcovmtx.num_diffs *= weight_adjustment
+                node_weights_complete_1 = weight_adjustment
+                print "num_diffs (w11) after weight_adjustment=", self._covdcovmtx.num_diffs
+                w11 = 1 / (N1_norm - 1 + v_norm*N2)
+                #print "Updated self._covdcovmtx.num_diffs=", self._covdcovmtx.num_diffs, "Updated self._covdcovmtx.sum_prod_diffs=", self._covdcovmtx.sum_prod_diffs     
+                print "After adjustment (Diag(C')/num_diffs.avg)**0.5 =", ((numpy.diagonal(self._covdcovmtx.sum_prod_diffs)/self._covdcovmtx.num_diffs).mean())**0.5
+                print ""
+                
+                ###Connections within unlabeled data (notice that C times this is equivalent to v*v/(N1+v*(N2-1)) once)
+                w22 = 0.5*2*(v_norm) * (v_norm) / ( N1_norm + v_norm*(N2 -1)) 
+                sum_x_unlabeled = x.sum(axis=0).reshape((1,-1))
+                sum_prod_x_unlabeled = mdp.utils.mult(x.T, x)
+                node_weights_complete_2 =  w22 * (N2-1) * C
+                self._covdcovmtx.update_clustered_homogeneous_block_sizes(x, weight=node_weights_complete_2, block_size=N2)
+                print "w22=",w22, "node_weights_complete_2*N2=", node_weights_complete_2*N2
+                print "After adding complete 2: num_samples=", self._covdcovmtx.num_samples, "num_diffs=", self._covdcovmtx.num_diffs
+                print " (Diag(C')/num_diffs.avg)**0.5 =", ((numpy.diagonal(self._covdcovmtx.sum_prod_diffs)/self._covdcovmtx.num_diffs).mean())**0.5
+                print ""
+                
+                ###Connections between labeled and unlabeled samples
+                w12 = 2*0.5 * v_norm * (1/(N1_norm-1+v_norm*N2) + 1/(N1_norm+v_norm * (N2-1))) #Accounts for transitions in both directions
+                print "(twice) w12=", w12
+                sum_prod_diffs_mixed =  w12*( N1 * sum_prod_x_unlabeled - (mdp.utils.mult(sum_x_labeled.T, sum_x_unlabeled)+ mdp.utils.mult(sum_x_unlabeled.T, sum_x_labeled)) + N2 * sum_prod_x_labeled)        
+                self._covdcovmtx.sum_prod_diffs += sum_prod_diffs_mixed      
+                self._covdcovmtx.num_diffs += C * N1_norm * N2 * w12 #w12 already counts twice
+                print " (Diag(mixed)/num_diffs.avg)**0.5 =", ((numpy.diagonal(sum_prod_diffs_mixed)/ (C * N1_norm * N2 * w12)).mean())**0.5
+                print ""
+        
+                       
+                #Additional adjustment for node weights of unlabeled data
+                missing_weight_unlabeled = v - node_weights_complete_2
+                missing_weight_labeled = 1.0 - node_weights_complete_1
+                print "missing_weight_unlabeled=", missing_weight_unlabeled       
+                print "Before two final AddSamples: num_samples=", self._covdcovmtx.num_samples, "num_diffs=", self._covdcovmtx.num_diffs
+                self._covdcovmtx.AddSamples(sum_prod_x_unlabeled, sum_x_unlabeled, N2, missing_weight_unlabeled)
+                self._covdcovmtx.AddSamples(sum_prod_x_labeled, sum_x_labeled, N1, missing_weight_labeled)
+                print "Final transformation: num_samples=", self._covdcovmtx.num_samples, "num_diffs=", self._covdcovmtx.num_diffs
+                print "Summary v11=%f+%f, v22=%f+%f"%(weight_adjustment, missing_weight_labeled, node_weights_complete_2, missing_weight_unlabeled)
+                print "Summary w11=%f, w22=%f, w12(two ways)=%f"%(w11, w22, w12) 
+                print "Summary (N1/C-1)*w11=%f, N2*w12 (one way)=%f"%((N1/C-1)*w11, N2*w12/2)
+                print "Summary (N2-1)*w22*C=%f, N1*w12 (one way)=%f"%((N2-1)*w22*C, N1*w12/2)
+                print "Summary (Diag(C')/num_diffs.avg)**0.5 =", ((numpy.diagonal(self._covdcovmtx.sum_prod_diffs)/self._covdcovmtx.num_diffs).mean())**0.5
+            elif train_mode == 'ignore_data':
+                print "Training graph: ignoring data"
+            else:
+                ex = "Unknown training method"
+                raise Exception(ex)
 
 #mdp.nodes.SFANode._train = SFANode_train
 #UPDATE WARNING, this should be mdp.nodes.SFANode._train not mdp.nodes.SFANode.train
-mdp.nodes.SFANode.train = SFANode_train_scheduler
+mdp.nodes.SFANode._train = SFANode_train_scheduler
 
 
 
@@ -323,30 +509,71 @@ mdp.nodes.SFANode._stop_training = SFANode_stop_training
 #mdp.nodes.SFANode.train_params = sfa_train_params
 
 #mdp.nodes.SFANode.list_train_params = ["scheduler", "n_parallel", "train_mode", "include_latest", "block_size"]
-mdp.nodes.SFANode.list_train_params = ["scheduler", "n_parallel", "train_mode", "block_size"] # "sfa_expo", "pca_expo", "magnitude_sfa_biasing"
+mdp.nodes.SFANode.list_train_params = ["scheduler", "n_parallel", "train_mode", "block_size", "node_weights", "edge_weights"] # "sfa_expo", "pca_expo", "magnitude_sfa_biasing"
 mdp.nodes.SFAPCANode.list_train_params = ["scheduler", "n_parallel", "train_mode", "block_size"] # "sfa_expo", "pca_expo", "magnitude_sfa_biasing"
 mdp.nodes.PCANode.list_train_params = ["scheduler", "n_parallel"]
 mdp.nodes.IEVMNode.list_train_params = ["scheduler", "n_parallel", "train_mode", "block_size"]
-mdp.nodes.IEVMLRecNode.list_train_params = ["scheduler", "n_parallel", "train_mode", "block_size"]
+mdp.nodes.IEVMLRecNode.list_train_params = ["scheduler", "n_parallel", "train_mode", "block_size", "node_weights", "edge_weights"]
 mdp.nodes.SFAAdaptiveNLNode.list_train_params = ["scheduler", "n_parallel", "train_mode", "block_size"]
-#This function replaces the tradicional Node.train
+mdp.nodes.NLIPCANode.list_train_params = ["exp_func", "norm_class"]
+mdp.nodes.HistogramEqualizationNode.list_train_params = ["num_pivots"]#This function replaces the tradicional Node.train
 #It extracts the relevant parameters from params according to Node.list_train_params (if available)
 #and passes it to train
-def node_train_params(self, data, params=None):
+def extract_params_relevant_for_node_train(node, params):
+    if isinstance(params, list):
+        return [extract_params_relevant_for_node_train(node, param) for param in params]
+
+    if isinstance(node, (mdp.hinet.Layer, mdp.hinet.CloneLayer)):
+        add_list_train_params_to_layer_or_node(node)
+
     all_params = {}
-    if isinstance(self, (mdp.hinet.Layer, mdp.hinet.CloneLayer)):
-        er = "Should never reach this point, we do specify here the train_params method for Layers..."
-        raise Exception(er)
-    elif "list_train_params" in dir(self):
+    if "list_train_params" in dir(node):
         #list_train_params = self.list_train_params
         for par, val in params.items():
-            if par in self.list_train_params:
+            if par in node.list_train_params:
                 all_params[par] = val
-        #print "parameters given to node:", all_params
+    print "all_params extracted:", all_params, "for node:", node, "with params:", params
+    return all_params
+
+def add_list_train_params_to_layer_or_node(node):
+    if isinstance(node, (mdp.hinet.CloneLayer)): 
+        add_list_train_params_to_layer_or_node(node.nodes[0])
+        node.list_train_params = node.nodes[0].list_train_params
+    elif isinstance(node, (mdp.hinet.Layer)): 
+        list_all_train_params = []
+        for node_i in node:
+            add_list_train_params_to_layer_or_node(node_i)
+            list_all_train_params += node_i.list_train_params
+        node.list_train_params = list_all_train_params
+    else: #Not Layer or CloneLayer
+        if "list_train_params" not in dir(node):
+            print "list_train_params was not present in node!!!"
+            node.list_train_params = []
+
+def node_train_params(self, data, params=None, verbose=False):
+    if isinstance(self, (mdp.hinet.Layer, mdp.hinet.CloneLayer)):
+        er = "Should never reach this point, we do not specify here the train_params method for Layers..."
+        raise Exception(er)
+    elif "list_train_params" in dir(self):
+        all_params = extract_params_relevant_for_node_train(self, params)
         print "NODE: ", self
         print "with args: ", inspect.getargspec(self.train)
         #print "and doc:", self.train.__doc__
-        return self.train(data, **all_params)
+        #WARNING!!!
+        #WARNING, this should be self.train, however an incompatibility was introduced in a newer MDP
+        # this var stores at which point in the training sequence we are
+        self._train_phase = 0
+        # this var is False if the training of the current phase hasn't
+        #  started yet, True otherwise
+        self._train_phase_started = True
+        # this var is False if the complete training is finished
+#        self._training = False
+        if verbose:
+            quit()
+            print "params=",params
+            print "list_train_params=", self.list_train_params
+            print "all_params:", all_params
+        return self._train(data, **all_params)
     else:
         if isinstance(self, mdp.nodes.SFANode):
             print "wrong wrong...", dir(self)
@@ -444,6 +671,9 @@ mdp.parallel.ParallelSFANode._join = ParallelSFANode_join
 
 
 def PCANode_train_scheduler(self, x, scheduler = None, n_parallel=None):
+    if self.input_dim is None:
+        self.input_dim = x.shape[1]
+        print "YEAHH, CORRECTED TRULY"
     if scheduler == None or n_parallel == None:
         # update the covariance matrix
         self._cov_mtx.update(x)
@@ -535,6 +765,28 @@ def GaussianClassifierNode_class_probabilities(self, x, verbose=True):
         
         return probs
     
+    
+def GaussianSoftCR(self, data, true_classes):
+    """  Compute an average classification rate based on the 
+    estimated class probability for the correct class. 
+    This is more informative than taking just the class with 
+    maximum a posteriory probability and checking if matches.
+    self (mdp node): mdp node providing the class_probabilities function 
+    data (2D numpy array): set of samples to do classification 
+    true classes (1D numpy array): 
+    """
+    probabilities = self.class_probabilities(data)
+    true_classes = true_classes.flatten()
+    
+    ###??? WHYYY??? true_classes = true_classes[0:probabilities.shape[1]]    
+ 
+    tot_prob = 0.0
+    for i, c in enumerate(true_classes):
+        tot_prob += probabilities[i, c]
+    tot_prob /= len(true_classes)
+    print "In softCR: probabilities[0,:]=", probabilities[0,:]
+    #print "softCR=", tot_prob
+    return tot_prob
     
 #TODO: Consider adding node GaussianClassifierWithRegressions
 #TODO: Consider making the next two functions node independent
@@ -643,6 +895,7 @@ mdp.nodes.GaussianClassifier.regression = GaussianRegression
 #Original: mdp.nodes.GaussianClassifier.regressionMAE = GaussianRegressionMAE
 #Experimental: 
 mdp.nodes.GaussianClassifier.regressionMAE = GaussianRegressionMAE #GaussianRegressionMAE_uniform_bars
+mdp.nodes.GaussianClassifier.softCR = GaussianSoftCR
 
 #def switchboard_execute(self, x):
 #    return apply_permutation_to_signal(x, self.connections, self.output_dim)
@@ -749,7 +1002,7 @@ if patch_layer:
             dtype = nodes_dtype
         return dtype
     
-    def Layer_new_train(self, x, scheduler=None, n_parallel=0, *args, **kwargs):
+    def Layer_new_train(self, x, scheduler=None, n_parallel=0, immediate_stop_training=False, *args, **kwargs):
         """Perform single training step by training the internal nodes."""
         start_index = 0
         stop_index = 0
@@ -765,7 +1018,7 @@ if patch_layer:
             for index, node in enumerate(self.nodes):
                 input_dim += node.input_dim
                 self.node_input_dims[index] = node.input_dim
- #           print "input dim is: %d, should be %d"%(input_dim, self.input_dim)
+#           print "input dim is: %d, should be %d"%(input_dim, self.input_dim)
 
 
         for node in self.nodes:
@@ -778,11 +1031,12 @@ if patch_layer:
                     node.train(x[:, start_index : stop_index], scheduler=scheduler, n_parallel=n_parallel, *args, **kwargs)
                 else:
                     node.train(x[:, start_index : stop_index], *args, **kwargs)
+                if node.is_training() and immediate_stop_training:
+                    node.stop_training()
 
 
 
-
-    def Layer_new_train_params(self, x, params = None):
+    def Layer_new_train_params(self, x, immediate_stop_training=False, params = None, verbose=False):
         """Perform single training step by training the internal nodes."""
         start_index = 0
         stop_index = 0
@@ -805,7 +1059,12 @@ if patch_layer:
             stop_index += node.input_dim
 #           print "stop_index = ", stop_index
             if node.is_training():
+                if verbose:
+                    print "Layer_new_train_params. params=", params
+                    print "Here computation is fine!!!"
                 node.train_params(x[:, start_index : stop_index], params)
+                if node.is_training() and immediate_stop_training:
+                    node.stop_training()
 #                if isinstance(node, (mdp.nodes.SFANode, mdp.nodes.PCANode, mdp.nodes.WhiteningNode, mdp.hinet.CloneLayer, mdp.hinet.Layer)) and node.input_dim >= 45:
 #                    print "Attempting node parallel training in Layer..."
 #                    node.train(x[:, start_index : stop_index], scheduler=scheduler, n_parallel=n_parallel, *args, **kwargs)
@@ -826,13 +1085,14 @@ if patch_layer:
                 layer_input_dim = x.shape[1]
                 self.set_input_dim(layer_input_dim)
                 num_nodes = len(self.nodes)
-                print "Pre_Execution of homogeneous layer with input_dim %d and %d nodes"%(layer_input_dim, num_nodes)
+                
+		print "Pre_Execution of homogeneous layer with input_dim %d and %d nodes"%(layer_input_dim, num_nodes)
                 for node in self.nodes:
                     node.set_input_dim(layer_input_dim / num_nodes)
-                    input_dim = 0
-                    for index, node in enumerate(self.nodes):
-                        input_dim += node.input_dim
-                        self.node_input_dims[index] = node.input_dim
+                input_dim = 0
+                for index, node in enumerate(self.nodes):
+                    input_dim += node.input_dim
+                    self.node_input_dims[index] = node.input_dim
 #                    print "input dim is: %d, should be %d"%(input_dim, self.input_dim)
             
             
@@ -918,11 +1178,11 @@ if patch_flow:
                 elif isinstance(self.flow[i], mdp.hinet.CloneLayer):
                     print "of cloned [%s]"%str(self.flow[i].nodes[0])
                 
-            hash_verbose=False
+            hash_verbose=True #and False
             if str(self.flow[i]) == "CloneLayer":
                 if str(self.flow[i].nodes[0]) == "RandomPermutationNode":
                     print "BINGO, RandomPermutationNode Found!"
-                    hash_verbose=False
+                    #hash_verbose=False
                 
             if node_cache_write or node_cache_read or signal_cache_write or signal_cache_read:
                 untrained_node_hash = misc.hash_object(self.flow[i], verbose=hash_verbose).hexdigest()
@@ -1014,8 +1274,9 @@ if patch_flow:
 #The second dimension is used in case there is more than one training data set for the node, and mmight be None, which means that the data/parameters from the previous node is used
 #The output is the data functions and parameters needed to train a particular node
 #Add logic for data_params
-    def extract_node_funcs(funcs_sets, param_sets, node_nr):
-        print "funcs_sets is:", funcs_sets
+    def extract_node_funcs(funcs_sets, param_sets, node_nr, verbose=False):
+        #print "funcs_sets is:", funcs_sets
+        #print "param_sets is:", param_sets
         if isinstance(funcs_sets, list):
             #Find index of last data_vec closer to the requested node 
             if node_nr >= len(funcs_sets):
@@ -1033,19 +1294,22 @@ if patch_flow:
                 for i in len(node_params):
                     node_params[i] = {} 
             else:
-                print "param_sets =", param_sets
+                if verbose:
+                    print "param_sets =", param_sets
                 node_params = param_sets[index]
             
 #            #TODO: More robust compatibility function required            
 ##            if len(node_params) != len(node_funcs):
 ##                er = "node_funcs and node_params are not compatible: "+str(node_funcs)+str(node_params)
 ##                raise Exception(er)
-            print "node_funcs and node_params:", node_funcs, node_params
+            if verbose:
+                print "node_funcs and node_params:", node_funcs, node_params
             return node_funcs, node_params
         else: #Not a data set, use data itself as training data
             if param_sets == None:
                 param_sets = {}
-            print "param_sets =", param_sets
+            if verbose:
+                print "param_sets =", param_sets
             return funcs_sets, param_sets
 
 #If the input is a list of functions, execute them to generate the data_vect, otherwise use node_funcs directly as array data        
@@ -1054,7 +1318,10 @@ if patch_flow:
         if isinstance(node_funcs, list):
             node_data = []
             for func in node_funcs:
-                node_data.append(func())
+                if inspect.isfunction(func):
+                    node_data.append(func())
+                else:
+                    node_data.append(func)
             return node_data
         elif inspect.isfunction(node_funcs):
             return node_funcs()
@@ -1072,7 +1339,7 @@ if patch_flow:
     #Perhaps the data should be loaded dynamically???
     #TODO: find nicer name!
     #In theory, there should  be a data_in_hash for data & another for (data, params), however we only use the last one
-    def flow_special_train_cache_scheduler_sets(self, funcs_sets, params_sets=None, verbose=True, benchmark=None, node_cache_read = None, signal_cache_read=None, node_cache_write=None, signal_cache_write=None, scheduler=None, n_parallel=None, memory_save=False):
+    def flow_special_train_cache_scheduler_sets(self, funcs_sets, params_sets=None, verbose=True, very_verbose=True, benchmark=None, node_cache_read = None, signal_cache_read=None, node_cache_write=None, signal_cache_write=None, scheduler=None, n_parallel=None, memory_save=False, immediate_stop_training=False):
         # train each Node successively
         #Set smalles dimensionality for which parallel training is worth doing
         min_input_size_for_parallel = 45
@@ -1086,7 +1353,6 @@ if patch_flow:
 #            signal_cache_read = None
 #            node_cache_write = None
 #            signal_cache_write = None
-            
         #indicates whether node_data and node_params are valid 
         node_funcs = node_data = node_params = None
 #        data_loaded = False
@@ -1102,7 +1368,9 @@ if patch_flow:
             #quit()"list_train_params" in dir(self)
             execute_node_data = False
             if isinstance(new_node_funcs, numpy.ndarray):
-                comp = (node_funcs != new_node_funcs)
+                #WARNING, this creates a comparisson array!!!!! there should be a more efficient way to compara arrays!
+		#HINT: first compare using "x is x", otherwise compare element by element
+		comp = (node_funcs != new_node_funcs)
                 if isinstance(comp, bool) and (node_funcs != new_node_funcs):
                     execute_node_data = True
                 elif isinstance(comp, numpy.ndarray) and (node_funcs != new_node_funcs).any():
@@ -1110,7 +1378,7 @@ if patch_flow:
             else:
                 if not (node_funcs == new_node_funcs): #New data loading needed
                     execute_node_data = True
-
+	    #WARNING! am I duplicating the training data for the first node???
             if execute_node_data: #data should be extracted from new_node_funcs and propagated just before the current node 
                 node_data = extract_data_from_funcs(new_node_funcs)
                 print "node_data is:", node_data
@@ -1150,15 +1418,18 @@ if patch_flow:
             #Compute hash of Node and Training Data if needed
             #Where to put/hash data_parameters?????? in data "of_course"!
             #Notice, here Data should be taken from appropriate component, and also data_params
+            effective_node_params = extract_params_relevant_for_node_train(self.flow[i], node_params)
             if node_cache_write or node_cache_read or signal_cache_write or signal_cache_read:
                 untrained_node_hash = misc.hash_object(self.flow[i], verbose=hash_verbose).hexdigest()
                 print "untrained_node_hash[%d]=" % i, untrained_node_hash
                 node_ndim = str(data_vec_ndim(data_vec))
                 #hash data and node parameters for handling the data!
-                print "node_params to be hashed: ", node_params
-                data_in_hash = misc.hash_object((data_vec, node_params)).hexdigest()
+                if verbose: # and False:
+                    print "effective_node_params to be hashed: ", effective_node_params
+                data_in_hash = misc.hash_object((data_vec, effective_node_params)).hexdigest()
                 print "data_in_hash[%d]=" % i, data_in_hash
-                           
+                
+
             if self.flow[i].is_trainable():
                 #look for trained node in cache
                 if node_cache_read:
@@ -1186,31 +1457,34 @@ if patch_flow:
                             for j, data in enumerate(data_vec):
                                 print "j=", j
                                 #Here some logic is expected (list of train parameters on each node???)
-                                self.flow[i].train(data, params=node_params[j])
+                                self.flow[i].train(data, params=effective_node_params[j], immediate_stop_training=immediate_stop_training)
                         else:
                             print "First step 3"                            
-                            self.flow[i].train(data_vec, params=node_params)
+                            self.flow[i].train(data_vec, params=effective_node_params, immediate_stop_training=immediate_stop_training)
                             
                     elif isinstance(self.flow[i], (mdp.nodes.SFANode, mdp.nodes.PCANode, mdp.nodes.WhiteningNode)):
                         print "Second Step"
                         if isinstance(data_vec, list):                          
                             for j, data in enumerate(data_vec):
-                                print "Parameters used for training node (L)=", node_params
-                                print "Pre self.flow[i].output_dim=", self.flow[i].output_dim
-                                self.flow[i].train_params(data, params=node_params[j])
+                                if verbose and very_verbose: #
+                                    print "Parameters used for training node (L)=", effective_node_params
+                                    print "Pre self.flow[i].output_dim=", self.flow[i].output_dim
+                                self.flow[i].train_params(data, params=effective_node_params[j])
                                 print "Post self.flow[i].output_dim=", self.flow[i].output_dim
                         else:
-                            print "Parameters used for training node=", node_params
-                            self.flow[i].train_params(data_vec, params=node_params)
+                            if verbose and very_verbose:
+                                print "Parameters used for training node=", effective_node_params
+                            self.flow[i].train_params(data_vec, params=effective_node_params)
                     else: #Other node which does not have parameters nor parallelization
 #                        print "Input_dim ", self.flow[i].input_dim, "<", min_input_size_for_parallel, ", or unknown parallel method, thus I didn't go parallel"
                         if isinstance(data_vec, list):                          
                             for j, data in enumerate(data_vec):
-                                self.flow[i].train_params(data, params=node_params[j])
+                                self.flow[i].train_params(data, params=effective_node_params[j])
                         else:
-                            self.flow[i].train_params(data_vec, params=node_params)                            
+                            self.flow[i].train_params(data_vec, params=effective_node_params)                            
                     print "Finishing training of node %d:"%i, self.flow[i] 
-                    self.flow[i].stop_training()
+                    if self.flow[i].is_training():
+                        self.flow[i].stop_training()
                     print "Post2 self.flow[i].output_dim=", self.flow[i].output_dim
 
             ttrain1 = time.time()
@@ -1267,6 +1541,7 @@ if patch_flow:
                 data_ndim = node_ndim
                 data_base_filename = "signal_%s_%s_%s"%((data_ndim, data_in_hash, trained_node_hash))
                 signal_cache_write.update_cache(data_vec, base_filename=data_base_filename, overwrite=True, verbose=True)
+        
         if isinstance(data_vec, list):
             return numpy.concatenate(data_vec, axis=0)
         else:

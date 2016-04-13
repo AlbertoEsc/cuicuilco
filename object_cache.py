@@ -13,6 +13,7 @@ import fnmatch
 import pickle
 import numpy
 import hashlib
+import types
 
 ## Pickle ##
 
@@ -299,18 +300,20 @@ def remove_hidden_vars(variable_list):
 
 #Warning, setting recursion to False causes the hash of [x] and x to be different
 #Recursion should usually be true, but avoid circular references!!!!
-def hash_object(object, m=None, recursion=True, verbose=False): 
-#    verbose=False
+def hash_object(obj, m=None, recursion=True, verbose=False): 
+    #verbose=False or True
     if verbose:
-        print "hashing_object called with object: ", object
+        print "hashing_object called with obj: ", obj, "of type: ", type(obj)
+    #print "verbose=",verbose
+    #quit()
 
     if m == None:
         m = hashlib.md5() # or sha1 etc
 
     
     #Case -3: object is a numpy scalar
-    if isinstance(object, (numpy.float, numpy.float64, numpy.int)):
-        rep = str(object)
+    if isinstance(obj, (numpy.float, numpy.float64, numpy.int)):
+        rep = str(obj)
         if verbose:
             print "Hashing as numpy_scalar with representation:", rep
         m.update(rep)
@@ -318,10 +321,10 @@ def hash_object(object, m=None, recursion=True, verbose=False):
 
     #Case -2: object is a "type" object
     skip_types = True
-    if isinstance(object, type):
+    if isinstance(obj, type):
         if skip_types:
             return m
-        rep = str(object)
+        rep = str(obj)
         if verbose:
             print "Hashing as a type:", rep
         m.update(rep)
@@ -329,10 +332,10 @@ def hash_object(object, m=None, recursion=True, verbose=False):
 
     #Case -1: object is a numpy.dtype object, or other recursive types
     skip_dtypes = True
-    if isinstance(object, numpy.dtype):
+    if isinstance(obj, numpy.dtype):
         if skip_dtypes:
             return m
-        rep = str(object)
+        rep = str(obj)
         if verbose:
             print "Hashing as single (recursive) scalar:", rep
         m.update(rep)
@@ -340,45 +343,62 @@ def hash_object(object, m=None, recursion=True, verbose=False):
     
     #Case 0: object is enumerable.. Is the second condition necessary????
     #TODO: Check if condition is necessary, changed 2 to 1
-    if isinstance(object, (tuple, list)) and len(object) >= 1:
+    if isinstance(obj, (tuple, list)) and len(obj) >= 1:
         if verbose:
             print "Hashing each list element"
-        for var in object:
+        for var in obj:
             m = hash_object(var, m, recursion, verbose=verbose)
         return m
 
     #Case 0.5: object is a dictionary...
-    if isinstance(object, dict):
+    if isinstance(obj, dict):
         if verbose:
-            print "Hashing each dictionary element and key:",  object
-        if len(object) not in [0,5]:
-            print "Ignoring length %d dictionary"%len(object)
-            return m
-        for var in object.keys():
+            print "Hashing each dictionary element and key:",  obj
+#WARNING!!! REMOVING THIS LINES; HOPE THE CODE WORKS AND DICTIONARIES ARE HASHED
+#        if len(object) not in [0,5]:
+#            print "Ignoring length %d dictionary"%len(object)
+#            return m
+        for var in obj.keys():
             m.update(str(var)) # hash_object(var, m, recursion, verbose=verbose)
-            m = hash_object(object[var], m, recursion, verbose=verbose)
+            m = hash_object(obj[var], m, recursion, verbose=verbose)
         return m
 
     #Case 1: object is an array
-    if isinstance(object, numpy.ndarray):
+    if isinstance(obj, numpy.ndarray):
         if verbose:
-            print "Hashing as an array:", object
-        m = hash_array(object, m) 
+            print "Hashing as an array:", obj
+        m = hash_array(obj, m) 
         return m
     
     #Case 2: object is a string
-    if isinstance(object, str):
+    if isinstance(obj, str):
         if verbose:
-            print "Hashing as a string:", object
-        m.update(object) 
+            print "Hashing as a string:", obj
+        m.update(obj) 
         return m
-        
+    
+
+    #Case 3: object is a function
+    if isinstance(obj, (types.FunctionType, types.LambdaType, types.BuiltinFunctionType, types.BuiltinMethodType)):
+        if verbose:
+            print "Hashing functionTypes by name", obj
+        m.update(str(obj.__name__))
+        return m
+   
+    #Case 4: object is None
+    if isinstance(obj, (types.NoneType)):
+        if verbose:
+            print "Skipping hash of NoneType", obj
+        #m.update(str(obj.__name__))
+        return m
+
+ 
     #Unknown type, probably an object 
     #hash object type, and then its contents
-    rep = str(type(object))
+    rep = str(type(obj))
     m.update(rep)
 
-    dataList = get_data_vars(object) #get_data_vars(object) #Warning... why only data vars instead of all vars???
+    dataList = get_data_vars(obj) #get_data_vars(object) #Warning... why only data vars instead of all vars???
     #Add funcList and hash contents as text (non-recursively)!!
     dataList = remove_hidden_vars(dataList)
 
@@ -387,7 +407,7 @@ def hash_object(object, m=None, recursion=True, verbose=False):
     if len(dataList) == 0:
         if skip_empty_object:
             return m
-        rep = str(object)
+        rep = str(obj)
         if verbose:
             print "Hashing as single scalar or empty object:", rep
         m.update(rep)
@@ -399,7 +419,7 @@ def hash_object(object, m=None, recursion=True, verbose=False):
 
     for var in dataList:
         if recursion == False:
-            rep = str(getattr(object, var))
+            rep = str(getattr(obj, var))
             if verbose:
                 print "Non-Recursive (Incomplete) Hashing:", rep
             m.update(rep)
@@ -407,7 +427,7 @@ def hash_object(object, m=None, recursion=True, verbose=False):
             if verbose:
                 print "Recursive Hashing as object:",
 #            if len(remove_hidden_vars(get_data_vars(object))) > 0:
-            m = hash_object(getattr(object, var), m, recursion, verbose=verbose)
+            m = hash_object(getattr(obj, var), m, recursion, verbose=verbose)
 #            else:
 #                m.update(str(getattr(object, variable)))
     return m

@@ -15,9 +15,10 @@
 import numpy
 import scipy
 import matplotlib as mpl
+mpl.use('Qt4Agg')
 import matplotlib.pyplot as plt
 import PIL
-import Image
+###import Image
 import mdp
 import more_nodes
 import patch_mdp
@@ -28,9 +29,9 @@ import glob
 import random
 import sfa_libs
 from sfa_libs import (scale_to, distance_squared_Euclidean, str3, wider_1Darray, ndarray_to_string, cutoff)
- 
+from exact_label_learning import (ConstructGammaFromLabels, RemoveNegativeEdgeWeights, MapGammaToEdgeWeights)
 import SystemParameters
-from SystemParameters import (scale_sSeq, take_first_02D, sSeq_force_image_size, sSeq_getinfo_format, convert_sSeq_to_funcs_params_sets)
+from SystemParameters import (scale_sSeq, take_first_02D, take_0_k_th_from_2D_list, sSeq_force_image_size, sSeq_getinfo_format, convert_sSeq_to_funcs_params_sets)
 from imageLoader import *
 import classifiers_regressions as classifiers
 import network_builder
@@ -38,8 +39,11 @@ import time
 from matplotlib.ticker import MultipleLocator
 import copy
 import string
-from nonlinear_expansion import (identity, pair_prod_adj1_ex, pair_prod_adj2_ex)
+from nonlinear_expansion import (identity, pair_prod_adj1_ex, pair_prod_adj2_ex, QE, TE)
 import getopt
+from lockfile import LockFile
+import mkl
+mkl.set_num_threads(22)
 
 #from mdp import numx
 #sys.path.append("/home/escalafl/workspace/hiphi/src/hiphi/utils")
@@ -72,9 +76,11 @@ classifier_cache_write_dir = None #"/local/tmp/escalafl/Alberto/SavedClassifiers
 
 enable_command_line = True
 reg_num_signals = 4
+skip_num_signals = 0
 use_full_sl_output = False
 enable_kNN=False
 enable_NCC=False
+enable_GC=False
 kNN_k = 1
 enable_svm=False
 svm_gamma = 0
@@ -105,6 +111,25 @@ use_filter = None
 export_data_to_libsvm = False
 integer_label_estimation = False
 cumulative_scores = False
+confusion_matrix = False
+features_residual_information  = 5000 #0
+compute_input_information = True
+convert_labels_days_to_years = False
+
+clip_seenid_newid_to_training = False
+add_noise_to_seenid=False
+
+dataset_for_display_train = 0
+dataset_for_display_newid = 0
+
+graph_exact_label_learning = False
+output_instead_of_SVM2 = False
+number_of_target_labels_per_orig_label=0 #The total number of labels is num_orig_labels * number_of_target_labels_per_orig_label
+
+coherent_seeds=False or True
+
+cuicuilco_queue = "/home/escalafl/workspace4/cuicuilco_MDP3.2/src/queue_cuicuilco.txt"
+cuicuilco_lock_file = "/home/escalafl/workspace4/cuicuilco_MDP3.2/src/queue_cuicuilco"
 
 import GenerateSystemParameters
 print "Using mdp version:", mdp.__version__, "file:", mdp.__file__
@@ -115,33 +140,45 @@ print GenerateSystemParameters.__file__
     #ParamsRTransX, ParamsRTransY, ParamsRScale, ParamsRFace, ParamsRObject, ParamsNatural, ParamsRawNatural
     #ParamsRFaceCentering, ParamsREyeTransX, ParamsREyeTransY
     #Data Set based training data: ParamsRTransXFunc, ParamsRTransYFunc, ParamsRTransXY_YFunc
-    #ParamsRGTSRBFunc, ParamsRAgeFunc
-from GenerateSystemParameters import ParamsRAgeFunc as DefaultParameters #ParamsRAgeFunc
+    #ParamsRGTSRBFunc, ParamsRAgeFunc, ParamsMNISTFunc
+from GenerateSystemParameters import ParamsMNISTFunc as DefaultParameters #ParamsRAgeFunc, ParamsMNISTFunc
 # ParamsRTransXYScaleFunc
 
     # Networks available: voidNetwork1L, SFANetwork1L, PCANetwork1L, u08expoNetwork1L, quadraticNetwork1L
     # Test_Network, linearNetwork4L, u08expoNetwork4L, NL_Network5L, linearNetwork5L, linearNetworkT6L, TestNetworkT6L, 
     # linearNetworkU11L, TestNetworkU11L, nonlinearNetworkU11L, TestNetworkPCASFAU11L, linearPCANetworkU11L,  u08expoNetworkU11L 
     # linearWhiteningNetwork11L, u08expo_m1p1_NetworkU11L, u08expoNetworkU11L, experimentalNetwork
-    # u08expo_pcasfaexpo_NetworkU11L, u08expoA2NetworkU11L/A3/A4, u08expoA3_pcasfaexpo_NetworkU11L, IEMNetworkU11L
-from GenerateSystemParameters import IEVMLRecNetworkU11L as DefaultNetwork ### using A4 lately, u08expoNetworkU11L, u08expo_pcasfaexpo_NetworkU11L, u08expoNetwork2T
+    # u08expo_pcasfaexpo_NetworkU11L, u08expoA2NetworkU11L/A3/A4, u08expoA3_pcasfaexpo_NetworkU11L, IEMNetworkU11L, SFANetwork1LOnlyTruncated
+from GenerateSystemParameters import NLIPCANetwork1L as DefaultNetwork ### using A4 lately, u08expoNetworkU11L, u08expo_pcasfaexpo_NetworkU11L, u08expoNetwork2T
 #GTSRBNetwork, u08expoNetworkU11L, u08expoS42NetworkU11L, u08expoNetwork1L, HeuristicEvaluationExpansionsNetworkU11L, HeuristicPaperNetwork
 #HeuristicEvaluationExpansionsNetworkU11L, HardSFAPCA_u08expoNetworkU11L, HardSFAPCA_u08expoNetworkU11L
-#GTSRBNetwork, u08expoNetworkU11L, IEVMLRecNetworkU11L, linearPCANetworkU11L, SFAAdaptiveNLNetwork32x32U11L
+#GTSRBNetwork, u08expoNetworkU11L, IEVMLRecNetworkU11L, linearPCANetworkU11L, SFAAdaptiveNLNetwork32x32U11L, 
 #u08expoNetwork32x32U11L_NoTop
+#5x5L0 Networks: u08expoNetworkU11L_5x5L0, linearPCANetworkU11L_5x5L0, IEVMLRecNetworkU11L_5x5L0, PCANetwork1L
+# MNISTNetwork7L, SFANetwork1LOnlyTruncated, MNISTNetwork_24x24_7L, MNISTNetwork_24x24_7L_B, SFANetworkMNIST2L, (MNIST 8C:) SFANetwork1L, SFADirectNetwork1L (MNIST: semi-supervised, Gender: exact label)
+# GENDER ELL: NetworkGender_8x8L0
+# AGE MORPH-II: IEVMLRecNetworkU11L_Overlap6x6L0_1Label, HeadNetwork1L, IEVMLRecNetworkU11L_Overlap6x6L0_GUO_3Labels, IEVMLRecNetworkU11L_Overlap6x6L0_GUO_1Label, SFANetworkU11L_Overlap6x6L0_GUO_3Labels
+# IEVMLRecNetworkU11L_Overlap6x6L0_3Labels <-Article HiGSFA, IEVMLRecNetworkU11L_Overlap6x6L0_2Labels
 
 #TT4 PCANetwork
 #u08expoS42NetworkU11L
+from GenerateSystemParameters import experiment_seed
+
+from GenerateSystemParameters_GUO import DAYS_IN_A_YEAR
+
+if coherent_seeds:
+    print "GenerateSystemParameters.experiment_seed=", experiment_seed
+    numpy.random.seed(experiment_seed+111111)
 
 if enable_command_line:
     argv = None
     if argv is None:
         argv = sys.argv
-    print "Apparent command line arguments: ", argv
+    print "Apparent command line arguments: \n", " ".join(argv)
     if len(argv) >= 2:
         try:
             opts, args = getopt.getopt(argv[1:], "", ["Experiment=", "InputFilename=", "EnableDisplay=", "Network=", 
-                                                      "WriteSlowness=", "OutputFilename=", "CacheAvailable=", "NumFeaturesSup=",
+                                                      "WriteSlowness=", "OutputFilename=", "CacheAvailable=", "NumFeaturesSup=", "SkipFeaturesSup=",
                                                       'SVM_gamma=', 'SVM_C=','EnableSVM=', "LoadNetworkNumber=", "AskNetworkLoading=",
                                                       'EnableLR=', "NParallel=", "EnableScheduler=",
                                                       "NetworkCacheReadDir=", "NetworkCacheWriteDir=", "NodeCacheReadDir=", "NodeCacheWriteDir=",
@@ -149,11 +186,14 @@ if enable_command_line:
                                                       "ClassifierCacheWriteDir=", "SaveSubimagesTraining=",  "SaveAverageSubimageTraining=",
                                                       "SaveSorted_AE_GaussNewid=", "SaveSortedIncorrectClassGaussNewid=", 
                                                       "ComputeSlowFeaturesNewidAcrossNet=", "UseFilter=", "kNN_k=",'EnableKNN=', "EnableNCC=", 
-                                                      "SaveSubimagesTrainingSupplementaryInfo=", "EstimateExplainedVarWithInverse=",
+                                                      "EnableGC=", "SaveSubimagesTrainingSupplementaryInfo=", "EstimateExplainedVarWithInverse=",
                                                       "EstimateExplainedVarWithKNN_k=", "EstimateExplainedVarWithKNNLinApp_k=", 
                                                       "EstimateExplainedVarLinGlobal_N=", "AddNormalizationNode=", 
                                                       "MakeLastPCANodeWhithening=", "FeatureCutOffLevel=", "ExportDataToLibsvm=",
-                                                      "IntegerLabelEstimation=", "CumulativeScores="])            
+                                                      "IntegerLabelEstimation=", "CumulativeScores=", "FeaturesResidualInformation=", 
+                                                      "ComputeInputInformation=", "SleepM=", "DatasetForDisplayTrain=", "DatasetForDisplayNewid=",
+                                                      "GraphExactLabelLearning=", "OutputInsteadOfSVM2=", "NumberTargetLabels=", "ConfusionMatrix=",
+                                                      "MapDaysToYears=", "AddNoiseToSeenid=", "ClipSeenidNewid="])            
             print "opts=", opts
             print "args=", args
 
@@ -216,6 +256,9 @@ if enable_command_line:
                 elif opt in ('--NumFeaturesSup'):
                     reg_num_signals = int(arg)
                     print "Setting reg_num_signals to", reg_num_signals
+                elif opt in ('--SkipFeaturesSup'):
+                    skip_num_signals = int(arg)
+                    print "Setting skip_num_signals to", skip_num_signals
                 elif opt in ('--SVM_gamma'):
                     svm_gamma = float(arg)
                     print "Setting svm_gamma to", svm_gamma   
@@ -248,13 +291,13 @@ if enable_command_line:
                         network_cache_read_dir = None
                     else:
                         network_cache_read_dir = arg
-                    print "Setting network_cache_read_dir to", network_cache_read_dir       
+                    print "Setting network_cache_read_dir to", network_cache_read_dir 
                 elif opt in ('--NetworkCacheWriteDir'):
                     if arg == "None":
                         network_cache_write_dir = None
                     else:
                         network_cache_write_dir = arg
-                    print "Setting network_cache_write_dir to", network_cache_write_dir       
+                    print "Setting network_cache_write_dir to", network_cache_write_dir
                 elif opt in ('--NodeCacheReadDir'):
                     if arg == "None":
                         node_cache_read_dir = None
@@ -317,7 +360,11 @@ if enable_command_line:
                     print "Setting enable_kNN to", enable_kNN
                 elif opt in ('--EnableNCC'):
                     enable_NCC = bool(int(arg)) 
-                    print "Setting enable_NCC to", enable_NCC              
+                    print "Setting enable_NCC to", enable_NCC
+                elif opt in ('--EnableGC'):
+                    enable_GC = bool(int(arg)) 
+                    print "Setting enable_GC to", enable_GC
+                    print "WARNING: This option only modifies regression display for now"
                 elif opt in ('--SaveSubimagesTrainingSupplementaryInfo'):
                     save_images_training_supplementary_info = arg 
                     print "Setting save_images_training_supplementary_info to", save_images_training_supplementary_info       
@@ -352,6 +399,77 @@ if enable_command_line:
                 elif opt in ('--CumulativeScores'):
                     cumulative_scores = bool(int(arg))
                     print "Setting cumulative_scores to", cumulative_scores
+                elif opt in ('--FeaturesResidualInformation'):
+                    features_residual_information = int(arg)
+                    print "Setting features_residual_information to", features_residual_information
+                elif opt in ('--ComputeInputInformation'):
+                    compute_input_information = bool(int(arg))
+                    print "Setting compute_input_information to", compute_input_information                
+                elif opt in ('--SleepM'):
+                    minutes_sleep = float(arg)
+                    if minutes_sleep >= 0:
+                        print "Sleeping for %f minutes..."%minutes_sleep
+                        time.sleep(minutes_sleep*60)
+                        print "... and awoke"
+                    else:
+                        print "Sleeping until execution in cuicuilco queue"
+                        t_wa = time.time()
+                        lock = LockFile(cuicuilco_lock_file)
+                        pid = os.getpid()
+                        print "process pid is:", pid
+                        #Add this proces to the queue
+                        print "adding process to queue..."
+                        lock.acquire()
+                        q = open(cuicuilco_queue , "a")
+                        q.write("%d\n"%pid)
+                        q.close()
+                        lock.release()
+                        served = False
+                        while not served:                                                                         
+                            lock.acquire()
+                            q = open(cuicuilco_queue, "r")
+                            next_pid = int(q.readline())
+                            print "top of queue:", next_pid,
+                            q.close()
+                            lock.release()
+
+                            if next_pid == pid:
+                                print "our turn in queue"
+                                served = True
+                            else:
+                                print "sleeping 60 seconds"
+                                time.sleep(60) #sleep for 10 seconds
+                        t_wb = time.time()
+                        print "process is executing now. Total waiting time: %f min"%((t_wb-t_wa)/60.0)
+                        #print "waiting for 35 minutes!!!"
+                        #time.sleep(60*35) 
+                elif opt in ('--DatasetForDisplayTrain'):
+                    dataset_for_display_train = int(arg)
+                    print "Setting dataset_for_display_train to", dataset_for_display_train
+                elif opt in ('--DatasetForDisplayNewid'):
+                    dataset_for_display_newid = int(arg)
+                    print "Setting dataset_for_display_newid to", dataset_for_display_newid
+                elif opt in ('--GraphExactLabelLearning'):
+                    graph_exact_label_learning = bool(int(arg))
+                    print "Setting graph_exact_label_learning to", graph_exact_label_learning
+                elif opt in ('--OutputInsteadOfSVM2'):
+                    output_instead_of_SVM2 = bool(int(arg))
+                    print "Setting output_instead_of_SVM2 to", output_instead_of_SVM2
+                elif opt in ('--NumberTargetLabels'):
+                    number_of_target_labels_per_orig_label = int(arg)
+                    print "Setting number_of_target_labels_per_orig_label to", number_of_target_labels_per_orig_label
+                elif opt in ('--ConfusionMatrix'):
+                    confusion_matrix = bool(int(arg))
+                    print "Setting confusion_matrix to", confusion_matrix                     
+                elif opt in ('--MapDaysToYears'):
+                    convert_labels_days_to_years = bool(int(arg))
+                    print "Setting convert_labels_days_to_years to", convert_labels_days_to_years                
+                elif opt in ('--AddNoiseToSeenid'):
+                    add_noise_to_seenid = bool(int(arg))
+                    print "Setting add_noise_to_seenid to", add_noise_to_seenid                
+                elif opt in ('--ClipSeenidNewid'):
+                    clip_seenid_newid_to_training = bool(int(arg))
+                    print "Setting clip_seenid_newid_to_training to", clip_seenid_newid_to_training              
                 else:
                     print "Argument not handled: ", opt
                     quit()
@@ -362,12 +480,20 @@ if enable_command_line:
 if enable_svm:
     import svm as libsvm
 
+
+if coherent_seeds:
+    print "GenerateSystemParameters.experiment_seed=", experiment_seed
+    numpy.random.seed(experiment_seed+12121212)
+
 if enable_scheduler and n_parallel > 1:
     scheduler = mdp.parallel.ThreadScheduler(n_threads=n_parallel)
 else:
     scheduler = None
 
-
+if features_residual_information <= 0 and compute_input_information:
+    print "ignoring flag compute_input_information=%d because  features_residual_information=%d <= 0"%(compute_input_information,features_residual_information)
+    compute_input_information = False
+    
 Parameters = DefaultParameters
 Network = DefaultNetwork
 
@@ -395,8 +521,8 @@ if Parameters == GenerateSystemParameters.ParamsNatural and input_filename != No
 
 #quit()
 #Cutoff for final network output
-min_cutoff = -30 # -1.0e200, -30.0
-max_cutoff = 30 # 1.0e200, 30.0
+min_cutoff = -10 # -1.0e200, -30.0
+max_cutoff = 10 # 1.0e200, 30.0
 
 enable_reduced_image_sizes = Parameters.enable_reduced_image_sizes
 reduction_factor =  Parameters.reduction_factor
@@ -427,18 +553,103 @@ if enable_reduced_image_sizes:
         else:
             scale_sSeq(sSeq, reduction_factor)
 
+if coherent_seeds:
+    numpy.random.seed(experiment_seed+34343434)
+
 iTrain_set = Parameters.iTrain
 sTrain_set = Parameters.sTrain
-iTrain = take_first_02D(iTrain_set)
-sTrain = take_first_02D(sTrain_set)
+iTrain = take_0_k_th_from_2D_list(iTrain_set, k=dataset_for_display_train)
+sTrain = take_0_k_th_from_2D_list(sTrain_set, k=dataset_for_display_train)
+
+#TODO: take k=1? or choose from command line? NOPE. Take always first label. sSeq must compute proper classes for chosen label anyway.
+objective_label = 1
+if graph_exact_label_learning:
+    if isinstance(iTrain_set, list):
+        iTrain0 = iTrain_set[len(iTrain_set)-1][0]
+    else:
+        iTrain0 = take_0_k_th_from_2D_list(iTrain_set, k=0)
+    Q = iTrain0.num_images
+
+    if len(iTrain0.correct_labels.shape)==2:
+        num_orig_labels = iTrain0.correct_labels.shape[1]
+    else:
+        num_orig_labels = 1
+        iTrain0.correct_labels.reshape((-1,num_orig_labels))
+        
+    #number_of_target_labels_per_orig_label = 2 #1 or more for auxiliary labels
+    if number_of_target_labels_per_orig_label >= 1:
+        min_label = iTrain0.correct_labels.min(axis=0)
+        max_label = iTrain0.correct_labels.max(axis=0)
+        plain_labels = iTrain0.correct_labels.reshape((-1,num_orig_labels))
+        num_samples = len(plain_labels)          
+        auxiliary_labels = numpy.zeros((num_samples, num_orig_labels * number_of_target_labels_per_orig_label))
+        auxiliary_labels[:,0:num_orig_labels] = plain_labels
+        for i in range(1,number_of_target_labels_per_orig_label):
+            auxiliary_labels[:,i*num_orig_labels:(i+1)*num_orig_labels] = numpy.cos((plain_labels-min_label) * (1.0+i)*numpy.pi / (max_label-min_label))
+        print auxiliary_labels
+    else:
+        auxiliary_labels = iTrain0.correct_labels.reshape((-1,num_orig_labels))
+        
+    print "iTrain0.correct_labels.shape", iTrain0.correct_labels.shape
+    orig_train_label_min = auxiliary_labels[:,objective_label].min()
+    orig_train_label_max = auxiliary_labels[:,objective_label].max()   
+
+    orig_train_labels_mean = numpy.array(auxiliary_labels).mean(axis=0)
+    orig_train_labels_std = numpy.array(auxiliary_labels).std(axis=0)   
+    orig_train_label_mean = orig_train_labels_mean[objective_label]
+    orig_train_label_std = orig_train_labels_std[objective_label]
+
+    orig_train_labels = auxiliary_labels
+    orig_train_labels_mean = numpy.array(orig_train_labels).mean(axis=0)
+    orig_train_labels_std = numpy.array(orig_train_labels).std(axis=0)   
+    train_feasible_labels = (orig_train_labels - orig_train_labels_mean)/orig_train_labels_std
+    print "original feasible (perhaps correlated) label.T: ", train_feasible_labels.T
+    
+    if len(iTrain0.correct_labels.shape)==2:
+        iTrain0.correct_labels = iTrain0.correct_labels[:,objective_label].flatten()
+        Parameters.iSeenid.correct_labels = Parameters.iSeenid.correct_labels[:,objective_label].flatten()
+        Parameters.iNewid[0][0].correct_labels = Parameters.iNewid[0][0].correct_labels[:,objective_label].flatten()
+        
+        iTrain0.correct_classes = iTrain0.correct_classes[:,objective_label].flatten()
+        Parameters.iSeenid.correct_classes = Parameters.iSeenid.correct_classes[:,objective_label].flatten()
+        Parameters.iNewid[0][0].correct_classes = Parameters.iNewid[0][0].correct_classes[:,objective_label].flatten()
+
+    
+    node_weights = numpy.ones(Q)
+    Gamma = ConstructGammaFromLabels(train_feasible_labels, node_weights, constant_deltas=False)        
+    print "Resulting Gamma is", Gamma
+    Gamma = RemoveNegativeEdgeWeights(node_weights, Gamma)
+    print "Removed negative weighs. Gamma=", Gamma
+#    edge_weights = MapGammaToEdgeWeights(Gamma) 
+    edge_weights = Gamma
+
+    if isinstance(sTrain_set, list):
+        sTrain0 = sTrain_set[len(sTrain_set)-1][0]
+    else:
+        sTrain0 = take_0_k_th_from_2D_list(sTrain_set, k=0)
+    
+    sTrain0.train_mode = "graph"
+    sTrain0.node_weights = node_weights
+    sTrain0.edge_weights = edge_weights
+     
+    
+print "sTrain=", sTrain
+#quit()
 
 iSeenid = Parameters.iSeenid
 sSeenid = Parameters.sSeenid
 
+if coherent_seeds:
+    print "Setting coherent seed"
+    numpy.random.seed(experiment_seed+56565656)
+
 iNewid_set = Parameters.iNewid
 sNewid_set = Parameters.sNewid
-iNewid = take_first_02D(iNewid_set)
-sNewid = take_first_02D(sNewid_set)
+print "dataset_for_display_newid=", dataset_for_display_newid
+iNewid = take_0_k_th_from_2D_list(iNewid_set, k=dataset_for_display_newid)
+sNewid = take_0_k_th_from_2D_list(sNewid_set, k=dataset_for_display_newid)
+
+#print "sNewid=", sNewid
 
 ##For displaying purposes only first entry in training sequences
 #if isinstance(iTrain, list):
@@ -446,6 +657,8 @@ sNewid = take_first_02D(sNewid_set)
 #    num_images_training = num_images = iTrain[0][0].num_images
 #else:
 image_files_training = iTrain.input_files
+#print image_files_training
+
 num_images_training = num_images = iTrain.num_images
 
 seq_sets = sTrain_set
@@ -715,7 +928,7 @@ else:
         Network.L10 = None
         skip_layers = 4
         
-    if (hack_image_size == 64 or hack_image_size == 80 or hack_image_size == 96) & (enable_hack_image_size == True):      
+    if (hack_image_size == 64 or hack_image_size == 72 or hack_image_size == 80 or hack_image_size == 95 or hack_image_size == 96) & (enable_hack_image_size == True):      
         Network.L9 = None #Uncomment for 64x64 Images
         Network.L10 = None
         skip_layers = 2
@@ -785,10 +998,10 @@ else:
         if Network.L6.sfa_node_class == mdp.nodes.PCANode:
             Network.L6.sfa_node_class = mdp.nodes.WhiteningNode
             Network.L6.sfa_out_dim = 100
-    if make_last_PCA_node_whithening & (hack_image_size == 64) & (enable_hack_image_size == True) and Network.L8 != None:
+    if make_last_PCA_node_whithening & (hack_image_size == 64 or hack_image_size == 80) & (enable_hack_image_size == True) and Network.L8 != None:
         if Network.L8.sfa_node_class == mdp.nodes.PCANode:
             Network.L8.sfa_node_class = mdp.nodes.WhiteningNode
-            Network.L8.sfa_out_dim = 55
+#            Network.L8.sfa_out_dim = 55
             
 #  RTransX  
 #    Network.L6.sfa_node_class = mdp.nodes.WhiteningNode
@@ -832,8 +1045,8 @@ else:
                 info_base_filename = string.split(info_filename, sep=".")[0] #Remove extension          
                 (iTrain_set, sTrain_set) = signal_cache_read.load_obj_from_cache(base_dir="/", base_filename=info_base_filename, verbose=True)
                 
-                iTrain = take_first_02D(iTrain_set)
-                sTrain = take_first_02D(sTrain_set)
+                iTrain = take_0_k_th_from_2D_list(iTrain_set, dataset_for_display_train)
+                sTrain = take_0_k_th_from_2D_list(sTrain_set, dataset_for_display_train)
 
                 signal_base_filename = string.replace(info_base_filename, "subimages_info", "subimages_train")
                 
@@ -869,13 +1082,18 @@ else:
     print "now building network"
     train_data_sets, train_params_sets = network_builder.expand_iSeq_sSeq_Layer_to_Network(train_data_sets, train_params_sets, Network)
     print "calling take_first_02D"
-    params_node = take_first_02D(train_params_sets)
+    params_node = take_0_k_th_from_2D_list(train_params_sets, k=dataset_for_display_train)
+
+    
+
+    #print "params_node=", params_node
+    #quit()
 ###WARNING!!!!!!!
 ##block_size = Parameters.block_size
 ##train_mode = Parameters.train_mode
 #print "train_mode=", train_mode
 #quit()
-# = "mixed", "sequence", "complete"
+# = "mixed", "serial", "complete"
     
     block_size = params_node["block_size"]
     train_mode = params_node["train_mode"]
@@ -897,10 +1115,28 @@ else:
 #                                    seq.subimage_height, seq.pixelsampling_x, seq.pixelsampling_y, \
 #                                    seq.subimage_first_row, seq.subimage_first_column, seq.add_noise_L0, \
 #                                    seq.convert_format, seq.translations_x, seq.translations_y, seq.trans_sampled, background_type=seq.background_type, color_background_filter=filter, verbose=False)
+
     print "calling take_first_02D again"
-    train_func = take_first_02D(train_data_sets)
+    train_func = take_0_k_th_from_2D_list(train_data_sets, k=dataset_for_display_train)
+    if coherent_seeds:
+        numpy.random.seed(experiment_seed+222222)
     subimages_train = train_func() ### why am I loading the subimages train here???
-    
+     
+    print "subimages_train[0,0]=%0.40f"%subimages_train[0,0]
+
+    #Avoid double extraction of data from files
+    if isinstance(train_data_sets, list) and len(train_data_sets) >=1:
+        if isinstance(train_data_sets[0], list) and len(train_data_sets[0]) >=1 and len(train_data_sets[0]) > dataset_for_display_train:
+            print "Correcting double loading"
+            func = train_data_sets[0][dataset_for_display_train]
+            print "substituting func=", func, "for loaded data"
+            for i in range(len(train_data_sets)):
+                for j in range(len(train_data_sets[i])):
+                    print "train_data_sets[%d][%d]="%(i,j), train_data_sets[i][j]
+                    if train_data_sets[i][j] is func:
+                        print "Correction done"
+                        train_data_sets[i][j] = subimages_train
+
     #TODO: Support train signal chache for generalized training
     if signal_cache_write and subimages_train_signal_in_cache == False and False:
         print "Caching Train Signal..."
@@ -971,6 +1207,12 @@ else:
     #TODO: more primitive but potentially powerful flow especification here should be possible
     flow, layers, benchmark = network_builder.CreateNetwork(Network, sTrain.subimage_width, sTrain.subimage_height, block_size=None, train_mode=None, benchmark=benchmark, in_channel_dim=in_channel_dim)
     
+    
+    print "Making sure the first switchboard does not add any noise (noise adde during image loading)"
+    if isinstance(flow[0], mdp.nodes.PInvSwitchboard):
+        flow[0].noise_addition=0.0
+
+    #quit()
     #WARNING
     #flow = mdp.Flow([flow[0]])
     
@@ -1020,7 +1262,13 @@ else:
     if special_training is True:
         ttrain0 = time.time()
 #Think: maybe training_signal cache can become unnecessary if flow.train is intelligent enough to look for the signal in the cache without loading it???
-        sl_seq = sl_seq_training = flow.special_train_cache_scheduler_sets(train_data_sets, params_sets=train_params_sets, verbose=True, benchmark=benchmark, node_cache_read=node_cache_read, signal_cache_read=signal_cache_read, node_cache_write=node_cache_write, signal_cache_write=signal_cache_write, scheduler=scheduler, n_parallel=n_parallel)
+        if coherent_seeds: #Use same seed as before for data loading... hope the results are the same. Nothing should be done before data generation to ensure this!!!
+            numpy.random.seed(experiment_seed+222222) 
+
+        #TODO: f train_data_sets is func() or [[func()]], use instead loaded images!!!!
+        sl_seq = sl_seq_training = flow.special_train_cache_scheduler_sets(train_data_sets, params_sets=train_params_sets, verbose=True, benchmark=benchmark, 
+                                                                           node_cache_read=node_cache_read, signal_cache_read=signal_cache_read, node_cache_write=node_cache_write, 
+                                                                           signal_cache_write=signal_cache_write,scheduler=scheduler,n_parallel=n_parallel,immediate_stop_training=True)
 #        sl_seq = sl_seq_training = flow.special_train_cache_scheduler_sets(subimages_p, verbose=True, benchmark=benchmark, node_cache_read=node_cache_read, signal_cache_read=signal_cache_read, node_cache_write=node_cache_write, signal_cache_write=signal_cache_write, scheduler=scheduler, n_parallel=n_parallel)
 #        sl_seq = sl_seq_training = flow.special_train_cache_scheduler(subimages_p, verbose=True, benchmark=benchmark, node_cache_read=node_cache_read, signal_cache_read=signal_cache_read, node_cache_write=node_cache_write, signal_cache_write=signal_cache_write, scheduler=scheduler, n_parallel=n_parallel)
         print "sl_seq is", sl_seq
@@ -1076,14 +1324,24 @@ else:
         last_sfa_node = last_sfa_node.nodes[0]
 
     if isinstance(last_sfa_node, mdp.nodes.SFANode):
-        sl_seq = sl_seq_training = more_nodes.sfa_pretty_coefficients(last_sfa_node, sl_seq_training)
+        if iTrain.correct_labels[0:10].sum() <= 0:
+            start_negative = True
+        else:
+            start_negative = False
+        sl_seq = sl_seq_training = more_nodes.sfa_pretty_coefficients(last_sfa_node, sl_seq_training, start_negative=start_negative) #default start_negative=True #WARNING!
     else:
         print "SFA coefficients not made pretty, last node was not SFA!!!"
+
+
+    print "Since training is finished, making sure the switchboards do not add any noise from now on"
+    for node in flow:
+        if isinstance(node, mdp.nodes.PInvSwitchboard):
+            node.noise_addition=0.0
 
 #    For display purposes ignore output of training, and concentrate on display signal:
     sl_seq = sl_seq_training = flow.execute(subimages_train)
     if feature_cut_off_level > 0.0:
-        sl_seq = sl_seq_training = cutoff(sl_seq_training, min_cutoff, max_cutoff)
+        sl_seq = sl_seq_training = cutoff(sl_seq_training, min_cutoff , max_cutoff)
     
 #    try:
 #        cache.pickle_to_disk([flow, layers, benchmark, Network, subimages_train, sl_seq_training], os.path.join(network_base_dir, "Network_" + str(int(time.time()))+ ".pckl"))
@@ -1132,12 +1390,56 @@ else:
     print "Saving Finished"
 #    except:
 #        print "Saving Failed, reason:", ex
+
+
+print "taking into account objective_label=%d"%objective_label
+if len(iTrain.correct_labels.shape)==2:
+    print "correction..."
+    iTrain.correct_labels = iTrain.correct_labels[:,objective_label].flatten()
+    Parameters.iSeenid.correct_labels = Parameters.iSeenid.correct_labels[:,objective_label].flatten()
+    Parameters.iNewid[0][0].correct_labels = Parameters.iNewid[0][0].correct_labels[:,objective_label].flatten()
         
+    iTrain.correct_classes = iTrain.correct_classes[:,objective_label].flatten()
+    Parameters.iSeenid.correct_classes = Parameters.iSeenid.correct_classes[:,objective_label].flatten()
+    Parameters.iNewid[0][0].correct_classes = Parameters.iNewid[0][0].correct_classes[:,objective_label].flatten()
+print "iTrain.correct_classes=", iTrain.correct_classes
+print "Parameters.iSeenid.correct_classes=", Parameters.iSeenid.correct_classes
+print "done"
+
+
+# print "taking into account objective_label=%d"%objective_label
+# if isinstance(iTrain_set, list):
+#     iTrain0 = iTrain_set[len(iTrain_set)-1][0]
+# else:
+#     iTrain0 = take_0_k_th_from_2D_list(iTrain_set, k=0)
+# 
+# if len(iTrain0.correct_labels.shape)==2:
+#     print "correction..."
+#     iTrain0.correct_labels = iTrain0.correct_labels[:,objective_label].flatten()
+#     Parameters.iSeenid.correct_labels = Parameters.iSeenid.correct_labels[:,objective_label].flatten()
+#     Parameters.iNewid[0][0].correct_labels = Parameters.iNewid[0][0].correct_labels[:,objective_label].flatten()
+#         
+#     iTrain0.correct_classes = iTrain0.correct_classes[:,objective_label].flatten()
+#     Parameters.iSeenid.correct_classes = Parameters.iSeenid.correct_classes[:,objective_label].flatten()
+#     Parameters.iNewid[0][0].correct_classes = Parameters.iNewid[0][0].correct_classes[:,objective_label].flatten()
+# print "iTrain0.correct_classes=", iTrain0.correct_classes
+# print "Parameters.iSeenid.correct_classes=", Parameters.iSeenid.correct_classes
+# print "done"
+
+
+
+if coherent_seeds:
+    numpy.random.seed(experiment_seed+333333)
+
 
 #Improve this!
 #Fixing some unassigned variables
 subimages_p = subimages = subimages_train
+sl_seq_training = sl_seq_training[:,skip_num_signals:]
 sl_seq = sl_seq_training
+
+
+print "subimages_train[0,0]=%0.40f"%subimages_train[0,0]
 
 print "Done creating / training / loading network"   
 y = flow.execute(subimages_p[0:1])
@@ -1145,7 +1447,7 @@ print y.shape
 more_nodes.describe_flow(flow)
 more_nodes.display_eigenvalues(flow, mode="Average") #"FirstNodeInLayer", "Average", "All"
 
-hierarchy_out_dim = y.shape[1]
+hierarchy_out_dim = y.shape[1]-skip_num_signals
 
 print "hierarchy_out_dim (real output data) =", hierarchy_out_dim
 print "last_node_out_dim=", flow[-1].output_dim
@@ -1174,11 +1476,12 @@ results.sNewid = sNewid
 
 print "Computing typical delta, eta values for Train SFA Signal"
 t_delta_eta0 = time.time()
-results.typical_delta_train, results.typical_eta_train = sfa_libs.comp_typical_delta_eta(sl_seq_training, block_size, num_reps=200)
-results.brute_delta_train = sfa_libs.comp_delta(sl_seq_training)
+results.typical_delta_train, results.typical_eta_train = sfa_libs.comp_typical_delta_eta(sl_seq_training, block_size, num_reps=200, training_mode=iTrain.train_mode)
+results.brute_delta_train = sfa_libs.comp_delta_normalized(sl_seq_training)
 results.brute_eta_train = sfa_libs.comp_eta(sl_seq_training)
 t_delta_eta1 = time.time()
 print "typical_delta_train=", results.typical_delta_train
+print "typical_delta_train[0:31].sum()=", results.typical_delta_train[0:31].sum()
 #print "typical_eta_train=", results.typical_eta_train
 #print "brute_delta_train=", results.brute_delta_train
 #print "brute_eta_train=", results.brute_eta_train
@@ -1189,7 +1492,17 @@ benchmark.append(("Computation of delta, eta values for Train SFA Signal", t_del
 
 print "Setting correct classes and labels for the Classifier/Regression, Train SFA Signal"
 correct_classes_training = iTrain.correct_classes
+print "correct_classes_training=", correct_classes_training
 correct_labels_training = iTrain.correct_labels
+
+if convert_labels_days_to_years:
+    correct_labels_training = correct_labels_training / DAYS_IN_A_YEAR
+    if integer_label_estimation:
+        correct_labels_training = (correct_labels_training+0.0006).astype(int)
+
+#     print "WARNING, ADDING A BIAS OF -0.5 TO ESTIMATION OF NEWID ONLY!!!"
+#     regression_Gauss_newid += -0.5
+#     regressionMAE_Gauss_newid += -0.5
     
 #print "Testing for bug in first node..."
 #print "subimages_train[0:1, 0:10]="
@@ -1222,6 +1535,8 @@ num_images_seenid = iSeenid.num_images
 block_size_seenid = iSeenid.block_size
 seq = sSeenid
 
+if coherent_seeds:
+    numpy.random.seed(experiment_seed+444444)
 
 if seq.input_files == "LoadBinaryData00":
     subimages_seenid = load_natural_data(seq.data_base_dir, seq.base_filename, seq.samples, verbose=False)
@@ -1249,10 +1564,33 @@ t_exec0 = time.time()
 print "Execution over known id testing set..."
 print "Input Signal: Known Id test images"
 sl_seq_seenid = flow.execute(subimages_seenid)
+sl_seq_seenid = sl_seq_seenid[:,skip_num_signals:]
 
 if feature_cut_off_level > 0.0:  
     print "before cutoff sl_seq_seenid= ", sl_seq_seenid
     sl_seq_seenid = cutoff(sl_seq_seenid, min_cutoff, max_cutoff)
+
+sl_seq_training_min = sl_seq_training.min(axis=0)
+sl_seq_training_max = sl_seq_training.max(axis=0)
+
+
+if clip_seenid_newid_to_training:
+    print "clipping sl_seq_seenid"
+    sl_seq_seenid_min = sl_seq_seenid.min(axis=0)
+    sl_seq_seenid_max = sl_seq_seenid.max(axis=0)
+    print "sl_seq_training_min=", sl_seq_training_min
+    print "sl_seq_training_max=", sl_seq_training_max   
+    print "sl_seq_seenid_min=", sl_seq_seenid_min
+    print "sl_seq_seenid_max=", sl_seq_seenid_max
+    sl_seq_seenid = numpy.clip(sl_seq_seenid, sl_seq_training_min, sl_seq_training_max)
+    
+    
+if add_noise_to_seenid:#Using uniform noise for speed over normal noise
+    noise_amplitude = (3**0.5)*0.5 #standard deviation 0.00005
+    print "adding noise to sl_seq_seenid, with noise_amplitude:", noise_amplitude
+    sl_seq_seenid += noise_amplitude * numpy.random.uniform(-1.0, 1.0, size=sl_seq_seenid.shape) 
+
+
 
 t_exec1 = time.time()
 print "Execution over Known Id in %0.3f s"% ((t_exec1 - t_exec0))
@@ -1260,14 +1598,15 @@ print "Execution over Known Id in %0.3f s"% ((t_exec1 - t_exec0))
 
 print "Computing typical delta, eta values for Seen Id SFA Signal"
 t_delta_eta0 = time.time()
-results.typical_delta_seenid, results.typical_eta_seenid = sfa_libs.comp_typical_delta_eta(sl_seq_seenid, iSeenid.block_size, num_reps=200)
+results.typical_delta_seenid, results.typical_eta_seenid = sfa_libs.comp_typical_delta_eta(sl_seq_seenid, iSeenid.block_size, num_reps=200, training_mode=iSeenid.train_mode)
 print "sl_seq_seenid=", sl_seq_seenid
-results.brute_delta_seenid = sfa_libs.comp_delta(sl_seq_seenid)
+results.brute_delta_seenid = sfa_libs.comp_delta_normalized(sl_seq_seenid)
 results.brute_eta_seenid= sfa_libs.comp_eta(sl_seq_seenid)
 t_delta_eta1 = time.time()
-print "typical delta_seenid=", results.typical_delta_seenid
-print "typical eta_seenid=", results.typical_eta_seenid
-#print "brute_delta_seenid=", results.brute_delta_seenid
+print "typical_delta_seenid=", results.typical_delta_seenid
+print "typical_delta_seenid[0:31].sum()=", results.typical_delta_seenid[0:31].sum()
+print "typical_eta_seenid=", results.typical_eta_seenid
+print "brute_delta_seenid=", results.brute_delta_seenid
 #print "brute_eta_seenid=", results.brute_eta_seenid
 print "computed delta/eta in %0.3f ms"% ((t_delta_eta1-t_delta_eta0)*1000.0)
 
@@ -1275,6 +1614,13 @@ print "computed delta/eta in %0.3f ms"% ((t_delta_eta1-t_delta_eta0)*1000.0)
 print "Setting correct labels/classes data for seenid"
 correct_classes_seenid = iSeenid.correct_classes
 correct_labels_seenid = iSeenid.correct_labels
+correct_labels_seenid_real = correct_labels_seenid.copy()
+
+if convert_labels_days_to_years:
+    correct_labels_seenid_real = correct_labels_seenid_real / DAYS_IN_A_YEAR
+    correct_labels_seenid /= DAYS_IN_A_YEAR
+    if integer_label_estimation:
+        correct_labels_seenid = (correct_labels_seenid+0.0006).astype(int)
 
 
 t8 = time.time()
@@ -1298,7 +1644,7 @@ if use_full_sl_output == True or reg_num_signals == 0:
 
 cf_sl = sl_seq_seenid
 cf_num_samples = cf_sl.shape[0]
-cf_correct_labels = iSeenid.correct_labels
+cf_correct_labels = correct_labels_seenid_real
 cf_correct_classes = iSeenid.correct_classes
 cf_spacing = cf_block_size = iSeenid.block_size
 
@@ -1323,12 +1669,12 @@ if reg_num_signals <= 128 and (Parameters.analysis != False) and enable_NCC:
 else:
     enable_ncc_cfr = False
 
-if reg_num_signals <= 128 and (Parameters.analysis != False):
+if reg_num_signals <= 128 and (Parameters.analysis != False) and enable_GC:
     enable_ccc_Gauss_cfr = True
-    enable_Gauss_cfr = True
+    enable_gc_cfr = True
 else:
     enable_ccc_Gauss_cfr = False
-    enable_Gauss_cfr = False
+    enable_gc_cfr = False
     
 if reg_num_signals <= 64 and (Parameters.analysis != False) and enable_kNN:
     enable_kNN_cfr = True
@@ -1360,6 +1706,21 @@ if enable_ccc_Gauss_cfr == True:
     print "Training Classifier/Regression GC..."
 #    S2SC = classifiers.Simple_2_Stage_Classifier()
 #    S2SC.train(data=cf_sl[:,0:reg_num_signals], labels=cf_correct_labels, classes= cf_correct_classes, block_size=cf_block_size,spacing=cf_block_size)
+    print "unique labels =", numpy.unique(cf_correct_classes)
+    print "len(unique_labels)=", len(numpy.unique(cf_correct_classes))
+    print "cf_sl[0,:]=", cf_sl[0,:]
+    print "cf_sl[1,:]=", cf_sl[1,:]
+    print "cf_sl[2,:]=", cf_sl[2,:]
+    print "cf_sl[3,:]=", cf_sl[3,:]
+    print "cf_sl[4,:]=", cf_sl[4,:]
+    print "cf_sl[5,:]=", cf_sl[5,:]
+
+#    for c in numpy.unique(cf_correct_classes):
+#        print "class %f appears %d times"%(c, (cf_correct_classes==c).sum())
+#        print "mean(cf_sl[c=%d,:])="%c, cf_sl[cf_correct_classes==c, :].mean(axis=0)
+#        print "std(cf_sl[c=%d,:])="%c, cf_sl[cf_correct_classes==c, :].std(axis=0)
+
+
     GC_node = mdp.nodes.GaussianClassifier()
     GC_node.train(x=cf_sl[:,0:reg_num_signals], labels = cf_correct_classes) #Functions for regression use class values!!!
     GC_node.stop_training()
@@ -1470,10 +1831,12 @@ if enable_ccc_Gauss_cfr == True:
     regression_Gauss_training = GC_node.regression(sl_seq_training[:,0:reg_num_signals], avg_labels)
     regressionMAE_Gauss_training = GC_node.regressionMAE(sl_seq_training[:,0:reg_num_signals], avg_labels)
     probs_training = GC_node.class_probabilities(sl_seq_training[:,0:reg_num_signals])
-
+    
+    softCR_Gauss_training = GC_node.softCR(sl_seq_training[:,0:reg_num_signals], correct_classes_training)
 else:
     classes_Gauss_training =  labels_Gauss_training = regression_Gauss_training = regressionMAE_Gauss_training = numpy.zeros(num_images_training) 
     probs_training = numpy.zeros((num_images_training, 2))
+    softCR_Gauss_training = 0.0
 
 if enable_kNN_cfr == True:
     print "kNN classify... (k=%d)"%kNN_k
@@ -1523,7 +1886,13 @@ if enable_lr_cfr == True:
 else:
     regression_lr_training = numpy.zeros(num_images_training)
 
-   
+
+if output_instead_of_SVM2:
+    regression2_svm_training = (sl_seq_training[:,0] * orig_train_label_std) + orig_train_label_mean
+    print "Applying cutoff to the label estimations for LR and Linear Scaling (SVM2)"
+    regression2_svm_training = cutoff(regression2_svm_training, orig_train_label_min, orig_train_label_max)
+    regression_lr_training = cutoff(regression_lr_training, orig_train_label_min, orig_train_label_max)
+
 print "Classification of training data: ", labels_kNN_training
 t_classifier_train2 = time.time()
 
@@ -1536,14 +1905,24 @@ print "Classification/Regression over Training Set in %0.3f s"% ((t_class1 - t_c
 
 if integer_label_estimation:
     print "Making all label estimations for training data integer numbers"
-    labels_ncc_training = numpy.rint(labels_ncc_training)
-    regression_Gauss_training = numpy.rint(regression_Gauss_training)
-    regressionMAE_Gauss_training = numpy.rint(regressionMAE_Gauss_training)
-    labels_kNN_training = numpy.rint(labels_kNN_training)
-    regression_svm_training = numpy.rint(regression_svm_training)
-    regression2_svm_training = numpy.rint(regression2_svm_training)
-    regression3_svm_training = numpy.rint(regression3_svm_training)
-    regression_lr_training = numpy.rint(regression_lr_training)
+    if convert_labels_days_to_years:
+        labels_ncc_training = labels_ncc_training.astype(int)
+        regression_Gauss_training = regression_Gauss_training.astype(int)
+        regressionMAE_Gauss_training = regressionMAE_Gauss_training.astype(int)
+        labels_kNN_training = labels_kNN_training.astype(int)
+        regression_svm_training = regression_svm_training.astype(int)
+        regression2_svm_training = regression2_svm_training.astype(int)
+        regression3_svm_training = regression3_svm_training.astype(int)
+        regression_lr_training = regression_lr_training.astype(int)   
+    else:
+        labels_ncc_training = numpy.rint(labels_ncc_training)
+        regression_Gauss_training = numpy.rint(regression_Gauss_training)
+        regressionMAE_Gauss_training = numpy.rint(regressionMAE_Gauss_training)
+        labels_kNN_training = numpy.rint(labels_kNN_training)
+        regression_svm_training = numpy.rint(regression_svm_training)
+        regression2_svm_training = numpy.rint(regression2_svm_training)
+        regression3_svm_training = numpy.rint(regression3_svm_training)
+        regression_lr_training = numpy.rint(regression_lr_training)   
     print "regressionMAE_Gauss_training[0:5]=", regressionMAE_Gauss_training[0:5]
     
 
@@ -1569,9 +1948,11 @@ if enable_ccc_Gauss_cfr == True:
     regression_Gauss_seenid = GC_node.regression(sl_seq_seenid[:,0:reg_num_signals], avg_labels)
     regressionMAE_Gauss_seenid = GC_node.regressionMAE(sl_seq_seenid[:,0:reg_num_signals], avg_labels)
     probs_seenid = GC_node.class_probabilities(sl_seq_seenid[:,0:reg_num_signals])
+    softCR_Gauss_seenid = GC_node.softCR(sl_seq_seenid[:,0:reg_num_signals], correct_classes_seenid)
 else:
     classes_Gauss_seenid = labels_Gauss_seenid = regression_Gauss_seenid = regressionMAE_Gauss_seenid = numpy.zeros(num_images_seenid) 
     probs_seenid = numpy.zeros((num_images_seenid, 2))
+    softCR_Gauss_seenid = 0.0
 
 if enable_kNN_cfr == True:
     print "kNN classify... (k=%d)"%kNN_k
@@ -1609,6 +1990,12 @@ if enable_lr_cfr == True:
 else:
     regression_lr_seenid = numpy.zeros(num_images_seenid)
 
+if output_instead_of_SVM2:
+    regression2_svm_seenid = (sl_seq_seenid[:,0] * orig_train_label_std) + orig_train_label_mean
+    print "Applying cutoff to the label estimations for LR and Linear Scaling (SVM2)"
+    regression2_svm_seenid = cutoff(regression2_svm_seenid, orig_train_label_min, orig_train_label_max)
+    regression_lr_seenid = cutoff(regression_lr_seenid, orig_train_label_min, orig_train_label_max)
+
 print "labels_kNN_seenid.shape=", labels_kNN_seenid.shape
 
 #correct_labels_seenid = wider_1Darray(numpy.arange(iSeenid.MIN_GENDER, iSeenid.MAX_GENDER, iSeenid.GENDER_STEP), iSeenid.block_size)
@@ -1621,19 +2008,32 @@ print "Classification/Regression over Seen Id in %0.3f s"% ((t_class1 - t_class0
 
 if integer_label_estimation:
     print "Making all label estimations for seenid data integer numbers"
-    labels_ncc_seenid = numpy.rint(labels_ncc_seenid)
-    regression_Gauss_seenid = numpy.rint(regression_Gauss_seenid)
-    regressionMAE_Gauss_seenid = numpy.rint(regressionMAE_Gauss_seenid)
-    labels_kNN_seenid = numpy.rint(labels_kNN_seenid)
-    regression_svm_seenid = numpy.rint(regression_svm_seenid)
-    regression2_svm_seenid = numpy.rint(regression2_svm_seenid)
-    regression3_svm_seenid = numpy.rint(regression3_svm_seenid)
-    regression_lr_seenid = numpy.rint(regression_lr_seenid)
+    if convert_labels_days_to_years:
+        labels_ncc_seenid = labels_ncc_seenid.astype(int)
+        regression_Gauss_seenid = regression_Gauss_seenid.astype(int)
+        regressionMAE_Gauss_seenid = regressionMAE_Gauss_seenid.astype(int)
+        labels_kNN_seenid = labels_kNN_seenid.astype(int)
+        regression_svm_seenid = regression_svm_seenid.astype(int)
+        regression2_svm_seenid = regression2_svm_seenid.astype(int)
+        regression3_svm_seenid = regression3_svm_seenid.astype(int)
+        regression_lr_seenid = regression_lr_seenid.astype(int)
+    else:
+        labels_ncc_seenid = numpy.rint(labels_ncc_seenid)
+        regression_Gauss_seenid = numpy.rint(regression_Gauss_seenid)
+        regressionMAE_Gauss_seenid = numpy.rint(regressionMAE_Gauss_seenid)
+        labels_kNN_seenid = numpy.rint(labels_kNN_seenid)
+        regression_svm_seenid = numpy.rint(regression_svm_seenid)
+        regression2_svm_seenid = numpy.rint(regression2_svm_seenid)
+        regression3_svm_seenid = numpy.rint(regression3_svm_seenid)
+        regression_lr_seenid = numpy.rint(regression_lr_seenid)
     print "regressionMAE_Gauss_seenid[0:5]=", regressionMAE_Gauss_seenid[0:5]
 
 t10 = time.time()
 t_load_images0 = time.time()
 print "Loading test images, new ids..."
+
+if coherent_seeds:
+    numpy.random.seed(experiment_seed+555555)
 
 image_files_newid = iNewid.input_files
 num_images_newid = iNewid.num_images
@@ -1661,8 +2061,20 @@ t_exec0 = time.time()
 print "Execution over New Id testing set..."
 print "Input Signal: New Id test images"
 sl_seq_newid = flow.execute(subimages_newid)
+sl_seq_newid = sl_seq_newid[:,skip_num_signals:]
 if feature_cut_off_level > 0.0:  
     sl_seq_newid = cutoff(sl_seq_newid, min_cutoff, max_cutoff)
+
+if clip_seenid_newid_to_training:
+    print "clipping sl_seq_newid"
+    sl_seq_newid_min = sl_seq_newid.min(axis=0)
+    sl_seq_newid_max = sl_seq_newid.max(axis=0)
+    print "sl_seq_training_min=", sl_seq_training_min
+    print "sl_seq_training_max=", sl_seq_training_max   
+    print "sl_seq_newid_min=", sl_seq_newid_min
+    print "sl_seq_newid_max=", sl_seq_newid_max
+    sl_seq_newid = numpy.clip(sl_seq_newid, sl_seq_training_min, sl_seq_training_max)
+
 
 #WARNING!!!
 #print "WARNING!!! SCALING NEW ID SLOW SIGNALS!!!"
@@ -1696,6 +2108,20 @@ t_class0 = time.time()
 correct_classes_newid = iNewid.correct_classes
 correct_labels_newid = iNewid.correct_labels
 
+if convert_labels_days_to_years:
+    if correct_labels_newid.mean() < 200:
+        print "correct_labels_newid appears to be already year values (mean %f)"%correct_labels_newid.mean()
+    else:
+        print "converting correct_labels_newid from days to years"
+        correct_labels_newid = correct_labels_newid / DAYS_IN_A_YEAR
+        
+    if integer_label_estimation:
+        if (correct_labels_newid - correct_labels_newid.astype(int)).mean() < 0.01:
+            print "correct_labels_newid appears to be already integer, preserving its value" 
+        else:
+            print "correct_labels_newid seem to be real values, converting them to years" 
+            correct_labels_newid = (correct_labels_newid+0.0006).astype(int)
+print "correct_labels_newid=", correct_labels_newid        
 
 if enable_ncc_cfr == True:
     print "NCC classify..."
@@ -1718,9 +2144,11 @@ if enable_ccc_Gauss_cfr == True:
     regression_Gauss_newid = GC_node.regression(sl_seq_newid[:,0:reg_num_signals], avg_labels)
     regressionMAE_Gauss_newid = GC_node.regressionMAE(sl_seq_newid[:,0:reg_num_signals], avg_labels)
     probs_newid = GC_node.class_probabilities(sl_seq_newid[:,0:reg_num_signals])
+    softCR_Gauss_newid = GC_node.softCR(sl_seq_newid[:,0:reg_num_signals], correct_classes_newid)
 else:
     classes_Gauss_newid = labels_Gauss_newid = regression_Gauss_newid = regressionMAE_Gauss_newid = numpy.zeros(num_images_newid) 
     probs_newid = numpy.zeros((num_images_newid, 2))
+    softCR_Gauss_newid = 0.0
 
 if enable_kNN_cfr == True:
     print "kNN classify... (k=%d)"%kNN_k
@@ -1757,20 +2185,43 @@ if enable_lr_cfr == True:
 else:
     regression_lr_newid = numpy.zeros(num_images_newid)
 
+if output_instead_of_SVM2:
+    regression2_svm_newid = (sl_seq_newid[:,0] * orig_train_label_std) + orig_train_label_mean
+    print "Applying cutoff to the label estimations for LR and Linear Scaling (SVM2)"
+    regression2_svm_newid = cutoff(regression2_svm_newid, orig_train_label_min, orig_train_label_max)
+    regression_lr_newid = cutoff(regression_lr_newid, orig_train_label_min, orig_train_label_max)
+
 t_class1 = time.time()
 print "Classification/Regression over New Id in %0.3f s"% ((t_class1 - t_class0))
 
 if integer_label_estimation:
+#     print "WARNING, ADDING A BIAS OF -0.5 TO ESTIMATION OF NEWID ONLY!!!"
+#     regression_Gauss_newid += -0.5
+#     regressionMAE_Gauss_newid += -0.5
+    
     print "Making all label estimations for newid data integer numbers"
-    labels_ncc_newid = numpy.rint(labels_ncc_newid)
-    regression_Gauss_newid = numpy.rint(regression_Gauss_newid)
-    regressionMAE_Gauss_newid = numpy.rint(regressionMAE_Gauss_newid)
-    labels_kNN_newid = numpy.rint(labels_kNN_newid)
-    regression_svm_newid = numpy.rint(regression_svm_newid)
-    regression2_svm_newid = numpy.rint(regression2_svm_newid)
-    regression3_svm_newid = numpy.rint(regression3_svm_newid)
-    regression_lr_newid = numpy.rint(regression_lr_newid)
+    if convert_labels_days_to_years: #5.7 should be mapped to 5 years because age estimation is exact (days)
+        labels_ncc_newid = labels_ncc_newid.astype(int)
+        regression_Gauss_newid = regression_Gauss_newid.astype(int)
+        regressionMAE_Gauss_newid = regressionMAE_Gauss_newid.astype(int)
+        labels_kNN_newid = labels_kNN_newid.astype(int)
+        regression_svm_newid = regression_svm_newid.astype(int)
+        regression2_svm_newid = regression2_svm_newid.astype(int)
+        regression3_svm_newid = regression3_svm_newid.astype(int)
+        regression_lr_newid = regression_lr_newid.astype(int)
+    else: #5.7 should be mapped to 6 years because age estimation is already based on years
+        labels_ncc_newid = numpy.rint(labels_ncc_newid)
+        regression_Gauss_newid = numpy.rint(regression_Gauss_newid)
+        regressionMAE_Gauss_newid = numpy.rint(regressionMAE_Gauss_newid)
+        labels_kNN_newid = numpy.rint(labels_kNN_newid)
+        regression_svm_newid = numpy.rint(regression_svm_newid)
+        regression2_svm_newid = numpy.rint(regression2_svm_newid)
+        regression3_svm_newid = numpy.rint(regression3_svm_newid)
+        regression_lr_newid = numpy.rint(regression_lr_newid)
+        quit()
     print "regressionMAE_Gauss_newid[0:5]=", regressionMAE_Gauss_newid[0:5]
+
+
 
 #print "Saving train/test_data for external analysis"
 #ndarray_to_string(sl_seq_training, "/local/tmp/escalafl/training_samples.txt")
@@ -1782,8 +2233,8 @@ if integer_label_estimation:
 
 print "Computing typical delta, eta values for Training SFA Signal"
 t_delta_eta0 = time.time()
-results.typical_delta_train, results.typical_eta_newid = sfa_libs.comp_typical_delta_eta(sl_seq_training, block_size, num_reps=200)
-results.brute_delta_train = sfa_libs.comp_delta(sl_seq_training)
+results.typical_delta_train, results.typical_eta_newid = sfa_libs.comp_typical_delta_eta(sl_seq_training, iTrain.block_size, num_reps=200, training_mode=iTrain.train_mode)
+results.brute_delta_train = sfa_libs.comp_delta_normalized(sl_seq_training)
 results.brute_eta_train= sfa_libs.comp_eta(sl_seq_training)
 t_delta_eta1 = time.time()
 print "delta_train=", results.typical_delta_train
@@ -1792,12 +2243,13 @@ print "brute_delta_train=", results.brute_delta_train
 
 print "Computing typical delta, eta values for New Id SFA Signal"
 t_delta_eta0 = time.time()
-results.typical_delta_newid, results.typical_eta_newid = sfa_libs.comp_typical_delta_eta(sl_seq_newid, iNewid.block_size, num_reps=200)
-results.brute_delta_newid = sfa_libs.comp_delta(sl_seq_newid)
+results.typical_delta_newid, results.typical_eta_newid = sfa_libs.comp_typical_delta_eta(sl_seq_newid, iNewid.block_size, num_reps=200, training_mode=iNewid.train_mode)
+results.brute_delta_newid = sfa_libs.comp_delta_normalized(sl_seq_newid)
 results.brute_eta_newid= sfa_libs.comp_eta(sl_seq_newid)
 t_delta_eta1 = time.time()
-print "typical delta_newid=", results.typical_delta_newid
-print "typical eta_newid=", results.typical_eta_newid
+print "typical_delta_newid=", results.typical_delta_newid
+print "typical_delta_newid[0:31].sum()=", results.typical_delta_newid[0:31].sum()
+print "typical_eta_newid=", results.typical_eta_newid
 print "brute_delta_newid=", results.brute_delta_newid
 #print "brute_eta_newid=", results.brute_eta_newid
 print "computed delta/eta in %0.3f ms"% ((t_delta_eta1-t_delta_eta0)*1000.0)
@@ -1887,11 +2339,13 @@ if save_train_data:
 
 print "Estimating explained variance for Train SFA Signal"
 number_samples_explained_variance = 9000 #1000 #4000 #2000
-fast_inverse_available = True and False
+#fast_inverse_available = True and False
 
 #WARNING!!!!
 if estimate_explained_var_with_inverse:
+#    print "Estimated explained variance with inverse (train) is: ", more_nodes.estimated_explained_variance(subimages_train, flow, sl_seq_training, number_samples_explained_variance)
     print "Estimated explained variance with inverse (train) is: ", more_nodes.estimated_explained_variance(subimages_train, flow, sl_seq_training, number_samples_explained_variance)
+    print "Estimated explained variance with inverse (newid) is: ", more_nodes.estimated_explained_variance(subimages_newid, flow, sl_seq_newid, number_samples_explained_variance)
 else:
     print "Fast inverse not available, not estimating explained variance"
 
@@ -1914,15 +2368,30 @@ if estimate_explained_var_linear_global_N:
         number_samples_EV_linear_global = estimate_explained_var_linear_global_N
     else:
         number_samples_EV_linear_global = sl_seq_training.shape[0]
-    num_features = sl_seq_training.shape[1]
-    EVLinGlobal_train1, EVLinGlobal_train2, EVLinGlobal_newid = more_nodes.estimate_explained_var_linear_global(subimages_train, sl_seq_training, subimages_newid, sl_seq_newid, num_features, number_samples_EV_linear_global)
+#    num_features = sl_seq_training.shape[1]
+    #WARNING!
+    #OFFICIAL AGE IS THIS:
+    #EVLinGlobal_train1, EVLinGlobal_train2, EVLinGlobal_newid = more_nodes.estimate_explained_var_linear_global(subimages_train, sl_seq_training[:,0:40], subimages_newid, sl_seq_newid[:,0:40], num_features, number_samples_EV_linear_global)
+    #FEATURE OBFUSCATION TEST:
+    number_samples_EV_linear_global = sl_seq_seenid.shape[0]
+    num_features_linear_model = 75
+    EVLinGlobal_train1, EVLinGlobal_train2, EVLinGlobal_newid = more_nodes.estimate_explained_var_linear_global(subimages_seenid, sl_seq_seenid[:,0:num_features_linear_model], subimages_newid, sl_seq_newid[:,0:num_features_linear_model], num_features_linear_model, number_samples_EV_linear_global)
 
-    print "Explained Variance Linear Global for training data (%d features, subset of size %d) is: "%(num_features, number_samples_EV_linear_global) , EVLinGlobal_train1, 
+    print "Explained Variance Linear Global for training data (%d features, subset of size %d) is: "%(num_features_linear_model, number_samples_EV_linear_global) , EVLinGlobal_train1, 
     print "for training data (new random subset) is: ", EVLinGlobal_train2
-    print "for newid (all_samples) is: ", EVLinGlobal_newid
+    print "for newid (all_samples FORCED %d) is: "%num_features_linear_model, EVLinGlobal_newid
 else:
-    print "Not estimating explained variance with kNN"
+    print "Not estimating explained variance with global linear reconstruction"
+    num_features_linear_model = 75
     
+print "Computing chance levels for newid data"
+chance_level_RMSE_newid = correct_labels_newid.std()
+correct_labels_newid_sorted = correct_labels_newid + 0.0
+correct_labels_newid_sorted.sort()
+median_estimation = numpy.ones(len(correct_labels_newid)) * correct_labels_newid_sorted[len(correct_labels_newid)/2]
+chance_level_MAE_newid = classifiers.mean_average_error(correct_labels_newid, median_estimation) 
+print "chance_level_RMSE_newid=", chance_level_RMSE_newid, "chance_level_MAE_newid=", chance_level_MAE_newid
+print "correct_labels_newid.mean()=", correct_labels_newid.mean(), "correct_labels_newid median() ",  median_estimation
 print "Computations Finished!"
 
 
@@ -2025,15 +2494,110 @@ numpy.savetxt("correct_labels_newid", correct_labels_newid)
 
 cs_list =  {}
 if cumulative_scores:
-    largest_errors = [0, 1, 2, 3, 4, 5, 6, 7, 8 , 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
-    print "Computing cumulative errors cs()= ", 
+    largest_errors = numpy.arange(0, 31)
+    print "Computing cumulative errors cs()= {", 
     for largest_error in largest_errors:
         cs = more_nodes.cumulative_score(ground_truth=correct_labels_newid, estimation=regression_Gauss_newid, largest_error=largest_error, integer_rounding=True)
         cs_list[largest_error] = cs
-        print "%d=>%0.5f"%(largest_error, cs),
-    print ""
+        print "%d:%0.7f, "%(largest_error, cs),
+    print "}"
 results.cs_list = cs_list
 
+
+error_table =  {}
+maes = {}
+estimation_means = {}
+print "Error table:"
+if cumulative_scores:
+    different_labels = numpy.unique(correct_labels_newid)
+    for label in different_labels:
+        error_table[label]={}
+        indices = (correct_labels_newid == label)
+        errors = correct_labels_newid[indices] - regression_Gauss_newid[indices]    
+        abs_errors = numpy.abs(errors)
+      
+        estimation_means[label] = regression_Gauss_newid[indices].mean()
+
+        for error in numpy.unique(errors):
+            error_table[label][error] = 0
+
+        maes[label] = abs_errors.mean()
+#0
+#        for abs_error in abs_errors:
+#            maes[label] += abs_error
+#        maes[label] /= 1.0 * len(errors)
+
+        print ""   
+        print "label=", label,       
+        for error in errors:
+            error_table[label][error] = error_table[label][error] + 1
+
+        for error in numpy.unique(errors):
+            print "e[%d]=%d "%(error, error_table[label][error]),
+
+    #Now compute error frequencies for all labels simultaneuous
+    signed_errors={}
+    for error in numpy.arange(-200,200):
+        signed_errors[error]=0
+    for label in different_labels:
+        for error in error_table[label].keys():
+            signed_errors[error] = signed_errors[error] + error_table[label][error]
+
+    print "\n Global signed errors:" 
+    signed_error_keys = numpy.array(signed_errors.keys())
+    signed_error_keys.sort()
+    for error in signed_error_keys:
+        print "e[%d]=%d "%(error, signed_errors[error]),
+    print "."
+
+
+    print "\n MAES for each GT year. maes(%d) to maes(%d)"%(different_labels[0],different_labels[-1])
+    for label in different_labels:
+        print "%f, "%maes[label],
+
+    print "\n estimation means for each GT year. estim_means(%d) to estim_means(%d)"%(different_labels[0],different_labels[-1])
+    for label in different_labels:
+        print "%f, "%estimation_means[label],
+
+
+if confusion_matrix and integer_label_estimation:
+    print "Computing confusion matrix"
+    min_label = numpy.min((correct_labels_training.min(), correct_labels_seenid.min(), correct_labels_newid.min())).astype(int)
+    max_label = numpy.max((correct_labels_training.max(), correct_labels_seenid.max(), correct_labels_newid.max())).astype(int)
+    print "overriding min/max label from data (%d, %d) to (16,77)"%(min_label, max_label)
+    min_label = 16
+    max_label = 77
+
+    different_labels = numpy.arange(min_label, max_label+1, dtype=int)
+    num_diff_labels = max_label-min_label+1
+
+    confusion = numpy.zeros((num_diff_labels,num_diff_labels))
+    mask_gt = {}
+    for ii, l_gt in enumerate(different_labels):
+        mask_gt[ii] = (correct_labels_newid == l_gt)
+    mask_est = {}    
+    for jj, l_est in enumerate(different_labels):
+        mask_est[jj] = (regression_Gauss_newid == l_est)
+    for ii, l_gt in enumerate(different_labels):
+        for jj, l_est in enumerate(different_labels):
+            confusion[ii,jj] = (mask_gt[ii] * mask_est[jj]).sum()
+
+    print "confusion:=", confusion
+    
+    #Output confusion matrix to standard output
+    for label in different_labels:
+        print "%f, "%label,
+    print ""
+    for ii in range(num_diff_labels):
+        print "[",
+        for jj in range(num_diff_labels):
+            print "%d, "%confusion[ii,jj],
+        print "]"
+
+    print "sums:",
+    for ii in range(num_diff_labels):
+        print "%d, "%mask_gt[ii].sum(),
+    print "]"
 save_results=False
 if save_results:
     cache.pickle_to_disk(results, "results_" + str(int(time.time()))+ ".pckl")
@@ -2046,25 +2610,79 @@ if False:
     print "sl_seq_seenid.var(axis=0)=", sl_seq_seenid.var(axis=0)
     print "sl_seq_newid.var(axis=0)=", sl_seq_newid.var(axis=0)
     
-print "Train: %0.3f CR_NCC, %0.3f CR_kNN, CR_Gauss %0.3f, CR_SVM %0.3f, MSE_NCC %0.3f, MSE_kNN %0.3f, MSE_Gauss %0.3f, MSE3_SVM %0.3f, MSE2_SVM %0.3f, MSE_SVM %0.3f, MSE_LR %0.3f, MAE %0.3f, MAE(Opt) %0.3f"%(
-       results.class_ncc_rate_train, results.class_kNN_rate_train, results.class_Gauss_rate_train, results.class_svm_rate_train, results.mse_ncc_train, results.mse_kNN_train, results.mse_gauss_train, 
+print "Train: %0.3f CR_NCC, %0.3f CR_kNN, CR_Gauss %0.5f, softCR_Gauss=%0.5f, CR_SVM %0.3f, MSE_NCC %0.3f, MSE_kNN %0.3f, MSE_Gauss= %0.3f MSE3_SVM %0.3f, MSE2_SVM %0.3f, MSE_SVM %0.3f, MSE_LR %0.3f, MAE= %0.5f MAE(Opt)= %0.3f"%(
+       results.class_ncc_rate_train, results.class_kNN_rate_train, results.class_Gauss_rate_train, softCR_Gauss_training, results.class_svm_rate_train, results.mse_ncc_train, results.mse_kNN_train, results.mse_gauss_train, 
        results.mse3_svm_train, results.mse2_svm_train, results.mse_svm_train, results.mse_lr_train, results.mae_gauss_train, results.maeOpt_gauss_train)
-print "Seen Id: %0.3f CR_NCC, %0.3f CR_kNN, CR_Gauss %0.3f, CR_SVM %0.3f, MSE_NCC %0.3f, MSE_kNN %0.3f, MSE_Gauss %0.3f, MSE3_SVM %0.3f, MSE2_SVM %0.3f, MSE_SVM %0.3f, MSE_LR %0.3f, MAE %0.3f, MAE(Opt) %0.3f"%(
-        results.class_ncc_rate_seenid, results.class_kNN_rate_seenid, results.class_Gauss_rate_seenid, results.class_svm_rate_seenid, results.mse_ncc_seenid, results.mse_kNN_seenid, results.mse_gauss_seenid, 
+print "Seen Id: %0.3f CR_NCC, %0.3f CR_kNN, CR_Gauss %0.5f, softCR_Gauss=%0.5f, CR_SVM %0.3f, MSE_NCC %0.3f, MSE_kNN %0.3f, MSE_Gauss= %0.3f MSE3_SVM %0.3f, MSE2_SVM %0.3f, MSE_SVM %0.3f, MSE_LR %0.3f, MAE= %0.5f MAE(Opt)= %0.3f"%(
+        results.class_ncc_rate_seenid, results.class_kNN_rate_seenid, results.class_Gauss_rate_seenid, softCR_Gauss_seenid, results.class_svm_rate_seenid, results.mse_ncc_seenid, results.mse_kNN_seenid, results.mse_gauss_seenid, 
         results.mse3_svm_seenid, results.mse2_svm_seenid, results.mse_svm_seenid, results.mse_lr_seenid, results.mae_gauss_seenid, results.maeOpt_gauss_seenid)
-print "New Id: %0.3f CR_NCC, %0.3f CR_kNN, CR_Gauss %0.3f, CR_SVM %0.3f, MSE_NCC %0.3f, MSE_kNN %0.3f, MSE_Gauss %0.3f, MSE3_SVM %0.3f, MSE2_SVM %0.3f, MSE_SVM %0.3f, MSE_LR %0.3f , MAE %0.3f, MAE(Opt) %0.3f"%(
-        results.class_ncc_rate_newid, results.class_kNN_rate_newid, results.class_Gauss_rate_newid, results.class_svm_rate_newid, results.mse_ncc_newid, results.mse_kNN_newid, results.mse_gauss_newid, 
+print "New Id: %0.3f CR_NCC, %0.3f CR_kNN, CR_Gauss %0.5f, softCR_Gauss=%0.5f, CR_SVM %0.3f, MSE_NCC %0.3f, MSE_kNN %0.3f, MSE_Gauss= %0.3f MSE3_SVM %0.3f, MSE2_SVM %0.3f, MSE_SVM %0.3f, MSE_LR %0.3f , MAE= %0.5f MAE(Opt)= %0.3f"%(
+        results.class_ncc_rate_newid, results.class_kNN_rate_newid, results.class_Gauss_rate_newid, softCR_Gauss_newid, results.class_svm_rate_newid, results.mse_ncc_newid, results.mse_kNN_newid, results.mse_gauss_newid, 
         results.mse3_svm_newid, results.mse2_svm_newid, results.mse_svm_newid, results.mse_lr_newid, results.mae_gauss_newid, results.maeOpt_gauss_newid)
 
-print "Train:   RMSE_NCC %0.3f, RMSE_kNN %0.3f, RMSE_Gauss %0.3f, RMSE3_SVM %0.3f, RMSE2_SVM %0.3f, RMSE_SVM %0.3f, RMSE_LR %0.3f"%(
+print "Train:   RMSE_NCC %0.3f, RMSE_kNN %0.3f, RMSE_Gauss= %0.5f RMSE3_SVM %0.3f, RMSE2_SVM %0.3f, RMSE_SVM %0.3f, RMSE_LR %0.3f"%(
        results.rmse_ncc_train, results.rmse_kNN_train, results.rmse_gauss_train, 
        results.rmse3_svm_train, results.rmse2_svm_train, results.rmse_svm_train, results.rmse_lr_train)
-print "Seen Id: RMSE_NCC %0.3f, RMSE_kNN %0.3f, RMSE_Gauss %0.3f, RMSE3_SVM %0.3f, RMSE2_SVM %0.3f, RMSE_SVM %0.3f, RMSE_LR %0.3f"%(
+print "Seen Id: RMSE_NCC %0.3f, RMSE_kNN %0.3f, RMSE_Gauss= %0.5f RMSE3_SVM %0.3f, RMSE2_SVM %0.3f, RMSE_SVM %0.3f, RMSE_LR %0.3f"%(
         results.rmse_ncc_seenid, results.rmse_kNN_seenid, results.rmse_gauss_seenid, 
         results.rmse3_svm_seenid, results.rmse2_svm_seenid, results.rmse_svm_seenid, results.rmse_lr_seenid)
-print "New Id:  RMSE_NCC %0.3f, RMSE_kNN %0.3f, RMSE_Gauss %0.3f, RMSE3_SVM %0.3f, RMSE2_SVM %0.3f, RMSE_SVM %0.3f, RMSE_LR %0.3f"%(
+print "New Id:  RMSE_NCC %0.3f, RMSE_kNN %0.3f, RMSE_Gauss= %0.5f RMSE3_SVM %0.3f, RMSE2_SVM %0.3f, RMSE_SVM %0.3f, RMSE_LR %0.3f"%(
         results.rmse_ncc_newid, results.rmse_kNN_newid, results.rmse_gauss_newid, 
-        results.rmse3_svm_newid, results.rmse2_svm_newid, results.rmse_svm_newid, results.rmse_lr_newid)
+        results.rmse3_svm_newid, results.rmse2_svm_newid, results.rmse_svm_newid, results.rmse_lr_newid)   
+    
+if False:
+    starting_point= "Sigmoids" #None, "Sigmoids", "Identity"
+    print "Computations useful to determine information loss and feature obfuscation IL/FO... starting_point=", starting_point
+    if iTrain.train_mode == "clustered":
+        if features_residual_information > 0:
+            results_e1_e2_from_feats=[]
+            for num_feats_residual_information in numpy.arange(40,features_residual_information,5):
+                e1, e2 = more_nodes.compute_classification_performance(sl_seq_seenid, correct_classes_seenid, sl_seq_newid, correct_classes_newid, num_feats_residual_information, starting_point=starting_point)
+                #print "Classification rates on expanded slow features with dimensionality %d are %f for training and %f for test"%(num_feats_residual_information, e1, e2)
+                results_e1_e2_from_feats.append((num_feats_residual_information, e1,e2))
+            print "\n num_feats_residual_information =",
+            for (num_feats_residual_information, e1, e2) in  results_e1_e2_from_feats:
+                print num_feats_residual_information,", ",
+            print "\n classification rate on seenid(feats) =",
+            for (num_feats_residual_information, e1, e2) in  results_e1_e2_from_feats:
+                print "%f, "%e1,
+            print "\n classification rate on newid(feats) =",
+            for (num_feats_residual_information, e1, e2) in  results_e1_e2_from_feats:
+                print "%f, "%e2,
+    
+        if compute_input_information:
+            results_e1_e2_from_pca=[]
+            pca_node = mdp.nodes.PCANode(output_dim=0.99)
+            pca_node.train(subimages_seenid)
+            pca_node.stop_training()
+            subimages_seenid_pca = pca_node.execute(subimages_seenid)
+            subimages_newid_pca = pca_node.execute(subimages_newid)
+            print "\n *****subimages_newid_pca.shape", subimages_newid_pca.shape
+            for num_feats_residual_information in numpy.arange(40,150,5): #(40,150,5):
+                e1, e2 = more_nodes.compute_classification_performance(subimages_seenid_pca, correct_classes_seenid, subimages_newid_pca, correct_classes_newid, num_feats_residual_information, starting_point=starting_point)
+                #print "Classification rates on expanded input data with dimensionality %d are %f for training and %f for test"%(num_feats_residual_information, e1, e2)
+                results_e1_e2_from_pca.append((num_feats_residual_information, e1,e2))
+            print "\n num_feats_residual_information =",
+            for (num_feats_residual_information, e1, e2) in  results_e1_e2_from_pca:
+                print num_feats_residual_information,", ",
+            print "\n classification rate on seenid(input) =",
+            for (num_feats_residual_information, e1, e2) in  results_e1_e2_from_pca:
+                print "%f, "%e1,
+            print "\n classification rate on newid(input) =",
+            for (num_feats_residual_information, e1, e2) in  results_e1_e2_from_pca:
+                print "%f, "%e2,
+            print "\n max CR on newid(input) = ", numpy.max([e2 for (nf, e1, e2) in results_e1_e2_from_pca])
+    else:
+        if features_residual_information > 0:
+            for num_feats_residual_information in numpy.linspace(60,features_residual_information,11):
+                e1, e2 = more_nodes.compute_regression_performance(sl_seq_seenid, correct_labels_seenid, sl_seq_newid, correct_labels_newid, num_feats_residual_information, starting_point=starting_point)
+                print "RMSE on expanded slow features with dimensionality %d are %f for training and %f for test"%(num_feats_residual_information, e1, e2)
+        
+        if compute_input_information:
+            for num_feats_residual_information in numpy.linspace(144,features_residual_information,11):
+                e1, e2 = more_nodes.compute_regression_performance(subimages_seenid, correct_labels_seenid, subimages_newid, correct_labels_newid, num_feats_residual_information, starting_point=starting_point)
+                print "RMSE on expanded input data with dimensionality %d are %f for training and %f for test"%(num_feats_residual_information, e1, e2)
+
 
 #quit()
 scale_disp = 1
@@ -2091,25 +2709,26 @@ else:
 
 print "%d Blocks used for averages"%num_blocks_train
 
+#Function for gender label estimation. (-3 to -0.1) = Masculine, (0.0 to 2.9) = femenine. Midpoint between classes is -0.05
 def binarize_array(arr):
     arr2 = arr + 0.0
-    arr2[arr2<0]=-1
-    arr2[arr2>=0]=1
+    arr2[arr2 < -0.05]=-1
+    arr2[arr2 >= -0.05]=1
     return arr2
 
-if Parameters == GenerateSystemParameters.ParamsGender:
+if Parameters == GenerateSystemParameters.ParamsGender or GenerateSystemParameters.ParamsRAgeFunc:
     print "Computing effective gender recognition:"
     binary_gender_estimation_training = binarize_array(regression_Gauss_training)
-    binary_correct_classes_training = binarize_array(correct_classes_training)
-    binary_gender_estimation_rate_training = classifiers.correct_classif_rate(binary_correct_classes_training, binary_gender_estimation_training) 
+    binary_correct_labels_training = binarize_array(correct_labels_training)
+    binary_gender_estimation_rate_training = classifiers.correct_classif_rate(binary_correct_labels_training, binary_gender_estimation_training) 
     print "Binary gender classification rate (training) from continuous labels is:", binary_gender_estimation_rate_training
     binary_gender_estimation_seenid = binarize_array(regression_Gauss_seenid)
-    binary_correct_classes_seenid = binarize_array(correct_classes_seenid)
-    binary_gender_estimation_rate_seenid = classifiers.correct_classif_rate(binary_correct_classes_seenid, binary_gender_estimation_seenid) 
+    binary_correct_labels_seenid = binarize_array(correct_labels_seenid)
+    binary_gender_estimation_rate_seenid = classifiers.correct_classif_rate(binary_correct_labels_seenid, binary_gender_estimation_seenid) 
     print "Binary gender classification rate (seenid) from continuous labels is:", binary_gender_estimation_rate_seenid
     binary_gender_estimation_newid = binarize_array(regression_Gauss_newid)
-    binary_correct_classes_newid = binarize_array(correct_classes_newid)
-    binary_gender_estimation_rate_newid = classifiers.correct_classif_rate(binary_correct_classes_newid, binary_gender_estimation_newid) 
+    binary_correct_labels_newid = binarize_array(correct_labels_newid)
+    binary_gender_estimation_rate_newid = classifiers.correct_classif_rate(binary_correct_labels_newid, binary_gender_estimation_newid) 
     print "Binary gender classification rate (newid) from continuous labels is:", binary_gender_estimation_rate_newid
 
     
@@ -2160,21 +2779,21 @@ if Parameters == GenerateSystemParameters.ParamsRGTSRBFunc and output_filename !
             base_GTSRB_dir = "/local/escalafl/Alberto/GTSRB"
     
             sample_img_filename = "00000/00001_00000.ppm"
-            set = "02"
+            fset = "02"
             for ii, image_filename in enumerate(iSeq.input_files):
                 if online_test:
-                    sfa_filename = GTSRB_SFA_dir_OnlineTest + "/SFA_" + set + "/" + image_filename[-9:-3]+"txt"
+                    sfa_filename = GTSRB_SFA_dir_OnlineTest + "/SFA_" + fset + "/" + image_filename[-9:-3]+"txt"
                 else:
-                    sfa_filename = GTSRB_SFA_dir_training + "/SFA_" + set + "/" + image_filename[-len(sample_img_filename):-3]+"txt"
+                    sfa_filename = GTSRB_SFA_dir_training + "/SFA_" + fset + "/" + image_filename[-len(sample_img_filename):-3]+"txt"
                 if ii==0:
                     print sfa_filename
-                file = open(sfa_filename, "wb")
+                filed = open(sfa_filename, "wb")
                 for i, xx in enumerate(sl[ii,0:number_SFA_features]):
                     if i==0:
-                        file.write('%f'%xx)
+                        filed.write('%f'%xx)
                     else:
-                        file.write('\n%f'%xx)
-                file.close( )
+                        filed.write('\n%f'%xx)
+                filed.close( )
             
         
 elif output_filename != None:
@@ -2235,7 +2854,7 @@ if save_sorted_incorrect_class_Gauss_newid:
     
     save_images_sorted_incorrect_class_Gauss_newid_base_dir = "/local/tmp/escalafl/Alberto/saved_images_sorted_incorrect_class_Gauss_newid"
     print "saving images to directory:", save_images_sorted_incorrect_class_Gauss_newid_base_dir
-    decimate =  100
+    decimate =  1
     for i, i_x in enumerate(sorting_incorrect_Gauss_newid):
         x = subimages_newid[i_x]
         if i%decimate == 0:
@@ -2270,6 +2889,27 @@ if compute_background_detection and Parameters == GenerateSystemParameters.Param
             correct_background = (regression[-bs:]>cutoff_background).sum() * 1.0 / bs
             false_background = (regression[0:-bs]>cutoff_background).sum() * 1.0 / len(regression[0:-bs])
             print "correct_background = ", correct_background, "false_background =", false_background 
+
+
+if minutes_sleep < 0:
+    lock.acquire()
+    q = open(cuicuilco_queue, "r")
+    next_pid = q.readline()
+    print "queue_top was: ", next_pid, "we are:", pid,
+    queue_rest = q.readlines()
+    print "queue_rest=", queue_rest
+    served = True
+    q.close()
+
+    print "removing us from the queue"
+    q2 = open(cuicuilco_queue, "w")
+    for line in queue_rest:
+        q2.write(line)
+    q2.close()
+    lock.release()
+
+
+
 
 if enable_display:
     print "Creating GUI..."
@@ -2380,7 +3020,7 @@ if enable_display:
     plt.ylabel("Slow Signals")
     
     sp12 = plt.subplot(2,2,2)
-    if Parameters.train_mode == 'sequence' or Parameters.train_mode == 'mixed' :
+    if Parameters.train_mode == 'serial' or Parameters.train_mode == 'mixed' :
         plt.title("Example of Ideal SFA Outputs")
         num_blocks = num_images_training/block_size
         sl_optimal = numpy.zeros((num_images, relevant_out_dim))
@@ -2562,7 +3202,7 @@ if enable_display:
     plt.suptitle(Network.name+"Reconstruction using kNN (+ avg) from output features. k="+str(kNN_k))
       
     #display SFA
-    f_kNNinv_a11 = plt.subplot(2,3,1)
+    f_kNNinv_a11 = plt.subplot(2,4,1)
     plt.title("Output Unit (Top Node) New Id")
     sl_seqdisp = sl_seq_newid[:, range(0,hierarchy_out_dim)]
     sl_seqdisp = scale_to(sl_seqdisp, sl_seq_newid.mean(), sl_seq_newid.max()-sl_seq_newid.min(), 127.5, 255.0, scale_disp, 'tanh')
@@ -2571,26 +3211,52 @@ if enable_display:
     
     #display first image
     #Alternative: im1.show(command="xv")
-    f_kNNinv_a12 = plt.subplot(2,3,2)
+    f_kNNinv_a12 = plt.subplot(2,4,2)
     plt.title("A particular image in the sequence")
     #im_smalldisp = im_small.copy()
     #f_kNNinv_a12.imshow(im_smalldisp, aspect='auto', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)
-    f_kNNinv_a13 = plt.subplot(2,3,3)
+    f_kNNinv_a13 = plt.subplot(2,4,3)
     plt.title("Reconstructed Image using kNN")
 
-    f_kNNinv_a21 = plt.subplot(2,3,4)
+    if estimate_explained_var_linear_global_N == -1:
+        training_data_lmodel = subimages_seenid
+        features_lmodel = sl_seq_seenid[:,0:num_features_linear_model]
+        indices_all_train_lmodel = more_nodes.random_subindices(training_data_lmodel.shape[0], number_samples_EV_linear_global)
+        indices_all_newid = numpy.arange(subimages_newid.shape[0]) #Select all images of newid
+         
+        lr_node = mdp.nodes.LinearRegressionNode()
+        sl_seq_training_sel = features_lmodel[indices_all_train_lmodel, :]
+        subimages_train_sel = training_data_lmodel[indices_all_train_lmodel]
+        lr_node.train(sl_seq_training_sel, subimages_train_sel) #Notice that the input "x"=n_sfa_x and the output to learn is "y" = x_pca
+        lr_node.stop_training()  
+      
+        sl_seq_newid_sel = sl_seq_newid[indices_all_newid, 0:num_features_linear_model]
+        subimages_newid_app = lr_node.execute(sl_seq_newid_sel)  
+    else:
+        subimages_newid_app = subimages_newid
+        
+    f_kNNinv_a14 = plt.subplot(2,4,4)
+    if estimate_explained_var_linear_global_N == -1:
+        plt.title("Linearly Reconstrion. #F=%d"%num_features_linear_model)
+    else:
+        plt.title("Linearly Reconstrion NOT Enabled. #F=%d"%num_features_linear_model)
+        
+    f_kNNinv_a21 = plt.subplot(2,4,5)
     plt.title("Reconstruction Error, k=1")
 
-    f_kNNinv_a22 = plt.subplot(2,3,5)
+    f_kNNinv_a22 = plt.subplot(2,4,6)
     plt.title("Reconstructed Image using kNN, k=1")
             
-    f_kNNinv_a23 = plt.subplot(2,3,6)
-    plt.title("Reconstruction Error, kNN average")
+    f_kNNinv_a23 = plt.subplot(2,4,7)
+    plt.title("kNN Reconstruction Error")
           
+    f_kNNinv_a24 = plt.subplot(2,4,8)
+    plt.title("Linear Reconstruction Error")
+
     #Retrieve Image in Sequence
     def on_press_kNN(event):
         #Why is this declared global??? 
-        global plt, f_kNNinv_a12, f_kNNinv_a13, f_kNNinv_a21, f_kNNinv_a22, f_kNNinv_a23, subimages_seenid, subimages_newid, sl_seq_seenid, sl_seq_newid, error_scale_disp
+        global plt, f_kNNinv_a12, f_kNNinv_a13, f_kNNinv_a14, f_kNNinv_a21, f_kNNinv_a22, f_kNNinv_a23, f_kNNinv_a24, subimages_seenid, subimages_newid, sl_seq_seenid, sl_seq_newid, subimages_newid_app, error_scale_disp
         print 'you pressed', event.button, event.xdata, event.ydata
         y = int(event.ydata)
         if y < 0:
@@ -2603,13 +3269,20 @@ if enable_display:
     #WARNING L and RGB
     #    subimage_im = subimages[y].reshape((sTrain.subimage_height, sTrain.subimage_width)) + 0.0
         subimage_im = subimages_newid[y].reshape(subimage_shape) + 0.0              
-        f_kNNinv_a12.imshow(subimage_im.clip(0,max_clip), aspect='auto', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)
+        f_kNNinv_a12.imshow(subimage_im.clip(0,max_clip), aspect='auto', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)      
+        f_kNNinv_a12.set_xlabel("Selected image y=%d"%y)
       
-    #Display Reconstructed Image
+    #Display Reconstructed Image kNN
         data_out = sl_seq_newid[y].reshape((1, hierarchy_out_dim))
         x_app_test = more_nodes.approximate_kNN_op(subimages_seenid, sl_seq_seenid, data_out, k=kNN_k, ignore_closest_match=True, operation="average")
         inverted_im_kNNavg = x_app_test.reshape(subimage_shape)        
         f_kNNinv_a13.imshow(inverted_im_kNNavg.clip(0,max_clip), aspect='auto', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)        
+    
+    #Display Linearly Reconstructed Image
+        data_out = sl_seq_newid[y].reshape((1, hierarchy_out_dim))
+        x_app_test = subimages_newid_app[y]
+        inverted_im_LRec = x_app_test.reshape(subimage_shape)        
+        f_kNNinv_a14.imshow(inverted_im_LRec.clip(0,max_clip), aspect='auto', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)        
         
     #Display Reconstructed Image for kNN_k=1
         data_out = sl_seq_newid[y].reshape((1, hierarchy_out_dim))
@@ -2623,7 +3296,7 @@ if enable_display:
         error_im_disp = scale_to(error_im, error_im.mean(), error_im.max()-error_im.min(), max_clip/2.0, max_clip, error_scale_disp, 'tanh')
         f_kNNinv_a21.imshow(error_im_disp.clip(0,max_clip), aspect='auto', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)       
         plt.axis = f_kNNinv_a21
-        f_kNNinv_a21.set_xlabel("min=%.2f, max=%.2f, std=%.2f, scale=%.2f, y=%d" % (error_im.min(), error_im.max(), error_im.std(), error_scale_disp, y))
+        f_kNNinv_a21.set_xlabel("min=%.2f, max=%.2f, std=%.2f, scale=%.2f" % (error_im.min(), error_im.max(), error_im.std(), error_scale_disp))
 
     #Display Reconstruction Error, kNN average
         error_scale_disp=1.5
@@ -2631,8 +3304,16 @@ if enable_display:
         error_im_disp = scale_to(error_im, error_im.mean(), error_im.max()-error_im.min(), max_clip/2.0, max_clip, error_scale_disp, 'tanh')
         f_kNNinv_a23.imshow(error_im_disp.clip(0,max_clip), aspect='auto', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)       
         plt.axis = f_kNNinv_a23
-        f_kNNinv_a23.set_xlabel("min=%.2f, max=%.2f, std=%.2f, scale=%.2f, y=%d" % (error_im.min(), error_im.max(), error_im.std(), error_scale_disp, y))
+        f_kNNinv_a23.set_xlabel("min=%.2f, max=%.2f, std=%.2f, scale=%.2f" % (error_im.min(), error_im.max(), error_im.std(), error_scale_disp))
 
+    #Display Linear Reconstruction Error
+        error_scale_disp=1.5
+        error_im = subimage_im - inverted_im_LRec
+        error_im_disp = scale_to(error_im, error_im.mean(), error_im.max()-error_im.min(), max_clip/2.0, max_clip, error_scale_disp, 'tanh')
+        f_kNNinv_a24.imshow(error_im_disp.clip(0,max_clip), aspect='auto', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)       
+        plt.axis = f_kNNinv_a24
+        f_kNNinv_a24.set_xlabel("min=%.2f, max=%.2f, std=%.2f, scale=%.2f" % (error_im.min(), error_im.max(), error_im.std(), error_scale_disp))
+    
         
         fkNNinv.canvas.draw()
         
@@ -2741,14 +3422,18 @@ if enable_display:
         p11.plot(numpy.arange(len(regression_svm_training)), regression_svm_training, 'g.', markersize=3, markerfacecolor='green')
         xlabel += " MSE_svm=%f,"%(results.mse_svm_train)
         regression_text_labels.append("SVM")
+    if enable_gc_cfr:
+        p11.plot(numpy.arange(len(regression_Gauss_training)), regression_Gauss_training, 'm.', markersize=3, markerfacecolor='magenta')
+        xlabel += " MSE_Gauss=%f,"%(results.mse_gauss_train)        
+        regression_text_labels.append("Gaussian Class/Regr.")   
     if enable_lr_cfr:
-        p11.plot(numpy.arange(len(correct_labels_training)), regression_lr_training, 'c.', markersize=3, markerfacecolor='cyan')
+#        p11.plot(numpy.arange(len(correct_labels_training)), regression_lr_training, 'b.', markersize=3, markerfacecolor='blue') 
+        p11.plot(numpy.arange(len(correct_labels_training)), regression_lr_training, 'c.', markersize=3, markerfacecolor='cyan') 
         xlabel += " MSE_lr=%f,"%(results.mse_lr_train)
         regression_text_labels.append("LR")
-    p11.plot(numpy.arange(len(regression_Gauss_training)), regression_Gauss_training, 'm.', markersize=3, markerfacecolor='magenta')
-    xlabel += " MSE_Gauss=%f,"%(results.mse_gauss_train)        
-    regression_text_labels.append("Gaussian Class/Regr.")
-    p11.plot(numpy.arange(len(correct_labels_training)), correct_labels_training, 'r.', markersize=3, markerfacecolor='red')  
+
+    p11.plot(numpy.arange(len(correct_labels_training)), correct_labels_training, 'k.', markersize=3, markerfacecolor='black')  
+#    p11.plot(numpy.arange(len(correct_labels_training)), correct_labels_training, 'r.', markersize=3, markerfacecolor='red')  
     regression_text_labels.append("Ground Truth")
     ##draw horizontal and vertical lines
     #majorLocator   = MultipleLocator(block_size)
@@ -2774,12 +3459,17 @@ if enable_display:
     if enable_svm_cfr:
         p12.plot(numpy.arange(len(regression_svm_seenid)), regression_svm_seenid, 'g.', markersize=4, markerfacecolor='green')
         xlabel += " MSE_svm=%f,"%results.mse_svm_seenid
+    if enable_gc_cfr:
+        p12.plot(numpy.arange(len(regression_Gauss_seenid)), regression_Gauss_seenid, 'm.', markersize=4, markerfacecolor='magenta')
+        xlabel += " MSE_Gauss=%f,"%results.mse_gauss_seenid
     if enable_lr_cfr:
+#        p12.plot(numpy.arange(len(regression_lr_seenid)), regression_lr_seenid, 'b.', markersize=4, markerfacecolor='blue')
         p12.plot(numpy.arange(len(regression_lr_seenid)), regression_lr_seenid, 'c.', markersize=4, markerfacecolor='cyan')
         xlabel += " MSE_lr=%f,"%results.mse_lr_seenid
-    p12.plot(numpy.arange(len(regression_Gauss_seenid)), regression_Gauss_seenid, 'm.', markersize=4, markerfacecolor='magenta')
-    xlabel += " MSE_Gauss=%f,"%results.mse_gauss_seenid
-    p12.plot(numpy.arange(len(correct_labels_seenid)), correct_labels_seenid, 'r.', markersize=4, markerfacecolor='red')
+
+    p12.plot(numpy.arange(len(correct_labels_seenid)), correct_labels_seenid, 'k.', markersize=4, markerfacecolor='black')
+#    p12.plot(numpy.arange(len(correct_labels_seenid)), correct_labels_seenid, 'r.', markersize=4, markerfacecolor='red')
+
     ##majorLocator_y   = MultipleLocator(block_size)
     ##majorLocator_x   = MultipleLocator(block_size_seenid)
     #majorLocator_x   = MultipleLocator( len(labels_ccc_seenid) * block_size / len(labels_ccc_training))
@@ -2802,12 +3492,18 @@ if enable_display:
     if enable_svm_cfr:
         p13.plot(numpy.arange(len(regression_svm_newid)), regression_svm_newid, 'g.', markersize=8, markerfacecolor='green')
         xlabel+=" MSE_svm=%f,"%results.mse_svm_newid
+    if enable_gc_cfr:
+        p13.plot(numpy.arange(len(regression_Gauss_newid)), regression_Gauss_newid, 'm.', markersize=8, markerfacecolor='magenta')
+        xlabel+=" MSE_Gauss=%f,"%results.mse_gauss_newid
+
     if enable_lr_cfr:
+#        p13.plot(numpy.arange(len(regression_lr_newid)), regression_lr_newid, 'b.', markersize=8, markerfacecolor='blue')
         p13.plot(numpy.arange(len(regression_lr_newid)), regression_lr_newid, 'c.', markersize=8, markerfacecolor='cyan')
         xlabel+=" MSE_lr=%f,"%results.mse_lr_newid
-    p13.plot(numpy.arange(len(regression_Gauss_newid)), regression_Gauss_newid, 'm.', markersize=8, markerfacecolor='magenta')
-    xlabel+=" MSE_Gauss=%f,"%results.mse_gauss_newid
-    p13.plot(numpy.arange(len(correct_labels_newid)), correct_labels_newid, 'r.', markersize=8, markerfacecolor='red')
+
+    p13.plot(numpy.arange(len(correct_labels_newid)), correct_labels_newid, 'k.', markersize=8, markerfacecolor='black')
+#    p13.plot(numpy.arange(len(correct_labels_newid)), correct_labels_newid, 'r.', markersize=8, markerfacecolor='red')
+   
     ##majorLocator_y   = MultipleLocator(block_size)
     ##majorLocator_x   = MultipleLocator(block_size_seenid)
     #majorLocator_x   = MultipleLocator( len(labels_ccc_newid) * block_size / len(labels_ccc_training))
@@ -3710,7 +4406,7 @@ if enable_display:
     print "GUI Finished!"
 
 
-    
+   
 print "Program successfully finished"
 
 #    def __init__(self):
@@ -3862,7 +4558,7 @@ print "Program successfully finished"
 #
 #    La.preserve_mask = numpy.ones((La.y_field_channels, La.x_field_channels)) > 0.5
 ## 6 x 12
-#print "About to create (lattice based) perceptive field of widht=%d, height=%d"%(La.x_field_channels, La.y_field_channels) 
+#print "About to create (lattice based) perceptive field of width=%d, height=%d"%(La.x_field_channels, La.y_field_channels) 
 #print "With a spacing of horiz=%d, vert=%d, and %d channels"%(La.x_field_spacing, La.y_field_spacing, La.in_channel_dim)
 #
 #(mat_connections_L0, lat_mat_L0) = compute_lattice_matrix_connections(v1_L0, v2_L0, preserve_mask_L0, subimage_width, subimage_height, in_channel_dim_L0)
@@ -3952,7 +4648,7 @@ print "Program successfully finished"
 #
 #L1.preserve_mask = numpy.ones((L1.y_field_channels, L1.x_field_channels, L1.in_channel_dim)) > 0.5
 #
-#print "About to create (lattice based) intermediate layer widht=%d, height=%d"%(L1.x_field_channels, L1.y_field_channels) 
+#print "About to create (lattice based) intermediate layer width=%d, height=%d"%(L1.x_field_channels, L1.y_field_channels) 
 #print "With a spacing of horiz=%d, vert=%d, and %d channels"%(L1.x_field_spacing, L1.y_field_spacing, L1.in_channel_dim)
 #
 #print "Shape of lat_mat_L0 is:", lat_mat_L0
@@ -4038,7 +4734,7 @@ print "Program successfully finished"
 #
 #preserve_mask_L2 = numpy.ones((y_field_channels_L2, x_field_channels_L2, in_channel_dim_L2)) > 0.5
 #
-#print "About to create (lattice based) third layer (L2) widht=%d, height=%d"%(x_field_channels_L2,y_field_channels_L2) 
+#print "About to create (lattice based) third layer (L2) width=%d, height=%d"%(x_field_channels_L2,y_field_channels_L2) 
 #print "With a spacing of horiz=%d, vert=%d, and %d channels"%(x_field_spacing_L2,y_field_spacing_L2,in_channel_dim_L2)
 #
 #print "Shape of lat_mat_L1 is:", L1.lat_mat
@@ -4323,7 +5019,7 @@ print "Program successfully finished"
 #
 #
 ##image_width  = 640
-##image_height = 480
+##image_height = 480subimages_seenid
 ##subimage_width  = 135
 ##subimage_height = 135 
 ##pixelsampling_x = 2
