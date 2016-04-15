@@ -1,0 +1,1 @@
+for i in `ls MNISTExp_24x24_SFA+PCNetB*S03* -t`; do echo $i; x1=`cat $i | grep CR | grep 'Train' | sed 's/,//g' | awk '{print $7}'`; echo $x1; x2=`cat $i | grep CR | grep 'New' |  sed 's/,//g' | awk '{print $8}'`; echo $x2; echo "$x2+(1-$x1)*0.5000" | bc; done
