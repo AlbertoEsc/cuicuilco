@@ -44,6 +44,7 @@ import getopt
 from lockfile import LockFile
 import mkl
 mkl.set_num_threads(22)
+from inspect import getmembers
 
 #from mdp import numx
 #sys.path.append("/home/escalafl/workspace/hiphi/src/hiphi/utils")
@@ -130,10 +131,35 @@ coherent_seeds=False or True
 
 cuicuilco_queue = "/home/escalafl/workspace4/cuicuilco_MDP3.2/src/queue_cuicuilco.txt"
 cuicuilco_lock_file = "/home/escalafl/workspace4/cuicuilco_MDP3.2/src/queue_cuicuilco"
+minutes_sleep = 0
 
-import GenerateSystemParameters
+import hierarchical_networks
+import experiment_datasets
 print "Using mdp version:", mdp.__version__, "file:", mdp.__file__
-print GenerateSystemParameters.__file__
+print hierarchical_networks.__file__
+print experiment_datasets.__file__
+
+available_experiments = {}
+print "Creating list of available experiments:"
+for (obj_name, obj_value) in getmembers(experiment_datasets):
+    if isinstance(obj_value, SystemParameters.ParamsSystem):
+        print "   ", obj_name
+        available_experiments[obj_name] = obj_value
+#        print "object", obj.__name__
+
+available_networks = {}
+print "Creating list of available networks:"
+for (obj_name, obj_value) in getmembers(hierarchical_networks):
+    if isinstance(obj_value, SystemParameters.ParamsNetwork) and obj_name != "network":
+        print "   ", obj_name
+        available_networks[obj_name] = obj_value
+#        print "object", obj.__name__
+
+name_default_experiment = "ParamsMNISTFunc"
+name_default_network = "voidNetwork1L"
+
+DefaultExperimentDataset = available_experiments[name_default_experiment]
+DefaultNetwork = available_networks[name_default_network]
 
     #This defines the sequences used for training, and testing
     #See also: ParamsGender, ParamsAngle, ParamsIdentity,  ParamsTransX, ParamsAge,  
@@ -141,7 +167,7 @@ print GenerateSystemParameters.__file__
     #ParamsRFaceCentering, ParamsREyeTransX, ParamsREyeTransY
     #Data Set based training data: ParamsRTransXFunc, ParamsRTransYFunc, ParamsRTransXY_YFunc
     #ParamsRGTSRBFunc, ParamsRAgeFunc, ParamsMNISTFunc
-from GenerateSystemParameters import ParamsMNISTFunc as DefaultParameters #ParamsRAgeFunc, ParamsMNISTFunc
+#from experiment_datasets import ParamsMNISTFunc as DefaultExperimentDataset #ParamsRAgeFunc, ParamsMNISTFunc
 # ParamsRTransXYScaleFunc
 
     # Networks available: voidNetwork1L, SFANetwork1L, PCANetwork1L, u08expoNetwork1L, quadraticNetwork1L
@@ -149,7 +175,7 @@ from GenerateSystemParameters import ParamsMNISTFunc as DefaultParameters #Param
     # linearNetworkU11L, TestNetworkU11L, nonlinearNetworkU11L, TestNetworkPCASFAU11L, linearPCANetworkU11L,  u08expoNetworkU11L 
     # linearWhiteningNetwork11L, u08expo_m1p1_NetworkU11L, u08expoNetworkU11L, experimentalNetwork
     # u08expo_pcasfaexpo_NetworkU11L, u08expoA2NetworkU11L/A3/A4, u08expoA3_pcasfaexpo_NetworkU11L, IEMNetworkU11L, SFANetwork1LOnlyTruncated
-from GenerateSystemParameters import NLIPCANetwork1L as DefaultNetwork ### using A4 lately, u08expoNetworkU11L, u08expo_pcasfaexpo_NetworkU11L, u08expoNetwork2T
+#from hierarchical_networks import NLIPCANetwork1L as DefaultNetwork ### using A4 lately, u08expoNetworkU11L, u08expo_pcasfaexpo_NetworkU11L, u08expoNetwork2T
 #GTSRBNetwork, u08expoNetworkU11L, u08expoS42NetworkU11L, u08expoNetwork1L, HeuristicEvaluationExpansionsNetworkU11L, HeuristicPaperNetwork
 #HeuristicEvaluationExpansionsNetworkU11L, HardSFAPCA_u08expoNetworkU11L, HardSFAPCA_u08expoNetworkU11L
 #GTSRBNetwork, u08expoNetworkU11L, IEVMLRecNetworkU11L, linearPCANetworkU11L, SFAAdaptiveNLNetwork32x32U11L, 
@@ -162,12 +188,11 @@ from GenerateSystemParameters import NLIPCANetwork1L as DefaultNetwork ### using
 
 #TT4 PCANetwork
 #u08expoS42NetworkU11L
-from GenerateSystemParameters import experiment_seed
-
-from GenerateSystemParameters_GUO import DAYS_IN_A_YEAR
+from experiment_datasets import experiment_seed
+from experiment_datasets import DAYS_IN_A_YEAR
 
 if coherent_seeds:
-    print "GenerateSystemParameters.experiment_seed=", experiment_seed
+    print "experiment_datasets.experiment_seed=", experiment_seed
     numpy.random.seed(experiment_seed+111111)
 
 if enable_command_line:
@@ -177,8 +202,8 @@ if enable_command_line:
     print "Apparent command line arguments: \n", " ".join(argv)
     if len(argv) >= 2:
         try:
-            opts, args = getopt.getopt(argv[1:], "", ["Experiment=", "InputFilename=", "EnableDisplay=", "Network=", 
-                                                      "WriteSlowness=", "OutputFilename=", "CacheAvailable=", "NumFeaturesSup=", "SkipFeaturesSup=",
+            opts, args = getopt.getopt(argv[1:], "", ["Experiment=", "InputFilename=", "EnableDisplay=", "WriteSlowness=", "OutputFilename=", 
+                                                      "CacheAvailable=", "NumFeaturesSup=", "SkipFeaturesSup=",
                                                       'SVM_gamma=', 'SVM_C=','EnableSVM=', "LoadNetworkNumber=", "AskNetworkLoading=",
                                                       'EnableLR=', "NParallel=", "EnableScheduler=",
                                                       "NetworkCacheReadDir=", "NetworkCacheWriteDir=", "NodeCacheReadDir=", "NodeCacheWriteDir=",
@@ -193,7 +218,8 @@ if enable_command_line:
                                                       "IntegerLabelEstimation=", "CumulativeScores=", "FeaturesResidualInformation=", 
                                                       "ComputeInputInformation=", "SleepM=", "DatasetForDisplayTrain=", "DatasetForDisplayNewid=",
                                                       "GraphExactLabelLearning=", "OutputInsteadOfSVM2=", "NumberTargetLabels=", "ConfusionMatrix=",
-                                                      "MapDaysToYears=", "AddNoiseToSeenid=", "ClipSeenidNewid="])            
+                                                      "MapDaysToYears=", "AddNoiseToSeenid=", "ClipSeenidNewid=",
+                                                      "HierarchicalNetwork=", "ExperimentDataset="])            
             print "opts=", opts
             print "args=", args
 
@@ -204,17 +230,17 @@ if enable_command_line:
             for opt, arg in opts:
 #                print "opt=", opt
 #                print "arg=", arg
-#TODO: Dictionary with name/experiment in GenerateSystemParameters
+#TODO: Dictionary with name/experiment in experiment_datasets
                 if opt in ('--Experiment'):
                     if arg == "ParamsNatural":
                         #make this a function?
-                        from GenerateSystemParameters import ParamsNatural as DefaultParameters
+                        from experiment_datasets import ParamsNatural as DefaultExperimentDataset
                     elif arg == "ParamsRawNatural":
-                        from GenerateSystemParameters import ParamsRawNatural as DefaultParameters                        
+                        from experiment_datasets import ParamsRawNatural as DefaultExperimentDataset                        
                     else:
                         print "Unknown experiment:", arg
                         sys.exit(2)
-                    print "Setting Parameters=", DefaultParameters.name
+                    print "Setting Parameters=", DefaultExperimentDataset.name
                 elif opt in ('--InputFilename'):
                     input_filename = arg
                     print "Using the following input file:", input_filename
@@ -227,20 +253,6 @@ if enable_command_line:
                     else:
                         write_slowness = False
                     print "Setting write_slowness to", write_slowness   
-#TODO: Dictionary with Networks in GenerateSystemParameters
-                elif opt in ('--Network'):
-                    if arg == "SFANetwork1L":
-                        from GenerateSystemParameters import SFANetwork1L as DefaultNetwork
-                    elif arg == "u08expoNetwork1L":
-                        from GenerateSystemParameters import u08expoNetwork1L as DefaultNetwork                    
-                    elif arg == "quadraticNetwork1L":
-                        from GenerateSystemParameters import quadraticNetwork1L as DefaultNetwork                        
-                    elif arg == "u08expoNetworkU11L":
-                        from GenerateSystemParameters import u08expoNetworkU11L as DefaultNetwork
-                    else:
-                        print "Network unknown:", arg
-                        quit()
-                    print "Setting DefaultNetwork to", DefaultNetwork.name
                 elif opt in ('--EnableDisplay'):
                     if arg == '1':
                         enable_display=True
@@ -469,7 +481,15 @@ if enable_command_line:
                     print "Setting add_noise_to_seenid to", add_noise_to_seenid                
                 elif opt in ('--ClipSeenidNewid'):
                     clip_seenid_newid_to_training = bool(int(arg))
-                    print "Setting clip_seenid_newid_to_training to", clip_seenid_newid_to_training              
+                    print "Setting clip_seenid_newid_to_training to", clip_seenid_newid_to_training      
+                elif opt in ('--HierarchicalNetwork'):
+                    name_default_network = arg
+                    print "Setting default_network to", name_default_network       
+                    DefaultNetwork = available_networks[name_default_network]
+                elif opt in ('--ExperimentDataset'):
+                    name_default_experiment = arg
+                    print "Setting name_default_experiment to", name_default_experiment   
+                    DefaultExperimentDataset = available_experiments[name_default_experiment]
                 else:
                     print "Argument not handled: ", opt
                     quit()
@@ -482,7 +502,7 @@ if enable_svm:
 
 
 if coherent_seeds:
-    print "GenerateSystemParameters.experiment_seed=", experiment_seed
+    print "experiment_datasets.experiment_seed=", experiment_seed
     numpy.random.seed(experiment_seed+12121212)
 
 if enable_scheduler and n_parallel > 1:
@@ -494,11 +514,11 @@ if features_residual_information <= 0 and compute_input_information:
     print "ignoring flag compute_input_information=%d because  features_residual_information=%d <= 0"%(compute_input_information,features_residual_information)
     compute_input_information = False
     
-Parameters = DefaultParameters
+Parameters = DefaultExperimentDataset
 Network = DefaultNetwork
 
 #Peculiarities for specifying the ParamsNatural experiment (requires run-time computations)
-if Parameters == GenerateSystemParameters.ParamsNatural and input_filename != None:
+if Parameters == experiment_datasets.ParamsNatural and input_filename != None:
     (magic_num, iteration, numSamples, rbm_sfa_numHid, sampleSpan) = read_binary_header("", input_filename)
     print "Iteration Number=%d,"%iteration, "numSamples=%d"%numSamples,"rbm_sfa_numHid=%d,"%rbm_sfa_numHid
     
@@ -856,8 +876,8 @@ if network_filename != None:
 
 else:
     print "Generating Network..."
-#    from GenerateSystemParameters import linearPCANetworkU11L as Network 
-#    from GenerateSystemParameters import TestNetworkU11L as Network
+#    from hierarchical_networks import linearPCANetworkU11L as Network 
+#    from hierarchical_networks import TestNetworkU11L as Network
 
     #Usually true for voidNetwork1L, but might be also activated for other networks
     use_full_sl_output = False
@@ -1544,7 +1564,7 @@ elif seq.input_files == "LoadRawData":
     subimages_seenid = load_raw_data(seq.data_base_dir, seq.base_filename, input_dim=seq.input_dim, dtype=seq.dtype, select_samples=seq.samples, verbose=False)
 else:
 #W
-#    subimages_seenid = GenerateSystemParameters.load_data_from_sSeq(seq)
+#    subimages_seenid = experiment_datasets.load_data_from_sSeq(seq)
     subimages_seenid = seq.load_data(seq)
 
 #    subimages_seenid = load_image_data(seq.input_files, seq.image_width, seq.image_height, seq.subimage_width, \
@@ -2046,7 +2066,7 @@ elif seq.input_files == "LoadRawData":
     subimages_newid = load_raw_data(seq.data_base_dir, seq.base_filename, input_dim=seq.input_dim, dtype=seq.dtype, select_samples=seq.samples, verbose=False)
 else:
 #W
-#    subimages_newid = GenerateSystemParameters.load_data_from_sSeq(seq)
+#    subimages_newid = experiment_datasets.load_data_from_sSeq(seq)
     subimages_newid = seq.load_data(seq)
 #    subimages_newid = load_image_data(seq.input_files, seq.image_width, seq.image_height, seq.subimage_width, \
 #                            seq.subimage_height, seq.pixelsampling_x, seq.pixelsampling_y, \
@@ -2716,7 +2736,7 @@ def binarize_array(arr):
     arr2[arr2 >= -0.05]=1
     return arr2
 
-if Parameters == GenerateSystemParameters.ParamsGender or GenerateSystemParameters.ParamsRAgeFunc:
+if Parameters == experiment_datasets.ParamsGender or experiment_datasets.ParamsRAgeFunc:
     print "Computing effective gender recognition:"
     binary_gender_estimation_training = binarize_array(regression_Gauss_training)
     binary_correct_labels_training = binarize_array(correct_labels_training)
@@ -2732,7 +2752,7 @@ if Parameters == GenerateSystemParameters.ParamsGender or GenerateSystemParamete
     print "Binary gender classification rate (newid) from continuous labels is:", binary_gender_estimation_rate_newid
 
     
-if Parameters == GenerateSystemParameters.ParamsRGTSRBFunc and output_filename != None:
+if Parameters == experiment_datasets.ParamsRGTSRBFunc and output_filename != None:
     fd = open("G"+output_filename, "w")
     txt = ""
     for i, filename in enumerate(iNewid.input_files):
@@ -2880,7 +2900,7 @@ if export_data_to_libsvm:
 
 compute_background_detection = True #and False
 cutoff_backgrounds = [0.975, 0.98, 0.985, 0.99, 0.995, 0.998, 0.999, 0.9995, 0.99995]
-if compute_background_detection and Parameters == GenerateSystemParameters.ParamsRFaceCentering:
+if compute_background_detection and Parameters == experiment_datasets.ParamsRFaceCentering:
     print "false_background should be as small as possible <= 0.01, correct_background should be large >= 0.8"
     for cutoff_background in cutoff_backgrounds:
         print "for cutoff_background = %f"%cutoff_background
@@ -4627,7 +4647,7 @@ print "Program successfully finished"
 #
 #t3 = time.time()
 
-#from GenerateSystemParameters import pSFALayerL1 as L1
+#from experiment_datasets import pSFALayerL1 as L1
 #
 ##Create Switchboard L1
 ##Create L1 sfa node
