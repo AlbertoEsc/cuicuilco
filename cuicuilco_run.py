@@ -1,14 +1,11 @@
 #! /usr/bin/env python
 
-#General purpose hierarchical network for data processing
+#CUICUILCO: A general purpose framework for the construction and evaluation of 
+#           hierarchical networks for supervised learning 
 
-#Changes: Improved multi-data function based training methods (+ graph based for SFA) (WIP)
-#New more modularized version, with new three structure and node/signal cache  
 #By Alberto Escalante. Alberto.Escalante@neuroinformatik.ruhr-uni-bochum.de First Version 9 Dec 2009
 #Ruhr-University-Bochum, Institute of Neurocomputation, Group of Prof. Dr. Wiskott
 
-#TODO: write correct interface to enable for excecution_read, excecution_save
-#also, check integer from float arguments in parallelization
 
 #USAGE EXAMPLE: python cuicuilco_run.py --Experiment=ParamsNatural --Network=u08expoNetwork1L --InputFilename=/scratch/escalafl/cooperations/igel/rbm_64/data_bin_4000.bin --OutputFilename=deleteme2.txt
 
@@ -18,7 +15,6 @@ import matplotlib as mpl
 mpl.use('Qt4Agg')
 import matplotlib.pyplot as plt
 import PIL
-###import Image
 import mdp
 import more_nodes
 import patch_mdp
@@ -139,6 +135,14 @@ print "Using mdp version:", mdp.__version__, "file:", mdp.__file__
 print hierarchical_networks.__file__
 print experiment_datasets.__file__
 
+print "List of modules and their versions:"
+obj_names = sys.modules.keys()
+for obj_name in obj_names:
+    obj_value = sys.modules[obj_name]
+    obj_members = dir(obj_value) #getmembers(obj_value)
+    if "__version__" in obj_members:
+        print "   ", obj_name, " version (__version__): ", obj_value.__version__
+
 available_experiments = {}
 print "Creating list of available experiments:"
 for (obj_name, obj_value) in getmembers(experiment_datasets):
@@ -161,33 +165,32 @@ name_default_network = "voidNetwork1L"
 DefaultExperimentDataset = available_experiments[name_default_experiment]
 DefaultNetwork = available_networks[name_default_network]
 
-    #This defines the sequences used for training, and testing
-    #See also: ParamsGender, ParamsAngle, ParamsIdentity,  ParamsTransX, ParamsAge,  
-    #ParamsRTransX, ParamsRTransY, ParamsRScale, ParamsRFace, ParamsRObject, ParamsNatural, ParamsRawNatural
-    #ParamsRFaceCentering, ParamsREyeTransX, ParamsREyeTransY
-    #Data Set based training data: ParamsRTransXFunc, ParamsRTransYFunc, ParamsRTransXY_YFunc
-    #ParamsRGTSRBFunc, ParamsRAgeFunc, ParamsMNISTFunc
+#See also: ParamsGender, ParamsAngle, ParamsIdentity,  ParamsTransX, ParamsAge,  
+#ParamsRTransX, ParamsRTransY, ParamsRScale, ParamsRFace, ParamsRObject, ParamsNatural, ParamsRawNatural
+#ParamsRFaceCentering, ParamsREyeTransX, ParamsREyeTransY
+#Data Set based training data: ParamsRTransXFunc, ParamsRTransYFunc, ParamsRTransXY_YFunc
+#ParamsRGTSRBFunc, ParamsRAgeFunc, ParamsMNISTFunc
 #from experiment_datasets import ParamsMNISTFunc as DefaultExperimentDataset #ParamsRAgeFunc, ParamsMNISTFunc
 # ParamsRTransXYScaleFunc
 
-    # Networks available: voidNetwork1L, SFANetwork1L, PCANetwork1L, u08expoNetwork1L, quadraticNetwork1L
-    # Test_Network, linearNetwork4L, u08expoNetwork4L, NL_Network5L, linearNetwork5L, linearNetworkT6L, TestNetworkT6L, 
-    # linearNetworkU11L, TestNetworkU11L, nonlinearNetworkU11L, TestNetworkPCASFAU11L, linearPCANetworkU11L,  u08expoNetworkU11L 
-    # linearWhiteningNetwork11L, u08expo_m1p1_NetworkU11L, u08expoNetworkU11L, experimentalNetwork
-    # u08expo_pcasfaexpo_NetworkU11L, u08expoA2NetworkU11L/A3/A4, u08expoA3_pcasfaexpo_NetworkU11L, IEMNetworkU11L, SFANetwork1LOnlyTruncated
+# Networks available: voidNetwork1L, SFANetwork1L, PCANetwork1L, u08expoNetwork1L, quadraticNetwork1L
+# Test_Network, linearNetwork4L, u08expoNetwork4L, NL_Network5L, linearNetwork5L, linearNetworkT6L, TestNetworkT6L, 
+# linearNetworkU11L, TestNetworkU11L, nonlinearNetworkU11L, TestNetworkPCASFAU11L, linearPCANetworkU11L,  u08expoNetworkU11L 
+# linearWhiteningNetwork11L, u08expo_m1p1_NetworkU11L, u08expoNetworkU11L, experimentalNetwork
+# u08expo_pcasfaexpo_NetworkU11L, u08expoA2NetworkU11L/A3/A4, u08expoA3_pcasfaexpo_NetworkU11L, IEMNetworkU11L, SFANetwork1LOnlyTruncated
 #from hierarchical_networks import NLIPCANetwork1L as DefaultNetwork ### using A4 lately, u08expoNetworkU11L, u08expo_pcasfaexpo_NetworkU11L, u08expoNetwork2T
 #GTSRBNetwork, u08expoNetworkU11L, u08expoS42NetworkU11L, u08expoNetwork1L, HeuristicEvaluationExpansionsNetworkU11L, HeuristicPaperNetwork
 #HeuristicEvaluationExpansionsNetworkU11L, HardSFAPCA_u08expoNetworkU11L, HardSFAPCA_u08expoNetworkU11L
 #GTSRBNetwork, u08expoNetworkU11L, IEVMLRecNetworkU11L, linearPCANetworkU11L, SFAAdaptiveNLNetwork32x32U11L, 
 #u08expoNetwork32x32U11L_NoTop
+#TT4 PCANetwork
+#u08expoS42NetworkU11L
 #5x5L0 Networks: u08expoNetworkU11L_5x5L0, linearPCANetworkU11L_5x5L0, IEVMLRecNetworkU11L_5x5L0, PCANetwork1L
 # MNISTNetwork7L, SFANetwork1LOnlyTruncated, MNISTNetwork_24x24_7L, MNISTNetwork_24x24_7L_B, SFANetworkMNIST2L, (MNIST 8C:) SFANetwork1L, SFADirectNetwork1L (MNIST: semi-supervised, Gender: exact label)
 # GENDER ELL: NetworkGender_8x8L0
 # AGE MORPH-II: IEVMLRecNetworkU11L_Overlap6x6L0_1Label, HeadNetwork1L, IEVMLRecNetworkU11L_Overlap6x6L0_GUO_3Labels, IEVMLRecNetworkU11L_Overlap6x6L0_GUO_1Label, SFANetworkU11L_Overlap6x6L0_GUO_3Labels
 # IEVMLRecNetworkU11L_Overlap6x6L0_3Labels <-Article HiGSFA, IEVMLRecNetworkU11L_Overlap6x6L0_2Labels
 
-#TT4 PCANetwork
-#u08expoS42NetworkU11L
 from experiment_datasets import experiment_seed
 from experiment_datasets import DAYS_IN_A_YEAR
 
@@ -228,12 +231,8 @@ if enable_command_line:
                 sys.exit(2)
                                
             for opt, arg in opts:
-#                print "opt=", opt
-#                print "arg=", arg
-#TODO: Dictionary with name/experiment in experiment_datasets
                 if opt in ('--Experiment'):
                     if arg == "ParamsNatural":
-                        #make this a function?
                         from experiment_datasets import ParamsNatural as DefaultExperimentDataset
                     elif arg == "ParamsRawNatural":
                         from experiment_datasets import ParamsRawNatural as DefaultExperimentDataset                        
@@ -289,9 +288,6 @@ if enable_command_line:
                 elif opt in ('--EnableLR'):
                     enable_lr = int(arg)
                     print "Setting enable_lr to", enable_lr   
-#                elif opt in ('--NetworkBaseDir'):
-#                    network_base_dir = arg
-#                    print "Setting network_base_dir to", network_base_dir 
                 elif opt in ('--NParallel'):
                     n_parallel = int(arg)
                     print "Setting n_parallel to", n_parallel   
@@ -429,7 +425,7 @@ if enable_command_line:
                         lock = LockFile(cuicuilco_lock_file)
                         pid = os.getpid()
                         print "process pid is:", pid
-                        #Add this proces to the queue
+                        #Add this process to the queue
                         print "adding process to queue..."
                         lock.acquire()
                         q = open(cuicuilco_queue , "a")
@@ -453,8 +449,6 @@ if enable_command_line:
                                 time.sleep(60) #sleep for 10 seconds
                         t_wb = time.time()
                         print "process is executing now. Total waiting time: %f min"%((t_wb-t_wa)/60.0)
-                        #print "waiting for 35 minutes!!!"
-                        #time.sleep(60*35) 
                 elif opt in ('--DatasetForDisplayTrain'):
                     dataset_for_display_train = int(arg)
                     print "Setting dataset_for_display_train to", dataset_for_display_train
@@ -517,7 +511,7 @@ if features_residual_information <= 0 and compute_input_information:
 Parameters = DefaultExperimentDataset
 Network = DefaultNetwork
 
-#Peculiarities for specifying the ParamsNatural experiment (requires run-time computations)
+#Specific code for setting up the ParamsNatural experiment (requires run-time computations)
 if Parameters == experiment_datasets.ParamsNatural and input_filename != None:
     (magic_num, iteration, numSamples, rbm_sfa_numHid, sampleSpan) = read_binary_header("", input_filename)
     print "Iteration Number=%d,"%iteration, "numSamples=%d"%numSamples,"rbm_sfa_numHid=%d,"%rbm_sfa_numHid
@@ -539,17 +533,15 @@ if Parameters == experiment_datasets.ParamsNatural and input_filename != None:
         er = "wrong number of Samples %d, 5000 were assumed"%numSamples
         raise Exception(er)
 
-#quit()
 #Cutoff for final network output
-min_cutoff = -10 # -1.0e200, -30.0
-max_cutoff = 10 # 1.0e200, 30.0
+min_cutoff = -1.0e200 #-10 # -30.0
+max_cutoff =  1.0e200 #10 # 30.0
 
 enable_reduced_image_sizes = Parameters.enable_reduced_image_sizes
 reduction_factor =  Parameters.reduction_factor
 hack_image_size =  Parameters.hack_image_size
 enable_hack_image_size =  Parameters.enable_hack_image_size
 
-#enable_reduced_image_sizes = False
 if enable_reduced_image_sizes:
 #    reduction_factor = 2.0 # (the inverse of a zoom factor)
     Parameters.name = Parameters.name + "_Resized images"
@@ -581,8 +573,8 @@ sTrain_set = Parameters.sTrain
 iTrain = take_0_k_th_from_2D_list(iTrain_set, k=dataset_for_display_train)
 sTrain = take_0_k_th_from_2D_list(sTrain_set, k=dataset_for_display_train)
 
-#TODO: take k=1? or choose from command line? NOPE. Take always first label. sSeq must compute proper classes for chosen label anyway.
-objective_label = 1
+#take k=1? or choose from command line? NOPE. Take always first label. sSeq must compute proper classes for chosen label anyway.
+objective_label = 0
 if graph_exact_label_learning:
     if isinstance(iTrain_set, list):
         iTrain0 = iTrain_set[len(iTrain_set)-1][0]
@@ -640,7 +632,6 @@ if graph_exact_label_learning:
     print "Resulting Gamma is", Gamma
     Gamma = RemoveNegativeEdgeWeights(node_weights, Gamma)
     print "Removed negative weighs. Gamma=", Gamma
-#    edge_weights = MapGammaToEdgeWeights(Gamma) 
     edge_weights = Gamma
 
     if isinstance(sTrain_set, list):
@@ -654,7 +645,6 @@ if graph_exact_label_learning:
      
     
 print "sTrain=", sTrain
-#quit()
 
 iSeenid = Parameters.iSeenid
 sSeenid = Parameters.sSeenid
@@ -669,13 +659,6 @@ print "dataset_for_display_newid=", dataset_for_display_newid
 iNewid = take_0_k_th_from_2D_list(iNewid_set, k=dataset_for_display_newid)
 sNewid = take_0_k_th_from_2D_list(sNewid_set, k=dataset_for_display_newid)
 
-#print "sNewid=", sNewid
-
-##For displaying purposes only first entry in training sequences
-#if isinstance(iTrain, list):
-#    image_files_training = iTrain[0][0].input_files
-#    num_images_training = num_images = iTrain[0][0].num_images
-#else:
 image_files_training = iTrain.input_files
 #print image_files_training
 
@@ -684,15 +667,7 @@ num_images_training = num_images = iTrain.num_images
 seq_sets = sTrain_set
 seq = sTrain
 
-#oTrain = NetworkOutput()
-
-#WARNING!!!!!!!
-#Move this after network loadings
 hack_image_sizes = [135, 90, 64, 32, 16]
-#Warning!!! hack_image_size = False
-
-
-
 
 #hack_image_size = 64
 #enable_hack_image_size = True
@@ -700,8 +675,6 @@ if enable_hack_image_size:
     sSeq_force_image_size(sTrain_set, hack_image_size, hack_image_size)
     sSeq_force_image_size(sSeenid, hack_image_size, hack_image_size)
     sSeq_force_image_size(sNewid_set, hack_image_size, hack_image_size)
-
-
         
 subimage_shape, max_clip, signals_per_image, in_channel_dim = sSeq_getinfo_format(sTrain)
 
@@ -710,39 +683,29 @@ subimage_shape, max_clip, signals_per_image, in_channel_dim = sSeq_getinfo_forma
 #filter = generate_color_filter2((seq.subimage_height, seq.subimage_width))
 if use_filter == "ColoredNoise" or use_filter == "1":
     alpha = 4.0 # mask 1 / f^(alpha/2) => power 1/f^alpha
-    filter = filter_colored_noise2D_imp((seq.subimage_height, seq.subimage_width), alpha)
+    my_filter = filter_colored_noise2D_imp((seq.subimage_height, seq.subimage_width), alpha)
 #back_type = None
 #filter = None
 elif use_filter=="None" or use_filter==None or use_filter == "0":
-    filter = None
+    my_filter = None
 else:
     print "Unknown filter: ", use_filter
     quit()
-sTrain.filter = filter
-sSeenid.filter = filter
-sNewid.filter = filter
+sTrain.filter = my_filter
+sSeenid.filter = my_filter
+sNewid.filter = my_filter
         
-#TODO: CREATE USER INTERFACE: users should be able to select a trained network, or train a new one
-#                             and to set the training variables: type of training
-#                             Also, users should set the analysis parameters: num. of signals 
-
-#Work in process, for now keep cache disabled
 network_read_enabled = True #and False
 if network_read_enabled and cache_available:
     network_read = cache.Cache(network_cache_read_dir, "")
 else:
     network_read = None
 
-
-
-#Make this a parameter
 network_saving_enabled = True #and False
 if network_saving_enabled and cache_available and (network_cache_write_dir != None):
     network_write = cache.Cache(network_cache_write_dir, "")
 else:
     network_write = None
-    #print "bug", network_saving_enabled,cache_available,network_cache_write_dir
-    #quit()
     
 node_cache_read_enabled = True #and False
 if node_cache_read_enabled and cache_available and (node_cache_read_dir != None):
@@ -812,7 +775,6 @@ if len(network_hashes_base_filenames) > 0 and (ask_network_loading or load_netwo
         network_filename = network_hashes_base_filenames[selected_network][0]
 
 if network_filename != None:
-#    network_base_filename = string.split(string.split(network_filename, sep=".")[0], sep="/")[-1]
     network_base_filename = string.split(network_filename, sep=".")[0]
     network_hash = string.split(network_base_filename, sep="_")[-1]
 
@@ -825,8 +787,6 @@ if network_filename != None:
     print "network_filename:", network_filename
     print "network_basefilename:", network_base_filename
     print "network_hash:", network_hash
-
-
 
 #        network_write.update_cache([flow, layers, benchmark, Network], None, network_base_dir, "Network"+Network.name+"_ParName"+Parameters.name+"_"+network_hash, overwrite=True, use_hash=network_hash, verbose=True)
 #        network_write.update_cache([iSeq, sSeq], None, network_base_dir, "iSeqsSeqData", overwrite=True, use_hash=network_hash, verbose=True)
@@ -852,39 +812,13 @@ if network_filename != None:
     sl_seq_training = network_read.load_array_from_cache(network_hash, network_cache_read_dir, "SLSeqData", verbose=True)   
     print "Done loading sl_seq_training: ", sl_seq_training.shape
     
-#Why this hash value???? also load whole iSeq, sSeq for first data
-#    subimages_train = network_read.load_array_from_cache(hash_value = "1259249913", base_dir = network_base_dir, base_filename="subimages_train_Network", verbose=True)
-#    print "Done loading subimages_train: %d Samples"%len(subimages_train)    
-    
-#    subimages_train_iter = cache.UnpickleLoader2(path=network_base_dir, basefilename="subimages_train_" + network_basefilename, verbose=True)
-#   
-#    subimages_train = cache.from_iter_to_array(subimages_train_iter, continuous=False, block_size=1, verbose=False)
-#    del subimages_train_iter
-    
-#    sl_seq_training = network_read.load_array_from_cache(hash_value = "1259249913", base_dir = network_base_dir, base_filename="sl_seq_training_Network", verbose=True)
-        
-#    sl_seq_training_iter = cache.UnpickleLoader2(path=network_base_dir, basefilename="sl_seq_training_" + network_basefilename)
-#    sl_seq_training = cache.from_iter_to_array(sl_seq_training_iter, continuous=False, block_size=1, verbose=False)
-#    del sl_seq_training_iter
-
-#      
-#    subimages_train = load_image_data(seq.input_files, seq.image_width, seq.image_height, seq.subimage_width, \
-#                                seq.subimage_height, seq.pixelsampling_x, seq.pixelsampling_y, \
-#                                seq.subimage_first_row, seq.subimage_first_column, seq.add_noise_L0, \
-#                                seq.convert_format, seq.translations_x, seq.translations_y, seq.trans_sampled, background_type=seq.background_type, color_background_filter=filter, verbose=False)
-#    sl_seq_training = flow.execute(subimages_train)
-
 else:
     print "Generating Network..."
-#    from hierarchical_networks import linearPCANetworkU11L as Network 
-#    from hierarchical_networks import TestNetworkU11L as Network
-
     #Usually true for voidNetwork1L, but might be also activated for other networks
     use_full_sl_output = False
 
-    #WARNING
-    #TODO: Move this to a function
     #Network.patch_network_for_RGB = True and False
+    #Expand network output dimensions in case the original data is RGB or HOG02 features
     if (sTrain.convert_format == "RGB" or sTrain.convert_format == "HOG02") and Parameters.patch_network_for_RGB:
         if sTrain.convert_format == "RGB":
 #            factors = [3, 2, 1.5]
@@ -897,27 +831,20 @@ else:
             er = "unknown conversion factor in network correction for in_channel_dim"
             raise Exception(er)
 
-        for i, layer in enumerate((Network.L0, Network.L1, Network.L2)):
+        for i, layer in enumerate(Network.layers[0:3]): #L0, Network.L1, Network.L2)):
             factor = factors[i]
             if layer != None:
                 if layer.pca_out_dim != None and layer.pca_out_dim >= 1:
                     layer.pca_out_dim = int(factor * layer.pca_out_dim)
                 if layer.red_out_dim != None and layer.red_out_dim >= 1:
                     layer.red_out_dim = int(factor * layer.red_out_dim)
-                #What about ord??? usually it keeps dimension the same, thus it is not specified
+                #What about ord? usually it keeps dimension the same, thus it is not specified
                 if layer.sfa_out_dim != None and layer.sfa_out_dim >= 1:
                     layer.sfa_out_dim = int(factor * layer.sfa_out_dim)
         print "testing..."
         #quit()
 
-
-
-    #Warning
-    #WARNING
-    #Todo: Correct network creation, to avoid redundant layers (without enough fan in)
-    #Todo: Correct update of last PCA Node into Whitening
-    #Todo: Move this to a function
-    
+    #Possibly skip some of the last layers of the network if the data resolution has been artificially reduced
     skip_layers = 0
     if (hack_image_size == 8) & (enable_hack_image_size == True):
         Network.L3 = None
@@ -928,7 +855,6 @@ else:
         Network.L8 = None
         Network.L9 = None 
         Network.L10 = None
-#        Network.layers = [Network.L0, Network.L1, Network.L2, Network.L3, Network.L4]
         skip_layers = 8
         
     if (hack_image_size == 16) & (enable_hack_image_size == True):
@@ -938,18 +864,17 @@ else:
         Network.L8 = None
         Network.L9 = None 
         Network.L10 = None
-#        Network.layers = [Network.L0, Network.L1, Network.L2, Network.L3, Network.L4]
         skip_layers = 6
         
     if (hack_image_size == 32) & (enable_hack_image_size == True):
-        Network.L7 = None #Uncomment for 32x32 Images
+        Network.L7 = None 
         Network.L8 = None
         Network.L9 = None 
         Network.L10 = None
         skip_layers = 4
         
     if (hack_image_size == 64 or hack_image_size == 72 or hack_image_size == 80 or hack_image_size == 95 or hack_image_size == 96) & (enable_hack_image_size == True):      
-        Network.L9 = None #Uncomment for 64x64 Images
+        Network.L9 = None 
         Network.L10 = None
         skip_layers = 2
     
@@ -958,7 +883,6 @@ else:
     print "SL=", skip_layers
       
 
-    #skip_layers = 0 #TURBOWARNING!!!!
     if skip_layers > 0:
         for i, layer in enumerate(Network.layers):
             if i+skip_layers < len(Network.layers) and layer != None and Network.layers[i+skip_layers] != None:
@@ -989,7 +913,6 @@ else:
                     if "pca_expo" in Network.layers[i+skip_layers].sfa_args:
                         layer.sfa_args["pca_expo"] = Network.layers[i+skip_layers].sfa_args["pca_expo"]
 
-    #??? What happened to the other layers???? FIXED!
     Network.layers = []
     for layer in [Network.L0, Network.L1, Network.L2, Network.L3, Network.L4, Network.L5, Network.L6, Network.L7, Network.L8, Network.L9, Network.L10 ]:
         if layer == None:
@@ -1013,7 +936,6 @@ else:
         if Network.L4.sfa_node_class == mdp.nodes.PCANode:
             Network.L4.sfa_node_class = mdp.nodes.WhiteningNode
             Network.L4.sfa_out_dim = 50
-#            Network.L4.sfa_out_dim = 0
     if make_last_PCA_node_whithening & (hack_image_size == 32) & (enable_hack_image_size == True) and Network.L6 != None:
         if Network.L6.sfa_node_class == mdp.nodes.PCANode:
             Network.L6.sfa_node_class = mdp.nodes.WhiteningNode
@@ -1021,27 +943,12 @@ else:
     if make_last_PCA_node_whithening & (hack_image_size == 64 or hack_image_size == 80) & (enable_hack_image_size == True) and Network.L8 != None:
         if Network.L8.sfa_node_class == mdp.nodes.PCANode:
             Network.L8.sfa_node_class = mdp.nodes.WhiteningNode
-#            Network.L8.sfa_out_dim = 55
             
-#  RTransX  
-#    Network.L6.sfa_node_class = mdp.nodes.WhiteningNode
-#    Network.L6.sfa_out_dim = 100
-#    Network.L8.sfa_node_class = mdp.nodes.WhiteningNode
-#    Network.L8.sfa_out_dim = 50
-#    Network.L2=None
-#    Network.L3=None
-#    Network.L4=None
-#    Network.L5=None
-    #TODO: try loading subimage_data from cache...
-    #TODO: Add RGB support
-    #TODO: Verify that at least iSeq is the same
-
     load_subimages_train_signal_from_cache = True
     enable_select_train_signal = True
     
     subimages_train_signal_in_cache = False
-    #WARNING: subimage loading disabled until generic training more advanced ... 
-    #not clear how to do a clean loading of all datas/display data
+
     if signal_cache_read and load_subimages_train_signal_from_cache and False:
         print "Looking for subimages_train in cache..."
         
@@ -1081,21 +988,7 @@ else:
                 else:
                     print "Subimages training signal UNEXPECTEDLY NOT FOUND in cache:", signal_base_filename
                     quit()
-            
-#        subimages_ndim = sTrain.subimage_height * sTrain.subimage_width
-#        signal_beginning_filename = "subimages_train_%d"%subimages_ndim
-#        subimages_train_filenames = cache.find_filenames_beginning_with(network_base_dir, signal_beginning_filename, recursion=False, extension=".pckl")
-#        
-#        print "The following possible subimage_train_signals were found:", subimages_train_filenames
-#        if len(subimages_train_filenames) > 0:
-#            #remove extension .pckl
-#            signal_filename = subimages_train_filenames[-1]
-#            print "Signal_filename selected:", signal_filename 
-#            signal_base_filename = string.split(signal_filename, sep=".")[0]
-#            #remove last 6 characters: "_S0000"
-#            signal_base_filename = signal_base_filename[0:-6]
-
-    
+ 
 #Conversion from sSeq to data_sets, param_sets
 #Actually train_func_sets
     train_data_sets, train_params_sets = convert_sSeq_to_funcs_params_sets(seq_sets, verbose=False)
@@ -1104,20 +997,9 @@ else:
     print "calling take_first_02D"
     params_node = take_0_k_th_from_2D_list(train_params_sets, k=dataset_for_display_train)
 
-    
-
-    #print "params_node=", params_node
-    #quit()
-###WARNING!!!!!!!
-##block_size = Parameters.block_size
-##train_mode = Parameters.train_mode
-#print "train_mode=", train_mode
-#quit()
-# = "mixed", "serial", "complete"
-    
+       
     block_size = params_node["block_size"]
     train_mode = params_node["train_mode"]
-    
     
     block_size_L0=block_size
     block_size_L1=block_size
@@ -1125,22 +1007,11 @@ else:
     block_size_L3=block_size
     block_size_exec=block_size #(Used only for random walk)
 
-#    if subimages_train_signal_in_cache == False:
-#        if seq.input_files == "LoadBinaryData00":
-#            subimages_train = load_natural_data(seq.data_base_dir, seq.base_filename, seq.samples, verbose=False)
-#        elif seq.input_files == "LoadRawData":
-#            subimages_train = load_raw_data(seq.data_base_dir, seq.base_filename, input_dim=seq.input_dim, dtype=seq.dtype, select_samples=seq.samples, verbose=False)
-#        else:
-#            subimages_train = load_image_data(seq.input_files, seq.image_width, seq.image_height, seq.subimage_width, \
-#                                    seq.subimage_height, seq.pixelsampling_x, seq.pixelsampling_y, \
-#                                    seq.subimage_first_row, seq.subimage_first_column, seq.add_noise_L0, \
-#                                    seq.convert_format, seq.translations_x, seq.translations_y, seq.trans_sampled, background_type=seq.background_type, color_background_filter=filter, verbose=False)
-
     print "calling take_first_02D again"
     train_func = take_0_k_th_from_2D_list(train_data_sets, k=dataset_for_display_train)
     if coherent_seeds:
         numpy.random.seed(experiment_seed+222222)
-    subimages_train = train_func() ### why am I loading the subimages train here???
+    subimages_train = train_func() 
      
     print "subimages_train[0,0]=%0.40f"%subimages_train[0,0]
 
@@ -1224,7 +1095,7 @@ else:
     print "******************************************"
     print "Creating hierarchy through network_builder"
     print "******************************************"
-    #TODO: more primitive but potentially powerful flow especification here should be possible
+    #TODO: more primitive but potentially powerful flow specification here should be possible
     flow, layers, benchmark = network_builder.CreateNetwork(Network, sTrain.subimage_width, sTrain.subimage_height, block_size=None, train_mode=None, benchmark=benchmark, in_channel_dim=in_channel_dim)
     
     
@@ -1232,12 +1103,8 @@ else:
     if isinstance(flow[0], mdp.nodes.PInvSwitchboard):
         flow[0].noise_addition=0.0
 
-    #quit()
-    #WARNING
-    #flow = mdp.Flow([flow[0]])
-    
     #For display purposes we alter here the image shape artificially...
-    #TODO: Improve this logic appropiately overall... shape should be really the shape, and in_channel_dim should be used
+    #TODO: Improve this logic appropriately overall... shape should be really the shape, and in_channel_dim should be used
     print subimage_shape
     if in_channel_dim in [1, 3]:
         subimage_shape = subimage_shape
@@ -1259,20 +1126,8 @@ else:
     print "Training hierarchy ..."
     print "*****************************"
     
-
-#    enable_parallel = False
-#    if enable_parallel == True:
-##        flow = mdp.Flow(flow[0:])
-#        print "original flow is", flow
-#        scheduler = mdp.parallel.ProcessScheduler(n_processes=4)
-#        print "***********1"
-#        flow = make_flow_parallel(flow)
-#        print "parallel flow is", flow
-#        print "***********2"
-
-        
+    
     subimages_p = subimages = subimages_train
-    #subimages_p = subimages
     #DEFINE TRAINING TYPE. SET ONE OF THE FOLLOWING VARIABLES TO TRUE
     #Either use special (most debugged and efficient) or storage_iterator (saves memory)
     special_training = True
@@ -1289,10 +1144,7 @@ else:
         sl_seq = sl_seq_training = flow.special_train_cache_scheduler_sets(train_data_sets, params_sets=train_params_sets, verbose=True, benchmark=benchmark, 
                                                                            node_cache_read=node_cache_read, signal_cache_read=signal_cache_read, node_cache_write=node_cache_write, 
                                                                            signal_cache_write=signal_cache_write,scheduler=scheduler,n_parallel=n_parallel,immediate_stop_training=True)
-#        sl_seq = sl_seq_training = flow.special_train_cache_scheduler_sets(subimages_p, verbose=True, benchmark=benchmark, node_cache_read=node_cache_read, signal_cache_read=signal_cache_read, node_cache_write=node_cache_write, signal_cache_write=signal_cache_write, scheduler=scheduler, n_parallel=n_parallel)
-#        sl_seq = sl_seq_training = flow.special_train_cache_scheduler(subimages_p, verbose=True, benchmark=benchmark, node_cache_read=node_cache_read, signal_cache_read=signal_cache_read, node_cache_write=node_cache_write, signal_cache_write=signal_cache_write, scheduler=scheduler, n_parallel=n_parallel)
         print "sl_seq is", sl_seq
-        #quit()
         
         ttrain1 = time.time()
         print "Network trained (specialized way) in time %0.3f s"% ((ttrain1-ttrain0))
@@ -1302,7 +1154,6 @@ else:
     #WARNING, introduce smart way of computing chunk_sizes
         input_iter = cache.chunk_iterator(subimages_p, 4, block_size, continuous=False)
         
-    #    sl_seq = sl_seq_training = flow.iterator_train(input_iter)
         flow.iterator_train(input_iter, block_size, continuous=True)
         sl_seq = sl_seq_training = flow.execute(subimages_p)
         
@@ -1363,9 +1214,6 @@ else:
     if feature_cut_off_level > 0.0:
         sl_seq = sl_seq_training = cutoff(sl_seq_training, min_cutoff , max_cutoff)
     
-#    try:
-#        cache.pickle_to_disk([flow, layers, benchmark, Network, subimages_train, sl_seq_training], os.path.join(network_base_dir, "Network_" + str(int(time.time()))+ ".pckl"))
-#   hashing Network info and training data would make more sense here...
     network_hash = str(int(time.time()))
 #    network_filename = "Network_" + network_hash + ".pckl"
 
@@ -1392,26 +1240,6 @@ else:
         signal_base_filename = "sfa_signal_ndim%s_time%s_flow%s"%((signal_ndim, signal_time, flow_hash))
         signal_cache_write.update_cache(sl_seq_training, base_filename=signal_base_filename, overwrite=True, verbose=True)
     
-
-#    cache.pickle_to_disk([flow, layers, benchmark, Network], os.path.join(network_base_dir, network_filename ))
-#    print "2"
-#    subimages_train_iter = chunk_iterator(subimages_train, chunk_size=5000, block_size=1, continuous=False, verbose=True)
-#    print "3"
-#    cache.save_iterable2(subimages_train_iter, path=network_base_dir, basefilename="subimages_train_" + network_filename)   
-#    print "4"
-#    del subimages_train_iter
-#    print "5"
-#    sl_seq_training_iter = chunk_iterator(sl_seq_training, chunk_size=200000, block_size=1, continuous=False, verbose=True)
-#    print "6"
-#    cache.save_iterable2(sl_seq_training_iter, path=network_base_dir, basefilename="sl_seq_training_" + network_filename)
-#    print "7"
-#    del sl_seq_training_iter
-#    print "8"
-    print "Saving Finished"
-#    except:
-#        print "Saving Failed, reason:", ex
-
-
 print "taking into account objective_label=%d"%objective_label
 if len(iTrain.correct_labels.shape)==2:
     print "correction..."
@@ -1427,32 +1255,10 @@ print "Parameters.iSeenid.correct_classes=", Parameters.iSeenid.correct_classes
 print "done"
 
 
-# print "taking into account objective_label=%d"%objective_label
-# if isinstance(iTrain_set, list):
-#     iTrain0 = iTrain_set[len(iTrain_set)-1][0]
-# else:
-#     iTrain0 = take_0_k_th_from_2D_list(iTrain_set, k=0)
-# 
-# if len(iTrain0.correct_labels.shape)==2:
-#     print "correction..."
-#     iTrain0.correct_labels = iTrain0.correct_labels[:,objective_label].flatten()
-#     Parameters.iSeenid.correct_labels = Parameters.iSeenid.correct_labels[:,objective_label].flatten()
-#     Parameters.iNewid[0][0].correct_labels = Parameters.iNewid[0][0].correct_labels[:,objective_label].flatten()
-#         
-#     iTrain0.correct_classes = iTrain0.correct_classes[:,objective_label].flatten()
-#     Parameters.iSeenid.correct_classes = Parameters.iSeenid.correct_classes[:,objective_label].flatten()
-#     Parameters.iNewid[0][0].correct_classes = Parameters.iNewid[0][0].correct_classes[:,objective_label].flatten()
-# print "iTrain0.correct_classes=", iTrain0.correct_classes
-# print "Parameters.iSeenid.correct_classes=", Parameters.iSeenid.correct_classes
-# print "done"
-
-
-
 if coherent_seeds:
     numpy.random.seed(experiment_seed+333333)
 
 
-#Improve this!
 #Fixing some unassigned variables
 subimages_p = subimages = subimages_train
 sl_seq_training = sl_seq_training[:,skip_num_signals:]
@@ -1520,34 +1326,8 @@ if convert_labels_days_to_years:
     if integer_label_estimation:
         correct_labels_training = (correct_labels_training+0.0006).astype(int)
 
-#     print "WARNING, ADDING A BIAS OF -0.5 TO ESTIMATION OF NEWID ONLY!!!"
-#     regression_Gauss_newid += -0.5
-#     regressionMAE_Gauss_newid += -0.5
-    
-#print "Testing for bug in first node..."
-#print "subimages_train[0:1, 0:10]="
-#print subimages_train[0:1, 0:10]
-#print "flow[0].execute(subimages_train[0:1])[:,0:10]="
-#print flow[0].execute(subimages_train[0:1])[:, 0:10]
-
-
-
 print "Loading test images, seen ids..."
 t_load_images0 = time.time()
-#im_seq_base_dir = "/local/tmp/escalafl/Alberto/testing_seenid"
-#im_seq_base_dir = "/local/tmp/escalafl/Alberto/training"
-
-#FOR LEARNING IDENTITIES, INVARIANT TO VERTICAL ANGLE AND TRANSLATIONS
-#im_seq_base_dir = "/local/tmp/escalafl/Alberto/Renderings20x500"
-#ids=range(0,4)
-#expressions=[0]
-#morphs=[0]
-#poses=range(0,500)
-#lightings=[0]
-##slow_signal=0
-#step=4
-#offset=1
-#image_files_seenid = create_image_filenames(im_seq_base_dir, slow_signal, ids, expressions, morphs, poses, lightings, step, offset)
 
 print "LOADING KNOWNID TEST INFORMATION"      
 image_files_seenid = iSeenid.input_files
@@ -1566,11 +1346,6 @@ else:
 #W
 #    subimages_seenid = experiment_datasets.load_data_from_sSeq(seq)
     subimages_seenid = seq.load_data(seq)
-
-#    subimages_seenid = load_image_data(seq.input_files, seq.image_width, seq.image_height, seq.subimage_width, \
-#                            seq.subimage_height, seq.pixelsampling_x, seq.pixelsampling_y, \
-#                            seq.subimage_first_row, seq.subimage_first_column, seq.add_noise_L0, \
-#                            seq.convert_format, seq.translations_x, seq.translations_y, seq.trans_sampled, background_type=seq.background_type, color_background_filter=filter, verbose=False)
 
 t_load_images1 = time.time()
 
@@ -1653,9 +1428,6 @@ if use_full_sl_output == True or reg_num_signals == 0:
 #else:
 #    results.reg_num_signals = reg_num_signals = 3  #42
 
-
-
-#WARNIGN!!! USING NEWID INSTEAD OF TRAINING
 #cf_sl = sl_seq_training
 #cf_num_samples = cf_sl.shape[0]
 #cf_correct_labels = correct_labels_training
@@ -1668,21 +1440,9 @@ cf_correct_labels = correct_labels_seenid_real
 cf_correct_classes = iSeenid.correct_classes
 cf_spacing = cf_block_size = iSeenid.block_size
 
-#if "correct_classes_from_zero" in sSeenid:
-#    all_classes = sSeenid.correct_classes_from_zero
-#else:
 all_classes = numpy.unique(cf_correct_classes)
 
-#if "avg_labels" in sSeenid:
-#    avg_labels = sSeenid.avg_labels
-#else:
 avg_labels = more_nodes.compute_average_labels_for_each_class(cf_correct_classes, cf_correct_labels)
-
-#correct_labels_training = numpy.arange(len(labels_ccc_training))
-#labels_classif = wider_1Darray(numpy.arange(iTrain.MIN_GENDER, iTrain.MAX_GENDER, iTrain.GENDER_STEP), iTrain.block_size)
-#correct_labels_training = labels_classif
-#print "labels_classif.shape = ", labels_classif.shape, " blocksize= ", block_size
-#correct_classes_training = numpy.arange(len(labels_classif)) / block_size
 
 if reg_num_signals <= 128 and (Parameters.analysis != False) and enable_NCC:
     enable_ncc_cfr = True
@@ -1711,11 +1471,6 @@ if reg_num_signals <= 8192 and (Parameters.analysis != False) and enable_lr:
 else:
     enable_lr_cfr = False
 
-#WARNING!!!!
-#enable_svm_cfr = False
-#enable_lr_cfr = False
-#TODO: Correct S2SC, it should accept a correct_classes parameter
-
 if enable_ncc_cfr == True:
     print "Training Classifier/Regression NCC"
     ncc_node = mdp.nodes.NearestMeanClassifier()
@@ -1724,8 +1479,6 @@ if enable_ncc_cfr == True:
 
 if enable_ccc_Gauss_cfr == True:
     print "Training Classifier/Regression GC..."
-#    S2SC = classifiers.Simple_2_Stage_Classifier()
-#    S2SC.train(data=cf_sl[:,0:reg_num_signals], labels=cf_correct_labels, classes= cf_correct_classes, block_size=cf_block_size,spacing=cf_block_size)
     print "unique labels =", numpy.unique(cf_correct_classes)
     print "len(unique_labels)=", len(numpy.unique(cf_correct_classes))
     print "cf_sl[0,:]=", cf_sl[0,:]
@@ -1739,7 +1492,6 @@ if enable_ccc_Gauss_cfr == True:
 #        print "class %f appears %d times"%(c, (cf_correct_classes==c).sum())
 #        print "mean(cf_sl[c=%d,:])="%c, cf_sl[cf_correct_classes==c, :].mean(axis=0)
 #        print "std(cf_sl[c=%d,:])="%c, cf_sl[cf_correct_classes==c, :].std(axis=0)
-
 
     GC_node = mdp.nodes.GaussianClassifier()
     GC_node.train(x=cf_sl[:,0:reg_num_signals], labels = cf_correct_classes) #Functions for regression use class values!!!
@@ -1841,10 +1593,6 @@ else:
 
 if enable_ccc_Gauss_cfr == True:
     print "GC classify..."
-#    classes_ccc_training, labels_ccc_training = S2SC.classifyCDC(sl_seq_training[:,0:reg_num_signals])
-#    classes_Gauss_training, labels_Gauss_training = S2SC.classifyGaussian(sl_seq_training[:,0:reg_num_signals])
-#    regression_Gauss_training = S2SC.GaussianRegression(sl_seq_training[:,0:reg_num_signals])
-#    probs_training = S2SC.GC_L0.class_probabilities(sl_seq_training[:,0:reg_num_signals])
     classes_Gauss_training = numpy.array(GC_node.label(sl_seq_training[:,0:reg_num_signals]))
     labels_Gauss_training = more_nodes.map_class_numbers_to_avg_label(all_classes, avg_labels, classes_Gauss_training)
     
@@ -1876,15 +1624,11 @@ if enable_svm_cfr == True and skip_svm_training==False:
     regression_svm_training= more_nodes.map_class_numbers_to_avg_label(all_classes, avg_labels, classes_svm_training)
     regression2_svm_training= more_nodes.map_class_numbers_to_avg_label(all_classes, avg_labels, classes_svm_training)
     regression3_svm_training= more_nodes.map_class_numbers_to_avg_label(all_classes, avg_labels, classes_svm_training)
-#    regression3_svm_training= svm_node.eban_regression(sl_seq_training[:,0:reg_num_signals])
-    #Warning!!!
-#    raw_input("please enter something to continue")
-        
+#    regression3_svm_training= svm_node.eban_regression(sl_seq_training[:,0:reg_num_signals])      
 #    eban_probs = svm_node.eban_probability2(sl_seq_training[0:2,0:reg_num_signals])
 #    print "len(eban_probs[0])= ", len(eban_probs[0])
 #    print eban_probs
 #
-#    
 #    eban_probs = svm_node.eban_probability(sl_seq_training[num_images_training/2:num_images_training/2+2,0:reg_num_signals])
 #    print "len(eban_probs[0])= ", len(eban_probs[0])
 #    print eban_probs
@@ -1896,9 +1640,6 @@ if enable_svm_cfr == True and skip_svm_training==False:
 #    quit()
 else:
     classes_svm_training=regression_svm_training = regression2_svm_training = regression3_svm_training=numpy.zeros(num_images_training)
-
-#HACK
-#classes_svm_training= svm_node.classifyNoMem(sl_seq_training[:,0:reg_num_signals])
 
 if enable_lr_cfr == True:
     print "LR execute..."
@@ -1991,19 +1732,12 @@ if enable_svm_cfr == True:
     regression3_svm_seenid = more_nodes.map_class_numbers_to_avg_label(all_classes, avg_labels, classes_svm_seenid)
 
 #    regression3_svm_seenid = svm_node.eban_regression(sl_seq_seenid[:,0:reg_num_signals], hint=probs_seenid)
-#    raw_input("please enter something to continue & save")
-    
     #network_write.update_cache(probs_seenid, None, network_base_dir, "GCProbs", overwrite=True, use_hash=network_hash, verbose=True)
-
-    
-#    quit()
 else:
     classes_svm_seenid=regression_svm_seenid = regression2_svm_seenid = regression3_svm_seenid = numpy.zeros(num_images_seenid)
 
 #HACK
 #classes_svm_seenid = svm_node.classifyNoMem(sl_seq_seenid[:,0:reg_num_signals])
-
-
        
 if enable_lr_cfr == True:
     regression_lr_seenid = lr_node.execute(sl_seq_seenid[:,0:reg_num_signals]).flatten()
@@ -2020,11 +1754,9 @@ print "labels_kNN_seenid.shape=", labels_kNN_seenid.shape
 
 #correct_labels_seenid = wider_1Darray(numpy.arange(iSeenid.MIN_GENDER, iSeenid.MAX_GENDER, iSeenid.GENDER_STEP), iSeenid.block_size)
 print "correct_labels_seenid.shape=", correct_labels_seenid.shape
-#correct_classes_seenid = numpy.arange(len(labels_ccc_seenid)) * len(labels_ccc_training) / len(labels_ccc_seenid) / block_size
 
 t_class1 = time.time()
 print "Classification/Regression over Seen Id in %0.3f s"% ((t_class1 - t_class0))
-
 
 if integer_label_estimation:
     print "Making all label estimations for seenid data integer numbers"
@@ -2095,26 +1827,6 @@ if clip_seenid_newid_to_training:
     print "sl_seq_newid_max=", sl_seq_newid_max
     sl_seq_newid = numpy.clip(sl_seq_newid, sl_seq_training_min, sl_seq_training_max)
 
-
-#WARNING!!!
-#print "WARNING!!! SCALING NEW ID SLOW SIGNALS!!!"
-#corr_factor = numpy.array([ 1.06273968,  1.0320762 ,  1.06581665,  1.01598426,  1.08355725,
-#        1.10316477,  1.08731609,  1.05887109,  1.08185727,  1.09867758,
-#        1.10567757,  1.08268021])
-#print corr_factor
-#
-#corr_factor = numpy.array([ 1.06273968,  1.0320762 ,  1.06581665,  1.01598426,  1.08355725,
-#        1.10316477,  1.08731609,  1.05887109,  1.08185727,  1.09867758]) * 0.98
-#print corr_factor
-#
-#corr_factor =  numpy.sqrt(sl_seq_training.var(axis=0) / sl_seq_newid.var(axis=0))[0:reg_num_signals].mean()
-#print corr_factor
-#
-#corr_factor =  numpy.sqrt(sl_seq_training.var(axis=0) / sl_seq_newid.var(axis=0))[0:reg_num_signals] * 0.98
-#print corr_factor
-#
-#corr_factor =  0.977 * numpy.sqrt(sl_seq_training.var(axis=0)[0:reg_num_signals].mean() / sl_seq_newid.var(axis=0)[0:reg_num_signals].mean())
-#print corr_factor
 
 corr_factor=1.0
 print corr_factor
@@ -2242,7 +1954,6 @@ if integer_label_estimation:
     print "regressionMAE_Gauss_newid[0:5]=", regressionMAE_Gauss_newid[0:5]
 
 
-
 #print "Saving train/test_data for external analysis"
 #ndarray_to_string(sl_seq_training, "/local/tmp/escalafl/training_samples.txt")
 #ndarray_to_string(correct_labels_training, "/local/tmp/escalafl/training_labels.txt")
@@ -2275,70 +1986,6 @@ print "brute_delta_newid=", results.brute_delta_newid
 print "computed delta/eta in %0.3f ms"% ((t_delta_eta1-t_delta_eta0)*1000.0)
 
 
-#print "Generating (new random) input sequence..."
-#use_average = False
-#use_first_id = False
-#use_random_walk = False
-#use_training_data = True
-#use_new_identity = False
-#new_id = 5
-#if block_size_exec is not None and block_size_exec > 1:
-#    print "block_size_exec > 1"
-#    num_images2 = num_images / block_size_exec
-#    subimages2 = numpy.zeros((num_images2, subimage_width * subimage_height))
-#    if use_first_id is True:-1 to 1 or?
-#        print "Input Signal: First ID / First Pose of each ID"
-#        for i in range(num_images2):
-#            subimages2[i] = subimages[block_size_exec * i]       
-#    elif use_average is True:
-#        print "Input Signal: Average of IDs"
-#        for i in range(num_images2):
-#            subimages2[i] = subimages[block_size_exec * i: block_size_exec * (i+1)].sum(axis=0) / block_size_exec
-#    elif use_random_walk is True:
-#        print "Input Signal: Random Walk"
-#        for i in range(num_images2):
-#            id = numpy.random.randint(block_size_exec)
-##            subimages[block_size * i + id]
-##            subimages2[i] = subimages[0]
-#            subimages2[i] = subimages[block_size_exec * i + id]
-#    elif use_training_data is True:
-#        print "Input Signal: Training Data"
-#        subimages2 = subimages
-#        num_images2 = num_images
-#    elif use_new_identity is True:
-#        print "Input Signal: New ID random%03d*.tif"%(new_id)
-#        test_image_files1 = glob.glob(im_seq_base_dir + "/random%03d*.tif"%(new_id))
-#        test_image_files1.sort()
-#
-#        test_image_files = []
-#        for i in range(len(test_image_files1)):
-#            test_image_files.append(test_image_files1[i])
-#
-#        num_images2 = num_test_images = len(test_image_files)
-#        
-#        subimages2 = numpy.zeros((num_test_images, subimage_width * subimage_height))
-#        act_im_num = 0
-#        for image_file in test_image_files:
-#            im = Image.open(image_file)
-#            im = im.convert("L")
-#            im_arr = numpy.asarray(im)
-#            im_small = im_arr[subimage_first_row:(subimage_first_row+subimage_height*subimage_pixelsampling):subimage_pixelsampling,
-#                              subimage_first_column:(subimage_first_column+subimage_width*subimage_pixelsampling):subimage_pixelsampling].astype(float)
-#            subimages2[act_im_num] = im_small.flatten()
-#            act_im_num = act_im_num+1
-#            del im_small
-#            del im_arr
-#            del im
-#    else:
-#        print "******************* No input sequence specified !!!!!!!!!!!!!!!!!"
-##
-#    subimages = subimages2
-#    num_images = num_images2
-#
-##flow.
-##print "Training finished, ed in %0.3f ms"% ((t2-t1)*1000.0)
-#sl_seq = flow.execute(subimages)
-#inverted_im = flow.inverse(sl_seq)
 
 if isinstance(block_size, int):
     print "virtual sequence length complete = ", num_images_training  * (block_size - 1)/2
@@ -2388,11 +2035,6 @@ if estimate_explained_var_linear_global_N:
         number_samples_EV_linear_global = estimate_explained_var_linear_global_N
     else:
         number_samples_EV_linear_global = sl_seq_training.shape[0]
-#    num_features = sl_seq_training.shape[1]
-    #WARNING!
-    #OFFICIAL AGE IS THIS:
-    #EVLinGlobal_train1, EVLinGlobal_train2, EVLinGlobal_newid = more_nodes.estimate_explained_var_linear_global(subimages_train, sl_seq_training[:,0:40], subimages_newid, sl_seq_newid[:,0:40], num_features, number_samples_EV_linear_global)
-    #FEATURE OBFUSCATION TEST:
     number_samples_EV_linear_global = sl_seq_seenid.shape[0]
     num_features_linear_model = 75
     EVLinGlobal_train1, EVLinGlobal_train2, EVLinGlobal_newid = more_nodes.estimate_explained_var_linear_global(subimages_seenid, sl_seq_seenid[:,0:num_features_linear_model], subimages_newid, sl_seq_newid[:,0:num_features_linear_model], num_features_linear_model, number_samples_EV_linear_global)
@@ -2542,7 +2184,7 @@ if cumulative_scores:
             error_table[label][error] = 0
 
         maes[label] = abs_errors.mean()
-#0
+
 #        for abs_error in abs_errors:
 #            maes[label] += abs_error
 #        maes[label] /= 1.0 * len(errors)
@@ -3838,99 +3480,6 @@ if enable_display:
         tmp_ax.axis('off')
         all_axes_mask_dec.append(tmp_ax)
     
-
-##ax_6.subplots_adjust(hspace=0.5)
-#plt.suptitle("Localized Linear (or Non-Linear) Masks Learned by SFA [0 - 4]")
-#lim_delta_sfa = 0.001
-#num_masks3 = 4
-#slow_values3 = [-3.0, -2.0, -1.0, 1.0, 2.0, 3.0]
-#axes3 = range(num_masks3)
-#for ma in range(num_masks3):
-#    axes3[ma] = range(len(slow_values3))
-#
-#for ma in range(num_masks3):
-#    for sl, slow_value in enumerate(slow_values3):
-#        tmp_ax = plt.subplot(4,6,ma*len(slow_values3)+sl+1)
-#        plt.axes(tmp_ax)
-#        plt.title("H-1( S[%d]=%d ) - z'"%(ma, slow_value))
-#
-#        if sl == 0:
-#            plt.yticks([])
-#            plt.xticks([])
-#            plt.ylabel("Mask[%d]"%ma)
-#        else:
-#            tmp_ax.axis('off')
-#        axes3[ma][sl] = tmp_ax
-#
-##Create Figure
-#ax11 = plt.figure()
-#ax11.subplots_adjust(hspace=0.3, wspace=0.03, top=0.93, right=0.96, bottom=0.05, left=0.05)
-#
-##ax_6.subplots_adjust(hspace=0.5)
-#plt.suptitle("Linear (or Non-Linear) Masks Learned by SFA [4 to 15]")
-#
-#masks4 = range(4,16) 
-#num_masks4 = len(masks4)
-#slow_values4 = [-1.0, 1.0]
-#axes4 = range(num_masks4)
-#for ma in range(num_masks4):
-#    axes4[ma] = range(len(slow_values4))
-#
-#for ma, mask in enumerate(masks4):
-#    for sl, slow_value in enumerate(slow_values4):
-#        tmp_ax = plt.subplot(4,6,ma*len(slow_values4)+sl+1)
-#        plt.axes(tmp_ax)
-#        plt.title("H-1( S[%d]=%d ) - z'"%(mask, slow_value))
-#        if sl == 0:
-#            plt.yticks([])
-#            plt.xticks([])
-#            plt.ylabel("Mask[%d]"%mask)
-#        else:
-#            tmp_ax.axis('off')
-#        axes4[ma][sl] = tmp_ax
-
-
-#UNCOMMENT THIS!!!! and add code to show result of localized inversion
-#print "************ Displaying Localized Morphs and Masks **********"
-##Create Figure
-#ax9 = plt.figure()
-#ax9.subplots_adjust(hspace=0.3, wspace=0.03, top=0.93, right=0.96, bottom=0.05, left=0.05)
-#
-##ax_6.subplots_adjust(hspace=0.5)
-#plt.suptitle("Localized (Linear or Non-Linear) Morphs using SFA")
-#
-##display SFA
-#ax9_11 = plt.subplot(4,5,1)
-#plt.title("Train-Signals in Slow Domain")
-#sl_seqdisp = sl_seq[:, range(0,hierarchy_out_dim)]
-#sl_seqdisp = scale_to(sl_seqdisp, sl_seq.mean(), sl_seq.max()-sl_seq.min(), 127.5, 255.0, scale_disp, 'tanh')
-#ax9_11.imshow(sl_seqdisp.clip(0,255), aspect='auto', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)
-#plt.ylabel("Image number")
-#
-#mask_normalize = False
-#lim_delta_sfa = 0.001
-#num_masks = 4
-#slow_values = [-3.0, -2.0, -1.0, 1.0, 2.0, 3.0]
-#axes = range(num_masks)
-#for ma in range(num_masks):
-#    axes[ma] = range(len(slow_values))
-#
-#for ma in range(num_masks):
-#    for sl, slow_value in enumerate(slow_values):
-#        tmp_ax = plt.subplot(4,6,ma*len(slow_values)+sl+1)
-#        plt.axes(tmp_ax)
-#        plt.title("H-1( S[%d]=%d ) - z'"%(ma, slow_value))
-#
-#        if sl == 0:
-#            plt.yticks([])
-#            plt.xticks([])
-#            plt.ylabel("Mask[%d]"%ma)
-#        else:
-#            tmp_ax.axis('off')
-#        axes[ma][sl] = tmp_ax
-
-
-
     #Retrieve Image in Sequence
     def mask_on_press(event):
         global plt, ax6, ax6_11, ax6_12, ax6_13, ax6_14, ax6_21, ax6_22, ax6_23, ax6_24, ax6_25, ax6_31, ax6_32, ax6_33, ax6_34, ax6_35, ax6_41, ax6_42, ax6_43, ax6_44, ax6_45
@@ -4390,735 +3939,8 @@ if enable_display:
                 #plt.ylabel("Slow Signals")
                 
 
-#            work_sfa[0][x] = slow_value
-#            t_loc_inv0 = time.time()
-#            inverted_im = flow.localized_inverse(data_in, work_sfa, verbose=True)
-#            t_loc_inv1 = time.time()
-#            print "Localized inverse computed in %0.3f ms"% ((t_loc_inv1-t_loc_inv0)*1000.0) 
-#
-#            inverted_im = inverted_im.reshape((sTrain.subimage_height, sTrain.subimage_width))
-#            if display_type == "inv":
-#                fig_axes.imshow(inverted_im.clip(0,255), vmin=0, vmax=255, aspect='equal', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)        
-        
-#        print "Displaying Masks Using Localized Inverses"
-#        #Display: Altered Reconstructions
-#        error_scale_disp=1.0
-#        disp_data = [(-1, "inv", ax9_21), (-0.5, "inv", ax9_22), (0, "inv", ax9_23), (0.5, "inv", ax9_24), (1, "inv", ax9_25)]
-#    
-#        data_in = subimages[y].reshape((1, sTrain.subimage_height * sTrain.subimage_width))
-#        data_out = sl_seq[y].reshape((1, hierarchy_out_dim))  
-#        work_sfa = data_out.copy()
-#           
-#        for slow_value, display_type, fig_axes in disp_data:
-#            work_sfa[0][x] = slow_value
-#            t_loc_inv0 = time.time()
-#            inverted_im = flow.localized_inverse(data_in, work_sfa, verbose=True)
-#            t_loc_inv1 = time.time()
-#            print "Localized inverse computed in %0.3f ms"% ((t_loc_inv1-t_loc_inv0)*1000.0) 
-#
-#            inverted_im = inverted_im.reshape((sTrain.subimage_height, sTrain.subimage_width))
-#            if display_type == "inv":
-#                fig_axes.imshow(inverted_im.clip(0,255), vmin=0, vmax=255, aspect='equal', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)        
-
-
     print "GUI Created, showing!!!!"
     plt.show()
     print "GUI Finished!"
-
-
-   
+  
 print "Program successfully finished"
-
-#    def __init__(self):
-#        self.name = "Training Data"
-#        self.num_samples = 0
-#        self.sl = []
-#        self.correct_classes = []
-#        self.correct_labels = []
-#        self.classes = []
-#        self.labels = []
-#        self.block_size = []
-#        self.eta_values = []
-#        self.delta_values = []
-#        self.class_ccc_rate = 0
-#        self.gauss_class_rate = 0
-#        self.reg_mse = 0
-#        self.gauss_reg_mse = 0
-
-
-#im_seq_base_dir = pFTrain.data_base_dir
-#ids = pFTrain.ids
-#ages = pFTrain.ages
-#MIN_GENDER = pFTrain.MIN_GENDER
-#MAX_GENDER = pFTrain.MAX_GENDER
-#GENDER_STEP = pFTrain.GENDER_STEP
-#genders = map(code_gender, numpy.arange(MIN_GENDER, MAX_GENDER,GENDER_STEP))
-#racetweens = pFTrain.racetweens
-#expressions = pFTrain.expressions 
-#morphs = pFTrain.morphs 
-#poses = pFTrain.poses
-#lightings = pFTrain.lightings
-#slow_signal = pFTrain.slow_signal
-#step = pFTrain.step
-#offset = pFTrain.offset
-#
-#image_files_training = create_image_filenames2(im_seq_base_dir, slow_signal, ids, ages, genders, racetweens, \
-#                            expressions, morphs, poses, lightings, step, offset)
-
-#params = [ids, expressions, morphs, poses, lightings]
-#params2 = [ids, ages, genders, racetweens, expressions, morphs, poses, lightings]
-
-#block_size= num_images / len(params[slow_signal])
-#block_size = num_images / len(params2[slow_signal])
-
-##translation = 4
-#translation = pDataTraining.translation 
-#
-##WARNING
-##scale_disp = 3
-#scale_disp = 1
-##image_width  = 640
-##image_height = 480
-#image_width  = pDataTraining.image_width   
-#image_height = pDataTraining.image_height 
-#subimage_width  = pDataTraining.subimage_width   
-#
-#subimage_height = pDataTraining.subimage_height 
-##pixelsampling_x = 2
-##pixelsampling_y = 2
-#pixelsampling_x = pDataTraining.pixelsampling_x 
-#pixelsampling_y = pDataTraining.pixelsampling_y 
-#subimage_pixelsampling=pDataTraining.subimage_pixelsampling
-#subimage_first_row= pDataTraining.subimage_first_row
-#subimage_first_column=pDataTraining.subimage_first_column
-#add_noise_L0 = pDataTraining.add_noise_L0
-#convert_format=pDataTraining.convert_format
-#
-##translations_x=None
-##translations_y=None
-#
-#translations_x=pDataTraining.translations_x
-#translations_y=pDataTraining.translations_y
-#trans_sampled=pDataTraining.trans_sampled
-
-
-
-#IMPROVEMENT, block_size_L0, L1, L2 should be specified just before training
-#print "Using training data for slowly varying vertical angle, and (very!!!) quickly varying user identity"
-#print "suggested: include_tails=False, use normal"
-#image_files = []
-#skip = 1
-#for i in range(len(image_files1)):
-#    image_files.append(image_files1[i])
-#    image_files.append(image_files2[i])
-#    image_files.append(image_files3[i])
-#    image_files.append(image_files4[i])
-#    image_files.append(image_files5[i])
-#    image_files.append(image_files6[i])
-#    image_files.append(image_files7[i])
-#
-#    
-#num_images = len(image_files)
-#
-##block_size=num_images/5
-#block_size=7
-#block_size_L0=block_size
-#block_size_L1=block_size
-#block_size_L2=block_size
-#block_size_L3=block_size
-#block_size_exec=block_size #(Used only for random walk)
-
-#Specify images to be loaded
-#IMPROVEMENT: implement with a dictionary
-
-#im_seq_base_dir = "/local/tmp/escalafl/Alberto/Renderings20x500"
-#ids=range(0,8)
-#expressions=[0]
-#morphs=[0]
-#poses=range(0,500)
-#lightings=[0]
-#slow_signal=0
-#step=2
-#offset=0
-#
-#image_files_training = create_image_filenames(im_seq_base_dir, slow_signal, ids, expressions, morphs, poses, lightings, step, offset)
-
-
-#    print "Shape of lat_mat_L0 is:", La.lat_mat
-#Create L%d sfa node
-#sfa_out_dim_La = 12
-#pca_out_dim_La = 90
-#pca_out_dim_La = sfa_out_dim_L0 x_field_channels_La * x_field_channels_La * 0.75 
-
-
-##pca_node_L3 = mdp.nodes.WhiteningNode(output_dim=pca_out_dim_L3) 
-#pca_node_L3 = mdp.nodes.SFANode(output_dim=pca_out_dim_L3, block_size=block_size_L3) 
-#
-#exp_node_L3 = GeneralExpansionNode(exp_funcs_L3, use_hint=True, max_steady_factor=0.35, \
-#                 delta_factor=0.6, min_delta=0.0001)
-##exp_out_dim_L3 = exp_node_L3.output_dim
-##red_node_L3 = mdp.nodes.WhiteningNode(input_dim=exp_out_dim_L3, output_dim=red_out_dim_L3)   
-#red_node_L3 = mdp.nodes.WhiteningNode(output_dim=red_out_dim_L3)   
-#
-##sfa_node_L3 = mdp.nodes.SFANode(input_dim=preserve_mask_L2.size, output_dim=sfa_out_dim_L3)
-##sfa_node_L3 = mdp.nodes.SFANode()
-#sfa_node_L3 = mdp.nodes.SFANode(output_dim=sfa_out_dim_L3, block_size=block_size_L3)
-#
-#t8 = time.time()
-
-
-#x_field_channels_L0=5
-#y_field_channels_L0=5
-#x_field_spacing_L0=5
-#y_field_spacing_L0=5
-#in_channel_dim_L0=1
-
-#    La.v1 = (La.x_field_spacing, 0)
-#    La.v2 = (La.x_field_spacing, La.y_field_spacing)
-#
-#    La.preserve_mask = numpy.ones((La.y_field_channels, La.x_field_channels)) > 0.5
-## 6 x 12
-#print "About to create (lattice based) perceptive field of width=%d, height=%d"%(La.x_field_channels, La.y_field_channels) 
-#print "With a spacing of horiz=%d, vert=%d, and %d channels"%(La.x_field_spacing, La.y_field_spacing, La.in_channel_dim)
-#
-#(mat_connections_L0, lat_mat_L0) = compute_lattice_matrix_connections(v1_L0, v2_L0, preserve_mask_L0, subimage_width, subimage_height, in_channel_dim_L0)
-#print "matrix connections L0:"
-#print mat_connections_L0
-#
-#t1 = time.time()
-#
-#switchboard_L0 = PInvSwitchboard(subimage_width * subimage_height, mat_connections_L0)
-#switchboard_L0.connections
-#
-#t2 = time.time()
-#print "PInvSwitchboard L0 created in %0.3f ms"% ((t2-t1)*1000.0)
-#
-##Create single PCA Node
-##pca_out_dim_L0 = 20
-#num_nodes_RED_L0 = num_nodes_EXP_L0 = num_nodes_SFA_L0 = num_nodes_PCA_L0 = lat_mat_L0.size / 2
-#
-##pca_out_dim_L0 = 7
-##exp_funcs_L0 = [identity, pair_prod_ex, pair_prod_adj1_ex, pair_prod_adj2_ex, pair_sqrt_abs_dif_adj2_ex]
-##red_out_dim_L0 = 25
-##sfa_out_dim_L0 = 20
-##MEGAWARNING!!!
-##pca_out_dim_L0 = 10
-#
-#pca_out_dim_L0 = pSFALayerL0.pca_out_dim
-#exp_funcs_L0 = pSFALayerL0.exp_funcs
-#red_out_dim_L0 = pSFALayerL0.red_out_dim
-#sfa_out_dim_L0 = pSFALayerL0.sfa_out_dim
-#
-##pca_out_dim_L0 = 16
-##
-##exp_funcs_L0 = [identity,]
-##red_out_dim_L0 = 0.99
-##sfa_out_dim_L0 = 15
-#
-##WARNING!!!!!!!!!!!
-##pca_node_L0 = mdp.nodes.WhiteningNode(input_dim=preserve_mask_L0.size, output_dim=pca_out_dim_L0)
-##pca_node_L0 = mdp.nodes.SFANode(input_dim=preserve_mask_L0.size, output_dim=pca_out_dim_L0, block_size=block_size_L0)
-#pca_node_L0 = pSFALayerL0.pca_node(output_dim=pca_out_dim_L0, **pSFALayerL0.pca_args)
-##pca_node_L0 = mdp.nodes.WhiteningNode(output_dim=pca_out_dim_L0)
-##Create array of pca_nodes (just one node, but cloned)
-#pca_layer_L0 = mdp.hinet.CloneLayer(pca_node_L0, n_nodes=num_nodes_PCA_L0)
-#
-##exp_funcs_L0 = [identity, pair_prod_ex, pair_sqrt_abs_dif_ex, pair_sqrt_abs_sum_ex]
-##exp_node_L0 = GeneralExpansionNode(exp_funcs_L0, input_dim = pca_out_dim_L0, use_hint=True, max_steady_factor=0.25, \
-#exp_node_L0 = GeneralExpansionNode(exp_funcs_L0, use_hint=True, max_steady_factor=0.25, \
-#                 delta_factor=0.6, min_delta=0.001)
-##exp_out_dim_L0 = exp_node_L0.output_dim
-#exp_layer_L0 = mdp.hinet.CloneLayer(exp_node_L0, n_nodes=num_nodes_EXP_L0)
-#
-##Create Node for dimensionality reduction
-##red_out_dim_L0 = 20.....PCANode, WhiteningNode
-##red_node_L0 = mdp.nodes.PCANode(output_dim=red_out_dim_L0)
-#red_node_L0 = pSFALayerL0.red_node(output_dim=red_out_dim_L0)
-##Create array of red_nodes (just one node, but cloned)
-#red_layer_L0 = mdp.hinet.CloneLayer(red_node_L0, n_nodes=num_nodes_RED_L0)
-#
-##Create single SFA Node
-##Warning Signal too short!!!!!sfa_out_dim_L0 = 20
-##sfa_out_dim_L0 = 10
-#sfa_node_L0 = pSFALayerL0.sfa_node(output_dim=sfa_out_dim_L0, block_size=block_size_L0)
-##Create array of sfa_nodes (just one node, but cloned)
-#num_nodes_SFA_L0 = lat_mat_L0.size / 2
-#sfa_layer_L0 = mdp.hinet.CloneLayer(sfa_node_L0, n_nodes=num_nodes_SFA_L0)
-#
-#t3 = time.time()
-
-#from experiment_datasets import pSFALayerL1 as L1
-#
-##Create Switchboard L1
-##Create L1 sfa node
-##x_field_channels_L1 = pSFALayerL1.x_field_channels
-##y_field_channels_L1 = pSFALayerL1.y_field_channels
-##x_field_spacing_L1 = pSFALayerL1.x_field_spacing
-##y_field_spacing_L1 = pSFALayerL1.y_field_spacing
-##in_channel_dim_L1 = pSFALayerL1.in_channel_dim
-##
-##pca_out_dim_L1 = pSFALayerL1.pca_out_dim 
-##exp_funcs_L1 = pSFALayerL1.exp_funcs 
-##red_out_dim_L1 = pSFALayerL1.red_out_dim 
-##sfa_out_dim_L1 = pSFALayerL1.sfa_out_dim
-##cloneLayerL1 = pSFALayerL1.cloneLayer
-#
-#L1.v1 = [L1.x_field_spacing, 0]
-#L1.v2 = [L1.x_field_spacing, L1.y_field_spacing]
-#
-#L1.preserve_mask = numpy.ones((L1.y_field_channels, L1.x_field_channels, L1.in_channel_dim)) > 0.5
-#
-#print "About to create (lattice based) intermediate layer width=%d, height=%d"%(L1.x_field_channels, L1.y_field_channels) 
-#print "With a spacing of horiz=%d, vert=%d, and %d channels"%(L1.x_field_spacing, L1.y_field_spacing, L1.in_channel_dim)
-#
-#print "Shape of lat_mat_L0 is:", lat_mat_L0
-#L1.y_in_channels, L1.x_in_channels, tmp = lat_mat_L0.shape
-#
-##remember, here tmp is always two!!!
-#
-##switchboard_L1 = mdp.hinet.Rectangular2dSwitchboard(12, 6, x_field_channels_L1,y_field_channels_L1,x_field_spacing_L1,y_field_spacing_L1,in_channel_dim_L1)
-#
-##preserve_mask_L1_3D = wider(preserve_mask_L1, scale_x=in_channel_dim)
-#(L1.mat_connections, L1.lat_mat) = compute_lattice_matrix_connections_with_input_dim(L1.v1, L1.v2, L1.preserve_mask, L1.x_in_channels, L1.y_in_channels, L1.in_channel_dim)
-#print "matrix connections L1:"
-#print L1.mat_connections
-#L1.switchboard = PInvSwitchboard(L1.x_in_channels * L1.y_in_channels * L1.in_channel_dim, L1.mat_connections)
-#
-#L1.switchboard.connections
-#
-#t4 = time.time()
-#
-#L1.num_nodes = L1.lat_mat.size / 2
-#
-#
-##Create L1 sfa node
-##sfa_out_dim_L1 = 12
-##pca_out_dim_L1 = 90
-##pca_out_dim_L1 = sfa_out_dim_L0 x_field_channels_L1 * x_field_channels_L1 * 0.75 
-#
-##MEGAWARNING, "is" is a wrong condition!!!
-#if L1.cloneLayer == True:
-#    print "Layer L1 with ", L1.num_nodes, " cloned PCA nodes will be created"
-#    print "Warning!!! layer L1 using cloned PCA instead of several independent copies!!!"
-#    L1.pca_node = L1.pca_node_class(input_dim=L1.preserve_mask.size, output_dim=L1.pca_out_dim, **L1.pca_args)
-#    #Create array of sfa_nodes (just one node, but cloned)
-#    L1.pca_layer = mdp.hinet.CloneLayer(L1.pca_node, n_nodes=L1.num_nodes)
-#else:
-#    print "Layer L1 with ", L1.num_nodes, " independent PCA nodes will be created"
-#    L1.PCA_nodes = range(L1.num_nodes_PCA)
-#    for i in range(L1.num_nodes_PCA):
-#        L1.PCA_nodes[i] = L1.pca_node_class(input_dim=L1.preserve_mask.size, output_dim=L1.pca_out_dim, **L1.pca_args)
-#    L1.pca_layer_L1 = mdp.hinet.Layer(L1.PCA_nodes, homogeneous = True)
-#
-#L1.exp_node = GeneralExpansionNode(L1.exp_funcs, use_hint=True, max_steady_factor=0.05, \
-#                 delta_factor=0.6, min_delta=0.0001)
-##exp_out_dim_L1 = exp_node_L1.output_dim
-#L1.exp_layer = mdp.hinet.CloneLayer(L1.exp_node, n_nodes=L1.num_nodes)
-#
-#if L1.cloneLayer == True: 
-#    print "Warning!!! layer L1 using cloned RED instead of several independent copies!!!"
-#    L1.red_node = L1.red_node_class(output_dim=L1.red_out_dim)   
-#    L1.red_layer = mdp.hinet.CloneLayer(L1.red_node, n_nodes=L1.num_nodes)
-#else:    
-#    print "Layer L1 with ", L1.num_nodes, " independent RED nodes will be created"
-#    L1.RED_nodes = range(L1.num_nodes)
-#    for i in range(L1.num_nodes):
-#        L1.RED_nodes[i] = L1.red_node_class(output_dim=L1.red_out_dim)
-#    L1.red_layer = mdp.hinet.Layer(L1.RED_nodes, homogeneous = True)
-#
-#if L1.cloneLayer == True: 
-#    print "Warning!!! layer L1 using cloned SFA instead of several independent copies!!!"
-#    #sfa_node_L1 = mdp.nodes.SFANode(input_dim=switchboard_L1.out_channel_dim, output_dim=sfa_out_dim_L1)
-#    L1.sfa_node = L1.sfa_node_class(output_dim=L1.sfa_out_dim, block_size=block_size)    
-#    #!!!no ma, ya aniadele el atributo output_channels al PINVSwitchboard    
-#    L1.sfa_layer = mdp.hinet.CloneLayer(L1.sfa_node, n_nodes=L1.num_nodes)
-#else:    
-#    print "Layer L1 with ", L1.num_nodes, " independent SFA nodes will be created"
-#    L1.SFA_nodes = range(L1.num_nodes)
-#    for i in range(L1.num_nodes):
-#        L1.SFA_nodes[i] = L1.sfa_node_class(output_dim=L1.sfa_out_dim, block_size=block_size)
-#    L1.sfa_layer = mdp.hinet.Layer(L1.SFA_nodes, homogeneous = True)
-
-#t5 = time.time()
-#
-#print "LAYER L2"
-##Create Switchboard L2
-#x_field_channels_L2=3
-#y_field_channels_L2=3
-#x_field_spacing_L2=3
-#y_field_spacing_L2=3
-#in_channel_dim_L2=L1.sfa_out_dim
-#
-#v1_L2 = [x_field_spacing_L2, 0]
-#v2_L2 = [x_field_spacing_L2, y_field_spacing_L2]
-#
-#preserve_mask_L2 = numpy.ones((y_field_channels_L2, x_field_channels_L2, in_channel_dim_L2)) > 0.5
-#
-#print "About to create (lattice based) third layer (L2) width=%d, height=%d"%(x_field_channels_L2,y_field_channels_L2) 
-#print "With a spacing of horiz=%d, vert=%d, and %d channels"%(x_field_spacing_L2,y_field_spacing_L2,in_channel_dim_L2)
-#
-#print "Shape of lat_mat_L1 is:", L1.lat_mat
-#y_in_channels_L2, x_in_channels_L2, tmp = L1.lat_mat.shape
-#
-##preserve_mask_L2_3D = wider(preserve_mask_L2, scale_x=in_channel_dim)
-#(mat_connections_L2, lat_mat_L2) = compute_lattice_matrix_connections_with_input_dim(v1_L2, v2_L2, preserve_mask_L2, x_in_channels_L2, y_in_channels_L2, in_channel_dim_L2)
-#print "matrix connections L2:"
-#print mat_connections_L2
-#switchboard_L2 = PInvSwitchboard(x_in_channels_L2 * y_in_channels_L2 * in_channel_dim_L2, mat_connections_L2)
-#
-#switchboard_L2.connections
-#
-#t6 = time.time()
-#print "PinvSwitchboard L2 created in %0.3f ms"% ((t6-t5)*1000.0)
-#num_nodes_PCA_L2 = num_nodes_EXP_L2 = num_nodes_RED_L2 = num_nodes_SFA_L2 = lat_mat_L2.size / 2
-#
-##Default: cloneLayerL2 = False
-#cloneLayerL2 = False
-#
-##Create L2 sfa node
-##sfa_out_dim_L2 = 12
-##pca_out_dim_L2 = 120
-#pca_out_dim_L2 = 100 
-#exp_funcs_L2 = [identity,]
-#red_out_dim_L2 = 100
-#sfa_out_dim_L2 = 40
-#
-#if cloneLayerL2 == True:
-#    print "Layer L2 with ", num_nodes_PCA_L2, " cloned PCA nodes will be created"
-#    print "Warning!!! layer L2 using cloned PCA instead of several independent copies!!!"  
-#    
-#    pca_node_L2 = mdp.nodes.PCANode(input_dim=preserve_mask_L2.size, output_dim=pca_out_dim_L2)
-#    #Create array of sfa_nodes (just one node, but cloned)
-#    pca_layer_L2 = mdp.hinet.CloneLayer(pca_node_L2, n_nodes=num_nodes_PCA_L2)
-#else:
-#    print "Layer L2 with ", num_nodes_PCA_L2, " independent PCA nodes will be created"
-#    PCA_nodes_L2 = range(num_nodes_PCA_L2)
-#    for i in range(num_nodes_PCA_L2):
-#        PCA_nodes_L2[i] = mdp.nodes.PCANode(input_dim=preserve_mask_L2.size, output_dim=pca_out_dim_L2)
-#    pca_layer_L2 = mdp.hinet.Layer(PCA_nodes_L2, homogeneous = True)
-#
-#exp_node_L2 = GeneralExpansionNode(exp_funcs_L2, use_hint=True, max_steady_factor=0.05, \
-#                 delta_factor=0.6, min_delta=0.0001)
-#exp_out_dim_L2 = exp_node_L2.output_dim
-#exp_layer_L2 = mdp.hinet.CloneLayer(exp_node_L2, n_nodes=num_nodes_EXP_L2)
-#
-#if cloneLayerL2 == True: 
-#    print "Warning!!! layer L2 using cloned RED instead of several independent copies!!!"
-#    red_node_L2 = mdp.nodes.WhiteningNode(output_dim=red_out_dim_L2)   
-#    red_layer_L2 = mdp.hinet.CloneLayer(red_node_L2, n_nodes=num_nodes_RED_L2)
-#else:    
-#    print "Layer L2 with ", num_nodes_RED_L2, " independent RED nodes will be created"
-#    RED_nodes_L2 = range(num_nodes_RED_L2)
-#    for i in range(num_nodes_RED_L2):
-#        RED_nodes_L2[i] = mdp.nodes.WhiteningNode(output_dim=red_out_dim_L2)
-#    red_layer_L2 = mdp.hinet.Layer(RED_nodes_L2, homogeneous = True)
-#
-#if cloneLayerL2 == True:
-#    print "Layer L2 with ", num_nodes_SFA_L2, " cloned SFA nodes will be created"
-#    print "Warning!!! layer L2 using cloned SFA instead of several independent copies!!!"      
-#    #sfa_node_L2 = mdp.nodes.SFANode(input_dim=switchboard_L2.out_channel_dim, output_dim=sfa_out_dim_L2)
-#    sfa_node_L2 = mdp.nodes.SFANode(input_dim=red_out_dim_L2, output_dim=sfa_out_dim_L2, block_size=block_size_L2)
-#    #!!!no ma, ya aniadele el atributo output_channels al PINVSwitchboard
-#    sfa_layer_L2 = mdp.hinet.CloneLayer(sfa_node_L2, n_nodes=num_nodes_SFA_L2)
-#else:
-#    print "Layer L2 with ", num_nodes_SFA_L2, " independent PCA/SFA nodes will be created"
-#
-#    SFA_nodes_L2 = range(num_nodes_SFA_L2)
-#    for i in range(num_nodes_SFA_L2):
-#        SFA_nodes_L2[i] = mdp.nodes.SFANode(input_dim=red_out_dim_L2, output_dim=sfa_out_dim_L2, block_size=block_size_L2)
-#    sfa_layer_L2 = mdp.hinet.Layer(SFA_nodes_L2, homogeneous = True)
-#
-#t7 = time.time()
-#
-##Create L3 sfa node
-##sfa_out_dim_L3 = 150
-##sfa_out_dim_L3 = 78
-##WARNING!!! CHANGED PCA TO SFA
-##pca_out_dim_L3 = 210
-##pca_out_dim_L3 = 0.999
-#pca_out_dim_L3 = 300
-##exp_funcs_L3 = [identity, pair_prod_ex, pair_prod_adj1_ex, pair_prod_adj2_ex, pair_prod_adj3_ex]
-#exp_funcs_L3 = [identity]
-#red_out_dim_L3 = 0.999999
-#sfa_out_dim_L3 = 40
-#
-#print "Creating final EXP/DimRed/SFA node L3"
-#
-##pca_node_L3 = mdp.nodes.WhiteningNode(output_dim=pca_out_dim_L3) 
-#pca_node_L3 = mdp.nodes.SFANode(output_dim=pca_out_dim_L3, block_size=block_size_L3) 
-#
-#exp_node_L3 = GeneralExpansionNode(exp_funcs_L3, use_hint=True, max_steady_factor=0.35, \
-#                 delta_factor=0.6, min_delta=0.0001)
-##exp_out_dim_L3 = exp_node_L3.output_dim
-##red_node_L3 = mdp.nodes.WhiteningNode(input_dim=exp_out_dim_L3, output_dim=red_out_dim_L3)   
-#red_node_L3 = mdp.nodes.WhiteningNode(output_dim=red_out_dim_L3)   
-#
-##sfa_node_L3 = mdp.nodes.SFANode(input_dim=preserve_mask_L2.size, output_dim=sfa_out_dim_L3)
-##sfa_node_L3 = mdp.nodes.SFANode()
-#sfa_node_L3 = mdp.nodes.SFANode(output_dim=sfa_out_dim_L3, block_size=block_size_L3)
-#
-#t8 = time.time()
-
-#Join Switchboard and SFA layer in a single flow
-#flow = mdp.Flow([switchboard_L0, sfa_layer_L0, switchboard_L1, sfa_layer_L1, switchboard_L2, sfa_layer_L2, sfa_node_L3], verbose=True)
-#flow = mdp.Flow([switchboard_L0, pca_layer_L0, exp_layer_L0, red_layer_L0, sfa_layer_L0, switchboard_L1, pca_layer_L1, exp_layer_L1, red_layer_L1, sfa_layer_L1, switchboard_L2, pca_layer_L2, exp_layer_L2, red_layer_L2, sfa_layer_L2, pca_node_L3, exp_node_L3, red_node_L3, sfa_node_L3], verbose=True)
-
-
-#pFSeenid = ParamsInput()
-#pFSeenid.name = "Gender60x200"
-#pFSeenid.data_base_dir ="/local/tmp/escalafl/Alberto/RenderingsGender60x200"
-#pFSeenid.ids = range(160,200)
-#pFSeenid.ages = [999]
-#pFSeenid.MIN_GENDER = -3
-#pFSeenid.MAX_GENDER = 3
-#pFSeenid.GENDER_STEP = 0.10000 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-##pFSeenid.GENDER_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-#pFSeenid.genders = map(code_gender, numpy.arange(pFSeenid.MIN_GENDER, pFSeenid.MAX_GENDER, pFSeenid.GENDER_STEP))
-#pFSeenid.racetweens = [999]
-#pFSeenid.expressions = [0]
-#pFSeenid.morphs = [0]
-#pFSeenid.poses = [0]
-#pFSeenid.lightings = [0]
-#pFSeenid.slow_signal = 2
-#pFSeenid.step = 1
-#pFSeenid.offset = 0                             
-
-#im_seq_base_dir = pFSeenid.data_base_dir
-#ids = pFSeenid.ids
-#ages = pFSeenid.ages
-#MIN_GENDER_SEENID = pFSeenid.MIN_GENDER
-#MAX_GENDER_SEENID = pFSeenid.MAX_GENDER
-#GENDER_STEP_SEENID = pFSeenid.GENDER_STEP
-#genders = map(code_gender, numpy.arange(MIN_GENDER_SEENID, MAX_GENDER_SEENID,GENDER_STEP_SEENID))
-#racetweens = pFSeenid.racetweens
-#expressions = pFSeenid.expressions 
-#morphs = pFSeenid.morphs 
-#poses = pFSeenid.poses
-#lightings = pFSeenid.lightings
-#slow_signal = pFSeenid.slow_signal
-#step = pFSeenid.step
-#offset = pFSeenid.offset
-
-
-#FOR LEARNING GENDER, INVARIANT TO IDENTITY
-#im_seq_base_dir = "/local/tmp/escalafl/Alberto/RenderingsGender60x200"
-#ids=range(160,200)
-#ages=[999]
-#GENDER_STEP_SEENID = 0.1
-#genders = map(code_gender, numpy.arange(-3,3,GENDER_STEP_SEENID)) #4.005, 0.20025
-#racetweens = [999]
-#expressions=[0]
-#morphs=[0]
-#poses=[0]
-#lightings=[0]
-#slow_signal=2
-#step=1
-#offset=0
-
-#params = [ids, expressions, morphs, poses, lightings]
-#params2 = [ids, ages, genders, racetweens, expressions, morphs, poses, lightings]
-#block_size_seenid= num_images_seenid / len(params2[slow_signal])
-
-#pDataSeenid = ParamsDataLoading()
-#pDataSeenid.input_files = image_files_seenid
-#pDataSeenid.num_images = len(image_files_seenid)
-#pDataSeenid.image_width = 256
-#pDataSeenid.image_height = 192
-#pDataSeenid.subimage_width = 135
-#pDataSeenid.subimage_height = 135 
-#pDataSeenid.pixelsampling_x = 1
-#pDataSeenid.pixelsampling_y =  1
-#pDataSeenid.subimage_pixelsampling = 2
-#pDataSeenid.subimage_first_row =  pDataSeenid.image_height/2-pDataSeenid.subimage_height*pDataSeenid.pixelsampling_y/2
-#pDataSeenid.subimage_first_column = pDataSeenid.image_width/2-pDataSeenid.subimage_width*pDataSeenid.pixelsampling_x/2+ 5*pDataSeenid.pixelsampling_x
-#pDataSeenid.add_noise_L0 = True
-#pDataSeenid.convert_format = "L"
-#pDataSeenid.translation = 0
-#pDataSeenid.translations_x = numpy.random.random_integers(-pDataSeenid.translation, pDataSeenid.translation, pDataSeenid.num_images)
-#pDataSeenid.translations_y = numpy.random.random_integers(-pDataSeenid.translation, pDataSeenid.translation, pDataSeenid.num_images)
-#pDataSeenid.trans_sampled = True
-
-#image_width  = pDataSeenid.image_width   
-#image_height = pDataSeenid.image_height 
-#subimage_width  = pDataSeenid.subimage_width   
-#subimage_height = pDataSeenid.subimage_height 
-#pixelsampling_x = pDataSeenid.pixelsampling_x 
-#pixelsampling_y = pDataSeenid.pixelsampling_y 
-#subimage_pixelsampling=pDataSeenid.subimage_pixelsampling
-#subimage_first_row= pDataSeenid.subimage_first_row
-#subimage_first_column=pDataSeenid.subimage_first_column
-#add_noise_L0 = pDataSeenid.add_noise_L0
-#convert_format=pDataSeenid.convert_format
-#translations_x=pDataSeenid.translations_x
-#translations_y=pDataSeenid.translations_y
-#trans_sampled=pDataSeenid.trans_sampled
-
-##image_width  = 640
-##image_height = 480
-#image_width  = 256
-#image_height = 192
-#subimage_width  = 135
-#subimage_height = 135 
-#pixelsampling_x = 1
-#pixelsampling_y = 1
-#subimage_pixelsampling=1
-##pixelsampling_x = 2
-##pixelsampling_y = 2
-##subimage_pixelsampling=2
-#subimage_first_row= image_height/2-subimage_height*pixelsampling_y/2
-#subimage_first_column=image_width/2-subimage_width*pixelsampling_x/2+ 5*pixelsampling_x
-#add_noise_L0 = False
-#convert_format="L"
-#translations_x=numpy.random.random_integers(-translation, translation, num_images_seenid) 
-#translations_y=numpy.random.random_integers(-translation, translation, num_images_seenid)
-#trans_sampled=True
-
-
-#image_files_seenid = create_image_filenames2(im_seq_base_dir, slow_signal, ids, ages, genders, racetweens, \
-#                            expressions, morphs, poses, lightings, step, offset)
-#
-#num_images_seenid = len(image_files_seenid)
-#
-#subimages_seenid = load_image_data(image_files_seenid, image_width, image_height, subimage_width, subimage_height, \
-#                    pixelsampling_x, pixelsampling_y, subimage_first_row, subimage_first_column, \
-#                    add_noise_L0, convert_format, translations_x, translations_y, trans_sampled)
-
-
-#pFNewid = ParamsInput()
-#pFNewid.name = "Gender60x200"
-#pFNewid.data_base_dir ="/local/tmp/escalafl/Alberto/Renderings20x500"
-#pFNewid.ids = range(0,2)
-#pFNewid.ages = [999]
-#pFNewid.MIN_GENDER = -3
-#pFNewid.MAX_GENDER = 3
-#pFNewid.GENDER_STEP = 0.10000 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-##pFNewid.GENDER_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-#pFNewid.genders = map(code_gender, numpy.arange(pFNewid.MIN_GENDER, pFNewid.MAX_GENDER, pFNewid.GENDER_STEP))
-#pFNewid.racetweens = [999]
-#pFNewid.expressions = [0]
-#pFNewid.morphs = [0]
-#pFNewid.poses = range(0,500)
-#pFNewid.lightings = [0]
-#pFNewid.slow_signal = 0
-#pFNewid.step = 4
-#pFNewid.offset = 0                             
-#
-#im_seq_base_dir = pFNewid.data_base_dir
-#ids = pFNewid.ids
-#ages = pFNewid.ages
-#MIN_GENDER_NEWID = pFNewid.MIN_GENDER
-#MAX_GENDER_NEWID = pFNewid.MAX_GENDER
-#GENDER_STEP_NEWID = pFNewid.GENDER_STEP
-#genders = map(code_gender, numpy.arange(MIN_GENDER_NEWID , MAX_GENDER_NEWID ,GENDER_STEP_NEWID ))
-#racetweens = pFNewid.racetweens
-#expressions = pFNewid.expressions 
-#morphs = pFNewid.morphs 
-#poses = pFNewid.poses
-#lightings = pFNewid.lightings
-#slow_signal = pFNewid.slow_signal
-#step = pFNewid.step
-#offset = pFNewid.offset
-#
-###im_seq_base_dir = "/local/tmp/escalafl/Alberto/testing_newid"
-##im_seq_base_dir = "/local/tmp/escalafl/Alberto/Renderings20x500"
-##ids=range(0,2)
-##expressions=[0]
-##morphs=[0]
-##poses=range(0,500)
-##lightings=[0]
-##slow_signal=0
-##step=4
-##offset=0
-#
-#image_files_newid = create_image_filenames(im_seq_base_dir, slow_signal, ids, expressions, morphs, poses, lightings, step, offset)
-#num_images_newid = len(image_files_newid)
-#params = [ids, expressions, morphs, poses, lightings]
-#block_size_newid= num_images_newid / len(params[slow_signal])
-#
-#
-#
-#
-##image_width  = 640
-##image_height = 480subimages_seenid
-##subimage_width  = 135
-##subimage_height = 135 
-##pixelsampling_x = 2
-##pixelsampling_y = 2
-##subimage_pixelsampling=2
-##subimage_first_row= image_height/2-subimage_height*pixelsampling_y/2
-##subimage_first_column=image_width/2-subimage_width*pixelsampling_x/2+ 5*pixelsampling_x
-##add_noise_L0 = False
-##convert_format="L"
-##translations_x=None
-##translations_y=None
-##trans_sampled=True
-#
-#
-#pDataNewid = ParamsDataLoading()
-#pDataNewid.input_files = image_files_seenid
-#pDataNewid.num_images = len(image_files_seenid)
-#pDataNewid.image_width = 640
-#pDataNewid.image_height = 480
-#pDataNewid.subimage_width = 135
-#pDataNewid.subimage_height = 135 
-#pDataNewid.pixelsampling_x = 2
-#pDataNewid.pixelsampling_y =  2
-#pDataNewid.subimage_pixelsampling = 2
-#pDataNewid.subimage_first_row =  pDataNewid.image_height/2-pDataNewid.subimage_height*pDataNewid.pixelsampling_y/2
-#pDataNewid.subimage_first_column = pDataNewid.image_width/2-pDataNewid.subimage_width*pDataNewid.pixelsampling_x/2+ 5*pDataNewid.pixelsampling_x
-#pDataNewid.add_noise_L0 = False
-#pDataNewid.convert_format = "L"
-#pDataNewid.translation = 0
-#pDataNewid.translations_x = numpy.random.random_integers(-pDataNewid.translation, pDataNewid.translation, pDataNewid.num_images)
-#pDataNewid.translations_y = numpy.random.random_integers(-pDataNewid.translation, pDataNewid.translation, pDataNewid.num_images)
-#pDataNewid.trans_sampled = True
-#
-#image_width  = pDataNewid.image_width   
-#image_height = pDataNewid.image_height 
-#subimage_width  = pDataNewid.subimage_width   
-#subimage_height = pDataNewid.subimage_height 
-#pixelsampling_x = pDataNewid.pixelsampling_x 
-#pixelsampling_y = pDataNewid.pixelsampling_y 
-#subimage_pixelsampling=pDataNewid.subimage_pixelsampling
-#subimage_first_row= pDataNewid.subimage_first_row
-#subimage_first_column=pDataNewid.subimage_first_column
-#add_noise_L0 = pDataNewid.add_noise_L0
-#convert_format=pDataNewid.convert_format
-#translations_x=pDataNewid.translations_x
-#translations_y=pDataNewid.translations_y
-#trans_sampled=pDataNewid.trans_sampled
-#
-#subimages_newid = load_image_data(image_files_newid, image_width, image_height, subimage_width, subimage_height, \
-#                    pixelsampling_x, pixelsampling_y, subimage_first_row, subimage_first_column, \
-#                    add_noise_L0, convert_format, translations_x, translations_y, trans_sampled)
-
-##Testing hash function
-##print "Testing for bug in hashing of RandomPermutationNode..."
-##xx = numpy.array([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]])
-##node1 = more_nodes.RandomPermutationNode()
-##node1.train(xx)
-##node2 = more_nodes.RandomPermutationNode()
-##node2.train(xx)
-##
-##hash1 = cache.hash_object(node1, m=None, recursion=True, verbose=False)
-##hash2 = cache.hash_object(node2, m=None, recursion=True, verbose=False)
-##
-##print "hash1=", hash1.hexdigest()
-##print "hash2=", hash2.hexdigest()
-##print "hash values should usually differ since there are two trainings"
-##print "*********************************************************************"
-##
-##print "Testing for bug in hashing of RandomPermutationNode..."
-##xx = numpy.array([[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]])
-##node1 = more_nodes.GeneralExpansionNode([identity])
-##node2 = more_nodes.GeneralExpansionNode([pair_prod_adj2_ex])
-##
-##hash1 = cache.hash_object(node1, m=None, recursion=True, verbose=False)
-##hash2 = cache.hash_object(node2, m=None, recursion=True, verbose=False)
-##
-##print "hash1=", hash1.hexdigest()
-##print "hash2=", hash2.hexdigest()
-##print "hash values should be equal if expansion functions are the same"
-##print "*********************************************************************"
-##
-##quit()
