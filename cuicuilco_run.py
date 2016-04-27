@@ -41,6 +41,7 @@ from lockfile import LockFile
 import mkl
 mkl.set_num_threads(22)
 from inspect import getmembers
+import subprocess
 
 #from mdp import numx
 #sys.path.append("/home/escalafl/workspace/hiphi/src/hiphi/utils")
@@ -51,6 +52,7 @@ from inspect import getmembers
 #list holding the benchmark information with entries: ("description", time as float in seconds)
 benchmark=[]
 
+__version__ = "0.6.0"
 
 t0 = time.time()
 print "LOADING INPUT INFORMATION"        
@@ -135,13 +137,17 @@ print "Using mdp version:", mdp.__version__, "file:", mdp.__file__
 print hierarchical_networks.__file__
 print experiment_datasets.__file__
 
+print "attempting to retrieve hash of current git commit:"
+print "output of \"$git describe --tags\" :", subprocess.check_output(["git", "describe", "--tags"]).strip()
+print "output of \"$git rev-parse HEAD\" :", subprocess.check_output(["git", "rev-parse", "HEAD"]).strip()
+
 print "List of modules and their versions:"
 obj_names = sys.modules.keys()
 for obj_name in obj_names:
     obj_value = sys.modules[obj_name]
     obj_members = dir(obj_value) #getmembers(obj_value)
     if "__version__" in obj_members:
-        print "   ", obj_name, " version (__version__): ", obj_value.__version__
+        print "   using ", obj_name, " version: ", obj_value.__version__
 
 available_experiments = {}
 print "Creating list of available experiments:"
