@@ -44,8 +44,6 @@ else:
     SystemParameters.ParamsSFALayer.ord_args = {}
     SystemParameters.ParamsSFASuperNode.ord_args = {}
     
-    
-
 print "SystemParameters.ParamsSFALayer.ord_node_class is:", SystemParameters.ParamsSFALayer.ord_node_class
 print "SystemParameters.ParamsSFALayer.ord_args is:", SystemParameters.ParamsSFALayer.ord_args
 

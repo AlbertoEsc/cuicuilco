@@ -49,7 +49,7 @@ class GaussianApprox(object):
         square_distances = (diffs**2).sum(2)
         return square_distances.argmin(1)
 
-class ClosestDistanceClassifier(object):
+class ClosestDistanceClassifier(object): 
     def train(self, data, labels=None):
         self.n_classes = data.shape[0]
         self.vectorsM = data.copy()
