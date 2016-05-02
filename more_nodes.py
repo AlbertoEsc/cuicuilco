@@ -1,33 +1,11 @@
-
 import numpy
 import scipy
 import scipy.optimize
-#import scipy.optimize
-#import matplotlib as mpl
-#import matplotlib.pyplot as plt
-#import PIL
-#import Image
 import mdp
-#import os
-#import glob
-#import random
-##For patching MDP
-#from mdp import numx
-#from mdp.utils import (mult, pinv, symeig, CovarianceMatrix, QuadraticForm,
-#                       SymeigException)
 from mdp.utils import (mult, pinv, symeig, CovarianceMatrix, SymeigException)
-#from mdp.utils import (mult, pinv, symeig, CovarianceMatrix, SymeigException)
 
 import copy
-#import time
-#import SystemParameters
-#import hashlib
-#
 import sys
-##sys.path.append("/home/escalafl/workspace/hiphi/src/hiphi/utils")
-##import misc
-#import object_cache
-#import more_nodes
 from sfa_libs import select_rows_from_matrix, distance_squared_Euclidean
 from inversion import invert_exp_funcs2
 
@@ -99,8 +77,7 @@ class RandomizedMaskNode(mdp.Node):
         return False
 
     def _execute(self, x):
-        vec_noise_func = numpy.vectorize(self.noise_func)
-
+#        vec_noise_func = numpy.vectorize(self.noise_func)
         print "computed X_avg=", self.x_avg
         print "computed X_std=", self.x_std
         noise_mat = self.noise_func(x, self.x_avg, self.x_std)
@@ -109,11 +86,10 @@ class RandomizedMaskNode(mdp.Node):
         print "Noise_amount_mask:", self.noise_amount_mask
         print "Noise_mat:", noise_mat
         noisy_signal = (1.0 - self.noise_amount_mask) * x + self.noise_amount_mask * noise_mat
-        preserve_mask = self.remove_mask == False
+        preserve_mask = (self.remove_mask == False)
         return noisy_signal[:, preserve_mask]
 
-   
-    
+
 class GeneralExpansionNode(mdp.Node):
     def __init__(self, funcs, input_dim = None, dtype = None, \
                  use_pseudoinverse=True, use_hint=False, output_dim=None, starting_point = None, max_steady_factor=1.5, \
@@ -142,7 +118,6 @@ class GeneralExpansionNode(mdp.Node):
             exp_dim += outx.shape[1]
         return exp_dim
     def output_sizes(self, n):
-        exp_dim=0
         sizes = numpy.zeros(len(self.funcs))
         x = numpy.zeros((1,n))
         for i, func in enumerate(self.funcs):
@@ -188,9 +163,7 @@ class GeneralExpansionNode(mdp.Node):
             print er
             raise Exception(er)    
         self.rs_coefficients = c1
-        self.rs_offsets = l1
-            
-            
+        self.rs_offsets = l1          
     def is_invertible(self):
         return self.use_pseudoinverse
     def inverse(self, x, use_hint=None, max_steady_factor=None, \
@@ -279,13 +252,8 @@ class PointwiseFunctionNode(mdp.Node):
         else:
             return x
 #        return numpy.array(map(self.row_func, x))
-
-    
-    
-    
-#Note: generalize with other functions!!!
-#Careful with the sign used!!!
-class BinomialAbsoluteExpansionNode(mdp.Node):
+ 
+class PairwiseAbsoluteExpansionNode(mdp.Node):
 #        mask_x_coordinates = mask_indices % x_in_channels
     def expanded_dim(self, n):
         return n + n*(n+1)/2
@@ -303,17 +271,15 @@ class BinomialAbsoluteExpansionNode(mdp.Node):
 
 #TODO:ADD inverse type sum, suitable for when output_scaling is True
 class PInvSwitchboard(mdp.hinet.Switchboard):
-    def __init__(self, input_dim, connections, slow_inv=False, type_inverse="average", output_scaling=True, noise_addition=0.000004):
+    def __init__(self, input_dim, connections, slow_inv=False, type_inverse="average", output_scaling=True, additive_noise_std=0.000004):
         super(PInvSwitchboard, self).__init__(input_dim=input_dim, connections=connections)
         self.pinv = None
         self.mat2 = None
         self.slow_inv = slow_inv
         self.type_inverse = type_inverse
-        self.output_dim = len(connections) #WARNING was connections.size
+        self.output_dim = len(connections) 
         self.output_scales = None
-        self.noise_addition = noise_addition #noise_std
-        #O[j] = I[connections[j]] 
-        #O[inverse_indices[i]]=I[i]
+        self.additive_noise_std = additive_noise_std 
         if self.inverse_connections == None:
             print "type(connections)", type(connections)
             all_outputs = numpy.arange(self.output_dim)
@@ -326,8 +292,7 @@ class PInvSwitchboard(mdp.hinet.Switchboard):
         elif self.inverse_connections == None and self.slow_inv == False:
             index_array = numpy.argsort(connections)
             value_array = connections[index_array]
-            
-            
+                      
             value_range = numpy.zeros((input_dim, 2))
             self.inverse_indices = range(input_dim)
             for i in range(input_dim):
@@ -340,29 +305,29 @@ class PInvSwitchboard(mdp.hinet.Switchboard):
 
         elif self.inverse_connections == None and self.slow_inv == True:
             print "warning using slow inversion in PInvSwitchboard!!!"
-#find input variables not used by connections:
+            #find input variables not used by connections:
             used_inputs = numpy.unique(connections)
             used_inputs_set = set(used_inputs)
             all_inputs_set = set(range(input_dim))
             unused_inputs_set = all_inputs_set - all_inputs_set.intersection(used_inputs_set)
             unused_inputs = list(unused_inputs_set)
             self.num_unused_inputs = len(unused_inputs)
-#extend connections array
-            ext_connections = numpy.concatenate((connections, unused_inputs))
-#create connections matrix
+            #extend connections array
+            #ext_connections = numpy.concatenate((connections, unused_inputs))
+            #create connections matrix
             mat_height = len(connections) + len(unused_inputs)
             mat_width =  input_dim
             mat = numpy.zeros((mat_height,mat_width)) 
-#fill connections matrix
+            #fill connections matrix
             for i in range(len(connections)):
                 mat[i,connections[i]] = 1
-#            
+            #            
             for i in range(len(unused_inputs)):
                 mat[i+len(connections), unused_inputs[i]] = 1
-#    
+            #    
             print "extended matrix is:"
             print mat
-#compute pseudoinverse
+            #compute pseudoinverse
             mat2 = numpy.matrix(mat)
             self.mat2 = mat2
             self.pinv = (mat2.T * mat2).I * mat2.T
@@ -397,35 +362,36 @@ class PInvSwitchboard(mdp.hinet.Switchboard):
         print "PINVSB output_scales =", self.output_scales
         print "SUM output_scales/len(output_scales)=", self.output_scales.sum() / len (self.output_scales)
         print "output_scales.min()", self.output_scales.min()
-#PInvSwitchboard is always invertible                
+
+    #PInvSwitchboard is always invertible                
     def is_invertible(self):
         return True
-#
+
     def _execute(self, x):
         print "calling PInvSwitchboard/superclass _execute" #calling execute(x) instead of _execute(x) results in infinite loop!!!
         print "super(PInvSwitchboard, self)=", super(PInvSwitchboard, self)
         x = numpy.array(x,order="FORTRAN")
-#        print "super()=", super()
+        #print "super()=", super()
         y = super(PInvSwitchboard, self)._execute(x) * self.output_scales
         print "y.shape", y.shape
-#        print "y computed"
-#        quit()
-        if self.noise_addition>0.0:
+        #print "y computed"
+        #quit()
+        if self.additive_noise_std>0.0:
             steps=10
-            print "PInvSwitchboard is adding noise to the output features with std", self.noise_addition, " computation in %d steps"%steps
+            print "PInvSwitchboard is adding noise to the output features with std", self.additive_noise_std, " computation in %d steps"%steps
             n, dim = y.shape
             step_size= int(n/steps)
-#            y += numpy.random.uniform(low=-(3**0.5)*self.noise_addition, high=(3**0.5)*self.noise_addition, size=y.shape)
+            #y += numpy.random.uniform(low=-(3**0.5)*self.additive_noise_std, high=(3**0.5)*self.additive_noise_std, size=y.shape)
             for s in range(steps):
-                y[step_size*s:step_size*(s+1)] += numpy.random.uniform(low=-(3**0.5)*self.noise_addition, high=(3**0.5)*self.noise_addition, size=(step_size, dim))
+                y[step_size*s:step_size*(s+1)] += numpy.random.uniform(low=-(3**0.5)*self.additive_noise_std, high=(3**0.5)*self.additive_noise_std, size=(step_size, dim))
                 print "noise block %d added"%s
             if step_size * steps < n:
                 rest= n-step_size * steps
-                y[step_size*steps:step_size*steps+rest] += numpy.random.uniform(low=-(3**0.5)*self.noise_addition, high=(3**0.5)*self.noise_addition, size=(rest, dim))                
+                y[step_size*steps:step_size*steps+rest] += numpy.random.uniform(low=-(3**0.5)*self.additive_noise_std, high=(3**0.5)*self.additive_noise_std, size=(rest, dim))                
                 print "remaining noise block added"                
         return y
-#
-#If true inverse is present, just use it, otherwise compute it by means of the pseudoinverse                    
+
+    #If true inverse is present, just use it, otherwise compute it by means of the pseudoinverse                    
     def _inverse(self, x):
         x = x * (1.0 / self.output_scales) 
         if self.inverse_connections == None and self.slow_inv == False:
@@ -452,7 +418,7 @@ class PInvSwitchboard(mdp.hinet.Switchboard):
             output = (self.pinv * data2.T).T
         else:
             print "using inverse_connections in PInvSwitchboard"
-#            return apply_permutation_to_signal(x, self.inverse_connections, self.input_dim)
+            #return apply_permutation_to_signal(x, self.inverse_connections, self.input_dim)
             output = select_rows_from_matrix(x, self.inverse_connections)
         return output 
     
@@ -463,7 +429,7 @@ class RandomPermutationNode(mdp.Node):
         super(RandomPermutationNode, self).__init__(input_dim, output_dim, dtype)
         self.permutation = None
         self.inv_permutation = None
-        self.dummy = 5 #without it the hash fails!!!!! neiiinnn!!! wie kann das sein!!!!! verbessert die hash du!!!!
+        self.dummy = 5 #without it the hash fails!!!!! 
         
     def is_trainable(self):
         return True
@@ -479,7 +445,7 @@ class RandomPermutationNode(mdp.Node):
 
     def _set_input_dim(self, n, verbose=False):
         if verbose:
-            print "!!!!!!!!!!!!!! RandomPermutationNode: Setting input_dim to ", n
+            print "RandomPermutationNode: Setting input_dim to ", n
         self._input_dim = n
         self._output_dim = n
 
@@ -490,7 +456,7 @@ class RandomPermutationNode(mdp.Node):
             self.set_input_dim(n)
         
         if self.input_dim == None:
-            print "!!!!!!!!!!! *******Really Setting input_dim to ", n           
+            print "*******Really Setting input_dim to ", n           
             self.input_dim = n
 
         if self.output_dim == None:
@@ -511,13 +477,11 @@ class RandomPermutationNode(mdp.Node):
                 print "Output dim is: ", self.output_dim
 
     def _execute(self, x, verbose=False):
-#        print "RandomPermutationNode: About to excecute, with input x= ", x
+        #print "RandomPermutationNode: About to excecute, with input x= ", x
         y = select_rows_from_matrix(x, self.permutation)
         if verbose:
             print "Output shape is = ", y.shape, 
         return y
-
-
 
 def sfa_pretty_coefficients(sfa_node, transf_training, start_negative=True):
     count = 0
@@ -769,8 +733,8 @@ def compute_largest_node_size(flow):
 
     
 #Used to compare the effectiveness of several PCA Networks
-def estimated_explained_variance(images, flow, sl_images, num_considered_images=100, verbose=True):
-    exp_var=0
+def estimate_explained_variance(images, flow, sl_images, num_considered_images=100, verbose=True):
+    #Here explained variance is defined as 1 - normalized reconstruction error 
     num_images = images.shape[0]
     im_numbers = numpy.random.randint(num_images, size=num_considered_images)
 
@@ -797,15 +761,11 @@ def estimated_explained_variance(images, flow, sl_images, num_considered_images=
         print "Individual explained variances: ", explained_individual
         print "Which, itself has standar deviation: ", explained_individual.std()
         print "Therefore, estimated explained variance has std of about: ", explained_individual.std()/numpy.sqrt(num_considered_images)
+        print "Dumb reconstruction_energy/original_energy=", rec_energy/ori_energy
         print "rec_error_energy/ori_energy=", rec_error_energy/ori_energy
         print "Thus explained variance about:", 1-rec_error_energy/ori_energy
-        print "Dumb reconstruction_energy/original_energy=", rec_energy/ori_energy
-    return rec_energy/ori_energy
+    return 1-rec_error_energy/ori_energy #rec_energy/ori_energy
     
-
-
-
-
 class HeadNode(mdp.Node):
     """Preserve only the first k dimensions from the data
     """    
@@ -837,7 +797,7 @@ class HeadNode(mdp.Node):
         return numpy.concatenate((y, zz), axis=1)
 
 
-
+#This code is obsolete.
 class SFAPCANode(mdp.Node):
     """Node that extracts slow features unless their delta value is too high. In such a case PCA features are extracted.
     """    
@@ -953,7 +913,7 @@ def estimated_explained_var_linearly(x, y, x_test, y_test):
     return explained_variance/x_variance
 
 def approximate_linearly(x, y, y_test):
-    lr_node = mdp.nodes.LinearRegressionNode()
+    lr_node = mdp.nodes.LinearRegressionNode(use_pseudoinverse=True)
     lr_node.train(y,x)
     lr_node.stop_training()
    
@@ -962,7 +922,7 @@ def approximate_linearly(x, y, y_test):
 
 #Approximates x from y, and computes how sensitive the estimation is to changes in y
 def sensivity_of_linearly_approximation(x, y):
-    lr_node = mdp.nodes.LinearRegressionNode()
+    lr_node = mdp.nodes.LinearRegressionNode(use_pseudoinverse=True)
     lr_node.train(y,x)
     lr_node.stop_training()
     beta = lr_node.beta[1:,:] # bias is used by default, we do not need to consider it
@@ -1164,8 +1124,8 @@ def approximate_kNN_op(x, x_exp, y_exp,k=1, ignore_closest_match = False, operat
                 #print "w_i[:,0] =", w_i[:,0]
                 #print "weight sum=",w_i.sum(),"min_weight=",w_i.min(),"max_weight=",w_i.max(), "negative weights=", negative_weights
                 w_i /= w_i.sum()
-     #           print "y[i].shape", y[i].shape
-     #           print "as.shape", numpy.dot(x_ind[i].T, w_i).T.shape
+                #print "y[i].shape", y[i].shape
+                #print "as.shape", numpy.dot(x_ind[i].T, w_i).T.shape
                 y[i] = numpy.dot(x_ind[i].T, w_i).T + x_mean# numpy.dot(w_i, x_ind[i]).T
                 y_exp_app[i] = numpy.dot(x_exp_ind[i].T, w_i).T
             
@@ -1675,7 +1635,7 @@ def rank_expanded_signals(x, x_exp, y, y_exp, max_comp=10, k=1, linear=False, ma
     return scores #**0.5 #WARNING!!!!!
 
 
-
+#Obsolete
 class IEVMNode(mdp.Node):
 #     """Node implementing simple Incremental Explained Variance Maximization. 
 #     Extracted features are moderately useful for reconstruction, although this node does 
@@ -2123,13 +2083,15 @@ def SFANode_force_output_dim(sfa_node, new_output_dim):
     sfa_node._output_dim = new_output_dim
     print "After: sfa_node.d.shape=",sfa_node.d.shape, " sfa_node.sf.shape=",sfa_node.sf.shape, " sfa_node._bias.shape=",sfa_node._bias.shape
 
+#iGSFA node 
+#TODO: simplify this, remove experimental parts
 class IEVMLRecNode(mdp.Node):
 #     """Node implementing simple Incremental Explained Variance Maximization. 
 #     Extracted features are moderately useful for reconstruction, although this node does 
 #     itself provide reconstruction.
-#    The expansion function is optional, as well as performing PCA on the scores.
-#    The added variance of the first k-outputs is equal to the explained variance of such k-outputs. 
-#    """    
+#     The expansion function is optional, as well as performing PCA on the scores.
+#     The added variance of the first k-outputs is equal to the explained variance of such k-outputs. 
+#     """    
 #WARNING! Official Dt for age: 1.999999, control1: 1.9999, control2: 1.99999999
     def __init__(self, input_dim = None, output_dim=None, pre_expansion_node_class = None, expansion_funcs=None, expansion_output_dim=None, expansion_starting_point=None, max_comp = None, max_num_samples_for_ev = None, max_test_samples_for_ev=None, offsetting_mode = "all features", max_preserved_sfa=1.9999, reconstruct_with_sfa = True,  out_sfa_filter=False, **argv ):
         super(IEVMLRecNode, self).__init__(input_dim =input_dim, output_dim=output_dim, **argv)
@@ -2831,95 +2793,90 @@ def cumulative_score(ground_truth, estimation, largest_error, integer_rounding=T
     return N_e_le_j * 1.0 / len(ground_truth)
 
 ##################### GSFA functions/classes ################
-
 #Special purpose object to compute the covariance matrices used by SFA.
-from GSFA_node import CovDCovMatrix, GSFANode
-
+from GSFA_node import CovDCovMatrix, GSFANode, ComputeCovDcovMatrixMixed, ComputeCovDcovMatrixSerial, ComputeCovDcovMatrixClustered, ComputeCovMatrix
 
 ######## Helper functions for parallel processing and CovDcovMatrices #########
 #This function appears to be obsolete
-def ComputeCovMatrix(x, verbose=False):
-    print "PCov",
-    if verbose:
-        print "Computation Began!!! **********************************************************8"
-        sys.stdout.flush()
-    covmtx = CovarianceMatrix(bias=True)
-    covmtx.update(x)
-    if verbose:
-        print "Computation Ended!!! **********************************************************8"
-        sys.stdout.flush()
-    return covmtx
-
-def ComputeCovDcovMatrixClustered(params, verbose=False):
-    print "PComp",
-    if verbose:
-        print "Computation Began!!! **********************************************************8"
-        sys.stdout.flush()
-    x, block_size, weight = params
-    covdcovmtx = CovDCovMatrix()
-    if isinstance(block_size, int):
-        covdcovmtx.update_clustered_homogeneous_block_sizes(x, block_size=block_size, weight=weight)
-    elif isinstance(block_size, list):
-        if isinstance(weight, int):
-            weight = [weight]*len(block_size)
-        elif isinstance(weight, list) and len(weight)==len(block_size):
-            weight = weight
-        else:
-            er = "weight is/are invalid:", weight, "block_size:", block_size
-            raise Exception(er)
-        current_pos = 0
-        for i, curr_block_size in enumerate(block_size):
-            covdcovmtx.update_clustered_homogeneous_block_sizes(x[:, current_pos:current_pos+curr_block_size], block_size=curr_block_size, weight=weight[i])
-            current_pos += curr_block_size
-    else:
-        er = "Unsupported block_size: ", block_size
-        raise Exception(er)
-    if verbose:
-        print "Computation Ended!!! **********************************************************8"
-        sys.stdout.flush()
-    return covdcovmtx
-
-def ComputeCovDcovMatrixSerial(params, verbose=False):
-    print "PSeq",
-    if verbose:
-        print "Computation Began!!! **********************************************************8"
-        sys.stdout.flush()
-    x, block_size = params
-    Torify= False
-    covdcovmtx = CovDCovMatrix(block_size)
-    covdcovmtx.updateSerial(x, block_size = block_size, Torify=Torify)
-    if verbose:
-        print "Computation Ended!!! **********************************************************8"
-        sys.stdout.flush()
-    return covdcovmtx
-
-def ComputeCovDcovMatrixMixed(params, verbose=False):
-    print "PMixed",
-    if verbose:
-        print "Computation Began!!! **********************************************************8"
-        sys.stdout.flush()
-    x, block_size = params
-    bs=block_size
-    covdcovmtx = CovDCovMatrix(block_size)
-    covdcovmtx.update_clustered_homogeneous_block_sizes(x[0:bs], block_size=block_size, weight=0.5)
-    covdcovmtx.update_clustered_homogeneous_block_sizes(x[bs:-bs], block_size=block_size, weight=1.0)
-    covdcovmtx.update_clustered_homogeneous_block_sizes(x[-bs:], block_size=block_size, weight=0.5)
-    covdcovmtx.updateSerial(x, block_size = block_size, Torify=False)            
-    if verbose:
-        print "Computation Ended!!! **********************************************************8"
-        sys.stdout.flush()
-    return covdcovmtx
-
-
-
-def graph_delta_values(y, edge_weights):
-    R = 0
-    deltas = 0
-    for (i, j) in edge_weights.keys():
-        w_ij = edge_weights[(i,j)]
-        deltas += w_ij * (y[j]-y[i])**2
-        R += w_ij
-    return deltas/R
+# # def ComputeCovMatrix(x, verbose=False):
+# #     print "PCov",
+# #     if verbose:
+# #         print "Computation Began!!! **********************************************************8"
+# #         sys.stdout.flush()
+# #     covmtx = CovarianceMatrix(bias=True)
+# #     covmtx.update(x)
+# #     if verbose:
+# #         print "Computation Ended!!! **********************************************************8"
+# #         sys.stdout.flush()
+# #     return covmtx
+# # 
+# # def ComputeCovDcovMatrixClustered(params, verbose=False):
+# #     print "PComp",
+# #     if verbose:
+# #         print "Computation Began!!! **********************************************************8"
+# #         sys.stdout.flush()
+# #     x, block_size, weight = params
+# #     covdcovmtx = CovDCovMatrix()
+# #     if isinstance(block_size, int):
+# #         covdcovmtx.update_clustered_homogeneous_block_sizes(x, block_size=block_size, weight=weight)
+# #     elif isinstance(block_size, list):
+# #         if isinstance(weight, int):
+# #             weight = [weight]*len(block_size)
+# #         elif isinstance(weight, list) and len(weight)==len(block_size):
+# #             weight = weight
+# #         else:
+# #             er = "weight is/are invalid:", weight, "block_size:", block_size
+# #             raise Exception(er)
+# #         current_pos = 0
+# #         for i, curr_block_size in enumerate(block_size):
+# #             covdcovmtx.update_clustered_homogeneous_block_sizes(x[:, current_pos:current_pos+curr_block_size], block_size=curr_block_size, weight=weight[i])
+# #             current_pos += curr_block_size
+# #     else:
+# #         er = "Unsupported block_size: ", block_size
+# #         raise Exception(er)
+# #     if verbose:
+# #         print "Computation Ended!!! **********************************************************8"
+# #         sys.stdout.flush()
+# #     return covdcovmtx
+# # 
+# # def ComputeCovDcovMatrixSerial(params, verbose=False):
+# #     print "PSeq",
+# #     if verbose:
+# #         print "Computation Began!!! **********************************************************8"
+# #         sys.stdout.flush()
+# #     x, block_size = params
+# #     Torify= False
+# #     covdcovmtx = CovDCovMatrix(block_size)
+# #     covdcovmtx.updateSerial(x, block_size = block_size, Torify=Torify)
+# #     if verbose:
+# #         print "Computation Ended!!! **********************************************************8"
+# #         sys.stdout.flush()
+# #     return covdcovmtx
+# # 
+# # def ComputeCovDcovMatrixMixed(params, verbose=False):
+# #     print "PMixed",
+# #     if verbose:
+# #         print "Computation Began!!! **********************************************************8"
+# #         sys.stdout.flush()
+# #     x, block_size = params
+# #     bs=block_size
+# #     covdcovmtx = CovDCovMatrix(block_size)
+# #     covdcovmtx.update_clustered_homogeneous_block_sizes(x[0:bs], block_size=block_size, weight=0.5)
+# #     covdcovmtx.update_clustered_homogeneous_block_sizes(x[bs:-bs], block_size=block_size, weight=1.0)
+# #     covdcovmtx.update_clustered_homogeneous_block_sizes(x[-bs:], block_size=block_size, weight=0.5)
+# #     covdcovmtx.updateSerial(x, block_size = block_size, Torify=False)            
+# #     if verbose:
+# #         print "Computation Ended!!! **********************************************************8"
+# #         sys.stdout.flush()
+# #     return covdcovmtx
+# # def graph_delta_values(y, edge_weights):
+# #     R = 0
+# #     deltas = 0
+# #     for (i, j) in edge_weights.keys():
+# #         w_ij = edge_weights[(i,j)]
+# #         deltas += w_ij * (y[j]-y[i])**2
+# #         R += w_ij
+# #     return deltas/R
 
 #TESTS:
 #All training modes should return something reasonable.

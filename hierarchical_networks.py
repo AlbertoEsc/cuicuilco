@@ -282,9 +282,9 @@ layer = pSFADirectLayer = SystemParameters.ParamsSFASuperNode()
 layer.name = "Direct SFA Layer for MNIST"
 layer.pca_node_class = mdp.nodes.PCANode #None  #None
 layer.pca_args = {}
-layer.pca_out_dim = 40 # 35 #WARNING: 100 or None
+layer.pca_out_dim = 100 #40 # 35 #WARNING: 100 or None
 layer.exp_funcs = [identity]
-layer.sfa_node_class =  mdp.nodes.HeadNode #mdp.nodes.SFANode #mdp.nodes.SFANode
+layer.sfa_node_class =  mdp.nodes.SFANode #mdp.nodes.SFANode #mdp.nodes.SFANode
 layer.sfa_out_dim = 35 #3 #49*2 # *3 # None
 
 layer = pSFADirectLayer2 = SystemParameters.ParamsSFASuperNode()
@@ -317,18 +317,18 @@ layer = pSFADirectLayer = SystemParameters.ParamsSFASuperNode()
 layer.name = "Direct SFA Layer"
 #layer.pca_node_class = None # mdp.nodes.SFANode
 #W
-layer.pca_node_class = mdp.nodes.PCANode #None  #None
-layer.pca_args = {}
+layer.pca_node_class = None #mdp.nodes.PCANode #None  #None
+#layer.pca_args = {}
 #layer.pca_out_dim = 35 #WARNING: 100 or None
-layer.pca_out_dim = 3000 # 35 #WARNING: 100 or None
+#layer.pca_out_dim = 100#3000 # 35 #WARNING: 100 or None
 #layer.exp_funcs = [identity, QE]
 layer.exp_funcs = [identity,] #unsigned_08expo, signed_08expo
 #layer.exp_funcs = [he.cos_exp_mix8_F]
 #layer.exp_funcs = [encode_signal_p9,] #For next experiment: [encode_signal_p9,]
 #layer.red_node_class = mdp.nodes.HeadNode
 #layer.red_out_dim = int(tuning_parameter)
-layer.sfa_node_class =  mdp.nodes.HeadNode #mdp.nodes.SFANode #mdp.nodes.SFANode
-layer.sfa_out_dim = 200 #3 #49*2 # *3 # None
+layer.sfa_node_class =  mdp.nodes.GSFANode #mdp.nodes.SFANode #mdp.nodes.SFANode
+layer.sfa_out_dim = 100 #3 #49*2 # *3 # None
 
 
 layer = pSFADirectLayer2 = SystemParameters.ParamsSFASuperNode()

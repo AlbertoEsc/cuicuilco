@@ -3,9 +3,9 @@
 #Ruhr-University-Bochum, Institute of Neurocomputation, Group of Prof. Dr. Wiskott
 
 import numpy
-import scipy
-import scipy.optimize
-import sfa_libs
+###import scipy
+###import scipy.optimize
+###import sfa_libs
 
 nan = numpy.nan
 
@@ -164,7 +164,7 @@ def dist_to_closest_neighbour_old(x):
 def dist_to_closest_neighbour(x, y=None):
     if y is None:
         y = x
-    num_samples, dim = x.shape
+    num_samples, _ = x.shape
 #    zero = numpy.zeros((1, dim))*numpy.nan
     distances = numpy.zeros(num_samples)
 #    indices = numpy.zeros(num_samples)
@@ -314,7 +314,7 @@ def multiply_sigmoid_08(x1, x2):
 
 #Computes: func(func(func(func(func(func(func(func(xi1,xi2),xi3),xi4),xi5),xi6),xi7),xi8),xi9) for all i1<=i2<=i3<=i4<=i5<=i6<=i7<=i8<=i9
 def products_9(x, func):
-    x_height, x_width = x.shape
+    _, x_width = x.shape
 
     res = []
     for i1 in range(x_width):
@@ -341,7 +341,7 @@ def products_9(x, func):
 
 #Computes: func(func(func(func(func(func(func(xi1,xi2),xi3),xi4),xi5),xi6),xi7, xi8) for all i1 <= i2 <= i3 <= i4 <= i5 <= i6 <= i7 <= i8
 def products_8(x, func):
-    x_height, x_width = x.shape
+    _, x_width = x.shape
 
     res = []
     for i1 in range(x_width):
@@ -366,7 +366,7 @@ def products_8(x, func):
 
 #Computes: func(func(func(func(func(func(xi,xj),xk),xl),xm),xn),x0) for all i <= j <= k <= l <= m <= n <= o
 def products_7(x, func):
-    x_height, x_width = x.shape
+    _, x_width = x.shape
 
     res = []
     for i in range(x_width):
@@ -390,7 +390,7 @@ def products_7(x, func):
 
 #Computes: func(func(func(func(func(xi,xj),xk),xl),xm),xn) for all i <= j <= k <= l <= m <= n
 def products_6(x, func):
-    x_height, x_width = x.shape
+    _, x_width = x.shape
 
     res = []
     for i in range(x_width):
@@ -410,7 +410,7 @@ def products_6(x, func):
 
 #Computes: func(func(func(func(xi,xj),xk),xl),xm) for all i <= j <= k <= l <= m
 def products_5(x, func):
-    x_height, x_width = x.shape
+    _, x_width = x.shape
 
     res = []
     for i in range(x_width):
@@ -428,7 +428,7 @@ def products_5(x, func):
 
 #Computes: func(func(func(xi,xj),xk),xl) for all i <= j <= k <= l
 def products_4(x, func):
-    x_height, x_width = x.shape
+    _, x_width = x.shape
 
     res = []
     for i in range(x_width):
@@ -444,7 +444,7 @@ def products_4(x, func):
 
 #Computes: func(func(xi,xj),xk) for all i <= j <= k 
 def products_3(x, func):
-    x_height, x_width = x.shape
+    _, x_width = x.shape
 
     res = []
     for i in range(x_width):
@@ -476,10 +476,10 @@ def pairwise_expansion(x, func, reflexive=True):
     x_height, x_width = x.shape
     if reflexive==True:
         k=0
-        out = numpy.zeros((x_height, x_width*(x_width+1)/2))
+        ### out = numpy.zeros((x_height, x_width*(x_width+1)/2))
     else:
         k=1
-        out = numpy.zeros((x_height, x_width*(x_width-1)/2))    
+        ### out = numpy.zeros((x_height, x_width*(x_width-1)/2))    
     mask = numpy.triu(numpy.ones((x_width,x_width)), k) > 0.5
 #    mask = mask.reshape((1,x_width,x_width))
     y1 = x.reshape(x_height, x_width, 1)
@@ -636,16 +636,16 @@ def pairwise_adjacent_expansion(x, adj, func, reflexive=True):
     in which abs(j-i) <= mix, mix=adj-k
     if reflexive==False, only pairs with i!=j are considered
     """
-    x_height, x_width = x.shape
+    _, x_width = x.shape
     if reflexive is True:
         k=0
     else:
         k=1
 #   number of variables, to which the first variable is paired/connected
     mix = adj-k
-    out = numpy.zeros((x_height, (x_width-adj+1)*mix))
+    ###out = numpy.zeros((x_height, (x_width-adj+1)*mix))
 #
-    vars = numpy.array(range(x_width))
+    ###vars = numpy.array(range(x_width))
     v1 = numpy.zeros(mix * (x_width-adj+1), dtype='int')
     for i in range(x_width-adj+1):
         v1[i*mix:(i+1)*mix] = i
@@ -720,12 +720,12 @@ def tanh_0125_signed_15expo(x):
 
 
 def unsigned_2_08expo(x, expo1=2, expo2=0.8):
-    abs = numpy.abs(x)
-    mask = abs < 1
+    x_abs = numpy.abs(x)
+    mask = x_abs < 1
     res = numpy.zeros(x.shape)
 
-    res[mask] = (abs ** expo1)[mask]
-    res[mask^True] = (abs ** expo2)[mask^True]   
+    res[mask] = (x_abs ** expo1)[mask]
+    res[mask^True] = (x_abs ** expo2)[mask^True]   
     return res
 
 def unsigned_08expo(x):
@@ -1359,9 +1359,6 @@ def ch3o6s3QE(x):
 def ch3o6s4QE(x):
     return ch3_Offset_sF_QE(x, Off=6, F=4)
 
-def ch3o6s5QE(x):
-    return ch3_Offset_sF_QE(x, Off=6, F=5)
-
 def ch3o7s4QE(x):
     return ch3_Offset_sF_QE(x, Off=7, F=4)
 
@@ -1596,7 +1593,7 @@ def ch3_oO_sF_u08(x, off, F):
         return unsigned_08expo(xs)
 
 def ch3_sF_max(x, F):
-    ns, dim = x.shape
+    _, dim = x.shape
     if 3*F >= dim:
         return maximum_mix1_ex(x)
     else:
@@ -1607,7 +1604,7 @@ def ch3_sF_max(x, F):
 
 def ch3_oO_sF_max(x, off, F):
     ch = 3
-    ns, dim = x.shape
+    _, dim = x.shape
 
     if (off+F)*ch >= dim:
         return maximum_mix1_ex(x)
@@ -1892,7 +1889,7 @@ def ch3s27max(x):
     return ch3_sF_max(x, 27)
 
 def ch3_sF_head(x, F):
-    ns, dim = x.shape
+    _, dim = x.shape
     if 3*F >= dim:
         return x 
     x1 = x[:,0:F]

@@ -3,11 +3,10 @@ import mdp
 from mdp import numx
 from mdp.utils import (mult, pinv, symeig, CovarianceMatrix, SymeigException)
 import more_nodes
-from more_nodes import CovDCovMatrix, ComputeCovDcovMatrixMixed, ComputeCovDcovMatrixSerial, ComputeCovDcovMatrixClustered, ComputeCovMatrix
+from GSFA_node import CovDCovMatrix, ComputeCovDcovMatrixMixed, ComputeCovDcovMatrixSerial, ComputeCovDcovMatrixClustered, ComputeCovMatrix
 import histogram_equalization
 from sfa_libs import select_rows_from_matrix
 import inversion
-#import mdp.parallel.makeparallel
 import sys
 import time
 import object_cache as misc
@@ -43,40 +42,21 @@ mdp.hinet.Layer.localized_inverse = inversion.layer_localized_inverse
 mdp.nodes.GeneralExpansionNode.localized_inverse = inversion.general_expansion_node_localized_inverse 
 
 def SFANode_inverse(self, y):
-    #code for storing pseudoinverse courtesy of Alberto Escalante
+    #pseudo-inverse is stored instead of computed everytime
     if self.pinv is None:
         self.pinv = pinv(self.sf)
-#        print "SFA.pinv = ", self.pinv
-#        print "Shape of SFA.pinv = ", self.pinv.shape
-#        print "SFA.sf = ", self.sf
-#        print "Shape of sf = ", self.sf.shape        
-#        sf_t = self.sf.T
-#        print "sf_t= ", sf_t
-#        
-#        m2 = mult(sf_t, self.sf)
-#        print "m2 = ", m2
-#        print "For orthonormal sf, m2 is the identity"
-#
-#        m3 = mult(self.sf, sf_t)
-#        print "m3 = ", m3
-#        print "just curiosity"
-#        
-#        s_mod = (self.sf * self.sf).sum(axis=0)
-#        print "s_mod = ", s_mod
-#        print "(sf/s_mod).T= ", (self.sf / s_mod).T
     return mult(y, self.pinv)+self.avg
 
-#print "Rewritting SFANode._inverse, __init__, _train, _stop_training..."
+#print "Rewritting SFANode methods: _inverse, __init__, _train, _stop_training..."
 mdp.nodes.SFANode._inverse = SFANode_inverse
 
 # TODO: Remove block_size=None, train_mode=None  
 def SFANode__init__(self, input_dim=None, output_dim=None, dtype=None, block_size=None, train_mode=None, sfa_expo=None, pca_expo=None, magnitude_sfa_biasing=None):
     super(mdp.nodes.SFANode, self).__init__(input_dim, output_dim, dtype)
     #Warning! bias activated, "courtesy" of Alberto
-    # init two covariance matrices
-    # one for the input data
+    # create two covariance matrices. The first one for the input data
     self._cov_mtx = CovarianceMatrix(dtype, bias=True)
-    # one for the derivatives
+    # and the second one for the derivatives
     self._dcov_mtx = CovarianceMatrix(dtype, bias=True)
 
     self.pinv = None
@@ -106,16 +86,16 @@ def SFANode_train_scheduler(self, x, block_size=None, train_mode = None, node_we
     if block_size == None:
         block_size = self.block_size
     if scheduler == None or n_parallel == None or train_mode == None:
-#        print "NO parallel sfa done...  scheduler=", ,uler, " n_parallel=", n_parallel
+        #print "NO parallel sfa done...  scheduler=", ,uler, " n_parallel=", n_parallel
         return SFANode_train(self, x, block_size=block_size, train_mode=train_mode, node_weights=node_weights, edge_weights=edge_weights)
     else:
-#        self._covdcovmtx.update_clustered_homogeneous_block_sizes(x, weight=1.0)
+        #self._covdcovmtx.update_clustered_homogeneous_block_sizes(x, weight=1.0)
 
-#        chunk_size=None 
-#        num_chunks = n_parallel
+        #chunk_size=None 
+        #num_chunks = n_parallel
         num_chunks = min(n_parallel, x.shape[0]/block_size)
         #here chunk_size is given in blocks!!!
-#        chunk_size = int(numpy.ceil((x.shape[0]/block_size)*1.0/num_chunks))
+        #chunk_size = int(numpy.ceil((x.shape[0]/block_size)*1.0/num_chunks))
         chunk_size = int((x.shape[0]/block_size)/num_chunks)
         
         #Notice that parallel training doesn't work with clustered mode and inhomogeneous blocks
@@ -148,9 +128,9 @@ def SFANode_train_scheduler(self, x, block_size=None, train_mode = None, node_we
             bs = block_size
             self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[0:bs], weight=0.5)
 
-#           xxxx self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[bs:-bs], weight=1.0)
+            #xxxx self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[bs:-bs], weight=1.0)
             x2 = x[bs:-bs]
-#            num_chunks2 = int(numpy.ceil((x2.shape[0]/block_size-2)*1.0/chunk_size))
+            #num_chunks2 = int(numpy.ceil((x2.shape[0]/block_size-2)*1.0/chunk_size))
             num_chunks2 = int((x2.shape[0]/block_size-2)/chunk_size)
             for i in range(num_chunks2):
                 if i < num_chunks2-1:
@@ -160,7 +140,7 @@ def SFANode_train_scheduler(self, x, block_size=None, train_mode = None, node_we
                     
             self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[-bs:], weight=0.5)
 
-#           xxxx self._covdcovmtx.updateSerial(x, torify=False)            
+            #xxxx self._covdcovmtx.updateSerial(x, torify=False)            
             for i in range(num_chunks):
                 if i==0:
                     scheduler.add_task((x[i*block_size*chunk_size:(i+1)*block_size*chunk_size], block_size), ComputeCovDcovMatrixSerial)
@@ -191,8 +171,9 @@ def SFANode_train_scheduler(self, x, block_size=None, train_mode = None, node_we
             self._covdcovmtx.addCovDCovMatrix(covdcovmtx)
 
 #TODO: There might be several errors due to incorrect computation of sum_prod_x as mdp.mult(sum_x.T,sum_x) WARNING!!!! CHECK ALL CODE!!!
-#WARNING, why the repetition of this code w.r.t the code in more_nodes and GSFA_node??? fix this!!!
 def SFANode_train(self, x, block_size=None, train_mode = None, node_weights=None, edge_weights=None):
+    print "obsolete code reached... quitting"
+    quit()
     if train_mode == None:
         train_mode = self.train_mode
     if block_size == None:
@@ -204,7 +185,7 @@ def SFANode_train(self, x, block_size=None, train_mode = None, node_weights=None
     self.set_input_dim(x.shape[1])
 
     ## update the covariance matrices
-    # cut the final point to avoid a trivial solution in special cases
+    # cut the final point to avoid an incorrect solution in special cases / chaining?
     # WARNING: Force artificial training
     print "train_mode=", train_mode
 
@@ -576,7 +557,7 @@ def node_train_params(self, data, params=None, verbose=False):
         return self._train(data, **all_params)
     else:
         if isinstance(self, mdp.nodes.SFANode):
-            print "wrong wrong...", dir(self)
+            print "wrong condition reached...", dir(self)
             quit()
         print self
         print "wrong wrong 2...", dir(self)
@@ -721,7 +702,7 @@ mdp.hinet.Switchboard._execute = switchboard_new_execute
 #print "Fixing GaussianClassifierNode_class_probabilities..."
 
 
-#Verbosity and fix for nan values courtesy of Alberto
+#Adds verbosity and fixes nan values
 def GaussianClassifierNode_class_probabilities(self, x, verbose=True):
         """Return the posterior probability of each class given the input."""
         self._pre_execution_checks(x)
@@ -1086,14 +1067,14 @@ if patch_layer:
                 self.set_input_dim(layer_input_dim)
                 num_nodes = len(self.nodes)
                 
-		print "Pre_Execution of homogeneous layer with input_dim %d and %d nodes"%(layer_input_dim, num_nodes)
+                print "Pre_Execution of homogeneous layer with input_dim %d and %d nodes"%(layer_input_dim, num_nodes)
                 for node in self.nodes:
                     node.set_input_dim(layer_input_dim / num_nodes)
                 input_dim = 0
                 for index, node in enumerate(self.nodes):
                     input_dim += node.input_dim
                     self.node_input_dims[index] = node.input_dim
-#                    print "input dim is: %d, should be %d"%(input_dim, self.input_dim)
+                    #print "input dim is: %d, should be %d"%(input_dim, self.input_dim)
             
             
             for node in self.nodes:
@@ -1114,21 +1095,19 @@ if patch_layer:
         node -- Node to be cloned.
         n_nodes -- Number of repetitions/clones of the given node.
         """
-#WARNING!!!
+        #WARNING!!!
         super(mdp.hinet.CloneLayer, self).__init__((node,) * n_nodes, dtype=dtype, homogeneous=True)
         self.node = node  # attribute for convenience
-        
-        
 
     mdp.hinet.Layer.__init__ = Layer_new__init__
     mdp.hinet.Layer._check_props = Layer_new_check_props
 
     mdp.hinet.Layer._train = Layer_new_train_params
-#ATTENTION, modification for backwards compatibility!!!!!!!
-#    mdp.hinet.Layer._train = Layer_new_train
-
-#    mdp.hinet.Layer.train_params = Layer_new_train_params
-#    mdp.hinet.Layer.train_scheduler = Layer_new_train
+    #ATTENTION, modification for backwards compatibility!!!!!!!
+    #mdp.hinet.Layer._train = Layer_new_train
+    
+    #mdp.hinet.Layer.train_params = Layer_new_train_params
+    #mdp.hinet.Layer.train_scheduler = Layer_new_train
     mdp.hinet.Layer._pre_execution_checks = Layer_new_pre_execution_checks      
     mdp.hinet.CloneLayer.__init__ = CloneLayer_new__init__
     #print "mdp.Layer was patched"
@@ -1138,17 +1117,13 @@ def HiNetParallelTranslator_translate_layer(self, layer):
     """Replace a Layer with its parallel version."""
     parallel_nodes = super(mdp.parallel.makeparallel.HiNetParallelTranslator, 
                            self)._translate_layer(layer)
-#Warning, it was: return parallelhinet.ParallelLayer(parallel_nodes)
+    #Warning, it was: return parallelhinet.ParallelLayer(parallel_nodes)
     return mdp.parallel.ParallelLayer(parallel_nodes, homogeneous=layer.homogeneous)
     
 #UPDATE WARNING: Is this still needed?
 #mdp.parallel.makeparallel.HiNetParallelTranslator._translate_layer = HiNetParallelTranslator_translate_layer
 
-
-
 #LINEAR_FLOW FUNCTIONS
-
-
 #Code courtesy of Alberto Escalante
 #improves the training time in a linear factor on the number of nodes
 #but is less general than the usual procedure
@@ -1208,14 +1183,14 @@ if patch_flow:
                 if trained_node_in_cache == False:
                     #Not in cache, then train the node
                     if isinstance(self.flow[i], (mdp.hinet.CloneLayer, mdp.hinet.Layer)):
-    #                       print "Here it should be doing parallel training 1!!!"
-#WARNING: REMOVED scheduler & n_parallel
-#                        self.flow[i].train(data, scheduler=scheduler, n_parallel=n_parallel)
+                        #print "Here it should be doing parallel training 1!!!"
+                        #WARNING: REMOVED scheduler & n_parallel
+                        #self.flow[i].train(data, scheduler=scheduler, n_parallel=n_parallel)
                         self.flow[i].train(data, scheduler=scheduler, n_parallel=n_parallel)
                     elif isinstance(self.flow[i], (mdp.nodes.SFANode, mdp.nodes.PCANode, mdp.nodes.WhiteningNode)) and \
                     self.flow[i].input_dim >= min_input_size_for_parallel:
-    #                       print "Here it should be doing parallel training 2!!!"
-#WARNING: REMOVED scheduler & n_parallel
+                        #print "Here it should be doing parallel training 2!!!"
+                        #WARNING: REMOVED scheduler & n_parallel
                         self.flow[i].train(data, scheduler=scheduler, n_parallel=n_parallel)
                     else:
                         print "Input_dim was: ", self.flow[i].input_dim, "or unknown parallel method, thus I didn't go parallel"
@@ -1267,13 +1242,13 @@ if patch_flow:
                 signal_cache_write.update_cache(data, base_filename=data_base_filename, overwrite=True, verbose=True)
         return data
 
-#The functions generate the training data when executed, while parameters are used for training the corresponding node
-#Function that given a training data description (func and param sets) extracts the relevant function and parameters vector for the given node
-#The catch is that funcs_sets and param_sets are (usually) bidimensional arrays. 
-#The first dimension is used for the particular node
-#The second dimension is used in case there is more than one training data set for the node, and mmight be None, which means that the data/parameters from the previous node is used
-#The output is the data functions and parameters needed to train a particular node
-#Add logic for data_params
+    #The functions generate the training data when executed, while parameters are used for training the corresponding node
+    #Function that given a training data description (func and param sets) extracts the relevant function and parameters vector for the given node
+    #The catch is that funcs_sets and param_sets are (usually) bidimensional arrays. 
+    #The first dimension is used for the particular node
+    #The second dimension is used in case there is more than one training data set for the node, and mmight be None, which means that the data/parameters from the previous node is used
+    #The output is the data functions and parameters needed to train a particular node
+    #Add logic for data_params
     def extract_node_funcs(funcs_sets, param_sets, node_nr, verbose=False):
         #print "funcs_sets is:", funcs_sets
         #print "param_sets is:", param_sets
@@ -1298,10 +1273,10 @@ if patch_flow:
                     print "param_sets =", param_sets
                 node_params = param_sets[index]
             
-#            #TODO: More robust compatibility function required            
-##            if len(node_params) != len(node_funcs):
-##                er = "node_funcs and node_params are not compatible: "+str(node_funcs)+str(node_params)
-##                raise Exception(er)
+            ##TODO: More robust compatibility function required            
+            ##if len(node_params) != len(node_funcs):
+            ##    er = "node_funcs and node_params are not compatible: "+str(node_funcs)+str(node_params)
+            ##    raise Exception(er)
             if verbose:
                 print "node_funcs and node_params:", node_funcs, node_params
             return node_funcs, node_params
@@ -1312,7 +1287,7 @@ if patch_flow:
                 print "param_sets =", param_sets
             return funcs_sets, param_sets
 
-#If the input is a list of functions, execute them to generate the data_vect, otherwise use node_funcs directly as array data        
+    #If the input is a list of functions, execute them to generate the data_vect, otherwise use node_funcs directly as array data        
     def extract_data_from_funcs(node_funcs):
         print "node_funcs is:", node_funcs
         if isinstance(node_funcs, list):
@@ -1344,18 +1319,18 @@ if patch_flow:
         #Set smalles dimensionality for which parallel training is worth doing
         min_input_size_for_parallel = 45
 
-#        print data.__class__, data.dtype, data.shape
-#        print data
-#        print data_params
+        #print data.__class__, data.dtype, data.shape
+        #print data
+        #print data_params
 
-#        if memory_save == True:
-#            node_cache_read = None
-#            signal_cache_read = None
-#            node_cache_write = None
-#            signal_cache_write = None
+        #if memory_save == True:
+        #    node_cache_read = None
+        #    signal_cache_read = None
+        #    node_cache_write = None
+        #    signal_cache_write = None
         #indicates whether node_data and node_params are valid 
         node_funcs = node_data = node_params = None
-#        data_loaded = False
+        #data_loaded = False
         for i in range(len(self.flow)):
             #indicates whether the node or the exec_signal were loaded from cache
             trained_node_in_cache = False
@@ -1369,8 +1344,8 @@ if patch_flow:
             execute_node_data = False
             if isinstance(new_node_funcs, numpy.ndarray):
                 #WARNING, this creates a comparisson array!!!!! there should be a more efficient way to compara arrays!
-		#HINT: first compare using "x is x", otherwise compare element by element
-		comp = (node_funcs != new_node_funcs)
+                #HINT: first compare using "x is x", otherwise compare element by element
+                comp = (node_funcs != new_node_funcs)
                 if isinstance(comp, bool) and (node_funcs != new_node_funcs):
                     execute_node_data = True
                 elif isinstance(comp, numpy.ndarray) and (node_funcs != new_node_funcs).any():
@@ -1378,7 +1353,7 @@ if patch_flow:
             else:
                 if not (node_funcs == new_node_funcs): #New data loading needed
                     execute_node_data = True
-	    #WARNING! am I duplicating the training data for the first node???
+            #WARNING! am I duplicating the training data for the first node???
             if execute_node_data: #data should be extracted from new_node_funcs and propagated just before the current node 
                 node_data = extract_data_from_funcs(new_node_funcs)
                 print "node_data is:", node_data
@@ -1441,11 +1416,10 @@ if patch_flow:
                         trained_node_in_cache = True
                     else:
                         print "Trained node NOT found in cache..."
-#                else:
-#                    er = "What happened here???"
-#                    raise Exception(er)   
+                #else:
+                    #er = "What happened here???"
+                    #raise Exception(er)   
                 
-
                 #If trained node not found in cache, then train!
                 #Here, however, parse data and data_params appropriately!!!!!
                 if trained_node_in_cache == False:
@@ -1476,7 +1450,7 @@ if patch_flow:
                                 print "Parameters used for training node=", effective_node_params
                             self.flow[i].train_params(data_vec, params=effective_node_params)
                     else: #Other node which does not have parameters nor parallelization
-#                        print "Input_dim ", self.flow[i].input_dim, "<", min_input_size_for_parallel, ", or unknown parallel method, thus I didn't go parallel"
+                        #print "Input_dim ", self.flow[i].input_dim, "<", min_input_size_for_parallel, ", or unknown parallel method, thus I didn't go parallel"
                         if isinstance(data_vec, list):                          
                             for j, data in enumerate(data_vec):
                                 self.flow[i].train_params(data, params=effective_node_params[j])
@@ -1506,9 +1480,9 @@ if patch_flow:
                 else:
                     print "Executed signal NOT found in cache..."
     
-#            print data.__class__, data.dtype, data.shape
-#            print "supported types:", self.flow[i].get_supported_dtypes()
-#            print data
+            #print data.__class__, data.dtype, data.shape
+            #print "supported types:", self.flow[i].get_supported_dtypes()
+            #print data
 
             #However, excecute should preserve shape here!           
             if exec_signal_in_cache == False:
@@ -1689,10 +1663,10 @@ numarray.linear_algebra.eigenvectors with an interface compatible with symeig.
                 ex = "pca_expo should be at most 1.0"
                 raise Exception(ex)
             
-#            pca_expo = 0.25
-#            sfa_expo = 1.1
+            #pca_expo = 0.25
+            #sfa_expo = 1.1
 
-#TODO: SMART SFA_PCA WITHOUT STRANGE EXPONENTS
+            #TODO: SMART SFA_PCA WITHOUT STRANGE EXPONENTS
             wB_pca_mapped = wB.real
             #wB_pca_mapped = wB.real**pca_expo
             ZB_pca = ZB.real / numx.sqrt(wB_pca_mapped)
@@ -1701,7 +1675,7 @@ numarray.linear_algebra.eigenvectors with an interface compatible with symeig.
                 quit()
             else:
                 ZB_sfa = ZB.real / numx.sqrt(wB.real*numpy.linspace(sfa_expo, 1.0, len(wB)))
-#            ZB_sfa = ZB.real / numx.sqrt(wB.real**sfa_expo)
+                #ZB_sfa = ZB.real / numx.sqrt(wB.real**sfa_expo)
 
 ##            if magnitude_sfa_biasing:
 ##                ZB_sfa = ZB.real / numx.sqrt(wB.real**sfa_expo)

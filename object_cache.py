@@ -15,8 +15,6 @@ import numpy
 import hashlib
 import types
 
-## Pickle ##
-
 PICKLE_EXT = ".pckl"  # default filename extension for pickle files
 PICKLE_PROTO = -1
 
@@ -101,13 +99,13 @@ class UnpickleLoader2(object):
         if verbose:
             print "Searching for prefix:", basefilename
         for root, _, files in os.walk(path):
-            for file in files:
-                if os.path.splitext(file)[1] == pickle_ext:
-                    txt = os.path.splitext(file)[0]
+            for filename in files:
+                if os.path.splitext(filename)[1] == pickle_ext:
+                    txt = os.path.splitext(filename)[0]
                     if txt[0:len(basefilename)] == basefilename: 
-                        self.filenames.append(os.path.join(root, file))
+                        self.filenames.append(os.path.join(root, filename))
                         if verbose:
-                            print "file %s taken"%file
+                            print "file %s taken"%filename
 #                    else:
 #                        if verbose:
 #                            print "file %s discarded"%file
@@ -166,9 +164,9 @@ class Cache(object):
         """
         if use_hash != None:
             print "Warning, hashing was disabled by calling function in update_cache!!!"
-            hash = use_hash
+            hashval = use_hash
         else:
-            hash = hash_object(obj).hexdigest()
+            hashval = hash_object(obj).hexdigest()
         
         if base_dir == None:
             base_dir = self.base_dir
@@ -179,14 +177,14 @@ class Cache(object):
         if obj_data == None:
             obj_data = obj
 
-        #base_filename += "_" + hash 
+        #base_filename += "_" + hashval
 
         if isinstance(obj_data, numpy.ndarray):
             #Warning! later make this more flexible, think about paralellization
             pickle_array(obj_data, base_dir=base_dir, base_filename=base_filename, chunk_size=5000, block_size=1, continuous=False, overwrite = overwrite, verbose=verbose)
         else:
             pickle_to_disk(obj_data, os.path.join(base_dir, base_filename + PICKLE_EXT), overwrite=overwrite)
-        return hash
+        return hashval
     
     def is_splitted_file_in_filesystem(self, base_dir=None, base_filename=None, recursion=None):
         if base_dir == None:
@@ -200,13 +198,13 @@ class Cache(object):
         verbose = True
         file_found = False
         for root, _, files in os.walk(base_dir):
-            for file in files:
-                if os.path.splitext(file)[1] == PICKLE_EXT:
-                    txt = os.path.splitext(file)[0]
+            for filename in files:
+                if os.path.splitext(filename)[1] == PICKLE_EXT:
+                    txt = os.path.splitext(filename)[0]
                     if txt[0:len(base_filename)] == base_filename: 
                         file_found = True
                         if verbose:
-                            print "file %s found"%file
+                            print "file %s found"%filename
 #                    else:
 #                        if verbose:
 #                            print "file %s discarded"%file
@@ -285,11 +283,11 @@ def hash_array(x, m=None, turbo_fast=True):
             m.update(str(value))
         return m
 
-def get_data_vars(object):
-    return [var for var in dir(object) if (not callable(getattr(object, var))) or str(getattr(object, var).__class__)[-6:-2] == "Node"]
+def get_data_vars(obj):
+    return [var for var in dir(obj) if (not callable(getattr(obj, var))) or str(getattr(obj, var).__class__)[-6:-2] == "Node"]
 
-def get_all_vars(object):
-    return [var for var in dir(object)]
+def get_all_vars(obj):
+    return [var for var in dir(obj)]
 
 def remove_hidden_vars(variable_list):
     clean_list = []
@@ -447,182 +445,7 @@ def from_iter_to_array(iterator, continuous, block_size=1, verbose=0):
             else:
                 result = numpy.append(result, data, axis=0)                
     return result
-    
-class UnpickleLoader(object):
-    """Load and unpickle files in the given directory, implements iterable.
-    
-    Only those files are unpickled that end with the given extension.
-    Can be used together with save_iterable.
-    """
-    
-    def __init__(self, path="", recursion=False, verbose=False, 
-                 pickle_ext=PICKLE_EXT):
-        """Make a list of all the files to unpickle.
-        
-        keyword arguments:
-        verbose -- output which files are unpickled
-        pickle_ext -- filename extension for the pickle files
-        """
-        self.verbose = verbose
-        self.path = path
-        self.filenames = []
-        for root, _, files in os.walk(path):
-            for file in files:
-                if os.path.splitext(file)[1] == pickle_ext:
-                    self.filenames.append(os.path.join(root, file))
-            if not recursion:
-                break
-        
-    def __iter__(self):
-        """Unpickle and return the files."""
-        for filename in self.filenames:
-            if self.verbose:
-                print "load " + filename
-            yield unpickle_from_disk(filename)
-
-
-### File-like object decorators ###
-
-class NewlineWriteFile(object):
-    """Decorator for file-like object.
-    
-    Adds a newline character to each line written with write().
-    """
-    
-    def __init__(self, file_obj):
-        """Wrap the given file-like object."""
-        self.file_obj = file_obj
-    
-    def write(self, str_obj):
-        """Write a string to the file object and append a newline character."""
-        self.file_obj.write(str_obj + "\n")
-        
-    def __getattr__(self, attr):
-        return getattr(self.file_obj, attr)
-
-
-class PopcornWriteFile(object):
-    """Decorator for file object.
-    
-    Adds a push() and pop() ability for indentation.
-    """
-    
-    def __init__(self, file_obj, depth_string="    "):
-        """Wrap the given file object.
-        
-        file_obj -- The wrapped file object.
-        depth_string -- String added in front for indentation depth.
-            The default value are four spaces.
-        """
-        self.file_obj = file_obj
-        self.depth = 0
-        self.depth_string = depth_string
-        
-    def push(self):
-        """Increase the indentation by one."""
-        self.depth += 1
-        
-    def pop(self):
-        """Decrease the indentation by one (unless it is already 0)."""
-        if self.depth > 0:
-            self.depth -= 1
-            
-    def write(self, str_obj):
-        """Write a string to the file object.
-        
-        Adds the correct indentation in front.
-        """
-        self.file_obj.write("".join([self.depth_string] * self.depth) +
-                            str_obj)
-        
-    def __getattr__(self, attr):
-        return getattr(self.file_obj, attr)
-
-
-## Introspection ##
-
-def hostname():
-    """Return the host name string, in lower case."""
-    from socket import gethostname
-    return gethostname().lower()
-
-def module_path(filename=None, frame=1):
-    """Return the absolute path of the module this function is called from.
-    
-    The returned path has the os specific format.
-    
-    filename -- If specified the path is joined with it.
-    frame -- Specifies for which stage in the call stack the path is returned,
-        so 1 gives the calling module, 2 the module that called the module 
-        and so on.
-    """
-    path = os.path.dirname(inspect.getfile(sys._getframe(frame)))
-    if filename == None:
-        return path
-    else:
-        return os.path.join(path, filename)
-    
-def module_project_filename(project_string="/scr/"):
-    """Return the absolute filename of the module this function is called from.
-    
-    The returned path is NOT os specific (\\ is replaced with /).
-    
-    project_string -- Follow the call stack down as long as the project_string
-        is present in the filenames. This is useful if one is only interested
-        in files in a certain project folder, but which are called from 
-        somewhere else.
-    """
-    module_name = None
-    frame = 1
-    next_module_name = inspect.getfile(sys._getframe(1)).replace("\\","/")
-    while next_module_name.find(project_string) > -1:
-        module_name = next_module_name
-        frame += 1
-        try:
-            next_module_name = \
-                inspect.getfile(sys._getframe(frame)).replace("\\","/")
-        except:
-            break
-    return module_name
-
-def locate(pattern, root=os.curdir):
-    """Locate all files matching supplied filename pattern in and below
-    supplied root directory.
-    
-    e.g. for xml in locate("*.xml"): ...
-    """
-    for path, dirs, files in os.walk(os.path.abspath(root)):
-        dirs.sort()
-        files.sort()
-        for filename in fnmatch.filter(files, pattern):
-            yield filename, path
-    
-    
-### Logging ##
-#    
-#class _tee(object):
-#    """Duplicate all input (tee in Unix)."""
-#    
-#    def __init__(self, *fileobjects):
-#        self.fileobjects=fileobjects
-#        
-#    def write(self, string):
-#        for fileobject in self.fileobjects:
-#            fileobject.write(string)
-#
-#
-#class Log(object):
-#    """Fork print to a logfile and stdout."""
-#    
-#    def __init__(self, filename, path="."):
-#        self.file = open(os.path.join(path, filename), "w")
-#        self.old_stdout = sys.stdout
-#        sys.stdout = _tee(sys.stdout, self.file)
-#        
-#    def close(self):
-#        sys.stdout = self.old_stdout
-#        self.file.close()
-        
+          
 #Warning, copied from SFA_libs, should not be here
 #allows usage of a large array as an iterator
 #chunk_size is given in number of blocks
