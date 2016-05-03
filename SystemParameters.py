@@ -153,10 +153,10 @@ class ParamsSFALayer(object):
         self.node_list = None
         self.layer_number = None
         
-class ExecSFALayer(object):
-    def __init__(self):
-        self.name = "SFA Layer"
-        self.params = None
+# class ExecSFALayer(object):
+#     def __init__(self):
+#         self.name = "SFA Layer"
+#         self.params = None
 
 #SFASuperNode: pca_node, ord_node, gen_exp, red_node, clip_node, sfa_node       
 class ParamsSFASuperNode(object):
@@ -205,10 +205,10 @@ class ParamsSFASuperNode(object):
 #        self.sfa_out_dim = 15
         self.node_list = None
 
-class ExecSFASuperNode(object):
-    def __init__(self):
-        self.name = "SFA Layer"
-        self.params = None
+# class ExecSFASuperNode(object):
+#     def __init__(self):
+#         self.name = "SFA Layer"
+#         self.params = None
         
 #CODE PENDING!!!!!!!!!!
 class ExperimentResult(object):

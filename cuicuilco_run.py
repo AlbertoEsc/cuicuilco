@@ -35,7 +35,7 @@ import time
 from matplotlib.ticker import MultipleLocator
 import copy
 import string
-from nonlinear_expansion import (identity, pair_prod_adj1_ex, pair_prod_adj2_ex, QE, TE)
+#from nonlinear_expansion import (identity, pair_prod_adj1_ex, pair_prod_adj2_ex, QE, CE)
 import getopt
 from lockfile import LockFile
 import mkl
@@ -211,7 +211,7 @@ if enable_command_line:
     print "Apparent command line arguments: \n", " ".join(argv)
     if len(argv) >= 2:
         try:
-            opts, args = getopt.getopt(argv[1:], "", ["Experiment=", "InputFilename=", "EnableDisplay=", "WriteSlowness=", "OutputFilename=", 
+            opts, args = getopt.getopt(argv[1:], "", ["InputFilename=", "OutputFilename=", "EnableDisplay=", 
                                                       "CacheAvailable=", "NumFeaturesSup=", "SkipFeaturesSup=",
                                                       'SVM_gamma=', 'SVM_C=','EnableSVM=', "LoadNetworkNumber=", "AskNetworkLoading=",
                                                       'EnableLR=', "NParallel=", "EnableScheduler=",
@@ -228,7 +228,7 @@ if enable_command_line:
                                                       "ComputeInputInformation=", "SleepM=", "DatasetForDisplayTrain=", "DatasetForDisplayNewid=",
                                                       "GraphExactLabelLearning=", "OutputInsteadOfSVM2=", "NumberTargetLabels=", "ConfusionMatrix=",
                                                       "MapDaysToYears=", "AddNoiseToSeenid=", "ClipSeenidNewid=",
-                                                      "HierarchicalNetwork=", "ExperimentDataset="])            
+                                                      "HierarchicalNetwork=", "ExperimentDataset=", "help"])            
             print "opts=", opts
             print "args=", args
 
@@ -237,27 +237,12 @@ if enable_command_line:
                 sys.exit(2)
                                
             for opt, arg in opts:
-                if opt in ('--Experiment'):
-                    if arg == "ParamsNatural":
-                        from experiment_datasets import ParamsNatural as DefaultExperimentDataset
-                    elif arg == "ParamsRawNatural":
-                        from experiment_datasets import ParamsRawNatural as DefaultExperimentDataset                        
-                    else:
-                        print "Unknown experiment:", arg
-                        sys.exit(2)
-                    print "Setting Parameters=", DefaultExperimentDataset.name
-                elif opt in ('--InputFilename'):
+                if opt in ('--InputFilename'):
                     input_filename = arg
                     print "Using the following input file:", input_filename
                 elif opt in ('--OutputFilename'):
                     output_filename = arg
                     print "Using the following output file:", output_filename
-                elif opt in ('--WriteSlowness'):
-                    if arg == '1':
-                        write_slowness = True
-                    else:
-                        write_slowness = False
-                    print "Setting write_slowness to", write_slowness   
                 elif opt in ('--EnableDisplay'):
                     if arg == '1':
                         enable_display=True
@@ -341,13 +326,17 @@ if enable_command_line:
                         classifier_cache_read_dir = None
                     else:
                         classifier_cache_read_dir = arg
-                    print "Setting classifier_cache_read_dir to", classifier_cache_read_dir       
+                    print "Setting classifier_cache_read_dir to", classifier_cache_read_dir
+                    er = "ClassifierCacheReadDir: Option not supported yet"
+                    raise Exception(er)
                 elif opt in ('--ClassifierCacheWriteDir'):
                     if arg == "None":
                         classifier_cache_write_dir = None
                     else:
                         classifier_cache_write_dir = arg
                     print "Setting classifier_cache_write_dir to", classifier_cache_write_dir   
+                    er = "ClassifierCacheWriteDir: Option not supported yet"
+                    raise Exception(er)
                 elif opt in ('--SaveSubimagesTraining'):
                     save_subimages_training = bool(int(arg))
                     print "Setting save_subimages_training to", save_subimages_training
@@ -378,11 +367,9 @@ if enable_command_line:
                 elif opt in ('--EnableGC'):
                     enable_GC = bool(int(arg)) 
                     print "Setting enable_GC to", enable_GC
-                    print "WARNING: This option only modifies regression display for now"
                 elif opt in ('--SaveSubimagesTrainingSupplementaryInfo'):
                     save_images_training_supplementary_info = arg 
                     print "Setting save_images_training_supplementary_info to", save_images_training_supplementary_info       
-                    #quit()   
                 elif opt in ('--EstimateExplainedVarWithInverse'):
                     estimate_explained_var_with_inverse = bool(int(arg))
                     print "Setting estimate_explained_var_with_inverse to", estimate_explained_var_with_inverse
@@ -490,6 +477,82 @@ if enable_command_line:
                     name_default_experiment = arg
                     print "Setting name_default_experiment to", name_default_experiment   
                     DefaultExperimentDataset = available_experiments[name_default_experiment]
+                elif opt in ('--help'):
+                    txt = \
+"""Cuicuilco: displaying help information
+Usage: python cuicuilco_run.py [OPTION]...
+Executes a single run of the Cuicuilco framework. 
+The following global variables must be specified on beforehand (integer values):
+    CUICUILCO_TUNING_PARAMETER        (value of the tuning parameter used by the datasets)
+    CUICUILCO_EXPERIMENT_SEED         (seed used for the dataset radomizations)
+    CUICUILCO_IMAGE_LOADING_NUM_PROC  (max number of processes used by MKL)
+The options below may be used:
+    **General options
+        --EnableDisplay={1/0} Enables the graphical interface
+        --ExperimentDataset={ParamsRAgeFunc/ParamsMNISTFunc/ParamsRTransXYScaleFunc/...} Selects a particular dataset
+        --HierarchicalNetwork={voidNetwork1L/PCANetwork1L/u08expoNetworkU11L/IEVMLRecNetworkU11L_Overlap6x6L0_1Label/...} Selects a particular network
+        --NumFeaturesSup=N Specifies the number of output features N used in the supervised step
+        --SkipFeaturesSup=S Specifies number of output features S that are skipped (ignored)
+        --SleepM=M Specifies a delay before cuicuilco starts loading the dataset. (useful to prevent memory clogging)
+                       if M>0 there is a delay of M minutes
+                       if M=0 there is no delay
+                       if M=-1 the program joins a waiting list and sleeps until its turn is reached               
+    **Network options
+        --AddNormalizationNode={1/0} Adds a normalization node at the end of the network
+        --MakeLastPCANodeWhithening={1/0} Changes the last PCANode into a WhitheningNode
+        --FeatureCutOffLevel=f Trims the feature values between -f and f
+    **Cache options
+        --CacheAvailable={1/0} Specifies whether any type of cache might be available
+        --NetworkCacheReadDir=directory Specifies a directory used to load previously trained networks
+        --NetworkCacheWriteDir=directory Specifies a directory used to save trained networks
+        --LoadNetworkNumber=M Loads the Mth network in cache instead of training a new network
+        --AskNetworkLoading={1/0} If the option is enabled, Cuicuilco requests in the command 
+                                  line the number of the network to be loaded
+        --NodeCacheReadDir=directory Specifies a directory used to search for nodes trained previously on the same data and parameters (can significantly speed up network training)
+        --NodeCacheWriteDir=directory Specifies a directory where trained nodes are saved
+    **Feature options
+        --AddNoiseToSeenid={1/0} Adds noise to the data used to train the supervised step
+        --ClipSeenidNewid={1/0} Trims the range of the data used to train the supervised step and the test data according to the range of the training data of the network
+    **Supervised step options  
+        --EnableLR={1/0} Enables linear regression (OLS) as supervised step
+        --EnableKNN={1/0} Enables k-nearest neighbors (kNN) as supervised step
+        --kNN_k=k Sets the value of k if kNN is enabled
+        --EnableNCC={1/0} Enables a nearest centroid classifier as supervised step
+        --EnableGC={1/0} Enables a Gaussian classifier as supervised step
+        --EnableSVM={1/0} Enables a support vector machine as supervised step (requires libsvm)
+        --SVM_gamma=gamma Sets the value of gamma if SVM is enabled (RBF, multiclass, one against one)
+        --SVM_C=C Sets the value of C if SVM is enabled
+    **Result options
+        --SaveSubimagesTraining={1/0} Saves (a fraction of) the training images to disk (after data distortion and other operations) 
+        --SaveSubimagesTrainingSupplementaryInfo={Class/Label} If the option above is enabled, this option adds the correct label or class information to the image filenames
+        --SaveAverageSubimageTraining={1/0} Saves the average training image to disk (after data distortion and other operations)
+        --SaveSorted_AE_GaussNewid={1/0} Saves (a fraction of) the training images to disk ordered by the absolute error for label estimation
+        --SaveSortedIncorrectClassGaussNewid={1/0} Saves (a fraction of) the training images to disk that were classified incorrectly   
+        --ExportDataToLibsvm={1/0} Saves the output features and labels in the format of libsvm
+    **Options to control computation of explained variance (1-reconstruction error). 
+        --EstimateExplainedVarWithInverse={1/0} Reconstructions are computed using flow.inverse
+        --EstimateExplainedVarWithKNN_k=k If k>0 reconstructions are computed as the average of the k nearest neighbors 
+        --EstimateExplainedVarWithKNNLinApp_k=k If k>0 reconstructions are a linear average of the k nearest neighbors
+        --EstimateExplainedVarLinGlobal_N=N Reconstructions are given by a linear model trained with N samples chosen randomly from the training data. If N=-1, all training samples are used.
+    **Label estimation options
+        --MapDaysToYears={1/0} Divides the ground-truth labels and label estimations by 365.242
+        --IntegerLabelEstimation={1/0} Truncates all label estimations to integer values
+        --CumulativeScores={1/0} Computes cumulative scores for test data
+        --ConfusionMatrix={1/0} Computes the confusion matrix for test data
+    **Exact label learning graph options
+        --GraphExactLabelLearning={1/0} Computes an ELL graph based on the available labels
+        --NumberTargetLabels=N Defines the number of target labels (if N>1 there N-1 auxiliary labels are created)
+        --OutputInsteadOfSVM2={1/0} If the option is enabled, the network output replaces the SVM2 label estimation
+    **Undocumented or in development options (consult the source code)
+        --InputFilename=filename, --OutputFilename=filename, --SignalCacheReadDir=directory, --SignalCacheWriteDir=directory, 
+        --ClassifierCacheReadDir=directory, --ClassifierCacheWriteDir=directory, --EnableScheduler={1/0},
+        --NParallel=N, --UseFilter={1/0}, --FeaturesResidualInformation=N, --ComputeInputInformation={1/0},
+        --ComputeSlowFeaturesNewidAcrossNet={1/0}, --DatasetForDisplayTrain=N, --DatasetForDisplayNewid=N   
+    **Other options
+        --help Displays this help information
+"""
+                    print txt
+                    quit()
                 else:
                     print "Argument not handled: ", opt
                     quit()

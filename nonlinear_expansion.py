@@ -102,14 +102,14 @@ def sel14_045QE(x):
 def sel18_04QE(x):
     return neg_expo(QE(x[:,0:18]), 0.4)
 
-def sel25_TE(x):
-    return TE(x[:,0:25])
+def sel25_CE(x):
+    return CE(x[:,0:25])
 
-def sel30_TE(x):
-    return TE(x[:,0:30])
+def sel30_CE(x):
+    return CE(x[:,0:30])
 
-def sel35_TE(x):
-    return TE(x[:,0:35])
+def sel35_CE(x):
+    return CE(x[:,0:35])
 
 
 def sel90_unsigned_08expo(x):
@@ -496,7 +496,7 @@ def pairwise_expansion(x, func, reflexive=True):
 def Q_func(x, func):
     return products_2(x,func)
 
-def T_func(x, func):
+def C_func(x, func):
     return products_3(x,func)
 
 def P4_func(x, func):
@@ -521,8 +521,8 @@ def P9_func(x, func):
 def QE(x):
     return Q_func(x,multiply)
 
-def TE(x):
-    return T_func(x,multiply)
+def CE(x):
+    return C_func(x,multiply)
 
 def P4(x):
     return P4_func(x,multiply)
@@ -548,9 +548,9 @@ def Q_AN(x,k=1.0,d=0.6):
     xx = poly_asymmetric_normalize(x, k, d)
     return QE(xx)
 
-def T_AN(x,k=1.0,d=0.73):
+def C_AN(x,k=1.0,d=0.73):
     xx = poly_asymmetric_normalize(x, k, d)
-    return TE(xx)
+    return CE(xx)
 
 #N=(Symmetric) Normalize
 def Q_N(x,k=1.0,d=0.6):
@@ -559,10 +559,10 @@ def Q_N(x,k=1.0,d=0.6):
     #print "Q_N expanded:", y, y.shape
     return y
 
-def T_N(x,k=1.0,d=0.73):
+def C_N(x,k=1.0,d=0.73):
 #    xx = norm2_normalize(x, k, d)
-    y = TE(x)/(k+norm2(x)**d)
-    #print "TE_N expanded:", y, y.shape
+    y = CE(x)/(k+norm2(x)**d)
+    #print "CE_N expanded:", y, y.shape
     return y
 
 #E=(Symmetric) Exponential Normalize
@@ -570,9 +570,9 @@ def Q_E(x,k=1.0,d=0.6):
     norm = norm2(x)
     return QE(x) / (k+numpy.exp(norm*d))
 
-def T_E(x,k=1.0,d=0.73):
+def C_E(x,k=1.0,d=0.73):
     norm = norm2(x)
-    return TE(x)/ (k+numpy.exp(norm*d))
+    return CE(x)/ (k+numpy.exp(norm*d))
 
 #AE=(Asymmetric) Exponential Normalize
 def Q_AE(x,k=1.0,d=0.6):
@@ -580,9 +580,9 @@ def Q_AE(x,k=1.0,d=0.6):
 #    print "xx.shape=", xx.shape
     return QE(xx)
 
-def T_AE(x,k=1.0,d=0.73):
+def C_AE(x,k=1.0,d=0.73):
     xx = expo_asymmetric_normalize(x, k, d)
-    return TE(xx)
+    return CE(xx)
 
 #Note: don't know why I called it asymmetric, this transformation seems symetric to me
 #AE=(Asymmetric) Polynomial Normalize: x-> x**d (signed exponentiation)
@@ -590,9 +590,9 @@ def Q_AP(x, d=0.4):
     xx = sgn_expo(x, d)
     return QE(xx)
 
-def T_AP(x, d=0.3):
+def C_AP(x, d=0.3):
     xx = sgn_expo(x, d)
-    return TE(xx)
+    return CE(xx)
 
 
 
@@ -918,10 +918,10 @@ def Q_exp(x, k=nan, d=2.0):
     qe = QE(xx)
     return numpy.concatenate((xx, qe), axis=1)
 
-def T_exp(x, k=nan, d=3.0):
+def C_exp(x, k=nan, d=3.0):
     xx = sgn_expo(x, d/3.0)
     qe = QE(xx)
-    te = TE(xx)
+    te = CE(xx)
 #    print qe.shape
     return numpy.concatenate((xx, qe, te), axis=1)
         
@@ -930,23 +930,23 @@ def Q_AN_exp(x, k=1.0, d=0.6):
     qe = QE(xx)
     return numpy.concatenate((xx, qe), axis=1)
 
-def T_AN_exp(x, k=1.0, d=0.7333):
+def C_AN_exp(x, k=1.0, d=0.7333):
     xx = poly_asymmetric_normalize(x, k, d)
     qe = QE(x)
-    te = TE(x)
+    te = CE(x)
     return numpy.concatenate((xx, qe, te), axis=1)
 
 def Q_N_exp(x, k=1.0, d=0.6):
     lin = norm2_normalize(x+0.0, k, d)
     qe = Q_N(x+0.0, k, d)
     #WAAARNINNGGG
-    #te = T_N(x, k, d)
+    #te = C_N(x, k, d)
     return numpy.concatenate((lin, qe), axis=1)
 
-def T_N_exp(x, k=1.0, d=0.7333):
+def C_N_exp(x, k=1.0, d=0.7333):
     lin = norm2_normalize(x+0.0, k, d)
     qe = Q_N(x+0.0, k, d)
-    te = T_N(x+0.0, k, d)
+    te = C_N(x+0.0, k, d)
     return numpy.concatenate((lin, qe, te), axis=1)
 #    return lin
 
@@ -955,10 +955,10 @@ def Q_E_exp(x, k=1.0, d=1.0):
     qe = Q_E(x, k, d)
     return numpy.concatenate((lin, qe), axis=1)
 
-def T_E_exp(x, k=1.0, d=1.0):
+def C_E_exp(x, k=1.0, d=1.0):
     lin = exponential_normalize(x, k, d)
     qe = Q_E(x, k, d)
-    te = T_E(x, k, d)
+    te = C_E(x, k, d)
     return numpy.concatenate((lin, qe, te), axis=1)
 
 def Q_AE_exp(x, k=1.0, d=1.0):
@@ -966,10 +966,10 @@ def Q_AE_exp(x, k=1.0, d=1.0):
     qe = QE(xx)
     return numpy.concatenate((xx, qe), axis=1)
 
-def T_AE_exp(x, k=1.0, d=1.0):
+def C_AE_exp(x, k=1.0, d=1.0):
     xx = expo_asymmetric_normalize(x, k, d)
     qe = QE(xx)
-    te = TE(xx)
+    te = CE(xx)
     return numpy.concatenate((xx, qe, te), axis=1)
 
 def Q_AP_exp(x, k=nan, d=1.0):
@@ -977,11 +977,11 @@ def Q_AP_exp(x, k=nan, d=1.0):
     qe = QE(xx)
     return numpy.concatenate((xx, qe), axis=1)
 
-#Warning, identical to T_exp for expo = 3*d
-def T_AP_exp(x, k=nan, d=1.0):
+#Warning, identical to C_exp for expo = 3*d
+def C_AP_exp(x, k=nan, d=1.0):
     xx = sgn_expo(x, d)
     qe = QE(xx)
-    te = TE(xx)
+    te = CE(xx)
     return numpy.concatenate((xx, qe, te), axis=1)
 
 #LIST VERSIONS OF THE EXPANSIONS
@@ -994,38 +994,38 @@ def S_L(k=nan, d=0.8):
 def Q_L(k=nan, d=2.0):
     return FuncListFromExpansion(Q_exp, k=k, d=d)
 
-def T_L(k=nan, d=3.0):
-    return FuncListFromExpansion(T_exp, k=k, d=d)
+def C_L(k=nan, d=3.0):
+    return FuncListFromExpansion(C_exp, k=k, d=d)
      
 def Q_AN_L(k=1.0, d=0.6):
     return FuncListFromExpansion(Q_AN_exp, k=k, d=d)
 
-def T_AN_L(k=1.0, d=0.7333):
-    return FuncListFromExpansion(T_AN_exp, k=k, d=d)
+def C_AN_L(k=1.0, d=0.7333):
+    return FuncListFromExpansion(C_AN_exp, k=k, d=d)
 
 def Q_N_L(k=1.0, d=0.6):
     return FuncListFromExpansion(Q_N_exp, k=k, d=d)
 
-def T_N_L(k=1.0, d=0.7333):
-    return FuncListFromExpansion(T_N_exp, k=k, d=d)
+def C_N_L(k=1.0, d=0.7333):
+    return FuncListFromExpansion(C_N_exp, k=k, d=d)
 
 def Q_E_L(k=1.0, d=1.0):
     return FuncListFromExpansion(Q_E_exp, k=k, d=d)
 
-def T_E_L(k=1.0, d=1.0):
-    return FuncListFromExpansion(T_E_exp, k=k, d=d)
+def C_E_L(k=1.0, d=1.0):
+    return FuncListFromExpansion(C_E_exp, k=k, d=d)
 
 def Q_AE_L(k=1.0, d=1.0):
     return FuncListFromExpansion(Q_AE_exp, k=k, d=d)
 
-def T_AE_L(k=1.0, d=1.0):
-    return FuncListFromExpansion(T_AE_exp, k=k, d=d)
+def C_AE_L(k=1.0, d=1.0):
+    return FuncListFromExpansion(C_AE_exp, k=k, d=d)
 
 def Q_AP_L(k=nan, d=1.0):
     return FuncListFromExpansion(Q_AP_exp, k=k, d=d)
 
-def T_AP_L(k=nan, d=1.0):
-    return FuncListFromExpansion(T_AP_exp, k=k, d=d)
+def C_AP_L(k=nan, d=1.0):
+    return FuncListFromExpansion(C_AP_exp, k=k, d=d)
 
 def MaxE(x):
     return products_2(x,numpy.maximum, k=1)
@@ -1422,8 +1422,8 @@ def ch3o3s8QE(x):
 def ch3o4s8QE(x):
     return ch3_Offset_sF_QE(x, Off=4, F=8)
 
-def s9TE(x):
-    return TE(x[:,0:9])
+def s9CE(x):
+    return CE(x[:,0:9])
 
 def s2QE(x):
     return QE(x[:,0:2])

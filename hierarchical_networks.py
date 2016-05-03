@@ -150,8 +150,8 @@ network.layers[0].sfa_out_dim = 75
 def normalized_Q_terms(x):
     return Q_N(x,k=1.0,d=2)
 
-def normalized_T_terms(x):
-    return T_N(x,k=1.0,d=3)
+def normalized_C_terms(x):
+    return C_N(x,k=1.0,d=3)
 
 def extract_sigmoid_features(x, c1, l1):
     if x.shape[1] != c1.shape[0] or c1.shape[1] != len(l1):
@@ -231,23 +231,23 @@ def QE_40(x):
 def QE_45(x):
     return QE(x[:,0:45])
 
-def TE_15(x):
-    return TE(x[:,0:15])
+def CE_15(x):
+    return CE(x[:,0:15])
 
-def TE_20(x):
-    return TE(x[:,0:20])
+def CE_20(x):
+    return CE(x[:,0:20])
 
-def TE_25(x):
-    return TE(x[:,0:25])
+def CE_25(x):
+    return CE(x[:,0:25])
 
-def TE_30(x):
-    return TE(x[:,0:30])
+def CE_30(x):
+    return CE(x[:,0:30])
 
-def TE_35(x):
-    return TE(x[:,0:35])
+def CE_35(x):
+    return CE(x[:,0:35])
 
-def TE_40(x):
-    return TE(x[:,0:40])
+def CE_40(x):
+    return CE(x[:,0:40])
 
 def P4_5(x):
     return P4(x[:,0:5])
@@ -292,7 +292,7 @@ layer.name = "Direct SFA Layer2"
 layer.pca_node_class = None  #None
 layer.pca_args = {}
 #layer.exp_funcs = [identity, QE]
-layer.exp_funcs = [identity, QE, TE] #unsigned_08expo, signed_08expo
+layer.exp_funcs = [identity, QE, CE] #unsigned_08expo, signed_08expo
 layer.sfa_node_class = mdp.nodes.SFANode #mdp.nodes.SFANode
 layer.sfa_out_dim = 20 
 ####################################################################
@@ -341,7 +341,7 @@ layer.pca_out_dim = 3 #WARNING: 100 or None
 #layer.pca_out_dim = 35 #WARNING: 100 or None
 #layer.pca_out_dim = 200 # 35 #WARNING: 100 or None
 #layer.exp_funcs = [identity, QE]
-layer.exp_funcs = [identity, P5, P4, TE, QE, unsigned_08expo, signed_08expo] #unsigned_08expo, signed_08expo
+layer.exp_funcs = [identity, P5, P4, CE, QE, unsigned_08expo, signed_08expo] #unsigned_08expo, signed_08expo
 #layer.exp_funcs = [he.cos_exp_mix8_F]
 #layer.exp_funcs = [encode_signal_p9,] #For next experiment: [encode_signal_p9,]
 #layer.red_node_class = mdp.nodes.HeadNode
@@ -382,25 +382,25 @@ layer.pca_out_dim = 35 #WARNING: 100 or None
 layer.sfa_node_class = mdp.nodes.IEVMLRecNode #mdp.nodes.SFANode
 #layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":"RandomSigmoids", "expansion_starting_point":"08Exp", "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999, "expansion_output_dim":4000} 
 #layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo],                       "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
-#QE10, TE10, QE15, TE15, QE20, TE20, QE25, TE25,
+#QE10, CE10, QE15, CE15, QE20, CE20, QE25, CE25,
 terms_NL_expansion = int(tuning_parameter)
 if terms_NL_expansion == 15:
-    expansion = [identity, QE_15, TE_15]
+    expansion = [identity, QE_15, CE_15]
 elif terms_NL_expansion == 20:
-    expansion = [identity, QE_20, TE_20]
+    expansion = [identity, QE_20, CE_20]
 elif terms_NL_expansion == 25:
-    expansion = [identity, QE_25, TE_25]
+    expansion = [identity, QE_25, CE_25]
 elif terms_NL_expansion == 30:
-    expansion = [identity, QE_30, TE_30]
+    expansion = [identity, QE_30, CE_30]
 elif terms_NL_expansion == 35:
-    expansion = [identity, QE_35, TE_35]
+    expansion = [identity, QE_35, CE_35]
 elif terms_NL_expansion == 40:
-    expansion = [identity, QE_40, TE_40]
+    expansion = [identity, QE_40, CE_40]
 else:
     er = "invalid size of NL expansion", terms_NL_expansion
     raise Exception(er) 
 
-expansion = [identity, QE, TE_30] #TE_35
+expansion = [identity, QE, CE_30] #CE_35
 
 layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":expansion,"max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999} 
 layer.sfa_out_dim = 9 #49*2 # *3 # None
@@ -436,7 +436,7 @@ network.L0.pca_out_dim = 200 # 100 #49 * 2 # *3
 network.L0.pca_args = {}
 network.L0.ord_node_class = he.NormalizeABNode #more_nodes.HistogramEqualizationNode #NormalizeABNode
 #network.L0.ord_args = {"num_pivots":200}
-network.L0.exp_funcs = [he.cos_exp_mix30_F] #[identity, sel30_QE, sel30_TE ] he.cos_exp_mix30_F] # sel60_QE # he.cos_exp_mix25_F # he.cos_exp_mix60q_F , sel25_QE, sel25_TE
+network.L0.exp_funcs = [he.cos_exp_mix30_F] #[identity, sel30_QE, sel30_CE ] he.cos_exp_mix30_F] # sel60_QE # he.cos_exp_mix25_F # he.cos_exp_mix60q_F , sel25_QE, sel25_CE
 network.L0.sfa_node_class = mdp.nodes.GSFANode #IdentityNode #PCANode # mdp.nodes.NLIPCANode #WhiteningNode
 network.L0.sfa_out_dim = 60 # 100 #49 * 2 # *3
 network.L0.sfa_args = {}
@@ -525,7 +525,7 @@ u08expoNetwork2T.layers[1].sfa_out_dim = 49
 ####################################################################
 ######        One-Layer Quadratic SFA NETWORK          ############
 ####################################################################  
-quadraticNetwork1L = NetworkSetExpFuncs([identity, pair_prod_ex], copy.deepcopy(SFANetwork1L)) #QE? TE?
+quadraticNetwork1L = NetworkSetExpFuncs([identity, pair_prod_ex], copy.deepcopy(SFANetwork1L)) #QE? CE?
 quadraticNetwork1L.layers[0].pca_node_class = mdp.nodes.SFANode
 quadraticNetwork1L.layers[0].pca_out_dim = 16
 
@@ -1009,61 +1009,61 @@ def QE_3Split_50(x):
     s = x.shape[1]/3
     return numpy.concatenate((QE(x[:,0:50]), QE(x[:,s:s+50]), QE(x[:,2*s:2*s+50])), axis=1)
 
-def TE_20_AP08(x):
-    return T_AP(x[:,0:20], d=0.8)
+def CE_20_AP08(x):
+    return C_AP(x[:,0:20], d=0.8)
 
-def TE_25_AP08(x):
-    return T_AP(x[:,0:25], d=0.8)
+def CE_25_AP08(x):
+    return C_AP(x[:,0:25], d=0.8)
 
-def TE_30_AP03(x):
-    return T_AP(x[:,0:30], d=0.3)
+def CE_30_AP03(x):
+    return C_AP(x[:,0:30], d=0.3)
 
-def TE_30_AP06(x):
-    return T_AP(x[:,0:30], d=0.6)
+def CE_30_AP06(x):
+    return C_AP(x[:,0:30], d=0.6)
 
-def TE_30_AP08(x):
-    return T_AP(x[:,0:30], d=0.8)
+def CE_30_AP08(x):
+    return C_AP(x[:,0:30], d=0.8)
 
-def TE_35_AP03(x):
-    return T_AP(x[:,0:35], d=0.3)
+def CE_35_AP03(x):
+    return C_AP(x[:,0:35], d=0.3)
 
-def TE_35_AP08(x):
-    return T_AP(x[:,0:35], d=0.8)
+def CE_35_AP08(x):
+    return C_AP(x[:,0:35], d=0.8)
 
-def TE_40_AP08(x):
-    return T_AP(x[:,0:40], d=0.8)
+def CE_40_AP08(x):
+    return C_AP(x[:,0:40], d=0.8)
 
-def TE_45_AP08(x):
-    return T_AP(x[:,0:45], d=0.8)
+def CE_45_AP08(x):
+    return C_AP(x[:,0:45], d=0.8)
 
-def TE_50_AP08(x):
-    return T_AP(x[:,0:50], d=0.8)
+def CE_50_AP08(x):
+    return C_AP(x[:,0:50], d=0.8)
 
-def TE_55_AP08(x):
-    return T_AP(x[:,0:55], d=0.8)
+def CE_55_AP08(x):
+    return C_AP(x[:,0:55], d=0.8)
 
-def TE_9_39(x):
-    return TE(x[:,9:39])
+def CE_9_39(x):
+    return CE(x[:,9:39])
 
-def TE_2Split_20(x):
+def CE_2Split_20(x):
     s = x.shape[1]/2
-    return numpy.concatenate((TE(x[:,0:20]), TE(x[:,s:s+20])), axis=1)
+    return numpy.concatenate((CE(x[:,0:20]), CE(x[:,s:s+20])), axis=1)
 
-def TE_2Split_25(x):
+def CE_2Split_25(x):
     s = x.shape[1]/2
-    return numpy.concatenate((TE(x[:,0:25]), TE(x[:,s:s+25])), axis=1)
+    return numpy.concatenate((CE(x[:,0:25]), CE(x[:,s:s+25])), axis=1)
 
-def TE_2Split_30(x):
+def CE_2Split_30(x):
     s = x.shape[1]/2
-    return numpy.concatenate((TE(x[:,0:30]), TE(x[:,s:s+30])), axis=1)
+    return numpy.concatenate((CE(x[:,0:30]), CE(x[:,s:s+30])), axis=1)
 
-def TE_3Split_15(x):
+def CE_3Split_15(x):
     s = x.shape[1]/3
-    return numpy.concatenate((TE(x[:,0:15]), TE(x[:,s:s+15]), TE(x[:,2*s:2*s+15])), axis=1)
+    return numpy.concatenate((CE(x[:,0:15]), CE(x[:,s:s+15]), CE(x[:,2*s:2*s+15])), axis=1)
 
-def TE_3Split_20(x):
+def CE_3Split_20(x):
     s = x.shape[1]/3
-    return numpy.concatenate((TE(x[:,0:20]), TE(x[:,s:s+20]), TE(x[:,2*s:2*s+20])), axis=1)
+    return numpy.concatenate((CE(x[:,0:20]), CE(x[:,s:s+20]), CE(x[:,2*s:2*s+20])), axis=1)
 
 
 print "******** Setting Layer L0 Parameters          *********************"
@@ -1091,7 +1091,7 @@ pSFALayerL2H_S3_D2.x_field_channels=2 #3 for 24x24 and 29x29, 2 for 28x28
 pSFALayerL2H_S3_D2.y_field_channels=1
 pSFALayerL2H_S3_D2.x_field_spacing=2 #2 for 24x24, 1 for 29x29
 pSFALayerL2H_S3_D2.y_field_spacing=1
-#pSFALayerL2H_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QE_3Split_25, TE_3Split_20], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerL2H_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QE_3Split_25, CE_3Split_20], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 #pSFALayerL2H_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo,  QE_2Split_15_AP08], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 pSFALayerL2H_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 
@@ -1101,7 +1101,7 @@ pSFALayerL3H_S2_D1.x_field_channels=3 #2 for 24x24 and 29x29, 3 for 28x28
 pSFALayerL3H_S2_D1.y_field_channels=1
 pSFALayerL3H_S2_D1.x_field_spacing=1
 pSFALayerL3H_S2_D1.y_field_spacing=1
-#sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QE_2Split_25, TE_2Split_20], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QE_2Split_25, CE_2Split_20], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 #pSFALayerL3H_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QE_2Split_50], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 #pSFALayerL3H_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo,  QE_3Split_35_AP08], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 pSFALayerL3H_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
@@ -1113,7 +1113,7 @@ pSFALayerL1V_S3_D2.x_field_channels=1
 pSFALayerL1V_S3_D2.y_field_channels=3
 pSFALayerL1V_S3_D2.x_field_spacing=1
 pSFALayerL1V_S3_D2.y_field_spacing=2
-#sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QE_3Split_20, TE_3Split_15], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QE_3Split_20, CE_3Split_15], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 pSFALayerL1V_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 
 pSFALayerL2V_S3_D2 = copy.deepcopy(pSFALayerL1H) #L5
@@ -1122,7 +1122,7 @@ pSFALayerL2V_S3_D2.x_field_channels=1
 pSFALayerL2V_S3_D2.y_field_channels=2
 pSFALayerL2V_S3_D2.x_field_spacing=1
 pSFALayerL2V_S3_D2.y_field_spacing=2 #2 for 24x24, 1 for 29x29
-#sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QE_3Split_25, TE_3Split_20], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QE_3Split_25, CE_3Split_20], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 pSFALayerL2V_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 
 pSFALayerL3V_S2_D1 = copy.deepcopy(pSFALayerL1H) #L7
@@ -1131,8 +1131,8 @@ pSFALayerL3V_S2_D1.x_field_channels=1
 pSFALayerL3V_S2_D1.y_field_channels=3
 pSFALayerL3V_S2_D1.x_field_spacing=1
 pSFALayerL3V_S2_D1.y_field_spacing=1
-#sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QE_2Split_25, TE_2Split_20], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
-#pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QE_2Split_35, TE_2Split_25], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QE_2Split_25, CE_2Split_20], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QE_2Split_35, CE_2Split_25], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":1, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 
 pSFALayerL0_4x4.sfa_out_dim = 13 #Was 15 #Usually 16 L1 # 9 + 5 
@@ -1144,7 +1144,7 @@ pSFALayerL3H_S2_D1.sfa_out_dim = 120 #L6 #70 #44 #265 # 2*9 + 35
 pSFALayerL3V_S2_D1.sfa_out_dim = 160 #L7 #130 #150 # 2*9 + 40
 #pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 #pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":"RandomSigmoids", "expansion_starting_point":"08Exp", "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999, "expansion_output_dim":2000} 
-#pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, QE, TE], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, QE, CE], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 pSFALayerL0_4x4.sfa_args["max_preserved_sfa"]=4
 pSFALayerL1H_S3_D2.sfa_args["max_preserved_sfa"]=4
 pSFALayerL1V_S3_D2.sfa_args["max_preserved_sfa"]=4
@@ -1159,13 +1159,13 @@ pSFALayerSupernode.name = "SFA Super Node Layer"
 pSFALayerSupernode.pca_node_class = None
 pSFALayerSupernode.ord_node_class = mdp.nodes.HeadNode
 pSFALayerSupernode.ord_args = {"output_dim":115}
-#pSFALayerSupernode.exp_funcs = [identity, unsigned_08expo, unsigned_08expo_p15, unsigned_08expo_m15, signed_08expo, QE_90_AP08, TE_30_AP08,] #signed_08expo
-pSFALayerSupernode.exp_funcs = [identity, unsigned_08expo, signed_08expo, QE_90_AP08, TE_30_AP08,] #signed_08expo
-#pSFALayerSupernode.exp_funcs = [identity, QE, TE]
+#pSFALayerSupernode.exp_funcs = [identity, unsigned_08expo, unsigned_08expo_p15, unsigned_08expo_m15, signed_08expo, QE_90_AP08, CE_30_AP08,] #signed_08expo
+pSFALayerSupernode.exp_funcs = [identity, unsigned_08expo, signed_08expo, QE_90_AP08, CE_30_AP08,] #signed_08expo
+#pSFALayerSupernode.exp_funcs = [identity, QE, CE]
 #pSFALayerSupernode.red_node_class = None
 pSFALayerSupernode.sfa_node_class = mdp.nodes.SFANode
 #pSFALayerSupernode.sfa_node_class = mdp.nodes.IEVMLRecNode #mdp.nodes.SFANode
-#pSFALayerSupernode.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QE_50, TE_30],                     "max_comp":1, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerSupernode.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QE_50, CE_30],                     "max_comp":1, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 #pSFALayerSupernode.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo_75],                     "max_comp":1, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 pSFALayerSupernode.sfa_out_dim = 80
 
@@ -3068,7 +3068,7 @@ network.layers = [network.L0, network.L1, network.L2, network.L3, network.L4, ne
 #NetworkGender_8x8L0 = NetworkSetExpFuncs([identity, unsigned_08expo, signed_08expo], copy.deepcopy(NetworkGender_8x8L0))
 NetworkGender_8x8L0 = NetworkSetExpFuncs([identity, unsigned_08expo], copy.deepcopy(NetworkGender_8x8L0))
 #NetworkGender_8x8L0.L6.exp_funcs = [identity, QE]
-#NetworkGender_8x8L0.L7.exp_funcs = [identity, QE] #, TE, P4, P5, P6]
+#NetworkGender_8x8L0.L7.exp_funcs = [identity, QE] #, CE, P4, P5, P6]
 
 #WARNING, TUNING FOR AGE EXPERIMENTS ONLY, BREAKS NETWORKS DERIVED FROM IT!
 network = u08expoNetworkU11L_5x5L0 = copy.deepcopy(u08expoNetworkU11L)
@@ -3139,12 +3139,12 @@ HeuristicEvaluationExpansionsNetworkU11L.L6.sfa_out_dim=30
 
 identity
 Q_d2_L = [identity, pair_prod_ex]
-T_d3_L = T_L(k=nan, d=3.0)
+C_d3_L = C_L(k=nan, d=3.0)
 Q_N_k1_d2_L = Q_N_L(k=1.0, d=2.0)
-#T_N_k1_d2_L = T_N_L(k=1.0, d=2.0) #WARNING, should change everywhere to d=3.0 ad
-T_N_k1_d3_L = T_N_L(k=1.0, d=3.0) 
+#C_N_k1_d2_L = C_N_L(k=1.0, d=2.0) #WARNING, should change everywhere to d=3.0 ad
+C_N_k1_d3_L = C_N_L(k=1.0, d=3.0) 
 Q_d08_L = Q_L(k=nan, d=0.8)
-T_d09_L = T_L(k=nan, d=0.9)
+C_d09_L = C_L(k=nan, d=0.9)
 S_d08_L = [identity, unsigned_08expo]
 S_d2_L = S_L(k=nan, d=2.0)
 
