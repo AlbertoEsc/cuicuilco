@@ -1,5 +1,6 @@
 *.pyc
 *.swp
+*.txt
 AgeImages/
 BenchmarkSupUnsupArticle/
 ELLArticle_GTSRB32C/
