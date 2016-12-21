@@ -1,5 +1,4 @@
 import system_parameters
-#from system_parameters import load_data_from_sSeq
 import numpy
 import scipy
 import mdp
@@ -23,8 +22,8 @@ if tuning_parameter==None:
     raise Exception(ex)
 print "tuning_parameter=", tuning_parameter
 
-#MEGAWARNING, remember that initialization overwrites these values!!!!!!!!!!
-#Therefore, the next section is useless unless class variables are read!!!!!!!!!!
+#WARNING: remember that initialization overwrites these values!!!!!!!!!!
+#Therefore, the next section is useless unless these class variables are read!!!!!!!!!!
 activate_random_permutation = False
 activate_sfa_ordering = False
 if activate_random_permutation:
@@ -47,6 +46,7 @@ else:
 print "system_parameters.ParamsSFALayer.ord_node_class is:", system_parameters.ParamsSFALayer.ord_node_class
 print "system_parameters.ParamsSFALayer.ord_args is:", system_parameters.ParamsSFALayer.ord_args
 
+
 def comp_layer_name(cloneLayer, exp_funcs, x_field_channels, y_field_channels, pca_out_dim, sfa_out_dim):
     name = ""
     if cloneLayer == False:
@@ -64,6 +64,7 @@ def comp_layer_name(cloneLayer, exp_funcs, x_field_channels, y_field_channels, p
         name += ") "
     name += "Layer: %dx%d => %s => %s"% (y_field_channels, x_field_channels, str(pca_out_dim), str(sfa_out_dim))
     return name
+
 
 def comp_supernode_name(exp_funcs, pca_out_dim, sfa_out_dim):
     name = ""
@@ -83,6 +84,7 @@ def comp_supernode_name(exp_funcs, pca_out_dim, sfa_out_dim):
     name += "SFA Super Node:  all => " + str(pca_out_dim) + " => " + str(sfa_out_dim)
     return name
 
+
 def NetworkSetExpFuncs(exp_funcs, network, include_L0=True):       
     for i, layer in enumerate(network.layers):
         if i>0 or include_L0==True:
@@ -91,16 +93,19 @@ def NetworkSetExpFuncs(exp_funcs, network, include_L0=True):
             layer.exp_funcs = [identity,]
     return network
 
+
 def NetworkSetSFANodeClass(sfa_node_class, network):       
     for i, layer in enumerate(network.layers):
         layer.sfa_node_class = sfa_node_class
     return network
+
 
 def NetworkAddSFAArgs(sfa_args, network):       
     for i, layer in enumerate(network.layers):
         for key in sfa_args.keys():
             layer.sfa_args[key] = sfa_args[key]
     return network
+
 
 def NetworkSetPCASFAExpo(network, first_pca_expo=0.0, last_pca_expo=1.0, first_sfa_expo=1.2, last_sfa_expo=1.0, hard_pca_expo=False):
     num_layers = len(network.layers)
@@ -117,8 +122,11 @@ def NetworkSetPCASFAExpo(network, first_pca_expo=0.0, last_pca_expo=1.0, first_s
     return network
 
 
+####################################################################
+##############               Void NETWORK               ############
+####################################################################  
 print "*******************************************************************"
-print "********    Creating Void Network            ******************"
+print "********    Creating Void Layer and Network      ******************"
 print "*******************************************************************"
 print "******** Setting Layer L0 Parameters          *********************"
 layer = pVoidLayer = system_parameters.ParamsSFASuperNode()
@@ -130,38 +138,15 @@ layer.sfa_node_class = mdp.nodes.IdentityNode
 layer.sfa_args = {}
 layer.sfa_out_dim = None
 
-####################################################################
-###########               Void NETWORK                ############
-####################################################################  
 network = voidNetwork1L = system_parameters.ParamsNetwork()
 network.name = "Void 1 Layer Network"
 network.L0 = pVoidLayer
-network.L1 = None
-network.L2 = None
-network.L3 = None
-network.L4 = None
 network.layers = [network.L0]
 
 
 network = HeadNetwork1L = copy.deepcopy(voidNetwork1L)
 network.layers[0].sfa_node_class = mdp.nodes.HeadNode
 network.layers[0].sfa_out_dim = 75
-
-def normalized_Q_terms(x):
-    return Q_N(x,k=1.0,d=2)
-
-def normalized_C_terms(x):
-    return C_N(x,k=1.0,d=3)
-
-def extract_sigmoid_features(x, c1, l1):
-    if x.shape[1] != c1.shape[0] or c1.shape[1] != len(l1):
-        er = "Array dimensions mismatch: x.shape =" + str(x.shape) + ", c1.shape =" + str(c1.shape) + ", l1.shape=" + str(l1.shape)
-        print er
-        raise Exception(er)   
-    s = numpy.dot(x,c1)+l1
-    f = numpy.tanh(s)
-    return f
-
 
 c35_to_800 = numpy.zeros((35,800))
 for i in range(800):
@@ -176,7 +161,6 @@ l35_to_800 = numpy.random.normal(loc=0.0, scale=1.0, size=800)
 
 def random_sigmoids_pairwise_35_to_800(x):
     return extract_sigmoid_features(x[:,0:35], c35_to_800, l35_to_800)
-
 
 c35_to_400 = numpy.zeros((35,400))
 for i in range(400):
@@ -206,66 +190,6 @@ l35_to_200 = numpy.random.normal(loc=0.0, scale=0.05, size=200)
 
 def random_sigmoids_pairwise_35_to_200(x):
     return extract_sigmoid_features(x, c35_to_200, l35_to_200)
-
-def QE_10(x):
-    return QE(x[:,0:10])
-
-def QE_15(x):
-    return QE(x[:,0:15])
-
-def QE_20(x):
-    return QE(x[:,0:20])
-
-def QE_25(x):
-    return QE(x[:,0:25])
-
-def QE_30(x):
-    return QE(x[:,0:30])
-
-def QE_35(x):
-    return QE(x[:,0:35])
-
-def QE_40(x):
-    return QE(x[:,0:40])
-
-def QE_45(x):
-    return QE(x[:,0:45])
-
-def QE_50(x):
-    return QE(x[:,0:50])
-
-def QE_55(x):
-    return QE(x[:,0:55])
-
-def CE_15(x):
-    return CE(x[:,0:15])
-
-def CE_20(x):
-    return CE(x[:,0:20])
-
-def CE_25(x):
-    return CE(x[:,0:25])
-
-def CE_30(x):
-    return CE(x[:,0:30])
-
-def CE_35(x):
-    return CE(x[:,0:35])
-
-def CE_40(x):
-    return CE(x[:,0:40])
-
-def P4_5(x):
-    return P4(x[:,0:5])
-
-def P4_10(x):
-    return P4(x[:,0:10])
-
-def P4_15(x):
-    return P4(x[:,0:15])
-
-def P4_20(x):
-    return P4(x[:,0:20])
 
 def unsigned_08expo_100(x):
     return unsigned_08expo(x[:,0:100])
@@ -297,8 +221,8 @@ layer = pSFADirectLayer2 = system_parameters.ParamsSFASuperNode()
 layer.name = "Direct SFA Layer2"
 layer.pca_node_class = None  #None
 layer.pca_args = {}
-#layer.exp_funcs = [identity, QE]
-layer.exp_funcs = [identity, QE, CE] #unsigned_08expo, signed_08expo
+#layer.exp_funcs = [identity, QT]
+layer.exp_funcs = [identity, QT, CT] #unsigned_08expo, signed_08expo
 layer.sfa_node_class = mdp.nodes.GSFANode #mdp.nodes.GSFANode
 layer.sfa_out_dim = 20 
 ####################################################################
@@ -335,218 +259,218 @@ network.L3 = None
 network.L4 = None
 network.layers = [network.L0]
 
-network = PCA_QE35_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [identity, QE_35] #unsigned_08expo
+network = PCA_QT35_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [identity, s35QT] #unsigned_08expo
 
 #NETWORK MNIST Net1
-network = PCA_QE40_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [identity, QE_40] #unsigned_08expo
+network = PCA_QT40_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [identity, s40QT] #unsigned_08expo
 
 #NETWORK MNIST NetB
-network = PCA_U08_QE40_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [identity, unsigned_08expo, QE_40] #unsigned_08expo
+network = PCA_U08_QT40_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [identity, unsigned_08expo, s40QT] #unsigned_08expo
 
 
 network = PCA_control4linear_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
 network.L0.exp_funcs = [control4_linear, ] #unsigned_08expo
 
-network = PCA_control4_QE20_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [control4_QE20, ] #unsigned_08expo
+network = PCA_control4_QT20_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control4_QT20, ] #unsigned_08expo
 
-network = PCA_control4_QE30_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [control4_QE30, ] #unsigned_08expo
+network = PCA_control4_QT30_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control4_QT30, ] #unsigned_08expo
 
-network = PCA_control4_QE40_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [control4_QE40, ] #unsigned_08expo
+network = PCA_control4_QT40_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control4_QT40, ] #unsigned_08expo
 
-network = PCA_control1_QE40_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [control1_QE40, ] #unsigned_08expo
+network = PCA_control1_QT40_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control1_QT40, ] #unsigned_08expo
 
-network = PCA_control2_QE40_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [control2_QE40, ] #unsigned_08expo
+network = PCA_control2_QT40_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control2_QT40, ] #unsigned_08expo
 
-network = PCA_control2_QE60_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [control2_QE60, ] #unsigned_08expo
+network = PCA_control2_QT60_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control2_QT60, ] #unsigned_08expo
 
-network = PCA_control3_QE40_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [control3_QE40, ] #unsigned_08expo
+network = PCA_control3_QT40_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control3_QT40, ] #unsigned_08expo
 
-network = PCA_control5_QE40_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [control5_QE40, ] #unsigned_08expo
+network = PCA_control5_QT40_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control5_QT40, ] #unsigned_08expo
 
-network = PCA_control6_QE40_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [control6_QE40, ] #unsigned_08expo
+network = PCA_control6_QT40_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control6_QT40, ] #unsigned_08expo
 
-network = PCA_control6_QE50_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [control6_QE50, ] #unsigned_08expo
-
-
-network = PCA_control4_QE50_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [control4_QE50, ] #unsigned_08expo
-
-network = PCA_control4_QE60_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [control4_QE60, ] #unsigned_08expo
-
-network = PCA_control5_QE60_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [control5_QE60, ] #unsigned_08expo
-
-network = PCA_control6_QE60_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [control6_QE60, ] #unsigned_08expo
-
-network = PCA_control8_QE60_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [control8_QE60, ] #unsigned_08expo
-
-network = PCA_control9_QE60_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [control9_QE60, ] #unsigned_08expo
+network = PCA_control6_QT50_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control6_QT50, ] #unsigned_08expo
 
 
+network = PCA_control4_QT50_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control4_QT50, ] #unsigned_08expo
 
-network = PCA_control2_QE40_CE10_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [control2_QE40_CE10, ] #unsigned_08expo
+network = PCA_control4_QT60_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control4_QT60, ] #unsigned_08expo
 
-network = PCA_control2_QE40_CE15_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [control2_QE40_CE15, ] #unsigned_08expo
+network = PCA_control5_QT60_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control5_QT60, ] #unsigned_08expo
 
-network = PCA_control2_QE40_CE20_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [control2_QE40_CE20, ] #unsigned_08expo
+network = PCA_control6_QT60_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control6_QT60, ] #unsigned_08expo
 
-network = PCA_control2_QE40_CE25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [control2_QE40_CE25, ] #unsigned_08expo
+network = PCA_control8_QT60_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control8_QT60, ] #unsigned_08expo
 
-network = PCA_control3_QE40_CE25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [control3_QE40_CE25, ] #unsigned_08expo
-
-network = PCA_control2_QE40_CE30_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [control2_QE40_CE30, ] #unsigned_08expo
-
-network = PCA_control2_QE40_CE35_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [control2_QE40_CE35, ] #unsigned_08expo
-
-network = PCA_control2_QE50_CE25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [control2_QE50_CE25, ] #unsigned_08expo
-
-network = PCA_control3_QE50_CE25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [control3_QE50_CE25, ] #unsigned_08expo
-
-network = PCA_control6_QE50_CE10_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [control6_QE50_CE10, ] #unsigned_08expo
-
-network = PCA_control6_QE50_CE15_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [control6_QE50_CE15, ] #unsigned_08expo
-
-network = PCA_control6_QE50_CE20_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [control6_QE50_CE20, ] #unsigned_08expo
-
-network = PCA_QE60_CE30_control6_QE40_CE10_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [QE60_CE30_control6_QE40_CE10, ] #unsigned_08expo
-
-network = PCA_QE60_CE35_control6_QE40_CE10_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [QE60_CE35_control6_QE40_CE10, ] #unsigned_08expo
-
-network = PCA_QE60_CE25_control3_QE40_CE10_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [QE60_CE25_control3_QE40_CE10, ] #unsigned_08expo
-
-network = PCA_QE50_CE20_control9_QE30_CE5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [QE50_CE20_control9_QE30_CE5, ] #unsigned_08expo
-
-network = PCA_QE50_CE20_control5_QE35_CE5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [QE50_CE20_control5_QE35_CE5, ] #unsigned_08expo
-
-network = PCA_QE50_CE20_control5_QE40_CE5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [QE50_CE20_control5_QE40_CE5, ] #unsigned_08expo
-
-network = PCA_QE50_CE20_control5_QE45_CE5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [QE50_CE20_control5_QE45_CE5, ] #unsigned_08expo
-
-network = PCA_QE50_CE20_control5_QE50_CE5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [QE50_CE20_control5_QE50_CE5, ] #unsigned_08expo
-
-network = PCA_QE50_CE20_control5_QE50_CE10_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [QE50_CE20_control5_QE50_CE10, ] #unsigned_08expo
-
-network = PCA_QE50_CE20_control5_QE50_CE15_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [QE50_CE20_control5_QE50_CE15, ] #unsigned_08expo
+network = PCA_control9_QT60_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control9_QT60, ] #unsigned_08expo
 
 
-network = PCA_QE40_CE25_control5_QE30_CE5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [QE40_CE25_control5_QE30_CE5, ] #unsigned_08expo
 
-network = PCA_QE40_CE35_control5_QE30_CE5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [QE40_CE35_control5_QE30_CE5, ] #unsigned_08expo
+network = PCA_control2_QT40_CT10_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control2_QT40_CT10, ] #unsigned_08expo
 
-network = PCA_QE40_CE30_control5_QE30_CE5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [QE40_CE30_control5_QE30_CE5, ] #unsigned_08expo
+network = PCA_control2_QT40_CT15_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control2_QT40_CT15, ] #unsigned_08expo
 
-network = PCA_QE50_CE20_control9_QE40_CE5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [QE50_CE20_control9_QE40_CE5, ] #unsigned_08expo
+network = PCA_control2_QT40_CT20_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control2_QT40_CT20, ] #unsigned_08expo
 
-network = PCA_QE60_CE30_control9_QE30_CE5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [QE60_CE30_control9_QE30_CE5, ] #unsigned_08expo
+network = PCA_control2_QT40_CT25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control2_QT40_CT25, ] #unsigned_08expo
+
+network = PCA_control3_QT40_CT25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control3_QT40_CT25, ] #unsigned_08expo
+
+network = PCA_control2_QT40_CT30_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control2_QT40_CT30, ] #unsigned_08expo
+
+network = PCA_control2_QT40_CT35_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control2_QT40_CT35, ] #unsigned_08expo
+
+network = PCA_control2_QT50_CT25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control2_QT50_CT25, ] #unsigned_08expo
+
+network = PCA_control3_QT50_CT25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control3_QT50_CT25, ] #unsigned_08expo
+
+network = PCA_control6_QT50_CT10_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control6_QT50_CT10, ] #unsigned_08expo
+
+network = PCA_control6_QT50_CT15_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control6_QT50_CT15, ] #unsigned_08expo
+
+network = PCA_control6_QT50_CT20_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control6_QT50_CT20, ] #unsigned_08expo
+
+network = PCA_QT60_CT30_control6_QT40_CT10_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QT60_CT30_control6_QT40_CT10, ] #unsigned_08expo
+
+network = PCA_QT60_CT35_control6_QT40_CT10_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QT60_CT35_control6_QT40_CT10, ] #unsigned_08expo
+
+network = PCA_QT60_CT25_control3_QT40_CT10_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QT60_CT25_control3_QT40_CT10, ] #unsigned_08expo
+
+network = PCA_QT50_CT20_control9_QT30_CT5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QT50_CT20_control9_QT30_CT5, ] #unsigned_08expo
+
+network = PCA_QT50_CT20_control5_QT35_CT5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QT50_CT20_control5_QT35_CT5, ] #unsigned_08expo
+
+network = PCA_QT50_CT20_control5_QT40_CT5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QT50_CT20_control5_QT40_CT5, ] #unsigned_08expo
+
+network = PCA_QT50_CT20_control5_QT45_CT5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QT50_CT20_control5_QT45_CT5, ] #unsigned_08expo
+
+network = PCA_QT50_CT20_control5_QT50_CT5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QT50_CT20_control5_QT50_CT5, ] #unsigned_08expo
+
+network = PCA_QT50_CT20_control5_QT50_CT10_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QT50_CT20_control5_QT50_CT10, ] #unsigned_08expo
+
+network = PCA_QT50_CT20_control5_QT50_CT15_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QT50_CT20_control5_QT50_CT15, ] #unsigned_08expo
 
 
-network = PCA_QE50_CE20_control9_QE25_CE5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [QE50_CE20_control9_QE25_CE5, ] #unsigned_08expo
+network = PCA_QT40_CT25_control5_QT30_CT5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QT40_CT25_control5_QT30_CT5, ] #unsigned_08expo
 
-network = PCA_QE50_CE20_control9_QE35_CE5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [QE50_CE20_control9_QE35_CE5, ] #unsigned_08expo
+network = PCA_QT40_CT35_control5_QT30_CT5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QT40_CT35_control5_QT30_CT5, ] #unsigned_08expo
 
-network = PCA_QE50_CE20_control9_QE45_CE5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [QE50_CE20_control9_QE45_CE5, ] #unsigned_08expo
+network = PCA_QT40_CT30_control5_QT30_CT5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QT40_CT30_control5_QT30_CT5, ] #unsigned_08expo
 
-network = PCA_QE60_CE35_control4_QE40_CE5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [QE60_CE35_control4_QE40_CE5, ] #unsigned_08expo
+network = PCA_QT50_CT20_control9_QT40_CT5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QT50_CT20_control9_QT40_CT5, ] #unsigned_08expo
+
+network = PCA_QT60_CT30_control9_QT30_CT5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QT60_CT30_control9_QT30_CT5, ] #unsigned_08expo
+
+
+network = PCA_QT50_CT20_control9_QT25_CT5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QT50_CT20_control9_QT25_CT5, ] #unsigned_08expo
+
+network = PCA_QT50_CT20_control9_QT35_CT5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QT50_CT20_control9_QT35_CT5, ] #unsigned_08expo
+
+network = PCA_QT50_CT20_control9_QT45_CT5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QT50_CT20_control9_QT45_CT5, ] #unsigned_08expo
+
+network = PCA_QT60_CT35_control4_QT40_CT5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QT60_CT35_control4_QT40_CT5, ] #unsigned_08expo
 
 #NETWORK MNIST NetA
-network = PCA_QE50_CE25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [identity, QE_50, CE_25, ] #unsigned_08expo
+network = PCA_QT50_CT25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [identity, s50QT, s25CT, ] #unsigned_08expo
 
 
-network = PCA_control2_QE60_CE25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [control2_QE60_CE25, ] #unsigned_08expo
+network = PCA_control2_QT60_CT25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control2_QT60_CT25, ] #unsigned_08expo
 
-network = PCA_control2_QE70_CE25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [control2_QE70_CE25, ] #unsigned_08expo
+network = PCA_control2_QT70_CT25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control2_QT70_CT25, ] #unsigned_08expo
 
-network = PCA_control2_QE75_CE25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [control2_QE75_CE25, ] #unsigned_08expo
-
-
-
-network = PCA_QE40_CE15_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [identity, QE_40, CE_15] #unsigned_08expo
-
-network = PCA_QE40_CE20_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [identity, QE_40, CE_20] #unsigned_08expo
-
-network = PCA_QE40_CE25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [identity, QE_40, CE_25] #unsigned_08expo
-
-network = PCA_QE40_CE30_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [identity, QE_40, CE_30] #unsigned_08expo
-
-network = PCA_QE45_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [identity, QE_45] #unsigned_08expo
-
-network = PCA_QE45_CE25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [identity, QE_45, CE_25] #unsigned_08expo
-
-network = PCA_QE50_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [identity, QE_50] #unsigned_08expo
-
-network = PCA_QE50_CE25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [identity, QE_50, CE_25] #unsigned_08expo
-
-network = PCA_QE55_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [identity, QE_55] #unsigned_08expo
-
-network = PCA_QE35_CE25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [identity, QE_35, CE_25] #unsigned_08expo
-
-network = PCA_QE30_CE25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [identity, QE_30, CE_25] #unsigned_08expo
+network = PCA_control2_QT75_CT25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control2_QT75_CT25, ] #unsigned_08expo
 
 
-#QE50_CE20_control9_QE30_CE5
+
+network = PCA_QT40_CT15_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [identity, s40QT, s15CT] #unsigned_08expo
+
+network = PCA_QT40_CT20_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [identity, s40QT, s20CT] #unsigned_08expo
+
+network = PCA_QT40_CT25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [identity, s40QT, s25CT] #unsigned_08expo
+
+network = PCA_QT40_CT30_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [identity, s40QT, s30CT] #unsigned_08expo
+
+network = PCA_QT45_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [identity, s45QT] #unsigned_08expo
+
+network = PCA_QT45_CT25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [identity, s45QT, s25CT] #unsigned_08expo
+
+network = PCA_QT50_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [identity, s50QT] #unsigned_08expo
+
+network = PCA_QT50_CT25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [identity, s50QT, s25CT] #unsigned_08expo
+
+network = PCA_QT55_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [identity, s55QT] #unsigned_08expo
+
+network = PCA_QT35_CT25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [identity, s35QT, s25CT] #unsigned_08expo
+
+network = PCA_QT30_CT25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [identity, s30QT, s25CT] #unsigned_08expo
+
+
+#QT50_CT20_control9_QT30_CT5
 
 print "*******************************************************************"
 print "*******    Creating Direct Linear SFA Network     *****************"
@@ -560,7 +484,7 @@ layer.pca_node_class = None #mdp.nodes.PCANode #None  #None
 #layer.pca_args = {}
 #layer.pca_out_dim = 35 #WARNING: 100 or None
 #layer.pca_out_dim = 100#3000 # 35 #WARNING: 100 or None
-#layer.exp_funcs = [identity, QE]
+#layer.exp_funcs = [identity, QT]
 layer.exp_funcs = [identity,] #unsigned_08expo, signed_08expo
 #layer.exp_funcs = [he.cos_exp_mix8_F]
 #layer.exp_funcs = [encode_signal_p9,] #For next experiment: [encode_signal_p9,]
@@ -579,8 +503,8 @@ layer.pca_args = {}
 layer.pca_out_dim = 3 #WARNING: 100 or None
 #layer.pca_out_dim = 35 #WARNING: 100 or None
 #layer.pca_out_dim = 200 # 35 #WARNING: 100 or None
-#layer.exp_funcs = [identity, QE]
-layer.exp_funcs = [identity, P5, P4, CE, QE, unsigned_08expo, signed_08expo] #unsigned_08expo, signed_08expo
+#layer.exp_funcs = [identity, QT]
+layer.exp_funcs = [identity, P5, P4, CT, QT, unsigned_08expo, signed_08expo] #unsigned_08expo, signed_08expo
 #layer.exp_funcs = [he.cos_exp_mix8_F]
 #layer.exp_funcs = [encode_signal_p9,] #For next experiment: [encode_signal_p9,]
 #layer.red_node_class = mdp.nodes.HeadNode
@@ -612,7 +536,7 @@ layer.pca_node_class = mdp.nodes.PCANode
 layer.pca_args = {}
 layer.pca_out_dim = 35 #WARNING: 100 or None
 #layer.ord_node_class = mdp.nodes.IEVMLRecNode
-#layer.ord_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, QE],"max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999, "output_dim":35} #output_dim":40
+#layer.ord_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, QT],"max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999, "output_dim":35} #output_dim":40
 #layer.ord_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity],"max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999, "output_dim":35} #output_dim":40
 #layer.exp_funcs = [identity,]
 #layer.exp_funcs = [encode_signal_p9,] #For next experiment: [encode_signal_p9,]
@@ -621,25 +545,25 @@ layer.pca_out_dim = 35 #WARNING: 100 or None
 layer.sfa_node_class = mdp.nodes.IEVMLRecNode #mdp.nodes.GSFANode
 #layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":"RandomSigmoids", "expansion_starting_point":"08Exp", "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999, "expansion_output_dim":4000} 
 #layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo],                       "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
-#QE10, CE10, QE15, CE15, QE20, CE20, QE25, CE25,
+#QT10, CT10, QT15, CT15, QT20, CT20, QT25, CT25,
 terms_NL_expansion = int(tuning_parameter)
 if terms_NL_expansion == 15:
-    expansion = [identity, QE_15, CE_15]
+    expansion = [identity, s15QT, s15CT]
 elif terms_NL_expansion == 20:
-    expansion = [identity, QE_20, CE_20]
+    expansion = [identity, s20QT, s20CT]
 elif terms_NL_expansion == 25:
-    expansion = [identity, QE_25, CE_25]
+    expansion = [identity, s25QT, s25CT]
 elif terms_NL_expansion == 30:
-    expansion = [identity, QE_30, CE_30]
+    expansion = [identity, s30QT, s30CT]
 elif terms_NL_expansion == 35:
-    expansion = [identity, QE_35, CE_35]
+    expansion = [identity, s35QT, s35CT]
 elif terms_NL_expansion == 40:
-    expansion = [identity, QE_40, CE_40]
+    expansion = [identity, s40QT, s40CT]
 else:
     er = "invalid size of NL expansion", terms_NL_expansion
     raise Exception(er) 
 
-expansion = [identity, QE, CE_30] #CE_35
+expansion = [identity, QT, s30CT] 
 
 layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":expansion,"max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999} 
 layer.sfa_out_dim = 9 #49*2 # *3 # None
@@ -675,7 +599,7 @@ network.L0.pca_out_dim = 200 # 100 #49 * 2 # *3
 network.L0.pca_args = {}
 network.L0.ord_node_class = he.NormalizeABNode #more_nodes.HistogramEqualizationNode #NormalizeABNode
 #network.L0.ord_args = {"num_pivots":200}
-network.L0.exp_funcs = [he.cos_exp_mix30_F] #[identity, sel30_QE, sel30_CE ] he.cos_exp_mix30_F] # sel60_QE # he.cos_exp_mix25_F # he.cos_exp_mix60q_F , sel25_QE, sel25_CE
+network.L0.exp_funcs = [he.cos_exp_mix30_F] #[identity, sel30_QT, sel30_CT ] he.cos_exp_mix30_F] # sel60_QT # he.cos_exp_mix25_F # he.cos_exp_mix60q_F , sel25_QT, sel25_CT
 network.L0.sfa_node_class = mdp.nodes.GSFANode #IdentityNode #PCANode # mdp.nodes.NLIPCANode #WhiteningNode
 network.L0.sfa_out_dim = 60 # 100 #49 * 2 # *3
 network.L0.sfa_args = {}
@@ -764,7 +688,7 @@ u08expoNetwork2T.layers[1].sfa_out_dim = 49
 ####################################################################
 ######        One-Layer Quadratic SFA NETWORK          ############
 ####################################################################  
-quadraticNetwork1L = NetworkSetExpFuncs([identity, pair_prod_ex], copy.deepcopy(SFANetwork1L)) #QE? CE?
+quadraticNetwork1L = NetworkSetExpFuncs([identity, pair_prod_ex], copy.deepcopy(SFANetwork1L)) #QT? CT?
 quadraticNetwork1L.layers[0].pca_node_class = mdp.nodes.GSFANode
 quadraticNetwork1L.layers[0].pca_out_dim = 16
 
@@ -803,7 +727,7 @@ GTSRBNetwork.L0.pca_out_dim = 200 #627 # int(1568/2.5) #300/3 # 200 #WW 50  #32x
 GTSRBNetwork.L0.ord_node_class = mdp.nodes.HeadNode
 GTSRBNetwork.L0.ord_args = {"output_dim":120}
 
-GTSRBNetwork.L0.exp_funcs = [identity, QE] #, QE, maximum_99mix2_s08_ex, sel80_QE, QE] #maximum_99mix2_s08_ex, sel80_QE
+GTSRBNetwork.L0.exp_funcs = [identity, QT] #, QT, maximum_99mix2_s08_ex, sel80_QT, QT] #maximum_99mix2_s08_ex, sel80_QT
 #maximum_75mix2_ex, media50_adj2_ex, pair_max90_mix1_ex, modulation50_adj1_08_ex, unsigned_08expo, sel90_unsigned_08expo
 #GTSRBNetwork.L0.exp_funcs = [identity,]
 #For SFA features on img: unsigned_08expo, for final system img+hog: unsigned_08expo also
@@ -1095,214 +1019,202 @@ def unsigned_08expo_75(x):
 def unsigned_08expo_115(x):
     return unsigned_08expo(x[:,0:115])
 
-def QE_50(x):
-    return QE(x[:,0:50])
+def QT_50_AP03(x):
+    return QT_AP(x[:,0:50], d=0.3)
 
-def QE_55(x):
-    return QE(x[:,0:55])
+def QT_50_AP06(x):
+    return QT_AP(x[:,0:50], d=0.6)
 
-def QE_60(x):
-    return QE(x[:,0:60])
+def QT_50_AP08(x):
+    return QT_AP(x[:,0:50], d=0.8)
 
-def QE_70(x):
-    return QE(x[:,0:70])
+def QT_60_AP08(x):
+    return QT_AP(x[:,0:60], d=0.8)
 
-def QE_50_AP03(x):
-    return Q_AP(x[:,0:50], d=0.3)
+def QT_70_AP08(x):
+    return QT_AP(x[:,0:70], d=0.8)
 
-def QE_50_AP06(x):
-    return Q_AP(x[:,0:50], d=0.6)
+def QT_90_AP08(x):
+    return QT_AP(x[:,0:90], d=0.8)
 
-def QE_50_AP08(x):
-    return Q_AP(x[:,0:50], d=0.8)
-
-def QE_60_AP08(x):
-    return Q_AP(x[:,0:60], d=0.8)
-
-def QE_70_AP08(x):
-    return Q_AP(x[:,0:70], d=0.8)
-
-def QE_90_AP08(x):
-    return Q_AP(x[:,0:90], d=0.8)
-
-def QE_2Split_25(x):
+def QT_2Split_25(x):
     s = x.shape[1]/2
-    return numpy.concatenate((QE(x[:,0:25]), QE(x[:,s:s+25])), axis=1)
+    return numpy.concatenate((QT(x[:,0:25]), QT(x[:,s:s+25])), axis=1)
 
-def QE_2Split_15(x):
+def QT_2Split_15(x):
     s = x.shape[1]/2
-    return numpy.concatenate((QE(x[:,0:15]), QE(x[:,s:s+15])), axis=1)
+    return numpy.concatenate((QT(x[:,0:15]), QT(x[:,s:s+15])), axis=1)
 
-def QE_2Split_35(x):
+def QT_2Split_35(x):
     s = x.shape[1]/2
-    return numpy.concatenate((QE(x[:,0:35]), QE(x[:,s:s+35])), axis=1)
+    return numpy.concatenate((QT(x[:,0:35]), QT(x[:,s:s+35])), axis=1)
 
-def QE_2Split_40(x):
+def QT_2Split_40(x):
     s = x.shape[1]/2
-    return numpy.concatenate((QE(x[:,0:40]), QE(x[:,s:s+40])), axis=1)
+    return numpy.concatenate((QT(x[:,0:40]), QT(x[:,s:s+40])), axis=1)
 
-def QE_2Split_45(x):
+def QT_2Split_45(x):
     s = x.shape[1]/2
-    return numpy.concatenate((QE(x[:,0:45]), QE(x[:,s:s+45])), axis=1)
+    return numpy.concatenate((QT(x[:,0:45]), QT(x[:,s:s+45])), axis=1)
 
-def QE_2Split_50(x):
+def QT_2Split_50(x):
     s = x.shape[1]/2
-    return numpy.concatenate((QE(x[:,0:50]), QE(x[:,s:s+50])), axis=1)
+    return numpy.concatenate((QT(x[:,0:50]), QT(x[:,s:s+50])), axis=1)
 
-def QE_2Split_55(x):
+def QT_2Split_55(x):
     s = x.shape[1]/2
-    return numpy.concatenate((QE(x[:,0:55]), QE(x[:,s:s+55])), axis=1)
+    return numpy.concatenate((QT(x[:,0:55]), QT(x[:,s:s+55])), axis=1)
 
-def QE_2Split_60(x):
+def QT_2Split_60(x):
     s = x.shape[1]/2
-    return numpy.concatenate((QE(x[:,0:60]), QE(x[:,s:s+60])), axis=1)
+    return numpy.concatenate((QT(x[:,0:60]), QT(x[:,s:s+60])), axis=1)
 
-def QE_2Split_65(x):
+def QT_2Split_65(x):
     s = x.shape[1]/2
-    return numpy.concatenate((QE(x[:,0:65]), QE(x[:,s:s+65])), axis=1)
+    return numpy.concatenate((QT(x[:,0:65]), QT(x[:,s:s+65])), axis=1)
 
-def QE_2Split_70(x):
+def QT_2Split_70(x):
     s = x.shape[1]/2
-    return numpy.concatenate((QE(x[:,0:70]), QE(x[:,s:s+70])), axis=1)
+    return numpy.concatenate((QT(x[:,0:70]), QT(x[:,s:s+70])), axis=1)
 
-def QE_2Split_15_AP08(x):
+def QT_2Split_15_AP08(x):
     s = x.shape[1]/2
-    return numpy.concatenate((Q_AP(x[:,0:15], d=0.8), Q_AP(x[:,s:s+15],  d=0.8)), axis=1)
+    return numpy.concatenate((QT_AP(x[:,0:15], d=0.8), QT_AP(x[:,s:s+15],  d=0.8)), axis=1)
 
-def QE_2Split_50_AP02(x):
+def QT_2Split_50_AP02(x):
     s = x.shape[1]/2
-    return numpy.concatenate((Q_AP(x[:,0:50], d=0.2), Q_AP(x[:,s:s+50],  d=0.2)), axis=1)
+    return numpy.concatenate((QT_AP(x[:,0:50], d=0.2), QT_AP(x[:,s:s+50],  d=0.2)), axis=1)
 
-def QE_2Split_50_AP03(x):
+def QT_2Split_50_AP03(x):
     s = x.shape[1]/2
-    return numpy.concatenate((Q_AP(x[:,0:50], d=0.3), Q_AP(x[:,s:s+50],  d=0.3)), axis=1)
+    return numpy.concatenate((QT_AP(x[:,0:50], d=0.3), QT_AP(x[:,s:s+50],  d=0.3)), axis=1)
 
-def QE_2Split_50_AP06(x):
+def QT_2Split_50_AP06(x):
     s = x.shape[1]/2
-    return numpy.concatenate((Q_AP(x[:,0:50], d=0.6), Q_AP(x[:,s:s+50],  d=0.6)), axis=1)
+    return numpy.concatenate((QT_AP(x[:,0:50], d=0.6), QT_AP(x[:,s:s+50],  d=0.6)), axis=1)
 
-def QE_2Split_50_AP08(x):
+def QT_2Split_50_AP08(x):
     s = x.shape[1]/2
-    return numpy.concatenate((Q_AP(x[:,0:50], d=0.8), Q_AP(x[:,s:s+50],  d=0.8)), axis=1)
+    return numpy.concatenate((QT_AP(x[:,0:50], d=0.8), QT_AP(x[:,s:s+50],  d=0.8)), axis=1)
 
-def QE_2Split_60_AP08(x):
+def QT_2Split_60_AP08(x):
     s = x.shape[1]/2
-    return numpy.concatenate((Q_AP(x[:,0:60], d=0.8), Q_AP(x[:,s:s+60],  d=0.8)), axis=1)
+    return numpy.concatenate((QT_AP(x[:,0:60], d=0.8), QT_AP(x[:,s:s+60],  d=0.8)), axis=1)
 
-def QE_2Split_70_AP08(x):
+def QT_2Split_70_AP08(x):
     s = x.shape[1]/2
-    return numpy.concatenate((Q_AP(x[:,0:70], d=0.8), Q_AP(x[:,s:s+70],  d=0.8)), axis=1)
+    return numpy.concatenate((QT_AP(x[:,0:70], d=0.8), QT_AP(x[:,s:s+70],  d=0.8)), axis=1)
 
-def QE_2Split_55_AP08(x):
+def QT_2Split_55_AP08(x):
     s = x.shape[1]/2
-    return numpy.concatenate((Q_AP(x[:,0:55], d=0.8), Q_AP(x[:,s:s+55],  d=0.8)), axis=1)
+    return numpy.concatenate((QT_AP(x[:,0:55], d=0.8), QT_AP(x[:,s:s+55],  d=0.8)), axis=1)
 
-def QE_3Split_10(x):
+def QT_3Split_10(x):
     s = x.shape[1]/3
-    return numpy.concatenate((QE(x[:,0:10]), QE(x[:,s:s+10]), QE(x[:,2*s:2*s+10])), axis=1)
+    return numpy.concatenate((QT(x[:,0:10]), QT(x[:,s:s+10]), QT(x[:,2*s:2*s+10])), axis=1)
 
-def QE_3Split_15(x):
+def QT_3Split_15(x):
     s = x.shape[1]/3
-    return numpy.concatenate((QE(x[:,0:15]), QE(x[:,s:s+15]), QE(x[:,2*s:2*s+15])), axis=1)
+    return numpy.concatenate((QT(x[:,0:15]), QT(x[:,s:s+15]), QT(x[:,2*s:2*s+15])), axis=1)
 
-def QE_3Split_15_AP02(x):
+def QT_3Split_15_AP02(x):
     s = x.shape[1]/3
-    return numpy.concatenate((Q_AP(x[:,0:15], d=0.2), Q_AP(x[:,s:s+15], d=0.2), Q_AP(x[:,2*s:2*s+15], d=0.2)), axis=1)
+    return numpy.concatenate((QT_AP(x[:,0:15], d=0.2), QT_AP(x[:,s:s+15], d=0.2), QT_AP(x[:,2*s:2*s+15], d=0.2)), axis=1)
 
-def QE_3Split_15_AP03(x):
+def QT_3Split_15_AP03(x):
     s = x.shape[1]/3
-    return numpy.concatenate((Q_AP(x[:,0:15], d=0.3), Q_AP(x[:,s:s+15], d=0.3), Q_AP(x[:,2*s:2*s+15], d=0.3)), axis=1)
+    return numpy.concatenate((QT_AP(x[:,0:15], d=0.3), QT_AP(x[:,s:s+15], d=0.3), QT_AP(x[:,2*s:2*s+15], d=0.3)), axis=1)
 
-def QE_3Split_15_AP06(x):
+def QT_3Split_15_AP06(x):
     s = x.shape[1]/3
-    return numpy.concatenate((Q_AP(x[:,0:15], d=0.6), Q_AP(x[:,s:s+15], d=0.6), Q_AP(x[:,2*s:2*s+15], d=0.6)), axis=1)
+    return numpy.concatenate((QT_AP(x[:,0:15], d=0.6), QT_AP(x[:,s:s+15], d=0.6), QT_AP(x[:,2*s:2*s+15], d=0.6)), axis=1)
 
-def QE_3Split_15_AP08(x):
+def QT_3Split_15_AP08(x):
     s = x.shape[1]/3
-    return numpy.concatenate((Q_AP(x[:,0:15], d=0.8), Q_AP(x[:,s:s+15], d=0.8), Q_AP(x[:,2*s:2*s+15], d=0.8)), axis=1)
+    return numpy.concatenate((QT_AP(x[:,0:15], d=0.8), QT_AP(x[:,s:s+15], d=0.8), QT_AP(x[:,2*s:2*s+15], d=0.8)), axis=1)
 
 
-def QE_3Split_20(x):
+def QT_3Split_20(x):
     s = x.shape[1]/3
-    return numpy.concatenate((QE(x[:,0:20]), QE(x[:,s:s+20]), QE(x[:,2*s:2*s+20])), axis=1)
+    return numpy.concatenate((QT(x[:,0:20]), QT(x[:,s:s+20]), QT(x[:,2*s:2*s+20])), axis=1)
 
 
-def QE_3Split_25(x):
+def QT_3Split_25(x):
     s = x.shape[1]/3
-    return numpy.concatenate((QE(x[:,0:25]), QE(x[:,s:s+25]), QE(x[:,2*s:2*s+25])), axis=1)
+    return numpy.concatenate((QT(x[:,0:25]), QT(x[:,s:s+25]), QT(x[:,2*s:2*s+25])), axis=1)
 
-def QE_3Split_35(x):
+def QT_3Split_35(x):
     s = x.shape[1]/3
-    return numpy.concatenate((QE(x[:,0:35]), QE(x[:,s:s+35]), QE(x[:,2*s:2*s+35])), axis=1)
+    return numpy.concatenate((QT(x[:,0:35]), QT(x[:,s:s+35]), QT(x[:,2*s:2*s+35])), axis=1)
 
-def QE_3Split_35_AP08(x):
+def QT_3Split_35_AP08(x):
     s = x.shape[1]/3
-    return numpy.concatenate((Q_AP(x[:,0:35], d=0.8), Q_AP(x[:,s:s+35], d=0.8), Q_AP(x[:,2*s:2*s+35], d=0.8)), axis=1)
+    return numpy.concatenate((QT_AP(x[:,0:35], d=0.8), QT_AP(x[:,s:s+35], d=0.8), QT_AP(x[:,2*s:2*s+35], d=0.8)), axis=1)
 
 
-def QE_3Split_45(x):
+def QT_3Split_45(x):
     s = x.shape[1]/3
-    return numpy.concatenate((QE(x[:,0:45]), QE(x[:,s:s+45]), QE(x[:,2*s:2*s+45])), axis=1)
+    return numpy.concatenate((QT(x[:,0:45]), QT(x[:,s:s+45]), QT(x[:,2*s:2*s+45])), axis=1)
 
-def QE_3Split_50(x):
+def QT_3Split_50(x):
     s = x.shape[1]/3
-    return numpy.concatenate((QE(x[:,0:50]), QE(x[:,s:s+50]), QE(x[:,2*s:2*s+50])), axis=1)
+    return numpy.concatenate((QT(x[:,0:50]), QT(x[:,s:s+50]), QT(x[:,2*s:2*s+50])), axis=1)
 
-def CE_20_AP08(x):
-    return C_AP(x[:,0:20], d=0.8)
+def CT_20_AP08(x):
+    return CT_AP(x[:,0:20], d=0.8)
 
-def CE_25_AP08(x):
-    return C_AP(x[:,0:25], d=0.8)
+def CT_25_AP08(x):
+    return CT_AP(x[:,0:25], d=0.8)
 
-def CE_30_AP03(x):
-    return C_AP(x[:,0:30], d=0.3)
+def CT_30_AP03(x):
+    return CT_AP(x[:,0:30], d=0.3)
 
-def CE_30_AP06(x):
-    return C_AP(x[:,0:30], d=0.6)
+def CT_30_AP06(x):
+    return CT_AP(x[:,0:30], d=0.6)
 
-def CE_30_AP08(x):
-    return C_AP(x[:,0:30], d=0.8)
+def CT_30_AP08(x):
+    return CT_AP(x[:,0:30], d=0.8)
 
-def CE_35_AP03(x):
-    return C_AP(x[:,0:35], d=0.3)
+def CT_35_AP03(x):
+    return CT_AP(x[:,0:35], d=0.3)
 
-def CE_35_AP08(x):
-    return C_AP(x[:,0:35], d=0.8)
+def CT_35_AP08(x):
+    return CT_AP(x[:,0:35], d=0.8)
 
-def CE_40_AP08(x):
-    return C_AP(x[:,0:40], d=0.8)
+def CT_40_AP08(x):
+    return CT_AP(x[:,0:40], d=0.8)
 
-def CE_45_AP08(x):
-    return C_AP(x[:,0:45], d=0.8)
+def CT_45_AP08(x):
+    return CT_AP(x[:,0:45], d=0.8)
 
-def CE_50_AP08(x):
-    return C_AP(x[:,0:50], d=0.8)
+def CT_50_AP08(x):
+    return CT_AP(x[:,0:50], d=0.8)
 
-def CE_55_AP08(x):
-    return C_AP(x[:,0:55], d=0.8)
+def CT_55_AP08(x):
+    return CT_AP(x[:,0:55], d=0.8)
 
-def CE_9_39(x):
-    return CE(x[:,9:39])
+def CT_9_39(x):
+    return CT(x[:,9:39])
 
-def CE_2Split_20(x):
+def CT_2Split_20(x):
     s = x.shape[1]/2
-    return numpy.concatenate((CE(x[:,0:20]), CE(x[:,s:s+20])), axis=1)
+    return numpy.concatenate((CT(x[:,0:20]), CT(x[:,s:s+20])), axis=1)
 
-def CE_2Split_25(x):
+def CT_2Split_25(x):
     s = x.shape[1]/2
-    return numpy.concatenate((CE(x[:,0:25]), CE(x[:,s:s+25])), axis=1)
+    return numpy.concatenate((CT(x[:,0:25]), CT(x[:,s:s+25])), axis=1)
 
-def CE_2Split_30(x):
+def CT_2Split_30(x):
     s = x.shape[1]/2
-    return numpy.concatenate((CE(x[:,0:30]), CE(x[:,s:s+30])), axis=1)
+    return numpy.concatenate((CT(x[:,0:30]), CT(x[:,s:s+30])), axis=1)
 
-def CE_3Split_15(x):
+def CT_3Split_15(x):
     s = x.shape[1]/3
-    return numpy.concatenate((CE(x[:,0:15]), CE(x[:,s:s+15]), CE(x[:,2*s:2*s+15])), axis=1)
+    return numpy.concatenate((CT(x[:,0:15]), CT(x[:,s:s+15]), CT(x[:,2*s:2*s+15])), axis=1)
 
-def CE_3Split_20(x):
+def CT_3Split_20(x):
     s = x.shape[1]/3
-    return numpy.concatenate((CE(x[:,0:20]), CE(x[:,s:s+20]), CE(x[:,2*s:2*s+20])), axis=1)
+    return numpy.concatenate((CT(x[:,0:20]), CT(x[:,s:s+20]), CT(x[:,2*s:2*s+20])), axis=1)
 
 
 print "******** Setting Layer L0 Parameters          *********************"
@@ -1321,7 +1233,7 @@ pSFALayerL1H_S3_D2.x_field_channels=3
 pSFALayerL1H_S3_D2.y_field_channels=1
 pSFALayerL1H_S3_D2.x_field_spacing=2
 pSFALayerL1H_S3_D2.y_field_spacing=1
-#pSFALayerL1H_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QE_3Split_15], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerL1H_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_3Split_15], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 pSFALayerL1H_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 
 pSFALayerL2H_S3_D2 = copy.deepcopy(pSFALayerL1H) #L4
@@ -1330,8 +1242,8 @@ pSFALayerL2H_S3_D2.x_field_channels=2 #3 for 24x24 and 29x29, 2 for 28x28
 pSFALayerL2H_S3_D2.y_field_channels=1
 pSFALayerL2H_S3_D2.x_field_spacing=2 #2 for 24x24, 1 for 29x29
 pSFALayerL2H_S3_D2.y_field_spacing=1
-#pSFALayerL2H_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QE_3Split_25, CE_3Split_20], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
-#pSFALayerL2H_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo,  QE_2Split_15_AP08], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerL2H_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_3Split_25, CT_3Split_20], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerL2H_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo,  QT_2Split_15_AP08], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 pSFALayerL2H_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 
 pSFALayerL3H_S2_D1 = copy.deepcopy(pSFALayerL1H) #L6
@@ -1340,9 +1252,9 @@ pSFALayerL3H_S2_D1.x_field_channels=3 #2 for 24x24 and 29x29, 3 for 28x28
 pSFALayerL3H_S2_D1.y_field_channels=1
 pSFALayerL3H_S2_D1.x_field_spacing=1
 pSFALayerL3H_S2_D1.y_field_spacing=1
-#sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QE_2Split_25, CE_2Split_20], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
-#pSFALayerL3H_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QE_2Split_50], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
-#pSFALayerL3H_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo,  QE_3Split_35_AP08], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_2Split_25, CT_2Split_20], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerL3H_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_2Split_50], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerL3H_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo,  QT_3Split_35_AP08], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 pSFALayerL3H_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 
 #***************************************************************************
@@ -1352,7 +1264,7 @@ pSFALayerL1V_S3_D2.x_field_channels=1
 pSFALayerL1V_S3_D2.y_field_channels=3
 pSFALayerL1V_S3_D2.x_field_spacing=1
 pSFALayerL1V_S3_D2.y_field_spacing=2
-#sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QE_3Split_20, CE_3Split_15], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_3Split_20, CT_3Split_15], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 pSFALayerL1V_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 
 pSFALayerL2V_S3_D2 = copy.deepcopy(pSFALayerL1H) #L5
@@ -1361,7 +1273,7 @@ pSFALayerL2V_S3_D2.x_field_channels=1
 pSFALayerL2V_S3_D2.y_field_channels=2
 pSFALayerL2V_S3_D2.x_field_spacing=1
 pSFALayerL2V_S3_D2.y_field_spacing=2 #2 for 24x24, 1 for 29x29
-#sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QE_3Split_25, CE_3Split_20], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_3Split_25, CT_3Split_20], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 pSFALayerL2V_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 
 pSFALayerL3V_S2_D1 = copy.deepcopy(pSFALayerL1H) #L7
@@ -1370,8 +1282,8 @@ pSFALayerL3V_S2_D1.x_field_channels=1
 pSFALayerL3V_S2_D1.y_field_channels=3
 pSFALayerL3V_S2_D1.x_field_spacing=1
 pSFALayerL3V_S2_D1.y_field_spacing=1
-#sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QE_2Split_25, CE_2Split_20], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
-#pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QE_2Split_35, CE_2Split_25], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_2Split_25, CT_2Split_20], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_2Split_35, CT_2Split_25], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":1, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 
 pSFALayerL0_4x4.sfa_out_dim = 13 #Was 15 #Usually 16 L1 # 9 + 5 
@@ -1383,7 +1295,7 @@ pSFALayerL3H_S2_D1.sfa_out_dim = 120 #L6 #70 #44 #265 # 2*9 + 35
 pSFALayerL3V_S2_D1.sfa_out_dim = 160 #L7 #130 #150 # 2*9 + 40
 #pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 #pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":"RandomSigmoids", "expansion_starting_point":"08Exp", "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999, "expansion_output_dim":2000} 
-#pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, QE, CE], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, QT, CT], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 pSFALayerL0_4x4.sfa_args["max_preserved_sfa"]=4
 pSFALayerL1H_S3_D2.sfa_args["max_preserved_sfa"]=4
 pSFALayerL1V_S3_D2.sfa_args["max_preserved_sfa"]=4
@@ -1398,13 +1310,13 @@ pSFALayerSupernode.name = "SFA Super Node Layer"
 pSFALayerSupernode.pca_node_class = None
 pSFALayerSupernode.ord_node_class = mdp.nodes.HeadNode
 pSFALayerSupernode.ord_args = {"output_dim":115}
-#pSFALayerSupernode.exp_funcs = [identity, unsigned_08expo, unsigned_08expo_p15, unsigned_08expo_m15, signed_08expo, QE_90_AP08, CE_30_AP08,] #signed_08expo
-pSFALayerSupernode.exp_funcs = [identity, unsigned_08expo, signed_08expo, QE_90_AP08, CE_30_AP08,] #signed_08expo
-#pSFALayerSupernode.exp_funcs = [identity, QE, CE]
+#pSFALayerSupernode.exp_funcs = [identity, unsigned_08expo, unsigned_08expo_p15, unsigned_08expo_m15, signed_08expo, QT_90_AP08, CT_30_AP08,] #signed_08expo
+pSFALayerSupernode.exp_funcs = [identity, unsigned_08expo, signed_08expo, QT_90_AP08, CT_30_AP08,] #signed_08expo
+#pSFALayerSupernode.exp_funcs = [identity, QT, CT]
 #pSFALayerSupernode.red_node_class = None
 pSFALayerSupernode.sfa_node_class = mdp.nodes.GSFANode
 #pSFALayerSupernode.sfa_node_class = mdp.nodes.IEVMLRecNode #mdp.nodes.GSFANode
-#pSFALayerSupernode.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QE_50, CE_30],                     "max_comp":1, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerSupernode.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_50, CT_30],                     "max_comp":1, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 #pSFALayerSupernode.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo_75],                     "max_comp":1, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 pSFALayerSupernode.sfa_out_dim = 80
 
@@ -2524,7 +2436,7 @@ print "IEVMLRecNetworkU11L_5x5L0 L0-10_SFA_out_dim = ", IEVMLRecNet_out_dims
 for i, layer in enumerate(network.layers):
     layer.sfa_node_class = mdp.nodes.IEVMLRecNode
     layer.sfa_out_dim = IEVMLRecNet_out_dims[i]
-    #Q_AP_L(k=nan, d=0.8), Q_AN_exp
+    #QT_AP_L(k=nan, d=0.8), Q_AN_exp
     #layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "max_preserved_sfa":2.0}
 #    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_comp":1, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based", "max_preserved_sfa":2.0}
 #    layer.sfa_args = {"pre_expansion_node_class":mdp.nodes.GSFANode, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":2.0}
@@ -2546,7 +2458,7 @@ if double_SFA_top_node:
     layer.pca_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, div2_sel75_unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} #2.0
     layer.sfa_node_class = mdp.nodes.IEVMLRecNode
     layer.sfa_out_dim = IEVMLRecNet_out_dims[8]
-    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, sel8_04QE], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} #2.0
+    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, sel8_04QT], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} #2.0
     
 
 #WARNING, EXPERIMENTAL CODE TO TEST OTHER EXPANSIONS
@@ -2606,31 +2518,31 @@ for i, layer in enumerate(network.layers):
     layer.sfa_out_dim = IEVMLRecNet_out_dims[i]
     layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.91} #1.85, 1.91 #only for tuning/experimentation, official is below 
 
-network.layers[0].sfa_args["expansion_funcs"]= [s18, s15u08ex, s17Max, s10QE] # ** s18, s15u08ex, s17Max, s10QE] #identity, s14u08ex, s14Max, s1QE, QE, s14u08ex, unsigned_08expo, s14QE, maximum_mix1_ex, s16QE, s10Max
+network.layers[0].sfa_args["expansion_funcs"]= [s18, s15u08ex, s17Max, s10QT] # ** s18, s15u08ex, s17Max, s10QT] #identity, s14u08ex, s14Max, s1QT, QT, s14u08ex, unsigned_08expo, s14QT, maximum_mix1_ex, s16QT, s10Max
 network.layers[0].sfa_args["max_preserved_sfa"]= 3 #T 2 #1 #! 2 # **1 #1 3
 
-network.layers[1].sfa_args["expansion_funcs"]= [ch3s20, ch3s20u08, ch3s20max, ch3o3s4QE, ch3o0s3QE] # ** ch3s16, ch3s16u08, ch3s16max, ch3o1s4QE #unsigned_08expo, ch3_O2_s3_QE, ch3_O3_s3_QE
+network.layers[1].sfa_args["expansion_funcs"]= [ch3s20, ch3s20u08, ch3s20max, ch3o3s4QT, ch3o0s3QT] # ** ch3s16, ch3s16u08, ch3s16max, ch3o1s4QT #unsigned_08expo, ch3_O2_s3_QT, ch3_O3_s3_QT
 network.layers[1].sfa_args["max_preserved_sfa"]= 4 #T 3 #2 #! 3 # ** 2 #3
 
-network.layers[2].sfa_args["expansion_funcs"]= [ch3s28, ch3s28u08, ch3s16max, ch3o4s6QE, ch3o0s3QE] # ** ch3s24, ch3s24u08, ch3s12max, ch3o2s6QE
+network.layers[2].sfa_args["expansion_funcs"]= [ch3s28, ch3s28u08, ch3s16max, ch3o4s6QT, ch3o0s3QT] # ** ch3s24, ch3s24u08, ch3s12max, ch3o2s6QT
 network.layers[2].sfa_args["max_preserved_sfa"]= 1.933 + 0.003 + 0.0015 #T 1.9 #1.81 #! 1.9 # ** 1.81 1.91 #1.93 #(nothing) 3# (nothing)4
 
-network.layers[3].sfa_args["expansion_funcs"]= [ch3s37, ch3s37u08, ch3s19max, ch3o4s6QE, ch3o0s3QE]   # ** ch3s33, ch3s33u08, ch3s15max, ch3o2s6QE  # maximum_mix1_exp
+network.layers[3].sfa_args["expansion_funcs"]= [ch3s37, ch3s37u08, ch3s19max, ch3o4s6QT, ch3o0s3QT]   # ** ch3s33, ch3s33u08, ch3s15max, ch3o2s6QT  # maximum_mix1_exp
 network.layers[3].sfa_args["max_preserved_sfa"]= 1.933 + 0.005 + 0.0015 #T 1.9 #1.81 #! 1.9  # ** 1.81 #1.91 #1.92 # (nothing) 5
 
-network.layers[4].sfa_args["expansion_funcs"]= [ch3s60, ch3s49u08, ch3s19max, ch3o4s6QE, ] # ** ch3s60, ch3s45u08, ch3s15max, ch3o2s6QE #ch3o3s5QE, maximum_mix1_ex,unsigned_08expo] #unsigned_08expo
+network.layers[4].sfa_args["expansion_funcs"]= [ch3s60, ch3s49u08, ch3s19max, ch3o4s6QT, ] # ** ch3s60, ch3s45u08, ch3s15max, ch3o2s6QT #ch3o3s5QT, maximum_mix1_ex,unsigned_08expo] #unsigned_08expo
 network.layers[4].sfa_args["max_preserved_sfa"]= 1.933 + 0.005 + 0.0023 #T 1.9 #1.81 #! 1.9 # **1.81
 
-network.layers[5].sfa_args["expansion_funcs"]= [ch3s72, ch3s40u08, ch3s11max, ch3o5s6QE, ch3o0s3QE] # ** ch3s72, ch3s35u08, ch3s6max, ch3o3s6QE #identity, ch3s50u08, ch3o3s3QE #maximum_mix1_ex,unsigned_08expo] #unsigned_08expo
+network.layers[5].sfa_args["expansion_funcs"]= [ch3s72, ch3s40u08, ch3s11max, ch3o5s6QT, ch3o0s3QT] # ** ch3s72, ch3s35u08, ch3s6max, ch3o3s6QT #identity, ch3s50u08, ch3o3s3QT #maximum_mix1_ex,unsigned_08expo] #unsigned_08expo
 network.layers[5].sfa_args["max_preserved_sfa"]= 1.953 + 0.005 + 0.0031 #T 1.93 #1.86 #! 1.93 # ** 1.81
 
-network.layers[6].sfa_args["expansion_funcs"]= [ch3s80, ch3s25u08, ch3s15max, ch3o6s4QE,] # ** ch3s80, ch3s20u08, ch3s10max, ch3o4s4QE 
+network.layers[6].sfa_args["expansion_funcs"]= [ch3s80, ch3s25u08, ch3s15max, ch3o6s4QT,] # ** ch3s80, ch3s20u08, ch3s10max, ch3o4s4QT 
 network.layers[6].sfa_args["max_preserved_sfa"]= 1.973 + 0.000 #T 1.96 #1.89 #! 1.96 # ** 1.89
 
-network.layers[7].sfa_args["expansion_funcs"]= [ch3s80, ch3o6s20u08,] # ** ch3s80, ch3o5s20u08 # ch3o4s5QE #unsigned_08expo, ch3o5s4QE
+network.layers[7].sfa_args["expansion_funcs"]= [ch3s80, ch3o6s20u08,] # ** ch3s80, ch3o5s20u08 # ch3o4s5QT #unsigned_08expo, ch3o5s4QT
 network.layers[7].sfa_args["max_preserved_sfa"]= 1.98 #T 1.97 #1.94 #! 1.97 # ** 1.81
  
-network.layers[8].sfa_args["expansion_funcs"]= [ch3s85, ch3o6s20u08, ch3o0s3QE] # ** ch3s85, ch3o4s20u08, #ch3o4s4QE #identity, ch3s70u08, unsigned_08expo, ch3_s25_max
+network.layers[8].sfa_args["expansion_funcs"]= [ch3s85, ch3o6s20u08, ch3o0s3QT] # ** ch3s85, ch3o4s20u08, #ch3o4s4QT #identity, ch3s70u08, unsigned_08expo, ch3_s25_max
 network.layers[8].sfa_args["max_preserved_sfa"]= 1.98 #T 1.97 #1.94 #! 1.97 # **1.81
 
 #WARNING, ADDING AN ADDITIONAL SFA NODE IN THE LAST LAYER, 80x80 resolution (Node 9)
@@ -2646,7 +2558,7 @@ if double_SFA_top_node:
     layer.sfa_node_class = mdp.nodes.IEVMLRecNode
     layer.sfa_out_dim = IEVMLRecNet_out_dims[9]
     layer.sfa_args = dict(layer.sfa_args)
-    layer.sfa_args["expansion_funcs"]= [s75, s34u08, o7s15QE, s3QE] # ** s75, s30u08ex, o5s15QE #s50u08ex, o4s18QE , s3QE
+    layer.sfa_args["expansion_funcs"]= [s75, s34u08, o7s15QT, s3QT] # ** s75, s30u08ex, o5s15QT #s50u08ex, o4s18QT , s3QT
     layer.sfa_args["max_preserved_sfa"]= 1.9 #! 1.81 # ** 1.81
 
 my_DT=1.96 #=1.96, 3 Labels
@@ -2691,31 +2603,31 @@ else:
 
 print "IEVMLRecNetworkU11L_Overlap6x6L0_GUO_1Label L0-10_SFA_out_dim = ", IEVMLRecNet_out_dims
 
-network.layers[0].sfa_args["expansion_funcs"]= [s18, s15u08ex, s17Max, s10QE] # ** s18, s15u08ex, s17Max, s10QE] #identity, s14u08ex, s14Max, s1QE, QE, s14u08ex, unsigned_08expo, s14QE, maximum_mix1_ex, s16QE, s10Max
+network.layers[0].sfa_args["expansion_funcs"]= [s18, s15u08ex, s17Max, s10QT] # ** s18, s15u08ex, s17Max, s10QT] #identity, s14u08ex, s14Max, s1QT, QT, s14u08ex, unsigned_08expo, s14QT, maximum_mix1_ex, s16QT, s10Max
 network.layers[0].sfa_args["max_preserved_sfa"]= 1 #T 2 #1 #! 2 # **1 #1 3
 
-network.layers[1].sfa_args["expansion_funcs"]= [ch3s20, ch3s20u08, ch3s20max, ch3o1s4QE] # ** ch3s16, ch3s16u08, ch3s16max, ch3o1s4QE #unsigned_08expo, ch3_O2_s3_QE, ch3_O3_s3_QE
+network.layers[1].sfa_args["expansion_funcs"]= [ch3s20, ch3s20u08, ch3s20max, ch3o1s4QT] # ** ch3s16, ch3s16u08, ch3s16max, ch3o1s4QT #unsigned_08expo, ch3_O2_s3_QT, ch3_O3_s3_QT
 network.layers[1].sfa_args["max_preserved_sfa"]= 2 #T 3 #2 #! 3 # ** 2 #3
 
-network.layers[2].sfa_args["expansion_funcs"]= [ch3s28, ch3s28u08, ch3s16max, ch3o2s6QE] # ** ch3s24, ch3s24u08, ch3s12max, ch3o2s6QE
+network.layers[2].sfa_args["expansion_funcs"]= [ch3s28, ch3s28u08, ch3s16max, ch3o2s6QT] # ** ch3s24, ch3s24u08, ch3s12max, ch3o2s6QT
 network.layers[2].sfa_args["max_preserved_sfa"]= 1.933 + 0.003 + 0.0015 #T 1.9 #1.81 #! 1.9 # ** 1.81 1.91 #1.93 #(nothing) 3# (nothing)4
 
-network.layers[3].sfa_args["expansion_funcs"]= [ch3s37, ch3s37u08, ch3s19max, ch3o2s6QE]   # ** ch3s33, ch3s33u08, ch3s15max, ch3o2s6QE  # maximum_mix1_exp
+network.layers[3].sfa_args["expansion_funcs"]= [ch3s37, ch3s37u08, ch3s19max, ch3o2s6QT]   # ** ch3s33, ch3s33u08, ch3s15max, ch3o2s6QT  # maximum_mix1_exp
 network.layers[3].sfa_args["max_preserved_sfa"]= 1.933 + 0.005 + 0.0015 #T 1.9 #1.81 #! 1.9  # ** 1.81 #1.91 #1.92 # (nothing) 5
 
-network.layers[4].sfa_args["expansion_funcs"]= [ch3s60, ch3s49u08, ch3s19max, ch3o2s6QE, ] # ** ch3s60, ch3s45u08, ch3s15max, ch3o2s6QE #ch3o3s5QE, maximum_mix1_ex,unsigned_08expo] #unsigned_08expo
+network.layers[4].sfa_args["expansion_funcs"]= [ch3s60, ch3s49u08, ch3s19max, ch3o2s6QT, ] # ** ch3s60, ch3s45u08, ch3s15max, ch3o2s6QT #ch3o3s5QT, maximum_mix1_ex,unsigned_08expo] #unsigned_08expo
 network.layers[4].sfa_args["max_preserved_sfa"]= 1.933 + 0.005 + 0.0023 #T 1.9 #1.81 #! 1.9 # **1.81
 
-network.layers[5].sfa_args["expansion_funcs"]= [ch3s72, ch3s40u08, ch3s11max, ch3o3s6QE] # ** ch3s72, ch3s35u08, ch3s6max, ch3o3s6QE #identity, ch3s50u08, ch3o3s3QE #maximum_mix1_ex,unsigned_08expo] #unsigned_08expo
+network.layers[5].sfa_args["expansion_funcs"]= [ch3s72, ch3s40u08, ch3s11max, ch3o3s6QT] # ** ch3s72, ch3s35u08, ch3s6max, ch3o3s6QT #identity, ch3s50u08, ch3o3s3QT #maximum_mix1_ex,unsigned_08expo] #unsigned_08expo
 network.layers[5].sfa_args["max_preserved_sfa"]= 1.953 + 0.005 + 0.0031 #T 1.93 #1.86 #! 1.93 # ** 1.81
 
-network.layers[6].sfa_args["expansion_funcs"]= [ch3s80, ch3s25u08, ch3s15max, ch3o4s4QE,] # ** ch3s80, ch3s20u08, ch3s10max, ch3o4s4QE 
+network.layers[6].sfa_args["expansion_funcs"]= [ch3s80, ch3s25u08, ch3s15max, ch3o4s4QT,] # ** ch3s80, ch3s20u08, ch3s10max, ch3o4s4QT 
 network.layers[6].sfa_args["max_preserved_sfa"]= 1.973 + 0.000 #T 1.96 #1.89 #! 1.96 # ** 1.89
 
-network.layers[7].sfa_args["expansion_funcs"]= [ch3s80, ch3o6s20u08,] # ** ch3s80, ch3o5s20u08 # ch3o4s5QE #unsigned_08expo, ch3o5s4QE
+network.layers[7].sfa_args["expansion_funcs"]= [ch3s80, ch3o6s20u08,] # ** ch3s80, ch3o5s20u08 # ch3o4s5QT #unsigned_08expo, ch3o5s4QT
 network.layers[7].sfa_args["max_preserved_sfa"]= 1.98 #T 1.97 #1.94 #! 1.97 # ** 1.81
  
-network.layers[8].sfa_args["expansion_funcs"]= [ch3s85, ch3o6s20u08, ] # ** ch3s85, ch3o4s20u08, #ch3o4s4QE #identity, ch3s70u08, unsigned_08expo, ch3_s25_max
+network.layers[8].sfa_args["expansion_funcs"]= [ch3s85, ch3o6s20u08, ] # ** ch3s85, ch3o4s20u08, #ch3o4s4QT #identity, ch3s70u08, unsigned_08expo, ch3_s25_max
 network.layers[8].sfa_args["max_preserved_sfa"]= 1.98 #T 1.97 #1.94 #! 1.97 # **1.81
 
 #WARNING, ADDING AN ADDITIONAL SFA NODE IN THE LAST LAYER, 80x80 resolution (Node 9)
@@ -2731,7 +2643,7 @@ if double_SFA_top_node:
     layer.sfa_node_class = mdp.nodes.IEVMLRecNode
     layer.sfa_out_dim = IEVMLRecNet_out_dims[9]
     layer.sfa_args = dict(layer.sfa_args)
-    layer.sfa_args["expansion_funcs"]= [s75, s34u08, o7s15QE, ] # ** s75, s30u08ex, o5s15QE #s50u08ex, o4s18QE , s3QE
+    layer.sfa_args["expansion_funcs"]= [s75, s34u08, o7s15QT, ] # ** s75, s30u08ex, o5s15QT #s50u08ex, o4s18QT , s3QT
     layer.sfa_args["max_preserved_sfa"]= 1.9 #! 1.81 # ** 1.81
 
 my_DT=1.91 #Definitive, 1 Label
@@ -2775,16 +2687,16 @@ else:
     network.layers[8].pca_args["max_preserved_sfa"] = DT[8] 
     network.layers[8].sfa_args["max_preserved_sfa"] = DT[9]
 
-network.layers[0].sfa_args["expansion_funcs"]= [s17, s20u08ex, s17Max, s10QE, ] #s17, s20u08ex, s17Max, s10QE
-network.layers[1].sfa_args["expansion_funcs"]= [ch3s8, ch3s12u08, ch3s10max, ch3o0s3QE] #ch3s8, ch3s12u08, ch3s10max, ch3o0s3QE 
+network.layers[0].sfa_args["expansion_funcs"]= [s17, s20u08ex, s17Max, s10QT, ] #s17, s20u08ex, s17Max, s10QT
+network.layers[1].sfa_args["expansion_funcs"]= [ch3s8, ch3s12u08, ch3s10max, ch3o0s3QT] #ch3s8, ch3s12u08, ch3s10max, ch3o0s3QT 
 network.layers[2].sfa_args["expansion_funcs"]= [ch3s18, ch3s18u08, ch3s16max] #ch3s18, ch3s18u08, ch3s16max
-network.layers[3].sfa_args["expansion_funcs"]= [ch3s25, ch3s23u08, ch3s19max, ch3o0s3QE]   #ch3s25, ch3s25u08, ch3s19max, ch3o0s3QE
+network.layers[3].sfa_args["expansion_funcs"]= [ch3s25, ch3s23u08, ch3s19max, ch3o0s3QT]   #ch3s25, ch3s25u08, ch3s19max, ch3o0s3QT
 network.layers[4].sfa_args["expansion_funcs"]= [ch3s49, ch3s43u08, ch3s19max, ] #ch3s49, ch3s43u08, ch3s19max,
-network.layers[5].sfa_args["expansion_funcs"]= [ch3s58, ch3s37u08, ch3s13max, ch3o0s3QE] #ch3s58, ch3s37u08, ch3s13max, ch3o0s3QE
+network.layers[5].sfa_args["expansion_funcs"]= [ch3s58, ch3s37u08, ch3s13max, ch3o0s3QT] #ch3s58, ch3s37u08, ch3s13max, ch3o0s3QT
 network.layers[6].sfa_args["expansion_funcs"]= [ch3s61, ch3s21u08, ch3s17max, ] #ch3s61, ch3s21u08, ch3s17max
 network.layers[7].sfa_args["expansion_funcs"]= [ch3s49, ] #ch3s49,
-network.layers[8].pca_args["expansion_funcs"]= [ch3s59, ch3o0s3QE] #ch3s59, ch3o0s3QE
-network.layers[8].sfa_args["expansion_funcs"]= [s66, s34u08, s3QE] #s66, s34u08, s3QE
+network.layers[8].pca_args["expansion_funcs"]= [ch3s59, ch3o0s3QT] #ch3s59, ch3o0s3QT
+network.layers[8].sfa_args["expansion_funcs"]= [s66, s34u08, s3QT] #s66, s34u08, s3QT
 
 #for i, layer in enumerate(network.layers):
 #    if i>0:
@@ -2861,7 +2773,7 @@ print "IEVMLRecNetworkU11L_Overlap6x6L0 L0-10_SFA_out_dim = ", IEVMLRecNet_out_d
 for i, layer in enumerate(network.layers):
     layer.sfa_node_class = mdp.nodes.IEVMLRecNode
     layer.sfa_out_dim = IEVMLRecNet_out_dims[i]
-    #Q_AP_L(k=nan, d=0.8), Q_AN_exp
+    #QT_AP_L(k=nan, d=0.8), Q_AN_exp
     #layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "max_preserved_sfa":2.0}
 #    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_comp":1, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based", "max_preserved_sfa":2.0}
 #    layer.sfa_args = {"pre_expansion_node_class":mdp.nodes.GSFANode, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":2.0}
@@ -2870,36 +2782,36 @@ for i, layer in enumerate(network.layers):
     #sel60_unsigned_08expo sel_exp(60, unsigned_08expo), unsigned_08expos14u08ex
 
 
-#network.layers[0].sfa_args["expansion_funcs"]= [identity, s14u08ex, s17Max, s9QE] #identity, s14u08ex, s14Max, s10QE, QE, s14u08ex, unsigned_08expo, s14QE, maximum_mix1_ex, s16QE, s10Max
+#network.layers[0].sfa_args["expansion_funcs"]= [identity, s14u08ex, s17Max, s9QT] #identity, s14u08ex, s14Max, s10QT, QT, s14u08ex, unsigned_08expo, s14QT, maximum_mix1_ex, s16QT, s10Max
 network.layers[0].sfa_args["expansion_funcs"]= [identity, s14u08ex, s12Max] #WARNING, EXPERIMENT Delta Values!
 network.layers[0].sfa_args["max_preserved_sfa"]= 40 #1#1 3
-#network.layers[0].sfa_args["expansion_funcs"]= [identity, QE] #unsigned_08expo
+#network.layers[0].sfa_args["expansion_funcs"]= [identity, QT] #unsigned_08expo
 
 #network.layers[0].sfa_args["expansion_funcs"]= [identity, maximum_mix1_ex,unsigned_08expo] #unsigned_08expo
-network.layers[1].sfa_args["expansion_funcs"]= [identity, ch3s16u08, ch3s10max, ch3o1s5QE] #ch3o1s3QE, ch3o1s5QE, unsigned_08expo, ch3_O2_s3_QE, ch3_O3_s3_QE
+network.layers[1].sfa_args["expansion_funcs"]= [identity, ch3s16u08, ch3s10max, ch3o1s5QT] #ch3o1s3QT, ch3o1s5QT, unsigned_08expo, ch3_O2_s3_QT, ch3_O3_s3_QT
 network.layers[1].sfa_args["max_preserved_sfa"]= 2 #2 #3
 #network.layers[1].sfa_args["expansion_funcs"]= [identity, maximum_mix1_ex,unsigned_08expo] #unsigned_08expo
 
-network.layers[2].sfa_args["expansion_funcs"]= [identity, ch3s24u08, ch3s12max, ch3o2s3QE] #identity, ch3o2s3QE, ch3s16u08, ch3s12max, unsigned_08expo, ch3s20u08, ch3s12max, ch3o3s3QE
+network.layers[2].sfa_args["expansion_funcs"]= [identity, ch3s24u08, ch3s12max, ch3o2s3QT] #identity, ch3o2s3QT, ch3s16u08, ch3s12max, unsigned_08expo, ch3s20u08, ch3s12max, ch3o3s3QT
 network.layers[2].sfa_args["max_preserved_sfa"]= 1.91 #1.93 #(nothing) 3# (nothing)4
 
-network.layers[3].sfa_args["expansion_funcs"]= [identity, ch3s33u08, ch3o3s3QE]  #ch3o3s4QE, ch3o3s26u08, ch3o3s12max, unsigned_08expo, maximum_mix1_ex,
+network.layers[3].sfa_args["expansion_funcs"]= [identity, ch3s33u08, ch3o3s3QT]  #ch3o3s4QT, ch3o3s26u08, ch3o3s12max, unsigned_08expo, maximum_mix1_ex,
 #network.layers[3].sfa_args["expansion_funcs"]= [identity, ch3o3s26u08, ch3o3s16max,]  #ch3o3s26u08, ch3o3s12max, unsigned_08expo, maximum_mix1_ex,
 network.layers[3].sfa_args["max_preserved_sfa"]= 1.91 #1.92 # (nothing) 5
 
-network.layers[4].sfa_args["expansion_funcs"]= [identity, ch3s45u08, ch3o3s4QE] #ch3o3s5QE, maximum_mix1_ex,unsigned_08expo] #unsigned_08expo
+network.layers[4].sfa_args["expansion_funcs"]= [identity, ch3s45u08, ch3o3s4QT] #ch3o3s5QT, maximum_mix1_ex,unsigned_08expo] #unsigned_08expo
 #network.layers[4].sfa_args["max_preserved_sfa"]= 6 #8
 
-network.layers[5].sfa_args["expansion_funcs"]= [identity, ch3s50u08, ch3o3s3QE] # maximum_mix1_ex,unsigned_08expo] #unsigned_08expo
+network.layers[5].sfa_args["expansion_funcs"]= [identity, ch3s50u08, ch3o3s3QT] # maximum_mix1_ex,unsigned_08expo] #unsigned_08expo
 #network.layers[5].sfa_args["max_preserved_sfa"]= 7 #9
 
-network.layers[6].sfa_args["expansion_funcs"]= [identity, ch3s40u08, ch3o3s5QE] # ch3s40u08, ch3o3s5QE]  #unsigned_08expo, ch3o3s5QE
+network.layers[6].sfa_args["expansion_funcs"]= [identity, ch3s40u08, ch3o3s5QT] # ch3s40u08, ch3o3s5QT]  #unsigned_08expo, ch3o3s5QT
 #network.layers[6].sfa_args["max_preserved_sfa"]= 7 #(nothing) 10
 
-network.layers[7].sfa_args["expansion_funcs"]= [identity, ch3s40u08, ch3o4s5QE] #unsigned_08expo, ch3o5s4QE
+network.layers[7].sfa_args["expansion_funcs"]= [identity, ch3s40u08, ch3o4s5QT] #unsigned_08expo, ch3o5s4QT
 #network.layers[7].sfa_args["max_preserved_sfa"]= 9 # 11
 
-network.layers[8].sfa_args["expansion_funcs"]= [identity, ch3s30u08, ch3o4s4QE] # identity, ch3s70u08, unsigned_08expo, ch3_s25_max
+network.layers[8].sfa_args["expansion_funcs"]= [identity, ch3s30u08, ch3o4s4QT] # identity, ch3s70u08, unsigned_08expo, ch3_s25_max
 #network.layers[8].sfa_args["max_preserved_sfa"]= 5
 
 #noise_addition=0.000004
@@ -2918,7 +2830,7 @@ if double_SFA_top_node:
     layer.sfa_node_class = mdp.nodes.IEVMLRecNode
     layer.sfa_out_dim = IEVMLRecNet_out_dims[9]
     layer.sfa_args = dict(layer.sfa_args)
-    layer.sfa_args["expansion_funcs"]= [identity, s40u08ex, o4s15QE] #s50u08ex, o4s18QE
+    layer.sfa_args["expansion_funcs"]= [identity, s40u08ex, o4s15QT] #s50u08ex, o4s18QT
     
 
 for i, layer in enumerate(network.layers):
@@ -2959,33 +2871,33 @@ def delta_map(delta):
 #    return delta #+0.25 #delta
 #return 2.0 - (2.0 - delta)*3.0/3.0 #2.5
 
-network.layers[0].sfa_args["expansion_funcs"]= [s18, s14u08ex, s17Max, s10_d1_Q_N] #identity, s14u08ex, s17Max, s10QE/s10_d1_Q_N
+network.layers[0].sfa_args["expansion_funcs"]= [s18, s14u08ex, s17Max, s10_d1_Q_N] #identity, s14u08ex, s17Max, s10QT/s10_d1_Q_N
 network.layers[0].sfa_args["max_preserved_sfa"]= 3 #3 
 
-network.layers[1].sfa_args["expansion_funcs"]= [ch3s18, ch3s16u08, ch3s10max, ch3_o3_s5_d1_Q_N, ch3_o0_s3_d1_Q_N] #identity, ch3s16u08, ch3s10max, ch3o3s5QE, ch3o0s3QE
+network.layers[1].sfa_args["expansion_funcs"]= [ch3s18, ch3s16u08, ch3s10max, ch3_o3_s5_d1_Q_N, ch3_o0_s3_d1_Q_N] #identity, ch3s16u08, ch3s10max, ch3o3s5QT, ch3o0s3QT
 network.layers[1].sfa_args["max_preserved_sfa"]= 4 #4
 
-#network.layers[2].sfa_args["expansion_funcs"]= [ch3s26, ch3s24u08, ch3s12max, ch3_o4_s3_d1_Q_N, ch3_o0_s3_d1_Q_N] #identity, ch3s24u08, ch3s12max, ch3o4s3QE, ch3o0s3QE
+#network.layers[2].sfa_args["expansion_funcs"]= [ch3s26, ch3s24u08, ch3s12max, ch3_o4_s3_d1_Q_N, ch3_o0_s3_d1_Q_N] #identity, ch3s24u08, ch3s12max, ch3o4s3QT, ch3o0s3QT
 network.layers[2].sfa_args["expansion_funcs"]= [ch3s27, ch3s27u08, ch3s12max, ch3_o4_s3_d1_Q_N, ch3_o0_s3_d1_Q_N] #Experiment changed o4s5 to o4s3
 network.layers[2].sfa_args["max_preserved_sfa"]= delta_map(1.96) #1.97
 
-network.layers[3].sfa_args["expansion_funcs"]= [ch3s35, ch3s33u08, ch3_o5_s3_d1_Q_N, ch3_o0_s3_d1_Q_N] #identity, ch3s33u08, ch3o5s3QE, ch3o0s3QE
-#network.layers[3].sfa_args["expansion_funcs"]= [ch3s35, ch3s33u08, ch3o5s5QE, ch3_o0_s3_d1_Q_N] #Experiment
+network.layers[3].sfa_args["expansion_funcs"]= [ch3s35, ch3s33u08, ch3_o5_s3_d1_Q_N, ch3_o0_s3_d1_Q_N] #identity, ch3s33u08, ch3o5s3QT, ch3o0s3QT
+#network.layers[3].sfa_args["expansion_funcs"]= [ch3s35, ch3s33u08, ch3o5s5QT, ch3_o0_s3_d1_Q_N] #Experiment
 network.layers[3].sfa_args["max_preserved_sfa"]= delta_map(1.96) #1.97
 
-network.layers[4].sfa_args["expansion_funcs"]= [ch3s62, ch3s45u08, ch3_o5_s4_d1_Q_N, ] #identity, ch3s45u08, ch3o5s4QE
+network.layers[4].sfa_args["expansion_funcs"]= [ch3s62, ch3s45u08, ch3_o5_s4_d1_Q_N, ] #identity, ch3s45u08, ch3o5s4QT
 network.layers[4].sfa_args["max_preserved_sfa"]= delta_map(1.96) #1.975
 
-network.layers[5].sfa_args["expansion_funcs"]= [ch3s74, ch3s50u08, ch3_o5_s3_d1_Q_N] #identity, ch3s50u08, ch3o5s3QE
+network.layers[5].sfa_args["expansion_funcs"]= [ch3s74, ch3s50u08, ch3_o5_s3_d1_Q_N] #identity, ch3s50u08, ch3o5s3QT
 network.layers[5].sfa_args["max_preserved_sfa"]= delta_map(1.97) #1.975
 
-network.layers[6].sfa_args["expansion_funcs"]= [ch3s82, ch3s40u08, ch3_o5_s5_d1_Q_N] #identity, ch3s40u08, ch3o5s5QE
+network.layers[6].sfa_args["expansion_funcs"]= [ch3s82, ch3s40u08, ch3_o5_s5_d1_Q_N] #identity, ch3s40u08, ch3o5s5QT
 network.layers[6].sfa_args["max_preserved_sfa"]= delta_map(1.97) #1.975
 
-network.layers[7].sfa_args["expansion_funcs"]= [ch3s82, ch3s40u08, ch3_o6_s5_d1_Q_N, ] #identity, ch3s40u08, ch3o6s5QE/ch3_o6_s5_Q_N,
+network.layers[7].sfa_args["expansion_funcs"]= [ch3s82, ch3s40u08, ch3_o6_s5_d1_Q_N, ] #identity, ch3s40u08, ch3o6s5QT/ch3_o6_s5_Q_N,
 network.layers[7].sfa_args["max_preserved_sfa"]= delta_map(1.97) #1.975
 
-network.layers[8].sfa_args["expansion_funcs"]= [ch3s87, ch3s30u08, ch3_o6_s4_d1_Q_N, ch3_o0_s3_d1_Q_N] #identity, ch3s30u08, ch3o6s4QE/ch3_o6_s4_d1_Q_N, ch3o0s3QE/ch3_o0_s3_d1_Q_N
+network.layers[8].sfa_args["expansion_funcs"]= [ch3s87, ch3s30u08, ch3_o6_s4_d1_Q_N, ch3_o0_s3_d1_Q_N] #identity, ch3s30u08, ch3o6s4QT/ch3_o6_s4_d1_Q_N, ch3o0s3QT/ch3_o0_s3_d1_Q_N
 network.layers[8].sfa_args["max_preserved_sfa"]= delta_map(1.97) #1.975
 
 double_SFA_top_node = True #and False
@@ -3000,7 +2912,7 @@ if double_SFA_top_node:
     layer.sfa_node_class = mdp.nodes.IEVMLRecNode
     layer.sfa_out_dim = IEVMLRecNet_out_dims[9]
     layer.sfa_args = dict(layer.sfa_args)
-    layer.sfa_args["expansion_funcs"]= [ch3s75, s40u08ex, o6_s15_d1_Q_N] #identity, s40u08ex, o6s15QE/o6_s15_d1_Q_N
+    layer.sfa_args["expansion_funcs"]= [ch3s75, s40u08ex, o6_s15_d1_Q_N] #identity, s40u08ex, o6s15QT/o6_s15_d1_Q_N
 
 
 #********************************************************************************************************
@@ -3025,31 +2937,31 @@ else:
 
 print "IEVMLRecNetworkU11L_Overlap6x6L0_3Labels L0-10_SFA_out_dim = ", IEVMLRecNet_out_dims
 
-network.layers[0].sfa_args["expansion_funcs"]= [identity, s14u08ex, s17Max, s10_d1_Q_N] #identity, s14u08ex, s17Max, s10QE/s10_d1_Q_N
+network.layers[0].sfa_args["expansion_funcs"]= [identity, s14u08ex, s17Max, s10_d1_Q_N] #identity, s14u08ex, s17Max, s10QT/s10_d1_Q_N
 network.layers[0].sfa_args["max_preserved_sfa"]= 2 #2 
 
-network.layers[1].sfa_args["expansion_funcs"]= [identity, ch3s16u08, ch3s10max, ch3_o2_s5_d1_Q_N, ch3_o0_s2_d1_Q_N] #identity, ch3s16u08, ch3s10max, ch3o3s5QE, ch3o0s3QE
+network.layers[1].sfa_args["expansion_funcs"]= [identity, ch3s16u08, ch3s10max, ch3_o2_s5_d1_Q_N, ch3_o0_s2_d1_Q_N] #identity, ch3s16u08, ch3s10max, ch3o3s5QT, ch3o0s3QT
 network.layers[1].sfa_args["max_preserved_sfa"]= 3 #3
 
-network.layers[2].sfa_args["expansion_funcs"]= [identity, ch3s24u08, ch3s12max, ch3_o3_s3_d1_Q_N, ch3_o0_s2_d1_Q_N] #identity, ch3s24u08, ch3s12max, ch3o4s3QE, ch3o0s3QE
+network.layers[2].sfa_args["expansion_funcs"]= [identity, ch3s24u08, ch3s12max, ch3_o3_s3_d1_Q_N, ch3_o0_s2_d1_Q_N] #identity, ch3s24u08, ch3s12max, ch3o4s3QT, ch3o0s3QT
 network.layers[2].sfa_args["max_preserved_sfa"]= 1.95 #1.95
 
-network.layers[3].sfa_args["expansion_funcs"]= [identity, ch3s33u08, ch3_o4_s3_d1_Q_N, ch3_o0_s2_d1_Q_N] #identity, ch3s33u08, ch3o5s3QE, ch3o0s3QE
+network.layers[3].sfa_args["expansion_funcs"]= [identity, ch3s33u08, ch3_o4_s3_d1_Q_N, ch3_o0_s2_d1_Q_N] #identity, ch3s33u08, ch3o5s3QT, ch3o0s3QT
 network.layers[3].sfa_args["max_preserved_sfa"]= 1.96 #1.955
 
-network.layers[4].sfa_args["expansion_funcs"]= [identity, ch3s45u08, ch3_o4_s4_d1_Q_N, ] #identity, ch3s45u08, ch3o5s4QE
+network.layers[4].sfa_args["expansion_funcs"]= [identity, ch3s45u08, ch3_o4_s4_d1_Q_N, ] #identity, ch3s45u08, ch3o5s4QT
 network.layers[4].sfa_args["max_preserved_sfa"]= 1.9625 #1.9625 
 
-network.layers[5].sfa_args["expansion_funcs"]= [identity, ch3s50u08, ch3o4s3QE] #identity, ch3s50u08, ch3o5s3QE
+network.layers[5].sfa_args["expansion_funcs"]= [identity, ch3s50u08, ch3o4s3QT] #identity, ch3s50u08, ch3o5s3QT
 network.layers[5].sfa_args["max_preserved_sfa"]= 1.9625 #1.9625 
 
-network.layers[6].sfa_args["expansion_funcs"]= [identity, ch3s40u08, ch3o4s5QE,] #identity, ch3s40u08, ch3o5s5QE
+network.layers[6].sfa_args["expansion_funcs"]= [identity, ch3s40u08, ch3o4s5QT,] #identity, ch3s40u08, ch3o5s5QT
 network.layers[6].sfa_args["max_preserved_sfa"]= 1.9625 #1.9625 
 
-network.layers[7].sfa_args["expansion_funcs"]= [identity, ch3s40u08, ch3_o5_s5_d1_Q_N, ] #identity, ch3s40u08, ch3o6s5QE/ch3_o6_s5_Q_N,
+network.layers[7].sfa_args["expansion_funcs"]= [identity, ch3s40u08, ch3_o5_s5_d1_Q_N, ] #identity, ch3s40u08, ch3o6s5QT/ch3_o6_s5_Q_N,
 network.layers[7].sfa_args["max_preserved_sfa"]= 1.9625 #1.9625 
 
-network.layers[8].sfa_args["expansion_funcs"]= [identity, ch3s30u08, ch3_o5_s4_d1_Q_N, ch3_o0_s2_d1_Q_N] #identity, ch3s30u08, ch3o6s4QE/ch3_o6_s4_d1_Q_N, ch3o0s3QE/ch3_o0_s3_d1_Q_N
+network.layers[8].sfa_args["expansion_funcs"]= [identity, ch3s30u08, ch3_o5_s4_d1_Q_N, ch3_o0_s2_d1_Q_N] #identity, ch3s30u08, ch3o6s4QT/ch3_o6_s4_d1_Q_N, ch3o0s3QT/ch3_o0_s3_d1_Q_N
 network.layers[8].sfa_args["max_preserved_sfa"]= 1.9625 #1.9625 
 
 double_SFA_top_node = True #and False
@@ -3064,7 +2976,7 @@ if double_SFA_top_node:
     layer.sfa_node_class = mdp.nodes.IEVMLRecNode
     layer.sfa_out_dim = IEVMLRecNet_out_dims[9]
     layer.sfa_args = dict(layer.sfa_args)
-    layer.sfa_args["expansion_funcs"]= [identity, s40u08ex, o5_s15_d1_Q_N] #identity, s40u08ex, o6s15QE/o6_s15_d1_Q_N
+    layer.sfa_args["expansion_funcs"]= [identity, s40u08ex, o5_s15_d1_Q_N] #identity, s40u08ex, o6s15QT/o6_s15_d1_Q_N
 
 
 
@@ -3277,7 +3189,7 @@ layer.pca_node_class = None
 #layer.pca_args = {}
 #layer.pca_out_dim = 35 #WARNING: 100 or None
 #layer.pca_out_dim = 4000 # 35 #WARNING: 100 or None
-#layer.exp_funcs = [identity, QE]
+#layer.exp_funcs = [identity, QT]
 layer.exp_funcs = [identity, unsigned_08expo] #unsigned_08expo, signed_08expo
 #layer.exp_funcs = [encode_signal_p9,] #For next experiment: [encode_signal_p9,]
 #layer.red_node_class = mdp.nodes.HeadNode
@@ -3306,8 +3218,8 @@ network.L9 = None
 network.layers = [network.L0, network.L1, network.L2, network.L3, network.L4, network.L5, network.L6, network.L7]
 #NetworkGender_8x8L0 = NetworkSetExpFuncs([identity, unsigned_08expo, signed_08expo], copy.deepcopy(NetworkGender_8x8L0))
 NetworkGender_8x8L0 = NetworkSetExpFuncs([identity, unsigned_08expo], copy.deepcopy(NetworkGender_8x8L0))
-#NetworkGender_8x8L0.L6.exp_funcs = [identity, QE]
-#NetworkGender_8x8L0.L7.exp_funcs = [identity, QE] #, CE, P4, P5, P6]
+#NetworkGender_8x8L0.L6.exp_funcs = [identity, QT]
+#NetworkGender_8x8L0.L7.exp_funcs = [identity, QT] #, CT, P4, P5, P6]
 
 #WARNING, TUNING FOR AGE EXPERIMENTS ONLY, BREAKS NETWORKS DERIVED FROM IT!
 network = u08expoNetworkU11L_5x5L0 = copy.deepcopy(u08expoNetworkU11L)
@@ -3601,7 +3513,7 @@ for i, layer in enumerate(network.layers):
     layer.exp_funcs = [identity]
     layer.sfa_node_class = mdp.nodes.IEVMLRecNode
 #    layer.sfa_out_dim = IEVMLRecNet_out_dims[i]
-    #Q_AP_L(k=nan, d=0.8), Q_AN_exp
+    #QT_AP_L(k=nan, d=0.8), Q_AN_exp
     #layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "max_preserved_sfa":2.0}
 #    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_comp":1, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based", "max_preserved_sfa":2.0}
 #    layer.sfa_args = {"pre_expansion_node_class":mdp.nodes.GSFANode, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":2.0}
@@ -3639,7 +3551,7 @@ for i, layer in enumerate(network.layers):
 #    layer.pca_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, div2_sel75_unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} #2.0
 #    layer.sfa_node_class = mdp.nodes.IEVMLRecNode
 #    layer.sfa_out_dim = IEVMLRecNet_out_dims[8]
-#    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, sel8_04QE], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} #2.0
+#    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, sel8_04QT], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} #2.0
 
 
 

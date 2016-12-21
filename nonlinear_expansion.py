@@ -50,66 +50,66 @@ def divN_selK_unsigned_08expo(x, num_parts, max_feats_per_part):
     
 #Warning, the functions below are not compatible with networks that apply non-linearity after merging fan-in
 
-def sel14_QE(x):
-    return QE(x[:,0:14])
+def sel14_QT(x):
+    return QT(x[:,0:14])
 
-def sel18_QE(x):
-    return QE(x[:,0:18])
+def sel18_QT(x):
+    return QT(x[:,0:18])
 
-def sel20_QE(x):
-    return QE(x[:,0:20])
+def sel20_QT(x):
+    return QT(x[:,0:20])
 
-def sel25_QE(x):
-    return QE(x[:,0:25])
+def sel25_QT(x):
+    return QT(x[:,0:25])
 
-def sel30_QE(x):
-    return QE(x[:,0:30])
+def sel30_QT(x):
+    return QT(x[:,0:30])
 
-def sel35_QE(x):
-    return QE(x[:,0:35])
+def sel35_QT(x):
+    return QT(x[:,0:35])
 
 
-def sel40_QE(x):
-    return QE(x[:,0:40])
+def sel40_QT(x):
+    return QT(x[:,0:40])
 
-def sel50_QE(x):
-    return QE(x[:,0:50])
+def sel50_QT(x):
+    return QT(x[:,0:50])
 
-def sel60_QE(x):
-    return QE(x[:,0:60])
+def sel60_QT(x):
+    return QT(x[:,0:60])
 
-def sel70_QE(x):
-    return QE(x[:,0:70])
+def sel70_QT(x):
+    return QT(x[:,0:70])
 
-def sel80_QE(x):
-    return QE(x[:,0:80])
+def sel80_QT(x):
+    return QT(x[:,0:80])
 
-def sel8_04QE(x):
-    return neg_expo(QE(x[:,0:8]), 0.4)
+def sel8_04QT(x):
+    return neg_expo(QT(x[:,0:8]), 0.4)
 
-def sel10_04QE(x):
-    return neg_expo(QE(x[:,0:10]), 0.4)
+def sel10_04QT(x):
+    return neg_expo(QT(x[:,0:10]), 0.4)
 
-def sel10_045QE(x):
-    return neg_expo(QE(x[:,0:10]), 0.45)
+def sel10_045QT(x):
+    return neg_expo(QT(x[:,0:10]), 0.45)
 
-def sel14_04QE(x):
-    return neg_expo(QE(x[:,0:14]), 0.4)
+def sel14_04QT(x):
+    return neg_expo(QT(x[:,0:14]), 0.4)
 
-def sel14_045QE(x):
-    return neg_expo(QE(x[:,0:14]), 0.45)
+def sel14_045QT(x):
+    return neg_expo(QT(x[:,0:14]), 0.45)
 
-def sel18_04QE(x):
-    return neg_expo(QE(x[:,0:18]), 0.4)
+def sel18_04QT(x):
+    return neg_expo(QT(x[:,0:18]), 0.4)
 
-def sel25_CE(x):
-    return CE(x[:,0:25])
+def sel25_CT(x):
+    return CT(x[:,0:25])
 
-def sel30_CE(x):
-    return CE(x[:,0:30])
+def sel30_CT(x):
+    return CT(x[:,0:30])
 
-def sel35_CE(x):
-    return CE(x[:,0:35])
+def sel35_CT(x):
+    return CT(x[:,0:35])
 
 
 def sel90_unsigned_08expo(x):
@@ -518,10 +518,10 @@ def P9_func(x, func):
     return products_9(x,func)
     
 # CONCRETE QUADRATIC AND CUBIC MONOMIAL GENERATION
-def QE(x):
+def QT(x):
     return Q_func(x,multiply)
 
-def CE(x):
+def CT(x):
     return C_func(x,multiply)
 
 def P4(x):
@@ -546,53 +546,53 @@ def P9(x):
 #AN=Asymmetric Normalize
 def Q_AN(x,k=1.0,d=0.6):
     xx = poly_asymmetric_normalize(x, k, d)
-    return QE(xx)
+    return QT(xx)
 
 def C_AN(x,k=1.0,d=0.73):
     xx = poly_asymmetric_normalize(x, k, d)
-    return CE(xx)
+    return CT(xx)
 
 #N=(Symmetric) Normalize
 def Q_N(x,k=1.0,d=0.6):
 #    xx = norm2_normalize(x, k, d)
-    y = QE(x)/(k+norm2(x)**d)
+    y = QT(x)/(k+norm2(x)**d)
     #print "Q_N expanded:", y, y.shape
     return y
 
 def C_N(x,k=1.0,d=0.73):
 #    xx = norm2_normalize(x, k, d)
-    y = CE(x)/(k+norm2(x)**d)
-    #print "CE_N expanded:", y, y.shape
+    y = CT(x)/(k+norm2(x)**d)
+    #print "CT_N expanded:", y, y.shape
     return y
 
 #E=(Symmetric) Exponential Normalize
 def Q_E(x,k=1.0,d=0.6):
     norm = norm2(x)
-    return QE(x) / (k+numpy.exp(norm*d))
+    return QT(x) / (k+numpy.exp(norm*d))
 
 def C_E(x,k=1.0,d=0.73):
     norm = norm2(x)
-    return CE(x)/ (k+numpy.exp(norm*d))
+    return CT(x)/ (k+numpy.exp(norm*d))
 
 #AE=(Asymmetric) Exponential Normalize
 def Q_AE(x,k=1.0,d=0.6):
     xx = expo_asymmetric_normalize(x, k, d)
 #    print "xx.shape=", xx.shape
-    return QE(xx)
+    return QT(xx)
 
 def C_AE(x,k=1.0,d=0.73):
     xx = expo_asymmetric_normalize(x, k, d)
-    return CE(xx)
+    return CT(xx)
 
-#Note: don't know why I called it asymmetric, this transformation seems symetric to me
+#Note: don't know why I called it asymmetric, this transformation seems symmetric to me
 #AE=(Asymmetric) Polynomial Normalize: x-> x**d (signed exponentiation)
-def Q_AP(x, d=0.4):
+def QT_AP(x, d=0.4):
     xx = sgn_expo(x, d)
-    return QE(xx)
+    return QT(xx)
 
-def C_AP(x, d=0.3):
+def CT_AP(x, d=0.3):
     xx = sgn_expo(x, d)
-    return CE(xx)
+    return CT(xx)
 
 
 
@@ -915,26 +915,26 @@ def S_exp(x, k=nan, d=0.8):
 
 def Q_exp(x, k=nan, d=2.0):
     xx = sgn_expo(x, d/2.0)
-    qe = QE(xx)
-    return numpy.concatenate((xx, qe), axis=1)
+    qt = QT(xx)
+    return numpy.concatenate((xx, qt), axis=1)
 
 def C_exp(x, k=nan, d=3.0):
     xx = sgn_expo(x, d/3.0)
-    qe = QE(xx)
-    te = CE(xx)
+    qt = QT(xx)
+    ct = CT(xx)
 #    print qe.shape
-    return numpy.concatenate((xx, qe, te), axis=1)
+    return numpy.concatenate((xx, qt, ct), axis=1)
         
 def Q_AN_exp(x, k=1.0, d=0.6):
     xx = poly_asymmetric_normalize(x, k, d)
-    qe = QE(xx)
-    return numpy.concatenate((xx, qe), axis=1)
+    qt = QT(xx)
+    return numpy.concatenate((xx, qt), axis=1)
 
 def C_AN_exp(x, k=1.0, d=0.7333):
     xx = poly_asymmetric_normalize(x, k, d)
-    qe = QE(x)
-    te = CE(x)
-    return numpy.concatenate((xx, qe, te), axis=1)
+    qt = QT(x)
+    te = CT(x)
+    return numpy.concatenate((xx, qt, te), axis=1)
 
 def Q_N_exp(x, k=1.0, d=0.6):
     lin = norm2_normalize(x+0.0, k, d)
@@ -963,25 +963,25 @@ def C_E_exp(x, k=1.0, d=1.0):
 
 def Q_AE_exp(x, k=1.0, d=1.0):
     xx =  expo_asymmetric_normalize(x, k, d)
-    qe = QE(xx)
+    qe = QT(xx)
     return numpy.concatenate((xx, qe), axis=1)
 
 def C_AE_exp(x, k=1.0, d=1.0):
     xx = expo_asymmetric_normalize(x, k, d)
-    qe = QE(xx)
-    te = CE(xx)
+    qe = QT(xx)
+    te = CT(xx)
     return numpy.concatenate((xx, qe, te), axis=1)
 
 def Q_AP_exp(x, k=nan, d=1.0):
     xx = sgn_expo(x, d)
-    qe = QE(xx)
+    qe = QT(xx)
     return numpy.concatenate((xx, qe), axis=1)
 
 #Warning, identical to C_exp for expo = 3*d
 def C_AP_exp(x, k=nan, d=1.0):
     xx = sgn_expo(x, d)
-    qe = QE(xx)
-    te = CE(xx)
+    qe = QT(xx)
+    te = CT(xx)
     return numpy.concatenate((xx, qe, te), axis=1)
 
 #LIST VERSIONS OF THE EXPANSIONS
@@ -1026,6 +1026,8 @@ def Q_AP_L(k=nan, d=1.0):
 
 def C_AP_L(k=nan, d=1.0):
     return FuncListFromExpansion(C_AP_exp, k=k, d=d)
+
+
 
 def MaxE(x):
     return products_2(x,numpy.maximum, k=1)
@@ -1269,7 +1271,7 @@ def maximum_75mix2_s08_ex(x):
 def maximum_99mix2_s08_ex(x):
     return maximum_Fmix2_sE_ex(x,99,0.8)
 
-def ch3_sF_QE(x, F):
+def ch3_sF_QT(x, F):
     ch = 3
     s = F
     ns, dim = x.shape
@@ -1277,254 +1279,360 @@ def ch3_sF_QE(x, F):
     xs[:,0:s] = x[:,0:s]
     xs[:,s:2*s] = x[:, dim/3:dim/3+s]
     xs[:,2*s:] = x[:, 2*dim/3:2*dim/3+s]
-    return QE(xs)
+    return QT(xs)
 
-def ch3_Offset_sF_QE(x, Off, F):
+def ch3_Offset_sF_QT(x, Off, F):
     ch = 3
     s = F
     ns, dim = x.shape
     if (Off+F)*ch >= dim:
-        return QE(x)
+        return QT(x)
     else:
         xs = numpy.zeros((ns, ch * s))
         xs[:,0:s] = x[:,Off:Off+s]
         xs[:,s:2*s] = x[:, dim/3+Off:dim/3+Off+s]
         xs[:,2*s:] = x[:, 2*dim/3+Off:2*dim/3+Off+s]
-        return QE(xs)
+        return QT(xs)
 
-def ch3_s3_QE(x):
-    return ch3_sF_QE(x, 3)
+def ch3_s3_QT(x):
+    return ch3_sF_QT(x, 3)
 
-def ch3_s4_QE(x):
-    return ch3_sF_QE(x, 4)
+def ch3_s4_QT(x):
+    return ch3_sF_QT(x, 4)
 
-def ch3_s5_QE(x):
-    return ch3_sF_QE(x, 5)
+def ch3_s5_QT(x):
+    return ch3_sF_QT(x, 5)
 
-def ch3_s10_QE(x):
-    return ch3_sF_QE(x, 10)
+def ch3_s10_QT(x):
+    return ch3_sF_QT(x, 10)
 
-def ch3o2s2QE(x):
-    return ch3_Offset_sF_QE(x, Off=2, F=2)
+def ch3o2s2QT(x):
+    return ch3_Offset_sF_QT(x, Off=2, F=2)
 
-def ch3o3s2QE(x):
-    return ch3_Offset_sF_QE(x, Off=3, F=2)
+def ch3o3s2QT(x):
+    return ch3_Offset_sF_QT(x, Off=3, F=2)
 
-def ch3o4s2QE(x):
-    return ch3_Offset_sF_QE(x, Off=4, F=2)
+def ch3o4s2QT(x):
+    return ch3_Offset_sF_QT(x, Off=4, F=2)
 
-def ch3o0s3QE(x):
-    return ch3_Offset_sF_QE(x, Off=0, F=3)
+def ch3o0s3QT(x):
+    return ch3_Offset_sF_QT(x, Off=0, F=3)
 
-def ch3o1s3QE(x):
-    return ch3_Offset_sF_QE(x, Off=1, F=3)
+def ch3o1s3QT(x):
+    return ch3_Offset_sF_QT(x, Off=1, F=3)
 
-def ch3o2s3QE(x):
-    return ch3_Offset_sF_QE(x, Off=2, F=3)
+def ch3o2s3QT(x):
+    return ch3_Offset_sF_QT(x, Off=2, F=3)
 
-def ch3o3s3QE(x):
-    return ch3_Offset_sF_QE(x, Off=3, F=3)
+def ch3o3s3QT(x):
+    return ch3_Offset_sF_QT(x, Off=3, F=3)
 
-def ch3o4s3QE(x):
-    return ch3_Offset_sF_QE(x, Off=4, F=3)
+def ch3o4s3QT(x):
+    return ch3_Offset_sF_QT(x, Off=4, F=3)
 
-def ch3o5s3QE(x):
-    return ch3_Offset_sF_QE(x, Off=5, F=3)
+def ch3o5s3QT(x):
+    return ch3_Offset_sF_QT(x, Off=5, F=3)
 
-def ch3o0s4QE(x):
-    return ch3_Offset_sF_QE(x, Off=0, F=4)
+def ch3o0s4QT(x):
+    return ch3_Offset_sF_QT(x, Off=0, F=4)
 
-def ch3o1s4QE(x):
-    return ch3_Offset_sF_QE(x, Off=1, F=4)
+def ch3o1s4QT(x):
+    return ch3_Offset_sF_QT(x, Off=1, F=4)
 
-def ch3o2s4QE(x):
-    return ch3_Offset_sF_QE(x, Off=2, F=4)
+def ch3o2s4QT(x):
+    return ch3_Offset_sF_QT(x, Off=2, F=4)
 
-def ch3o3s4QE(x):
-    return ch3_Offset_sF_QE(x, Off=3, F=4)
+def ch3o3s4QT(x):
+    return ch3_Offset_sF_QT(x, Off=3, F=4)
 
-def ch3o4s4QE(x):
-    return ch3_Offset_sF_QE(x, Off=4, F=4)
+def ch3o4s4QT(x):
+    return ch3_Offset_sF_QT(x, Off=4, F=4)
 
-def ch3o5s4QE(x):
-    return ch3_Offset_sF_QE(x, Off=5, F=4)
+def ch3o5s4QT(x):
+    return ch3_Offset_sF_QT(x, Off=5, F=4)
 
 
-def ch3o6s2QE(x):
-    return ch3_Offset_sF_QE(x, Off=6, F=2)
+def ch3o6s2QT(x):
+    return ch3_Offset_sF_QT(x, Off=6, F=2)
 
-def ch3o6s3QE(x):
-    return ch3_Offset_sF_QE(x, Off=6, F=3)
+def ch3o6s3QT(x):
+    return ch3_Offset_sF_QT(x, Off=6, F=3)
 
-def ch3o6s4QE(x):
-    return ch3_Offset_sF_QE(x, Off=6, F=4)
+def ch3o6s4QT(x):
+    return ch3_Offset_sF_QT(x, Off=6, F=4)
 
-def ch3o7s4QE(x):
-    return ch3_Offset_sF_QE(x, Off=7, F=4)
+def ch3o7s4QT(x):
+    return ch3_Offset_sF_QT(x, Off=7, F=4)
 
-def ch3o0s5QE(x):
-    return ch3_Offset_sF_QE(x, Off=0, F=5)
+def ch3o0s5QT(x):
+    return ch3_Offset_sF_QT(x, Off=0, F=5)
 
-def ch3o1s5QE(x):
-    return ch3_Offset_sF_QE(x, Off=1, F=5)
+def ch3o1s5QT(x):
+    return ch3_Offset_sF_QT(x, Off=1, F=5)
 
-def ch3o2s5QE(x):
-    return ch3_Offset_sF_QE(x, Off=2, F=5)
+def ch3o2s5QT(x):
+    return ch3_Offset_sF_QT(x, Off=2, F=5)
 
-def ch3o3s5QE(x):
-    return ch3_Offset_sF_QE(x, Off=3, F=5)
+def ch3o3s5QT(x):
+    return ch3_Offset_sF_QT(x, Off=3, F=5)
 
-def ch3o4s5QE(x):
-    return ch3_Offset_sF_QE(x, Off=4, F=5)
+def ch3o4s5QT(x):
+    return ch3_Offset_sF_QT(x, Off=4, F=5)
 
-def ch3o5s5QE(x):
-    return ch3_Offset_sF_QE(x, Off=5, F=5)
+def ch3o5s5QT(x):
+    return ch3_Offset_sF_QT(x, Off=5, F=5)
 
-def ch3o6s5QE(x):
-    return ch3_Offset_sF_QE(x, Off=6, F=5)
+def ch3o6s5QT(x):
+    return ch3_Offset_sF_QT(x, Off=6, F=5)
 
-def ch3o7s5QE(x):
-    return ch3_Offset_sF_QE(x, Off=7, F=5)
+def ch3o7s5QT(x):
+    return ch3_Offset_sF_QT(x, Off=7, F=5)
 
-def ch3o1s6QE(x):
-    return ch3_Offset_sF_QE(x, Off=1, F=6)
+def ch3o1s6QT(x):
+    return ch3_Offset_sF_QT(x, Off=1, F=6)
 
-def ch3o2s6QE(x):
-    return ch3_Offset_sF_QE(x, Off=2, F=6)
+def ch3o2s6QT(x):
+    return ch3_Offset_sF_QT(x, Off=2, F=6)
 
-def ch3o3s6QE(x):
-    return ch3_Offset_sF_QE(x, Off=3, F=6)
+def ch3o3s6QT(x):
+    return ch3_Offset_sF_QT(x, Off=3, F=6)
 
-def ch3o4s6QE(x):
-    return ch3_Offset_sF_QE(x, Off=4, F=6)
+def ch3o4s6QT(x):
+    return ch3_Offset_sF_QT(x, Off=4, F=6)
 
-def ch3o5s6QE(x):
-    return ch3_Offset_sF_QE(x, Off=5, F=6)
+def ch3o5s6QT(x):
+    return ch3_Offset_sF_QT(x, Off=5, F=6)
 
-def ch3o1s7QE(x):
-    return ch3_Offset_sF_QE(x, Off=1, F=7)
+def ch3o1s7QT(x):
+    return ch3_Offset_sF_QT(x, Off=1, F=7)
 
-def ch3o2s7QE(x):
-    return ch3_Offset_sF_QE(x, Off=2, F=7)
+def ch3o2s7QT(x):
+    return ch3_Offset_sF_QT(x, Off=2, F=7)
 
-def ch3o3s7QE(x):
-    return ch3_Offset_sF_QE(x, Off=3, F=7)
+def ch3o3s7QT(x):
+    return ch3_Offset_sF_QT(x, Off=3, F=7)
 
-def ch3o4s7QE(x):
-    return ch3_Offset_sF_QE(x, Off=4, F=7)
+def ch3o4s7QT(x):
+    return ch3_Offset_sF_QT(x, Off=4, F=7)
 
-def ch3o2s8QE(x):
-    return ch3_Offset_sF_QE(x, Off=2, F=8)
+def ch3o2s8QT(x):
+    return ch3_Offset_sF_QT(x, Off=2, F=8)
 
-def ch3o3s8QE(x):
-    return ch3_Offset_sF_QE(x, Off=3, F=8)
+def ch3o3s8QT(x):
+    return ch3_Offset_sF_QT(x, Off=3, F=8)
 
-def ch3o4s8QE(x):
-    return ch3_Offset_sF_QE(x, Off=4, F=8)
+def ch3o4s8QT(x):
+    return ch3_Offset_sF_QT(x, Off=4, F=8)
 
-def s9CE(x):
-    return CE(x[:,0:9])
 
-def s2QE(x):
-    return QE(x[:,0:2])
 
-def s3QE(x):
-    return QE(x[:,0:3])
+def s2QT(x):
+    return QT(x[:,0:2])
 
-def s4QE(x):
-    return QE(x[:,0:4])
+def s3QT(x):
+    return QT(x[:,0:3])
 
-def s5QE(x):
-    return QE(x[:,0:5])
+def s4QT(x):
+    return QT(x[:,0:4])
 
-def s06QE(x):
-    return QE(x[:,0:6])
+def s5QT(x):
+    return QT(x[:,0:5])
 
-def s7QE(x):
-    return QE(x[:,0:7])
+def s06QT(x):
+    return QT(x[:,0:6])
 
-def s8QE(x):
-    return QE(x[:,0:8])
+def s7QT(x):
+    return QT(x[:,0:7])
 
-def s9QE(x):
-    return QE(x[:,0:9])
+def s8QT(x):
+    return QT(x[:,0:8])
 
-def s10QE(x):
-    return QE(x[:,0:10])
+def s9QT(x):
+    return QT(x[:,0:9])
 
-def s11QE(x):
-    return QE(x[:,0:11])
+def s10QT(x):
+    return QT(x[:,0:10])
+
+def s11QT(x):
+    return QT(x[:,0:11])
     
-def s12QE(x):
-    return QE(x[:,0:12])
+def s12QT(x):
+    return QT(x[:,0:12])
 
-def s13QE(x):
-    return QE(x[:,0:13])
+def s13QT(x):
+    return QT(x[:,0:13])
 
-def s14QE(x):
-    return QE(x[:,0:14])
+def s14QT(x):
+    return QT(x[:,0:14])
 
-def s15QE(x):
-    return QE(x[:,0:15])
+def s15QT(x):
+    return QT(x[:,0:15])
 
-def s16QE(x):
-    return QE(x[:,0:16])
+def s16QT(x):
+    return QT(x[:,0:16])
 
-def s17QE(x):
-    return QE(x[:,0:17])
+def s17QT(x):
+    return QT(x[:,0:17])
 
-def s18QE(x):
-    return QE(x[:,0:18])
+def s18QT(x):
+    return QT(x[:,0:18])
 
-def Offset_sF_QE(x, Off, F):
+def s20QT(x):
+    return QT(x[:,0:20])
+
+def s25QT(x):
+    return QT(x[:,0:25])
+
+def s30QT(x):
+    return QT(x[:,0:30])
+
+def s35QT(x):
+    return QT(x[:,0:35])
+
+def s40QT(x):
+    return QT(x[:,0:40])
+
+def s45QT(x):
+    return QT(x[:,0:45])
+
+def s50QT(x):
+    return QT(x[:,0:50])
+
+def s55QT(x):
+    return QT(x[:,0:55])
+
+def s60QT(x):
+    return QT(x[:,0:60])
+
+def s65QT(x):
+    return QT(x[:,0:65])
+
+def s70QT(x):
+    return QT(x[:,0:70])
+
+def s75QT(x):
+    return QT(x[:,0:75])
+
+
+
+
+def s2CT(x):
+    return CT(x[:,0:2])
+
+def s3CT(x):
+    return CT(x[:,0:3])
+
+def s4CT(x):
+    return CT(x[:,0:4])
+
+def s5CT(x):
+    return CT(x[:,0:5])
+
+def s6CT(x):
+    return CT(x[:,0:6])
+
+def s7CT(x):
+    return CT(x[:,0:7])
+
+def s8CT(x):
+    return CT(x[:,0:8])
+
+def s9CT(x):
+    return CT(x[:,0:9])
+
+def s10CT(x):
+    return CT(x[:,0:10])
+
+def s11CT(x):
+    return CT(x[:,0:11])
+    
+def s12CT(x):
+    return CT(x[:,0:12])
+
+def s13CT(x):
+    return CT(x[:,0:13])
+
+def s14CT(x):
+    return CT(x[:,0:14])
+
+def s15CT(x):
+    return CT(x[:,0:15])
+
+def s16CT(x):
+    return CT(x[:,0:16])
+
+def s17CT(x):
+    return CT(x[:,0:17])
+
+def s18CT(x):
+    return CT(x[:,0:18])
+
+def s20CT(x):
+    return CT(x[:,0:20])
+
+def s25CT(x):
+    return CT(x[:,0:25])
+
+def s30CT(x):
+    return CT(x[:,0:30])
+
+def s35CT(x):
+    return CT(x[:,0:35])
+
+def s40CT(x):
+    return CT(x[:,0:40])
+
+
+
+def Offset_sF_QT(x, Off, F):
     s = F
     dim = x.shape[1]
     if (Off+F) >= dim:
         s = dim - Off    
     xs = x[:,Off:Off+s]
-    return QE(xs)
+    return QT(xs)
     
-def o4s12QE(x):
-    return Offset_sF_QE(x, 4, 12)
+def o4s12QT(x):
+    return Offset_sF_QT(x, 4, 12)
 
-def o4s13QE(x):
-    return Offset_sF_QE(x, 4, 13)
+def o4s13QT(x):
+    return Offset_sF_QT(x, 4, 13)
 
-def o4s15QE(x):
-    return Offset_sF_QE(x, 4, 15)
+def o4s15QT(x):
+    return Offset_sF_QT(x, 4, 15)
 
-def o5s15QE(x):
-    return Offset_sF_QE(x, 5, 15)
+def o5s15QT(x):
+    return Offset_sF_QT(x, 5, 15)
 
-def o6s15QE(x):
-    return Offset_sF_QE(x, 6, 15)
+def o6s15QT(x):
+    return Offset_sF_QT(x, 6, 15)
 
-def o7s15QE(x):
-    return Offset_sF_QE(x, 7, 15)
+def o7s15QT(x):
+    return Offset_sF_QT(x, 7, 15)
 
-def o4s16QE(x):
-    return Offset_sF_QE(x, 4, 16)
+def o4s16QT(x):
+    return Offset_sF_QT(x, 4, 16)
 
-def o5s16QE(x):
-    return Offset_sF_QE(x, 5, 16)
+def o5s16QT(x):
+    return Offset_sF_QT(x, 5, 16)
 
-def o6s16QE(x):
-    return Offset_sF_QE(x, 6, 16)
+def o6s16QT(x):
+    return Offset_sF_QT(x, 6, 16)
 
-def o4s17QE(x):
-    return Offset_sF_QE(x, 4, 17)
+def o4s17QT(x):
+    return Offset_sF_QT(x, 4, 17)
 
-def o4s18QE(x):
-    return Offset_sF_QE(x, 4, 18)
+def o4s18QT(x):
+    return Offset_sF_QT(x, 4, 18)
 
-def o6s18QE(x):
-    return Offset_sF_QE(x, 6, 18)
+def o6s18QT(x):
+    return Offset_sF_QT(x, 6, 18)
 
-def o4s21QE(x):
-    return Offset_sF_QE(x, 4, 21)
+def o4s21QT(x):
+    return Offset_sF_QT(x, 4, 21)
 
-def o4s24QE(x):
-    return Offset_sF_QE(x, 4, 24)
+def o4s24QT(x):
+    return Offset_sF_QT(x, 4, 24)
 
 def Fmaximum_mix1_ex(x, F):
     x1 = x[:, 0:F-1]
@@ -2310,176 +2418,185 @@ def two_set_products(c, x):
 def control4_linear(x):
     return numpy.concatenate((x[:,4:], two_set_products(x[:,0:4], x[:,4:])), axis=1)
 
-def controlC_QEF(x, C, F):
-    xx = numpy.concatenate((x[:,C:], QE(x[:,C:F+C])), axis=1)
-    cc = x[:,0:C]    
+def controlC_QTF(x, C, F):
+    cc = x[:,0:C] #Control signal   
+    xx = numpy.concatenate((x[:,C:], QT(x[:,C:F+C])), axis=1) #Data signal
     return numpy.concatenate((xx, two_set_products(cc, xx)), axis=1)
 
-def control4_QE20(x):
-    return controlC_QEF(x, 4, 20)
+def control4_QT20(x):
+    return controlC_QTF(x, 4, 20)
 
-def control4_QE30(x):
-    return controlC_QEF(x, 4, 30)
+def control4_QT30(x):
+    return controlC_QTF(x, 4, 30)
 
-def control4_QE40(x):
-    return controlC_QEF(x, 4, 40)
+def control4_QT40(x):
+    return controlC_QTF(x, 4, 40)
 
-def control4_QE50(x):
-    return controlC_QEF(x, 4, 50)
+def control4_QT50(x):
+    return controlC_QTF(x, 4, 50)
 
-def control4_QE60(x):
-    return controlC_QEF(x, 4, 60)
+def control4_QT60(x):
+    return controlC_QTF(x, 4, 60)
 
-def control5_QE60(x):
-    return controlC_QEF(x, 5, 60)
+def control5_QT60(x):
+    return controlC_QTF(x, 5, 60)
 
-def control6_QE60(x):
-    return controlC_QEF(x, 6, 60)
+def control6_QT60(x):
+    return controlC_QTF(x, 6, 60)
 
-def control8_QE60(x):
-    return controlC_QEF(x, 8, 60)
+def control8_QT60(x):
+    return controlC_QTF(x, 8, 60)
 
-def control9_QE60(x):
-    return controlC_QEF(x, 9, 60)
-
-
-
-def control1_QE40(x):
-    return controlC_QEF(x, 1, 40)
-
-def control2_QE40(x):
-    return controlC_QEF(x, 2, 40)
-
-def control3_QE40(x):
-    return controlC_QEF(x, 3, 40)
-
-def control5_QE40(x):
-    return controlC_QEF(x, 5, 40)
-
-def control6_QE40(x):
-    return controlC_QEF(x, 6, 40)
-
-def control6_QE50(x):
-    return controlC_QEF(x, 6, 50)
+def control9_QT60(x):
+    return controlC_QTF(x, 9, 60)
 
 
-def control2_QE60(x):
-    return controlC_QEF(x, 2, 60)
 
-def controlC_QEF_CEG(x, C, F, G):
-    xx = numpy.concatenate((x[:,C:], QE(x[:,C:F+C]), CE(x[:,C:G+C])), axis=1)
-    cc = x[:,0:C]    
+def control1_QT40(x):
+    return controlC_QTF(x, 1, 40)
+
+def control2_QT40(x):
+    return controlC_QTF(x, 2, 40)
+
+def control3_QT40(x):
+    return controlC_QTF(x, 3, 40)
+
+def control5_QT40(x):
+    return controlC_QTF(x, 5, 40)
+
+def control6_QT40(x):
+    return controlC_QTF(x, 6, 40)
+
+def control6_QT50(x):
+    return controlC_QTF(x, 6, 50)
+
+
+def control2_QT60(x):
+    return controlC_QTF(x, 2, 60)
+
+def controlC_QTF_CTG(x, C, F, G):
+    cc = x[:,0:C] # Control signal
+    xx = numpy.concatenate((x[:,C:], QT(x[:,C:F+C]), CT(x[:,C:G+C])), axis=1) #Data signal
     return numpy.concatenate((xx, two_set_products(cc, xx)), axis=1)
 
-def control2_QE40_CE10(x):
-    return controlC_QEF_CEG(x, 2, 40, 10)
+def control2_QT40_CT10(x):
+    return controlC_QTF_CTG(x, 2, 40, 10)
 
-def control2_QE40_CE15(x):
-    return controlC_QEF_CEG(x, 2, 40, 15)
+def control2_QT40_CT15(x):
+    return controlC_QTF_CTG(x, 2, 40, 15)
 
-def control2_QE40_CE20(x):
-    return controlC_QEF_CEG(x, 2, 40, 20)
+def control2_QT40_CT20(x):
+    return controlC_QTF_CTG(x, 2, 40, 20)
 
-def control2_QE40_CE25(x):
-    return controlC_QEF_CEG(x, 2, 40, 25)
+def control2_QT40_CT25(x):
+    return controlC_QTF_CTG(x, 2, 40, 25)
 
-def control3_QE40_CE25(x):
-    return controlC_QEF_CEG(x, 3, 40, 25)
+def control3_QT40_CT25(x):
+    return controlC_QTF_CTG(x, 3, 40, 25)
 
-def control3_QE50_CE25(x):
-    return controlC_QEF_CEG(x, 3, 50, 25)
+def control3_QT50_CT25(x):
+    return controlC_QTF_CTG(x, 3, 50, 25)
 
 
-def control2_QE40_CE30(x):
-    return controlC_QEF_CEG(x, 2, 40, 30)
+def control2_QT40_CT30(x):
+    return controlC_QTF_CTG(x, 2, 40, 30)
 
-def control2_QE40_CE35(x):
-    return controlC_QEF_CEG(x, 2, 40, 35)
+def control2_QT40_CT35(x):
+    return controlC_QTF_CTG(x, 2, 40, 35)
 
-def control2_QE50_CE25(x):
-    return controlC_QEF_CEG(x, 2, 50, 25)
+def control2_QT50_CT25(x):
+    return controlC_QTF_CTG(x, 2, 50, 25)
 
-def control2_QE60_CE25(x):
-    return controlC_QEF_CEG(x, 2, 60, 25)
+def control2_QT60_CT25(x):
+    return controlC_QTF_CTG(x, 2, 60, 25)
 
-def control2_QE70_CE25(x):
-    return controlC_QEF_CEG(x, 2, 70, 25)
+def control2_QT70_CT25(x):
+    return controlC_QTF_CTG(x, 2, 70, 25)
 
-def control2_QE75_CE25(x):
-    return controlC_QEF_CEG(x, 2, 75, 25)
+def control2_QT75_CT25(x):
+    return controlC_QTF_CTG(x, 2, 75, 25)
 
-def control6_QE50_CE10(x):
-    return controlC_QEF_CEG(x, 6, 50, 10)
+def control6_QT50_CT10(x):
+    return controlC_QTF_CTG(x, 6, 50, 10)
 
-def control6_QE50_CE15(x):
-    return controlC_QEF_CEG(x, 6, 50, 15)
+def control6_QT50_CT15(x):
+    return controlC_QTF_CTG(x, 6, 50, 15)
 
-def control6_QE50_CE20(x):
-    return controlC_QEF_CEG(x, 6, 50, 20)
+def control6_QT50_CT20(x):
+    return controlC_QTF_CTG(x, 6, 50, 20)
 
-def QEA_CEB_controlC_QEF_CEG(x, A, B, C, F, G):
-    px = numpy.concatenate((x[:,C:], QE(x[:,C:A+C]), CE(x[:,C:B+C])), axis=1)
-    xx = numpy.concatenate((x[:,C:], QE(x[:,C:F+C]), CE(x[:,C:G+C])), axis=1)
+def QTA_CTB_controlC_QTF_CTG(x, A, B, C, F, G):
+    px = numpy.concatenate((x[:,C:], QT(x[:,C:A+C]), CT(x[:,C:B+C])), axis=1)
+    xx = numpy.concatenate((x[:,C:], QT(x[:,C:F+C]), CT(x[:,C:G+C])), axis=1)
     cc = x[:,0:C]
     return numpy.concatenate((px, two_set_products(cc, xx)), axis=1)
 
-def QE60_CE30_control6_QE40_CE10(x):
-    return QEA_CEB_controlC_QEF_CEG(x, 60, 30, 6, 40, 10)
+def QT60_CT30_control6_QT40_CT10(x):
+    return QTA_CTB_controlC_QTF_CTG(x, 60, 30, 6, 40, 10)
 
-def QE60_CE35_control6_QE40_CE10(x):
-    return QEA_CEB_controlC_QEF_CEG(x, 60, 35, 6, 40, 10)
+def QT60_CT35_control6_QT40_CT10(x):
+    return QTA_CTB_controlC_QTF_CTG(x, 60, 35, 6, 40, 10)
 
-def QE60_CE25_control3_QE40_CE10(x):
-    return QEA_CEB_controlC_QEF_CEG(x, 60, 25, 3, 40, 10)
+def QT60_CT25_control3_QT40_CT10(x):
+    return QTA_CTB_controlC_QTF_CTG(x, 60, 25, 3, 40, 10)
 
-def QE50_CE20_control9_QE30_CE5(x):
-    return QEA_CEB_controlC_QEF_CEG(x, 50, 20, 9, 30, 5)
+def QT50_CT20_control9_QT30_CT5(x):
+    return QTA_CTB_controlC_QTF_CTG(x, 50, 20, 9, 30, 5)
 
-def QE50_CE20_control5_QE35_CE5(x):
-    return QEA_CEB_controlC_QEF_CEG(x, 50, 20, 5, 35, 5)
+def QT50_CT20_control5_QT35_CT5(x):
+    return QTA_CTB_controlC_QTF_CTG(x, 50, 20, 5, 35, 5)
 
-def QE50_CE20_control5_QE40_CE5(x):
-    return QEA_CEB_controlC_QEF_CEG(x, 50, 20, 5, 40, 5)
+def QT50_CT20_control5_QT40_CT5(x):
+    return QTA_CTB_controlC_QTF_CTG(x, 50, 20, 5, 40, 5)
 
-def QE50_CE20_control5_QE45_CE5(x):
-    return QEA_CEB_controlC_QEF_CEG(x, 50, 20, 5, 45, 5)
+def QT50_CT20_control5_QT45_CT5(x):
+    return QTA_CTB_controlC_QTF_CTG(x, 50, 20, 5, 45, 5)
 
-def QE50_CE20_control5_QE50_CE5(x):
-    return QEA_CEB_controlC_QEF_CEG(x, 50, 20, 5, 50, 5)
+def QT50_CT20_control5_QT50_CT5(x):
+    return QTA_CTB_controlC_QTF_CTG(x, 50, 20, 5, 50, 5)
 
-def QE50_CE20_control5_QE50_CE10(x):
-    return QEA_CEB_controlC_QEF_CEG(x, 50, 20, 5, 50, 10)
+def QT50_CT20_control5_QT50_CT10(x):
+    return QTA_CTB_controlC_QTF_CTG(x, 50, 20, 5, 50, 10)
 
-def QE50_CE20_control5_QE50_CE15(x):
-    return QEA_CEB_controlC_QEF_CEG(x, 50, 20, 5, 50, 15)
-
-
-def QE40_CE30_control5_QE30_CE5(x):
-    return QEA_CEB_controlC_QEF_CEG(x, 40, 30, 5, 30, 5)
-
-def QE40_CE25_control5_QE30_CE5(x):
-    return QEA_CEB_controlC_QEF_CEG(x, 40, 25, 5, 30, 5)
-
-def QE40_CE35_control5_QE30_CE5(x):
-    return QEA_CEB_controlC_QEF_CEG(x, 40, 35, 5, 30, 5)
+def QT50_CT20_control5_QT50_CT15(x):
+    return QTA_CTB_controlC_QTF_CTG(x, 50, 20, 5, 50, 15)
 
 
-def QE50_CE20_control9_QE40_CE5(x):
-    return QEA_CEB_controlC_QEF_CEG(x, 50, 20, 9, 40, 5)
+def QT40_CT30_control5_QT30_CT5(x):
+    return QTA_CTB_controlC_QTF_CTG(x, 40, 30, 5, 30, 5)
 
-def QE60_CE30_control9_QE30_CE5(x):
-    return QEA_CEB_controlC_QEF_CEG(x, 60, 30, 9, 30, 5)
+def QT40_CT25_control5_QT30_CT5(x):
+    return QTA_CTB_controlC_QTF_CTG(x, 40, 25, 5, 30, 5)
 
-def QE50_CE20_control9_QE25_CE5(x):
-    return QEA_CEB_controlC_QEF_CEG(x, 50, 20, 9, 25, 5)
+def QT40_CT35_control5_QT30_CT5(x):
+    return QTA_CTB_controlC_QTF_CTG(x, 40, 35, 5, 30, 5)
 
-def QE50_CE20_control9_QE35_CE5(x):
-    return QEA_CEB_controlC_QEF_CEG(x, 50, 20, 9, 35, 5)
 
-def QE50_CE20_control9_QE45_CE5(x):
-    return QEA_CEB_controlC_QEF_CEG(x, 50, 20, 9, 45, 5)
+def QT50_CT20_control9_QT40_CT5(x):
+    return QTA_CTB_controlC_QTF_CTG(x, 50, 20, 9, 40, 5)
 
-def QE60_CE35_control4_QE40_CE5(x):
-    return QEA_CEB_controlC_QEF_CEG(x, 60, 35, 4, 40, 5)
+def QT60_CT30_control9_QT30_CT5(x):
+    return QTA_CTB_controlC_QTF_CTG(x, 60, 30, 9, 30, 5)
 
+def QT50_CT20_control9_QT25_CT5(x):
+    return QTA_CTB_controlC_QTF_CTG(x, 50, 20, 9, 25, 5)
+
+def QT50_CT20_control9_QT35_CT5(x):
+    return QTA_CTB_controlC_QTF_CTG(x, 50, 20, 9, 35, 5)
+
+def QT50_CT20_control9_QT45_CT5(x):
+    return QTA_CTB_controlC_QTF_CTG(x, 50, 20, 9, 45, 5)
+
+def QT60_CT35_control4_QT40_CT5(x):
+    return QTA_CTB_controlC_QTF_CTG(x, 60, 35, 4, 40, 5)
+
+
+def extract_sigmoid_features(x, c1, l1):
+    if x.shape[1] != c1.shape[0] or c1.shape[1] != len(l1):
+        er = "Array dimensions mismatch: x.shape =" + str(x.shape) + ", c1.shape =" + str(c1.shape) + ", l1.shape=" + str(l1.shape)
+        print er
+        raise Exception(er)   
+    s = numpy.dot(x,c1)+l1
+    f = numpy.tanh(s)
+    return f
 

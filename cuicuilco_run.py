@@ -1,16 +1,24 @@
 #! /usr/bin/env python
 
-#CUICUILCO: A general purpose framework for the construction and evaluation of 
-#           hierarchical networks for supervised learning 
+#####################################################################################################################
+# CUICUILCO: A general purpose framework for the construction and evaluation of 
+#            hierarchical networks for supervised learning 
 
-#By Alberto Escalante. Alberto.Escalante@neuroinformatik.ruhr-uni-bochum.de First Version 9 Dec 2009
-#Ruhr-University-Bochum, Institute of Neurocomputation, Group of Prof. Dr. Wiskott
+# By Alberto Escalante. Alberto.Escalante@neuroinformatik.ruhr-uni-bochum.de 
+# First Version 9 Dec 2009. Current version Dec 2016
+# Ruhr-University-Bochum, Institute of Neurocomputation, Group of Prof. Dr. Wiskott
 
 
-#USAGE EXAMPLE: python cuicuilco_run.py --Experiment=ParamsNatural --Network=u08expoNetwork1L --InputFilename=/scratch/escalafl/cooperations/igel/rbm_64/data_bin_4000.bin --OutputFilename=deleteme2.txt
+#####################################################################################################################
+# USAGE EXAMPLES:
+# python cuicuilco_run.py --Experiment=ParamsNatural --Network=u08expoNetwork1L --InputFilename=/scratch/escalafl/cooperations/igel/rbm_64/data_bin_4000.bin --OutputFilename=deleteme2.txt
+
+#####################################################################################################################
+
 
 import numpy
 import scipy
+import scipy.misc
 import matplotlib as mpl
 mpl.use('Qt4Agg')
 import matplotlib.pyplot as plt
@@ -35,35 +43,31 @@ import time
 from matplotlib.ticker import MultipleLocator
 import copy
 import string
-#from nonlinear_expansion import (identity, pair_prod_adj1_ex, pair_prod_adj2_ex, QE, CE)
+
 import getopt
 from lockfile import LockFile
 from inspect import getmembers
 import subprocess
 import mkl
-mkl.set_num_threads(22)
+mkl.set_num_threads(22) #Number of threads used by mlk to parallelize matrix operations of numpy. 
+                        #Adjust according to the number of cores in your system.
 
-#from mdp import numx
-#sys.path.append("/home/escalafl/workspace/hiphi/src/hiphi/utils")
-#import misc
-#import cache
-
-#from system_parameters import *
-#list holding the benchmark information with entries: ("description", time as float in seconds)
+#benchmark is a list that contains benchmark information (running times) with entries: ("description", time as float in seconds)
 benchmark=[]
 
-__version__ = "0.6.0"
+__version__ = "0.8.0"
 
 t0 = time.time()
 print "LOADING INPUT INFORMATION"        
 
-random_seed = 123456
+#
+random_seed = 123456 #Default seed used by hierarchical_networks
 numpy.random.seed(random_seed)
 
-enable_display = False
-input_filename = None
-output_filename = None
-cache_available = True
+enable_display = False 
+input_filename = None #This field is only used by the ParamsNatural experimental dataset
+output_filename = None #The delta values of the extracted features are saved to this file
+cache_available = True #This should be enabled for any cache (network, node, signal, classifier caches) to work 
 load_and_append_output_features_dir = None
 num_features_to_append_to_input = 0
 save_output_features_dir = None
@@ -92,7 +96,6 @@ svm_max = 1.0
 enable_lr = False
 load_network_number = None
 ask_network_loading = True
-#network_base_dir = None #"/local/tmp/escalafl/Alberto/SavedNetworks"
 n_parallel = None # 5
 enable_scheduler = False
 
@@ -124,6 +127,7 @@ add_noise_to_seenid=False
 dataset_for_display_train = 0
 dataset_for_display_newid = 0
 
+#ELL options
 graph_exact_label_learning = False
 output_instead_of_SVM2 = False
 number_of_target_labels_per_orig_label=0 #The total number of labels is num_orig_labels * number_of_target_labels_per_orig_label
@@ -585,6 +589,7 @@ The options below may be used:
                     quit()
         except getopt.GetoptError:
             print "Error parsing the arguments: ", argv[1:]
+            print "option:", getopt.GetoptError.opt, "message:", getopt.GetoptError.msg
             sys.exit(2)
 
 if enable_svm:
@@ -1374,11 +1379,9 @@ if coherent_seeds:
     numpy.random.seed(experiment_seed+333333)
 
 
-#Fixing some unassigned variables
 subimages_p = subimages = subimages_train
 sl_seq_training = sl_seq_training[:,skip_num_signals:]
 sl_seq = sl_seq_training
-
 
 print "subimages_train[0,0]=%0.40f"%subimages_train[0,0]
 
@@ -1386,7 +1389,7 @@ print "Done creating / training / loading network"
 y = flow.execute(subimages_p[0:1])
 print y.shape
 more_nodes.describe_flow(flow)
-more_nodes.display_eigenvalues(flow, mode="Average") #"FirstNodeInLayer", "Average", "All"
+more_nodes.display_eigenvalues(flow, mode="Average") #mode="FirstNodeInLayer", "Average", "All"
 
 hierarchy_out_dim = y.shape[1]-skip_num_signals
 
@@ -1395,10 +1398,9 @@ print "last_node_out_dim=", flow[-1].output_dim
 if isinstance(flow[-1], (mdp.hinet.Layer, mdp.hinet.CloneLayer)):
     print "last_Layer_node_out_dim=", flow[-1][0].output_dim
     print "last node of network is a layer! is this a mistake?"
-    #quit()
 if hierarchy_out_dim != flow[-1].output_dim:
     print "error!!! hierarchy_out_dim != flow[-1].output_dim"
-    print "Perhaps enable_reduced_image_sizes=True or enable_hack_image_size=True for linear network?"
+    print "Perhaps caused by enable_reduced_image_sizes=True or enable_hack_image_size=True?"
     quit()
     
 results = system_parameters.ExperimentResult()
@@ -1423,9 +1425,6 @@ results.brute_eta_train = sfa_libs.comp_eta(sl_seq_training)
 t_delta_eta1 = time.time()
 print "typical_delta_train=", results.typical_delta_train
 print "typical_delta_train[0:31].sum()=", results.typical_delta_train[0:31].sum()
-#print "typical_eta_train=", results.typical_eta_train
-#print "brute_delta_train=", results.brute_delta_train
-#print "brute_eta_train=", results.brute_eta_train
 
 print "computed delta/eta in %0.3f ms"% ((t_delta_eta1-t_delta_eta0)*1000.0)
 benchmark.append(("Computation of delta, eta values for Train SFA Signal", t_delta_eta1-t_delta_eta0))
@@ -1458,8 +1457,7 @@ if seq.input_files == "LoadBinaryData00":
 elif seq.input_files == "LoadRawData":
     subimages_seenid = load_raw_data(seq.data_base_dir, seq.base_filename, input_dim=seq.input_dim, dtype=seq.dtype, select_samples=seq.samples, verbose=False)
 else:
-#W
-#    subimages_seenid = experimental_datasets.load_data_from_sSeq(seq)
+    #subimages_seenid = experimental_datasets.load_data_from_sSeq(seq)
     subimages_seenid = seq.load_data(seq)
 
 if load_and_append_output_features_dir != None:              
@@ -1471,14 +1469,9 @@ if load_and_append_output_features_dir != None:
     print additional_features_seenid.shape
     print subimages_seenid.shape
     subimages_seenid = numpy.concatenate((subimages_seenid, additional_features_seenid), axis=1)
-#    train_data_sets = system_parameters.expand_dataset_with_additional_features(train_data_sets, additional_features_training)    
+    #train_data_sets = system_parameters.expand_dataset_with_additional_features(train_data_sets, additional_features_training)    
 
 t_load_images1 = time.time()
-
-#average_subimage_seenid = subimages_seenid.sum(axis=0)*1.0 / num_images_seenid
-#average_subimage_seenid_I = scipy.cache.toimage(average_subimage_seenid.reshape(sSeenid.subimage_height, sSeenid.subimage_width, 3), mode="RGB")
-#average_subimage_seenid_I.save("average_image_seenidRGB2.jpg", mode="RGB")
-
 print num_images_seenid, " Images loaded in %0.3f s"% ((t_load_images1-t_load_images0))
 
 t_exec0 = time.time()
@@ -1506,11 +1499,10 @@ if clip_seenid_newid_to_training:
     sl_seq_seenid = numpy.clip(sl_seq_seenid, sl_seq_training_min, sl_seq_training_max)
     
     
-if add_noise_to_seenid:#Using uniform noise for speed over normal noise
+if add_noise_to_seenid: #Using uniform noise due to its speed over normal noise
     noise_amplitude = (3**0.5)*0.5 #standard deviation 0.00005
     print "adding noise to sl_seq_seenid, with noise_amplitude:", noise_amplitude
     sl_seq_seenid += noise_amplitude * numpy.random.uniform(-1.0, 1.0, size=sl_seq_seenid.shape) 
-
 
 
 t_exec1 = time.time()
@@ -1533,7 +1525,6 @@ print "typical_delta_seenid=", results.typical_delta_seenid
 print "typical_delta_seenid[0:31].sum()=", results.typical_delta_seenid[0:31].sum()
 print "typical_eta_seenid=", results.typical_eta_seenid
 print "brute_delta_seenid=", results.brute_delta_seenid
-#print "brute_eta_seenid=", results.brute_eta_seenid
 print "computed delta/eta in %0.3f ms"% ((t_delta_eta1-t_delta_eta0)*1000.0)
 
 
@@ -1667,10 +1658,6 @@ def svm_scale(data, mins, maxs, svm_min, svm_max):
 
 if enable_svm_cfr == True:
     print "Training SVM..."
-    # params names: ["svm_type", "kernel_type", "degree", "gamma", "coef0", "cache_size", 
-    #                  "eps", "C", "nr_weight", "weight_label", "weight", "nu", "p", "shrinking", "probability"]
-    #kernels = ["RBF", "LINEAR", "POLY", "SIGMOID"]
-    #classifiers = ["C_SVC", "NU_SVC", "ONE_CLASS", "EPSILON_SVR", "NU_SVR"]
     
     params = {"C":svm_C, "gamma":svm_gamma, "nu":0.6, "eps":0.0001}
     svm_node = mdp.nodes.LibSVMClassifier(kernel="RBF", classifier="C_SVC", params=params, probability=True)
@@ -1679,16 +1666,6 @@ if enable_svm_cfr == True:
     if svm_gamma==0:
         svm_gamma = 1.0 / (num_blocks)
     svm_node.stop_training()
-#    svm_node.stop_training(svm_type=libsvm.C_SVC, kernel_type=libsvm.RBF, C=svm_C, gamma=svm_gamma, nu=0.6, eps=0.0001, expo=1.6)
-
-#HACK
-#svm_node = classifiers.ClosestDistanceClassifierNew()
-#svm_node.train(cf_sl[:,0:reg_num_signals], cf_correct_labels)
-
-#    svm_node.train_probability(cf_sl[:,0:reg_num_signals], cf_block_size, activation_func = my_sigmoid)
-
-#    svm_node.eban_probability(cf_sl[:,0:reg_num_signals])
-#    quit()
 
 if enable_lr_cfr == True:
     print "Training LR..."
@@ -1703,7 +1680,8 @@ if classifier_write and enable_ccc_Gauss_cfr:
     #update cache is not adding the hash to the filename,so we add it manually
     classifier_filename = "GaussianClassifier_NetName"+Network.name + "iTrainName" + iTrain.name + "_NetH" + network_hash + "_CFSlowH"+ cf_sl_hash +"_NumSig%03d"%reg_num_signals
     classifier_write.update_cache(GC_node, None, None, classifier_filename, overwrite=True, verbose=True)
-#****************************************************************
+
+############################################################
 ####TODO: make classifier cash work!
 ####TODO: review eban_svm model & implementation! beat normal svm!
 
@@ -1750,26 +1728,9 @@ skip_svm_training = False
 if enable_svm_cfr == True and skip_svm_training==False:
     print "SVM classify..."
     classes_svm_training= svm_node.label(svm_scale(sl_seq_training[:,0:reg_num_signals], data_mins, data_maxs, svm_min, svm_max))
-#    regression_svm_training= svm_node.label_of_class(classes_svm_training)
-#    regression2_svm_training= svm_node.regression(sl_seq_training[:,0:reg_num_signals])
-#    regression3_svm_training= regression2_svm_training
     regression_svm_training= more_nodes.map_class_numbers_to_avg_label(all_classes, avg_labels, classes_svm_training)
     regression2_svm_training= more_nodes.map_class_numbers_to_avg_label(all_classes, avg_labels, classes_svm_training)
     regression3_svm_training= more_nodes.map_class_numbers_to_avg_label(all_classes, avg_labels, classes_svm_training)
-#    regression3_svm_training= svm_node.eban_regression(sl_seq_training[:,0:reg_num_signals])      
-#    eban_probs = svm_node.eban_probability2(sl_seq_training[0:2,0:reg_num_signals])
-#    print "len(eban_probs[0])= ", len(eban_probs[0])
-#    print eban_probs
-#
-#    eban_probs = svm_node.eban_probability(sl_seq_training[num_images_training/2:num_images_training/2+2,0:reg_num_signals])
-#    print "len(eban_probs[0])= ", len(eban_probs[0])
-#    print eban_probs
-#
-#    eban_probs = svm_node.eban_probability(sl_seq_training[-2:,0:reg_num_signals])
-#    print "len(eban_probs[0])= ", len(eban_probs[0])
-#    print eban_probs
-#
-#    quit()
 else:
     classes_svm_training=regression_svm_training = regression2_svm_training = regression3_svm_training=numpy.zeros(num_images_training)
 
@@ -1829,12 +1790,6 @@ else:
     classes_ncc_seenid = labels_ncc_seenid = numpy.zeros(num_images_seenid) 
 
 if enable_ccc_Gauss_cfr == True:
-#    classes_ccc_seenid, labels_ccc_seenid = S2SC.classifyCDC(sl_seq_seenid[:,0:reg_num_signals])
-#    classes_Gauss_seenid, labels_Gauss_seenid = S2SC.classifyGaussian(sl_seq_seenid[:,0:reg_num_signals])
-#    print "Classification of Seen id test images: ", labels_ccc_seenid
-#    regression_Gauss_seenid = S2SC.GaussianRegression(sl_seq_seenid[:,0:reg_num_signals])
-#    probs_seenid = S2SC.GC_L0.class_probabilities(sl_seq_seenid[:,0:reg_num_signals])
-    
     classes_Gauss_seenid = numpy.array(GC_node.label(sl_seq_seenid[:,0:reg_num_signals]))
     labels_Gauss_seenid = more_nodes.map_class_numbers_to_avg_label(all_classes, avg_labels, classes_Gauss_seenid)
     
@@ -1856,21 +1811,13 @@ else:
 
 if enable_svm_cfr == True:
     classes_svm_seenid = svm_node.label(svm_scale(sl_seq_seenid[:,0:reg_num_signals], data_mins, data_maxs, svm_min, svm_max))
-#    regression_svm_seenid = svm_node.label_of_class(classes_svm_seenid)
-#    regression2_svm_seenid = svm_node.regression(sl_seq_seenid[:,0:reg_num_signals])
-#    regression3_svm_seenid = regression2_svm_seenid
     regression_svm_seenid = more_nodes.map_class_numbers_to_avg_label(all_classes, avg_labels, classes_svm_seenid)
     regression2_svm_seenid = more_nodes.map_class_numbers_to_avg_label(all_classes, avg_labels, classes_svm_seenid)
     regression3_svm_seenid = more_nodes.map_class_numbers_to_avg_label(all_classes, avg_labels, classes_svm_seenid)
-
-#    regression3_svm_seenid = svm_node.eban_regression(sl_seq_seenid[:,0:reg_num_signals], hint=probs_seenid)
-    #network_write.update_cache(probs_seenid, None, network_base_dir, "GCProbs", overwrite=True, use_hash=network_hash, verbose=True)
 else:
     classes_svm_seenid=regression_svm_seenid = regression2_svm_seenid = regression3_svm_seenid = numpy.zeros(num_images_seenid)
 
-#HACK
-#classes_svm_seenid = svm_node.classifyNoMem(sl_seq_seenid[:,0:reg_num_signals])
-       
+      
 if enable_lr_cfr == True:
     regression_lr_seenid = lr_node.execute(sl_seq_seenid[:,0:reg_num_signals]).flatten()
 else:
@@ -1929,13 +1876,7 @@ if seq.input_files == "LoadBinaryData00":
 elif seq.input_files == "LoadRawData":
     subimages_newid = load_raw_data(seq.data_base_dir, seq.base_filename, input_dim=seq.input_dim, dtype=seq.dtype, select_samples=seq.samples, verbose=False)
 else:
-#W
-#    subimages_newid = experimental_datasets.load_data_from_sSeq(seq)
     subimages_newid = seq.load_data(seq)
-#    subimages_newid = load_image_data(seq.input_files, seq.image_width, seq.image_height, seq.subimage_width, \
-#                            seq.subimage_height, seq.pixelsampling_x, seq.pixelsampling_y, \
-#                            seq.subimage_first_row, seq.subimage_first_column, seq.add_noise_L0, \
-#                            seq.convert_format, seq.translations_x, seq.translations_y, seq.trans_sampled, background_type=seq.background_type, color_background_filter=filter, verbose=False)
 
 if load_and_append_output_features_dir != None:              
     newid_data_hash = cache.hash_object((iNewid,sNewid)).hexdigest()
@@ -1944,8 +1885,6 @@ if load_and_append_output_features_dir != None:
     additional_features_newid = cache.unpickle_array(base_dir=load_and_append_output_features_dir, base_filename="output_features_training_TestD"+newid_data_hash)        
     additional_features_newid = 100000 * additional_features_newid[:,0:num_features_to_append_to_input] #
     subimages_newid = numpy.concatenate((subimages_newid, additional_features_newid), axis=1)
-#    train_data_sets = system_parameters.expand_dataset_with_additional_features(train_data_sets, additional_features_training)    
-
 
 t_load_images1 = time.time()
 t11 = time.time()
@@ -2013,12 +1952,6 @@ else:
     classes_ncc_newid = labels_ncc_newid = numpy.zeros(num_images_newid) 
            
 if enable_ccc_Gauss_cfr == True:
-#    classes_ccc_newid, labels_ccc_newid = S2SC.classifyCDC(sl_seq_newid[:,0:reg_num_signals])
-#    classes_Gauss_newid, labels_Gauss_newid = S2SC.classifyGaussian(sl_seq_newid[:,0:reg_num_signals])
-#    print "Classification of New Id test images: ", labels_ccc_newid
-#    regression_Gauss_newid = S2SC.GaussianRegression(sl_seq_newid[:,0:reg_num_signals])
-#    probs_newid = S2SC.GC_L0.class_probabilities(sl_seq_newid[:,0:reg_num_signals])
-
     classes_Gauss_newid = numpy.array(GC_node.label(sl_seq_newid[:,0:reg_num_signals]))
     labels_Gauss_newid = more_nodes.map_class_numbers_to_avg_label(all_classes, avg_labels, classes_Gauss_newid) 
     
@@ -2043,23 +1976,12 @@ if enable_svm_cfr == True:
     regression_svm_newid = more_nodes.map_class_numbers_to_avg_label(all_classes, avg_labels, classes_svm_newid)
     regression2_svm_newid = more_nodes.map_class_numbers_to_avg_label(all_classes, avg_labels, classes_svm_newid)
     regression3_svm_newid = more_nodes.map_class_numbers_to_avg_label(all_classes, avg_labels, classes_svm_newid)
-#    regression_svm_newid = svm_node.label_of_class(classes_svm_newid)
-#    regression2_svm_newid = svm_node.regression(sl_seq_newid[:,0:reg_num_signals])
-#    regression3_svm_newid = regression2_svm_newid
-#    regression3_svm_newid = svm_node.eban_regression(sl_seq_newid[:,0:reg_num_signals], hint=probs_newid)
-#WARNING
-#    regression3_svm_newid = svm_node.eban_regression3(sl_seq_newid[:,0:reg_num_signals], activation_func_app = my_sigmoid, hint=probs_newid)
-#    raw_input("please enter something to continue")
-    #Hack, reusing probs_newid for displaying probs_newid_eban_svm
-#    probs_newid = svm_node.eban_probability2(sl_seq_seenid[:,0:reg_num_signals], hint=probs_seenid)
+
     probs_training[0, 10] = 1.0
     probs_newid[0, 10] = 1.0
     probs_seenid[0, 10] = 1.0
-#    m_err1 = svm_node.model_error(probs, l)
 else:
     classes_svm_newid=regression_svm_newid = regression2_svm_newid = regression3_svm_newid = numpy.zeros(num_images_newid)
-
-#classes_svm_newid = svm_node.classifyNoMem(sl_seq_newid[:,0:reg_num_signals])
 
 if enable_lr_cfr == True:
     regression_lr_newid = lr_node.execute(sl_seq_newid[:,0:reg_num_signals]).flatten()
@@ -2078,8 +2000,7 @@ print "Classification/Regression over New Id in %0.3f s"% ((t_class1 - t_class0)
 if integer_label_estimation:
 #     print "WARNING, ADDING A BIAS OF -0.5 TO ESTIMATION OF NEWID ONLY!!!"
 #     regression_Gauss_newid += -0.5
-#     regressionMAE_Gauss_newid += -0.5
-    
+#     regressionMAE_Gauss_newid += -0.5    
     print "Making all label estimations for newid data integer numbers"
     if convert_labels_days_to_years: #5.7 should be mapped to 5 years because age estimation is exact (days)
         labels_ncc_newid = labels_ncc_newid.astype(int)
@@ -2099,9 +2020,7 @@ if integer_label_estimation:
         regression2_svm_newid = numpy.rint(regression2_svm_newid)
         regression3_svm_newid = numpy.rint(regression3_svm_newid)
         regression_lr_newid = numpy.rint(regression_lr_newid)
-        #quit()
     print "regressionMAE_Gauss_newid[0:5]=", regressionMAE_Gauss_newid[0:5]
-
 
 #print "Saving train/test_data for external analysis"
 #ndarray_to_string(sl_seq_training, "/local/tmp/escalafl/training_samples.txt")
@@ -2135,7 +2054,6 @@ print "brute_delta_newid=", results.brute_delta_newid
 print "computed delta/eta in %0.3f ms"% ((t_delta_eta1-t_delta_eta0)*1000.0)
 
 
-
 if isinstance(block_size, int):
     print "virtual sequence length complete = ", num_images_training  * (block_size - 1)/2
     print "virtual sequence length sequence = ", (num_images_training - block_size)  * block_size 
@@ -2157,25 +2075,21 @@ print "Estimating explained variance for Train SFA Signal"
 number_samples_explained_variance = 9000 #1000 #4000 #2000
 #fast_inverse_available = True and False
 
-#WARNING!!!!
 if estimate_explained_var_with_inverse:
-#    print "Estimated explained variance with inverse (train) is: ", more_nodes.estimated_explained_variance(subimages_train, flow, sl_seq_training, number_samples_explained_variance)
-    print "Estimated explained variance with inverse (train) is: ", more_nodes.estimated_explained_variance(subimages_train, flow, sl_seq_training, number_samples_explained_variance)
-    print "Estimated explained variance with inverse (newid) is: ", more_nodes.estimated_explained_variance(subimages_newid, flow, sl_seq_newid, number_samples_explained_variance)
+    print "Estimated explained variance with inverse (train) is: ", more_nodes.estimate_explained_variance(subimages_train, flow, sl_seq_training, number_samples_explained_variance)
+    print "Estimated explained variance with inverse (newid) is: ", more_nodes.estimate_explained_variance(subimages_newid, flow, sl_seq_newid, number_samples_explained_variance)
 else:
     print "Fast inverse not available, not estimating explained variance"
 
 if estimate_explained_var_with_kNN_k:
     k = estimate_explained_var_with_kNN_k #  k=64
-#    print "Estimated explained variance with kNN (train, %d features) is: "%reg_num_signals, more_nodes.estimated_explained_var_with_kNN(subimages_train, sl_seq_training[:,0:reg_num_signals], max_num_samples_for_ev = 4000, max_test_samples_for_ev=2000, k=8, ignore_closest_match = True, label_avg=True)
-    print "Estimated explained variance with kNN (train, %d features) is: "%reg_num_signals, more_nodes.estimated_explained_var_with_kNN(subimages_train, sl_seq_training[:,0:reg_num_signals], max_num_samples_for_ev = 10000, max_test_samples_for_ev=10000, k=k, ignore_closest_match = True, operation="average")
+    print "Estimated explained variance with kNN (train, %d features) is: "%reg_num_signals, more_nodes.estimate_explained_var_with_kNN(subimages_train, sl_seq_training[:,0:reg_num_signals], max_num_samples_for_ev = 10000, max_test_samples_for_ev=10000, k=k, ignore_closest_match = True, operation="average")
 else:
     print "Not estimating explained variance with kNN"
 
 if estimate_explained_var_with_kNN_lin_app_k:
     k= estimate_explained_var_with_kNN_lin_app_k #k=64
-#    print "Estimated explained variance with kNN (train, %d features) is: "%reg_num_signals, more_nodes.estimated_explained_var_with_kNN(subimages_train, sl_seq_training[:,0:reg_num_signals], max_num_samples_for_ev = 4000, max_test_samples_for_ev=2000, k=8, ignore_closest_match = True, label_avg=True)
-    print "Estimated explained variance with kNN_lin_app (train, %d features) is: "%reg_num_signals, more_nodes.estimated_explained_var_with_kNN(subimages_train, sl_seq_training[:,0:reg_num_signals], max_num_samples_for_ev = 10000, max_test_samples_for_ev=10000, k=k, ignore_closest_match = True, operation="lin_app")
+    print "Estimated explained variance with kNN_lin_app (train, %d features) is: "%reg_num_signals, more_nodes.estimate_explained_var_with_kNN(subimages_train, sl_seq_training[:,0:reg_num_signals], max_num_samples_for_ev = 10000, max_test_samples_for_ev=10000, k=k, ignore_closest_match = True, operation="lin_app")
 else:
     print "Not estimating explained variance with kNN_lin_app"
 
@@ -2334,10 +2248,6 @@ if cumulative_scores:
 
         maes[label] = abs_errors.mean()
 
-#        for abs_error in abs_errors:
-#            maes[label] += abs_error
-#        maes[label] /= 1.0 * len(errors)
-
         print ""   
         print "label=", label,       
         for error in errors:
@@ -2495,7 +2405,6 @@ if False:
                 print "RMSE on expanded input data with dimensionality %d are %f for training and %f for test"%(num_feats_residual_information, e1, e2)
 
 
-#quit()
 scale_disp = 1
 
 print "Computing average SFA..."
@@ -2522,7 +2431,7 @@ print "%d Blocks used for averages"%num_blocks_train
 
 #Function for gender label estimation. (-3 to -0.1) = Masculine, (0.0 to 2.9) = femenine. Midpoint between classes is -0.05
 def binarize_array(arr):
-    arr2 = arr + 0.0
+    arr2 = arr.copy()
     arr2[arr2 < -0.05]=-1
     arr2[arr2 >= -0.05]=1
     return arr2
@@ -2548,7 +2457,6 @@ if Parameters == experimental_datasets.ParamsRGTSRBFunc and output_filename != N
     txt = ""
     for i, filename in enumerate(iNewid.input_files):
         txt += filename[-9:] +"; "+str(int(classes_Gauss_newid[i]))+"\n"
-#    print "writing \"%s\" to; %s"%(txt, output_filename)
     fd.write(txt)
     fd.close()
 
@@ -2556,7 +2464,6 @@ if Parameters == experimental_datasets.ParamsRGTSRBFunc and output_filename != N
     txt = ""
     for i, filename in enumerate(iNewid.input_files):
         txt += filename[-9:] +"; "+str(int(classes_kNN_newid[i])) + "\n"
-#    print "writing \"%s\" to; %s"%(txt, output_filename)
     fd.write(txt)
     fd.close()
 
@@ -2564,7 +2471,6 @@ if Parameters == experimental_datasets.ParamsRGTSRBFunc and output_filename != N
     txt = ""
     for i, filename in enumerate(iNewid.input_files):
         txt += filename[-9:] +"; "+str(int(classes_svm_newid[i])) + "\n"
-#    print "writing \"%s\" to; %s"%(txt, output_filename)
     fd.write(txt)
     fd.close()
 
@@ -2725,7 +2631,10 @@ if minutes_sleep < 0:
 
 if enable_display:
     print "Creating GUI..."
-    
+
+    #################################################################################################################################################
+    ############################## Plot for (examples of) the training, supervised, and test images #################################################    
+    #################################################################################################################################################
     print "****** Displaying Typical Images used for Training and Testing **********"
     tmp_fig = plt.figure()
     plt.suptitle(Parameters.name + ". Image Datasets")
@@ -2738,28 +2647,23 @@ if enable_display:
     sequences = [subimages_training, subimages_seenid, subimages_newid]
     messages = ["Training Images", "Seen Id Images", "New Id Images"]
     nums_images = [num_images_training, num_images_seenid, num_images_newid]
-    #Warning, next is for L, then for RGB
-    #sizes = [(sTrain.subimage_height, sTrain.subimage_width), (sSeenid.subimage_height, sSeenid.subimage_width), \
-    #         (sNewid.subimage_height, sNewid.subimage_width)]
-    #Note: sizes should be in practice the same, no need to generalize
     sizes = [subimage_shape, subimage_shape, subimage_shape]
     for seqn in range(3):
         for im in range(num_images_per_set):
             tmp_sb = plt.subplot(3, num_images_per_set, num_images_per_set*seqn + im+1)
             y = im * (nums_images[seqn]-1) / (num_images_per_set - 1)
-#            print sequences[seqn][y].shape
-#            print sizes[seqn]         
             subimage_im = sequences[seqn][y][0:num_pixels_per_image].reshape(sizes[seqn])
                 
             tmp_sb.imshow(subimage_im.clip(0,max_clip), norm=None, vmin=0, vmax=max_clip, aspect='auto', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)
-    #        subimage_im = subimage_im/256.0
-    #        tmp_sb.imshow(subimage_im.clip(0,1), origin='upper')
             if im == 0:
                 plt.ylabel(messages[seqn])
             else:
                 tmp_sb.axis('off')
     
-    
+
+    #################################################################################################################################################
+    ########################## Plot of all extracted features from the training, supervised, and test images ################################    
+    #################################################################################################################################################    
     print "************ Displaying SFA Output Signals **************"
     #Create Figure
     f0 = plt.figure()
@@ -2793,11 +2697,15 @@ if enable_display:
     plt.ylabel("New Id Images")
     
     
+    
+    #################################################################################################################################################
+    ########################## Plot of the first 3 extracted features from the training, supervised, and test images ################################    
+    #################################################################################################################################################      
+    print "************ Plotting Relevant SFA Output Signals **************"
     relevant_out_dim = 3
     if hierarchy_out_dim < relevant_out_dim:
         relevant_out_dim = hierarchy_out_dim
-    
-    print "************ Plotting Relevant SFA Output Signals **************"
+
     ax_5 = plt.figure()
     ax_5.subplots_adjust(hspace=0.5)
     plt.suptitle(Parameters.name + ". Most Relevant Slow Signals")
@@ -2854,9 +2762,7 @@ if enable_display:
     plt.title("SFA Outputs. (Seen Id Test Set)")
     for sig in reversed_sfa_indices:
         colour = sig * 1.0 /relevant_out_dim 
-    #    Warning!!!
         plt.plot(numpy.arange(num_images_seenid), sl_seq_seenid[:, sig], ".", color=(r_color[sig], g_color[sig], b_color[sig]), label=sfa_text_labels[sig], markersize=6, markerfacecolor=(r_color[sig], g_color[sig], b_color[sig]))
-    #    plt.plot(numpy.arange(len(subimages)), subimages[:, sig], ".", color=(r_color[sig], g_color[sig], b_color[sig]), label=sfa_text_labels[sig], markersize=6, markerfacecolor=(r_color[sig], g_color[sig], b_color[sig]))
     plt.ylim(-max_amplitude_sfa, max_amplitude_sfa)
     plt.xlim(0, num_images_seenid)
     #plt.ylim(0, 1)
@@ -2874,6 +2780,9 @@ if enable_display:
     plt.xlabel("Input Image, New Id Test")
     plt.ylabel("Slow Signals")
     
+
+    
+    ########################## Some options to control the following plots ################################    
     show_linear_inv    = True
     show_linear_masks  = True
     show_linear_masks_ext  = True
@@ -2884,6 +2793,10 @@ if enable_display:
     
     show_translation_x = False
     
+    
+    ######################################################################################################################
+    ###### Interactive plot that allows the user to perform network inverse for a given output vector ####################    
+    ######################################################################################################################        
     print "************ Displaying Training Set SFA and Inverses **************"
     #Create Figure
     f1 = plt.figure()
@@ -3003,7 +2916,10 @@ if enable_display:
         
     f1.canvas.mpl_connect('button_press_event', on_press_inv)
         
-    
+
+    ######################################################################################################################
+    ###### Interactive plot that allows the user to approximate an inverse using kNN and a global linear model ###########    
+    ######################################################################################################################          
     print "************ Displaying Test Set SFA and Inverses through kNN from Seen Id data **************"
     #TODO:Make this a parameter!
     kNN_k = 30
@@ -3133,9 +3049,10 @@ if enable_display:
     
     
     
-    
-    print "************ Displaying Classification / Regression Results **************"
-    #Create Figure
+    ######################################################################################################################
+    ###### Plot that shows the classification of the training, supervised, and test datasets #############################
+    ######################################################################################################################           
+    print "************ Displaying Classification Results **************"
     f2 = plt.figure()
     plt.suptitle("Classification Results (Class Numbers)  using %d Slow Signals"%reg_num_signals)
     #plt.title("Training Set")
@@ -3213,6 +3130,11 @@ if enable_display:
     #p13.xaxis.set_major_locator(majorLocator_x)
     ##p13.yaxis.set_major_locator(majorLocator_y)
     
+    
+    ######################################################################################################################
+    ###### Plot that shows the label estimations for the training, supervised, and test datasets #########################
+    ######################################################################################################################           
+    print "************ Displaying Regression Results **************"    
     f3 = plt.figure()
       
     plt.suptitle("Regression Results (Labels) using %d Slow Signals"%reg_num_signals)
@@ -3325,7 +3247,10 @@ if enable_display:
     plt.legend( regression_text_labels, loc=2 )
     p13.grid(True)
     
-    
+
+    ######################################################################################################################
+    ###### Plot that displays the class probabilities estimated by a gaussian classifier #################################
+    ######################################################################################################################           
     print "************** Displaying Probability Profiles ***********"
     f4 = plt.figure()
     plt.suptitle("Probability Profiles of Gaussian Classifier Using %d Signals for Classification"%reg_num_signals)
@@ -3355,6 +3280,9 @@ if enable_display:
     plt.ylabel("Image Number, New Id Set")
     f4.colorbar(pic)
     
+    ######################################################################################################################
+    ###### Plot that displays  #################################
+    ######################################################################################################################              
     print "************ Displaying Linear (or Non-Linear) Morphs and Masks Learned by SFA **********"
     #Create Figure
     ax6 = plt.figure()
@@ -3977,6 +3905,9 @@ if enable_display:
             
     ax9.canvas.mpl_connect('button_press_event', localized_on_press)
 
+    ######################################################################################################################
+    ###### Plot that displays the slow features of some central node of each layer of the network ########################
+    ######################################################################################################################           
     if compute_slow_features_newid_across_net:
         if compute_slow_features_newid_across_net == 2:
             print "Displaying slowest component across network"
@@ -4000,11 +3931,9 @@ if enable_display:
             print "Displaying first %d slowest components across network"%relevant_out_dim
             transpose_plot = False
             first_feature = 0
-            two_feats = False
+            two_feats = False          
             
         print "************ Displaying Slow Features Across Network (Newid) **********"
-        #Create Figure
-        
         ax = plt.figure()
         #ax13.subplots_adjust(hspace=0.3, wspace=0.03, top=0.93, right=0.96, bottom=0.05, left=0.05)
         
@@ -4082,8 +4011,7 @@ if enable_display:
                     plt.plot(sl_partial[:, 0], sl_partial[:, 1], ".", color=(r_color, g_color, b_color), markersize=6, markerfacecolor=(r_color, g_color, b_color))
                 
                 plt.xlim(-max_amplitude_sfa, max_amplitude_sfa)
-                plt.ylim(-max_amplitude_sfa, max_amplitude_sfa)
-                
+                plt.ylim(-max_amplitude_sfa, max_amplitude_sfa)               
                 #plt.xlabel("Input Image, Training Set (red=slowest signal, light green=fastest signal)")
                 #plt.ylabel("Slow Signals")
                 

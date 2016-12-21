@@ -904,7 +904,7 @@ class SFAPCANode(mdp.Node):
 def data_variance(x):
     return ((x-x.mean(axis=0))**2).sum(axis=1).mean()
 
-def estimated_explained_var_linearly(x, y, x_test, y_test):
+def estimate_explained_var_linearly(x, y, x_test, y_test):
     x_test_app = approximate_linearly(x, y, y_test)
     
     explained_variance = compute_explained_var(x_test, x_test_app)
@@ -932,7 +932,7 @@ def sensivity_of_linearly_approximation(x, y):
     sens = (beta**2).sum(axis=1)
     return sens
 
-def estimated_explained_var_with_kNN(x, y, max_num_samples_for_ev = None, max_test_samples_for_ev=None, k=1, ignore_closest_match = False, operation="average"):
+def estimate_explained_var_with_kNN(x, y, max_num_samples_for_ev = None, max_test_samples_for_ev=None, k=1, ignore_closest_match = False, operation="average"):
     num_samples = x.shape[0]
     indices_all_x = numpy.arange(x.shape[0])
 
