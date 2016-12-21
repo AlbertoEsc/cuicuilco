@@ -1199,7 +1199,7 @@ def load_images(image_files, image_format="L", sampling=1.0):
 
 #coordinates are (x0, y0, x1, y1)
 #sizes are (width, height)
-def extract_subimages(images, image_indices, coordinates, out_size=(64,64)):
+def extract_subimages_basic(images, image_indices, coordinates, out_size=(64,64), allow_out_of_image_sampling=True):
     if len(image_indices) != len(coordinates):
         raise Exception("number of images indices %d and number of coordinates %d do not match"%(len(image_indices), len(coordinates)) )
     
@@ -1209,7 +1209,7 @@ def extract_subimages(images, image_indices, coordinates, out_size=(64,64)):
     subimages = []
     for i, im_index in enumerate(image_indices):
         subimage_coordinates = (x0, y0, x1, y1) = coordinates[i]
-        if x0<0 or y0<0 or x1>=images[im_index].size[0] or y1>=images[im_index].size[1]:
+        if (x0<0 or y0<0 or x1>=images[im_index].size[0] or y1>=images[im_index].size[1]) and not allow_out_of_image_sampling:
                 err = "Image Loading Failed: Subimage out of Image"
                 print "subimage_coordinates =", (x0,y0,x1,y1)
                 print "Image size: im.size[0], im.size[1] = ", images[im_index].size[0],  images[im_index].size[1]
@@ -1218,6 +1218,104 @@ def extract_subimages(images, image_indices, coordinates, out_size=(64,64)):
         im_out = images[im_index].transform(out_size, Image.EXTENT, subimage_coordinates, interpolation_format)
         subimages.append(im_out)
     return subimages
+
+def extract_subimages_rotate(images, image_indices, all_coordinates, delta_angs, out_size=(64,64), interpolation_format=interpolation_format):
+    if len(image_indices) != len(all_coordinates):
+        raise Exception("number of images indices %d and number of coordinates %d do not match"%(len(image_indices), len(all_coordinates)) )
+    
+    if len(images) < 1:
+        raise Exception("At least one image is needed")    
+    
+    subimages = []
+    for i, im_index in enumerate(image_indices):
+        subimage_coordinates = all_coordinates[i]
+        if delta_angs[i] != 0:
+            im_out = extract_subimage_rotate(images[im_index], subimage_coordinates, delta_angs[i], out_size=out_size, interpolation_format=interpolation_format)
+        else:
+            im_out = images[im_index].transform(out_size, Image.EXTENT, subimage_coordinates, interpolation_format)
+        subimages.append(im_out)
+    return subimages
+    
+def extract_subimage_rotate(image, subimage_coordinates, delta_ang, out_size=(64,64), allow_out_of_image_sampling=True, interpolation_format=interpolation_format):
+    (x0, y0, x1, y1) = subimage_coordinates
+    if (x0<0 or y0<0 or x1>=image.size[0] or y1>=image.size[1]) and not allow_out_of_image_sampling:
+        err = "Image Loading Failed: Subimage out of Image"
+        print "subimage_coordinates =", (x0,y0,x1,y1)
+        print "Image size: im.size[0], im.size[1] = ", image.size[0],  image.size[1]
+        raise Exception(err)
+
+    if delta_ang != None:
+        rotation_center_x = (x0+x1-1)/2.0
+        rotation_center_y = (y0+y1-1)/2.0
+
+        integer_rotation_center = True #and False
+        if integer_rotation_center:
+            rotation_center_x_int = int(rotation_center_x + 0.5)
+            rotation_center_y_int = int(rotation_center_y + 0.5)
+        else:
+            rotation_center_x_int = rotation_center_x
+            rotation_center_y_int = rotation_center_y
+                    
+        rotation_window_width = 2 * max(image.size[0]-1-rotation_center_x_int+0.5, rotation_center_x_int+0.5) #Result is always integer and odd
+        rotation_window_height = 2 * max(image.size[1]-1-rotation_center_y_int+0.5, rotation_center_y_int+0.5) #Result is always integer and odd
+
+########
+        rxA = (x0-rotation_center_x) * numpy.cos(delta_ang* numpy.pi  / 180.0) + (y0-rotation_center_y) * numpy.sin(delta_ang* numpy.pi  / 180.0)
+        ryA = (y0-rotation_center_y) * numpy.cos(delta_ang* numpy.pi  / 180.0) - (x0-rotation_center_x) * numpy.sin(delta_ang* numpy.pi  / 180.0)
+        rxB = -1 * (x0-rotation_center_x) * numpy.cos(delta_ang* numpy.pi  / 180.0) + (y0-rotation_center_y) * numpy.sin(delta_ang* numpy.pi  / 180.0)
+        ryB = (y0-rotation_center_y) * numpy.cos(delta_ang* numpy.pi  / 180.0) - (-1)*(x0-rotation_center_x) * numpy.sin(delta_ang* numpy.pi  / 180.0)
+        wx = 2 * int(max(rxA, rxB, -rxA, -rxB)+2) + 1
+        wy = 2 * int(max(ryA, ryB, -ryA, -ryB)+2) + 1
+        
+        rotation_window_width = min(rotation_window_width, wx)
+        rotation_window_height = min(rotation_window_height, wy)
+        
+        if integer_rotation_center == False:
+            rotation_window_width = int(rotation_window_width + 0.5)
+            rotation_window_height = int(rotation_window_height + 0.5)
+
+        Delta_x = rotation_center_x - rotation_center_x_int
+        Delta_y = rotation_center_y - rotation_center_y_int
+
+        rotation_angle_rad =  -delta_ang * numpy.pi  / 180.0 
+        Delta_x_rotated = Delta_x  * numpy.cos(rotation_angle_rad) - Delta_y * numpy.sin(rotation_angle_rad)
+        Delta_y_rotated = Delta_y  * numpy.cos(rotation_angle_rad) + Delta_x * numpy.sin(rotation_angle_rad)
+    
+        rotation_crop_x0 = rotation_center_x_int-(rotation_window_width-1)/2.0
+        rotation_crop_y0 = rotation_center_y_int-(rotation_window_height-1)/2.0
+        rotation_crop_x1 = rotation_center_x_int+(rotation_window_width-1)/2.0+1
+        rotation_crop_y1 = rotation_center_y_int+(rotation_window_height-1)/2.0+1              
+        #Here crop size should not loose any pixel from the rotation window
+        crop_size = (int(rotation_window_width+0.5), int(rotation_window_height+0.5)) #Avoiding type problem, even though variables are actually integer 
+                    
+        crop_coordinates = (rotation_crop_x0, rotation_crop_y0, rotation_crop_x1, rotation_crop_y1)
+        im_crop_first = image.transform(crop_size, Image.EXTENT, crop_coordinates) #, Image.BICUBIC)
+                    
+        #print delta_ang
+        im_rotated = rotate_improved(im_crop_first, delta_ang, Image.BICUBIC)
+        im_contrasted = im_rotated
+                    
+        center_x_geometric = (crop_size[0]-1)/2.0
+        center_y_geometric = (crop_size[1]-1)/2.0
+        #print "After rotation: geometric center_x, center_y=", center_x_geometric, center_y_geometric
+    
+        new_center_x = center_x_geometric + Delta_x_rotated #Real value!
+        new_center_y = center_y_geometric + Delta_y_rotated #Real value!
+        #print "After rotation: new_center_x, new_center_y=", new_center_x, new_center_y
+        #print "center_x, center_y=", center_x, center_y
+        #print "ori_width, ori_height=", ori_width, ori_height
+    
+        ori_width = x1-x0
+        ori_height = y1-y0
+        x0 = (new_center_x-(ori_width-1)/2.0) #WWW added -1
+        x1 = (new_center_x+(ori_width-1)/2.0)+1 #WWW added -1 and +1
+        y0 = (new_center_y-(ori_height-1)/2.0) #WWW added -1
+        y1 = (new_center_y+(ori_height-1)/2.0)+1 #WWW added -1 and +1
+                        
+        #print "transform_coords = x0, x1, y0, y1=", x0, x1, y0, y1
+        subimage_coordinates = (x0,y0,x1,y1)
+        im_out = im_contrasted.transform(out_size, Image.EXTENT, subimage_coordinates, interpolation_format)
+    return im_out
 
 def code_gender(gender):
     if gender is None:
@@ -1662,5 +1760,6 @@ def rotate_improved(self, angle, resample=Image.NEAREST, expand=0, force_odd_out
 #data = load_image_data(image_files, image_width, image_height, subimage_width, subimage_height, \
 #                    pixelsampling_x, pixelsampling_y, subimage_first_row, subimage_first_column, \
 #                    add_noise, convert_format, translations_x, translations_y, trans_sampled)
+
 
 

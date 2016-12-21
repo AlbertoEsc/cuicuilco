@@ -26,8 +26,8 @@ import random
 import sfa_libs
 from sfa_libs import (scale_to, distance_squared_Euclidean, str3, wider_1Darray, ndarray_to_string, cutoff)
 from exact_label_learning import (ConstructGammaFromLabels, RemoveNegativeEdgeWeights, MapGammaToEdgeWeights)
-import SystemParameters
-from SystemParameters import (scale_sSeq, take_first_02D, take_0_k_th_from_2D_list, sSeq_force_image_size, sSeq_getinfo_format, convert_sSeq_to_funcs_params_sets)
+import system_parameters
+from system_parameters import (scale_sSeq, take_first_02D, take_0_k_th_from_2D_list, sSeq_force_image_size, sSeq_getinfo_format, convert_sSeq_to_funcs_params_sets)
 from imageLoader import *
 import classifiers_regressions as classifiers
 import network_builder
@@ -38,17 +38,17 @@ import string
 #from nonlinear_expansion import (identity, pair_prod_adj1_ex, pair_prod_adj2_ex, QE, CE)
 import getopt
 from lockfile import LockFile
-import mkl
-mkl.set_num_threads(22)
 from inspect import getmembers
 import subprocess
+import mkl
+mkl.set_num_threads(22)
 
 #from mdp import numx
 #sys.path.append("/home/escalafl/workspace/hiphi/src/hiphi/utils")
 #import misc
 #import cache
 
-#from SystemParameters import *
+#from system_parameters import *
 #list holding the benchmark information with entries: ("description", time as float in seconds)
 benchmark=[]
 
@@ -64,6 +64,9 @@ enable_display = False
 input_filename = None
 output_filename = None
 cache_available = True
+load_and_append_output_features_dir = None
+num_features_to_append_to_input = 0
+save_output_features_dir = None
 network_cache_read_dir = None #"/local/tmp/escalafl/Alberto/SavedNetworks"
 network_cache_write_dir = None #"/local/tmp/escalafl/Alberto/SavedNetworks"
 node_cache_read_dir = None #"/local/tmp/escalafl/Alberto/SavedNodes"
@@ -131,16 +134,21 @@ cuicuilco_queue = "/home/escalafl/workspace4/cuicuilco_MDP3.2/src/queue_cuicuilc
 cuicuilco_lock_file = "/home/escalafl/workspace4/cuicuilco_MDP3.2/src/queue_cuicuilco"
 minutes_sleep = 0
 
+
+
 import hierarchical_networks
-import experiment_datasets
+import experimental_datasets
 print "Using mdp version:", mdp.__version__, "file:", mdp.__file__
 print hierarchical_networks.__file__
-print experiment_datasets.__file__
+print experimental_datasets.__file__
 
-print "attempting to retrieve hash of current git commit:"
-print "output of \"$git describe --tags\" :", subprocess.check_output(["git", "describe", "--tags"]).strip()
-print "output of \"$git rev-parse HEAD\" :", subprocess.check_output(["git", "rev-parse", "HEAD"]).strip()
-
+print "Attempting to retrieve hash of current git commit"
+try:
+    print "output of \"$git describe --tags\":", subprocess.check_output(["git", "describe", "--tags"]).strip()
+    print "output of \"$git rev-parse HEAD\":", subprocess.check_output(["git", "rev-parse", "HEAD"]).strip()
+except subprocess.CalledProcessError as e:
+    print "\nFailed to determine current git commit:", str(e), "\n"
+    
 print "List of modules and their versions:"
 obj_names = sys.modules.keys()
 for obj_name in obj_names:
@@ -151,8 +159,8 @@ for obj_name in obj_names:
 
 available_experiments = {}
 print "Creating list of available experiments:"
-for (obj_name, obj_value) in getmembers(experiment_datasets):
-    if isinstance(obj_value, SystemParameters.ParamsSystem):
+for (obj_name, obj_value) in getmembers(experimental_datasets):
+    if isinstance(obj_value, system_parameters.ParamsSystem):
         print "   ", obj_name
         available_experiments[obj_name] = obj_value
 #        print "object", obj.__name__
@@ -160,7 +168,7 @@ for (obj_name, obj_value) in getmembers(experiment_datasets):
 available_networks = {}
 print "Creating list of available networks:"
 for (obj_name, obj_value) in getmembers(hierarchical_networks):
-    if isinstance(obj_value, SystemParameters.ParamsNetwork) and obj_name != "network":
+    if isinstance(obj_value, system_parameters.ParamsNetwork) and obj_name != "network":
         print "   ", obj_name
         available_networks[obj_name] = obj_value
 #        print "object", obj.__name__
@@ -168,7 +176,7 @@ for (obj_name, obj_value) in getmembers(hierarchical_networks):
 name_default_experiment = "ParamsMNISTFunc"
 name_default_network = "voidNetwork1L"
 
-DefaultExperimentDataset = available_experiments[name_default_experiment]
+DefaultExperimentalDataset = available_experiments[name_default_experiment]
 DefaultNetwork = available_networks[name_default_network]
 
 #See also: ParamsGender, ParamsAngle, ParamsIdentity,  ParamsTransX, ParamsAge,  
@@ -176,7 +184,7 @@ DefaultNetwork = available_networks[name_default_network]
 #ParamsRFaceCentering, ParamsREyeTransX, ParamsREyeTransY
 #Data Set based training data: ParamsRTransXFunc, ParamsRTransYFunc, ParamsRTransXY_YFunc
 #ParamsRGTSRBFunc, ParamsRAgeFunc, ParamsMNISTFunc
-#from experiment_datasets import ParamsMNISTFunc as DefaultExperimentDataset #ParamsRAgeFunc, ParamsMNISTFunc
+#from experimental_datasets import ParamsMNISTFunc as DefaultExperimentalDataset #ParamsRAgeFunc, ParamsMNISTFunc
 # ParamsRTransXYScaleFunc
 
 # Networks available: voidNetwork1L, SFANetwork1L, PCANetwork1L, u08expoNetwork1L, quadraticNetwork1L
@@ -197,11 +205,11 @@ DefaultNetwork = available_networks[name_default_network]
 # AGE MORPH-II: IEVMLRecNetworkU11L_Overlap6x6L0_1Label, HeadNetwork1L, IEVMLRecNetworkU11L_Overlap6x6L0_GUO_3Labels, IEVMLRecNetworkU11L_Overlap6x6L0_GUO_1Label, SFANetworkU11L_Overlap6x6L0_GUO_3Labels
 # IEVMLRecNetworkU11L_Overlap6x6L0_3Labels <-Article HiGSFA, IEVMLRecNetworkU11L_Overlap6x6L0_2Labels
 
-from experiment_datasets import experiment_seed
-from experiment_datasets import DAYS_IN_A_YEAR
+from experimental_datasets import experiment_seed
+from experimental_datasets import DAYS_IN_A_YEAR
 
 if coherent_seeds:
-    print "experiment_datasets.experiment_seed=", experiment_seed
+    print "experimental_datasets.experiment_seed=", experiment_seed
     numpy.random.seed(experiment_seed+111111)
 
 if enable_command_line:
@@ -214,7 +222,8 @@ if enable_command_line:
             opts, args = getopt.getopt(argv[1:], "", ["InputFilename=", "OutputFilename=", "EnableDisplay=", 
                                                       "CacheAvailable=", "NumFeaturesSup=", "SkipFeaturesSup=",
                                                       'SVM_gamma=', 'SVM_C=','EnableSVM=', "LoadNetworkNumber=", "AskNetworkLoading=",
-                                                      'EnableLR=', "NParallel=", "EnableScheduler=",
+                                                      'EnableLR=', "NParallel=", "EnableScheduler=", "SaveOutputFeaturesDir=",
+                                                      "LoadAndAppendOutputFeaturesDir=", "NumFeaturesToAppendToInput=",
                                                       "NetworkCacheReadDir=", "NetworkCacheWriteDir=", "NodeCacheReadDir=", "NodeCacheWriteDir=",
                                                       "SignalCacheReadDir=", "SignalCacheWriteDir=", "ClassifierCacheReadDir=", 
                                                       "ClassifierCacheWriteDir=", "SaveSubimagesTraining=",  "SaveAverageSubimageTraining=",
@@ -228,7 +237,7 @@ if enable_command_line:
                                                       "ComputeInputInformation=", "SleepM=", "DatasetForDisplayTrain=", "DatasetForDisplayNewid=",
                                                       "GraphExactLabelLearning=", "OutputInsteadOfSVM2=", "NumberTargetLabels=", "ConfusionMatrix=",
                                                       "MapDaysToYears=", "AddNoiseToSeenid=", "ClipSeenidNewid=",
-                                                      "HierarchicalNetwork=", "ExperimentDataset=", "help"])            
+                                                      "HierarchicalNetwork=", "ExperimentalDataset=", "help"])            
             print "opts=", opts
             print "args=", args
 
@@ -285,6 +294,24 @@ if enable_command_line:
                 elif opt in ('--EnableScheduler'):
                     enable_scheduler = int(arg)             
                     print "Setting enable_scheduler to", enable_scheduler   
+                elif opt in ('--SaveOutputFeaturesDir'):
+                    if arg == "None":
+                        save_output_features_dir = None
+                    else:
+                        save_output_features_dir = arg
+                    print "Setting save_output_features_dir to", save_output_features_dir
+                elif opt in ('--LoadAndAppendOutputFeaturesDir'):
+                    if arg == "None":
+                        load_and_append_output_features_dir = None
+                    else:
+                        load_and_append_output_features_dir = arg
+                    print "Setting load_and_append_output_features_dir to", load_and_append_output_features_dir
+                elif opt in ('--NumFeaturesToAppendToInput'):
+                    if arg == "None":
+                        num_features_to_append_to_input = None
+                    else:
+                        num_features_to_append_to_input = int(arg)
+                    print "Setting num_features_to_append_to_input to", num_features_to_append_to_input
                 elif opt in ('--NetworkCacheReadDir'):
                     if arg == "None":
                         network_cache_read_dir = None
@@ -335,8 +362,8 @@ if enable_command_line:
                     else:
                         classifier_cache_write_dir = arg
                     print "Setting classifier_cache_write_dir to", classifier_cache_write_dir   
-                    er = "ClassifierCacheWriteDir: Option not supported yet"
-                    raise Exception(er)
+                    #er = "ClassifierCacheWriteDir: Option not supported yet"
+                    #raise Exception(er)
                 elif opt in ('--SaveSubimagesTraining'):
                     save_subimages_training = bool(int(arg))
                     print "Setting save_subimages_training to", save_subimages_training
@@ -473,10 +500,10 @@ if enable_command_line:
                     name_default_network = arg
                     print "Setting default_network to", name_default_network       
                     DefaultNetwork = available_networks[name_default_network]
-                elif opt in ('--ExperimentDataset'):
+                elif opt in ('--ExperimentalDataset'):
                     name_default_experiment = arg
                     print "Setting name_default_experiment to", name_default_experiment   
-                    DefaultExperimentDataset = available_experiments[name_default_experiment]
+                    DefaultExperimentalDataset = available_experiments[name_default_experiment]
                 elif opt in ('--help'):
                     txt = \
 """Cuicuilco: displaying help information
@@ -488,15 +515,15 @@ The following global variables must be specified on beforehand (integer values):
     CUICUILCO_IMAGE_LOADING_NUM_PROC  (max number of processes used by MKL)
 The options below may be used:
     **General options
-        --EnableDisplay={1/0} Enables the graphical interface
-        --ExperimentDataset={ParamsRAgeFunc/ParamsMNISTFunc/ParamsRTransXYScaleFunc/...} Selects a particular dataset
-        --HierarchicalNetwork={voidNetwork1L/PCANetwork1L/u08expoNetworkU11L/IEVMLRecNetworkU11L_Overlap6x6L0_1Label/...} Selects a particular network
-        --NumFeaturesSup=N Specifies the number of output features N used in the supervised step
-        --SkipFeaturesSup=S Specifies number of output features S that are skipped (ignored)
-        --SleepM=M Specifies a delay before cuicuilco starts loading the dataset. (useful to prevent memory clogging)
-                       if M>0 there is a delay of M minutes
+        --EnableDisplay={1/0}. Enables the graphical interface
+        --ExperimentalDataset={ParamsRAgeFunc/ParamsMNISTFunc/ParamsRTransXYScaleFunc/...}. Selects a particular dataset
+        --HierarchicalNetwork={voidNetwork1L/PCANetwork1L/u08expoNetworkU11L/IEVMLRecNetworkU11L_Overlap6x6L0_1Label/...}. Selects a particular network
+        --NumFeaturesSup=N. Specifies the number of output features N used in the supervised step
+        --SkipFeaturesSup=S. Specifies number of output features S that are skipped (ignored)
+        --SleepM=M. Specifies a delay before Cuicuilco starts loading the dataset. (useful to prevent memory/processor clogging).
+                       if M>0 the current Cuicuilco process is paused for M minutes
                        if M=0 there is no delay
-                       if M=-1 the program joins a waiting list and sleeps until its turn is reached               
+                       if M<0 the program joins a waiting list (specified by the lock file named queue_cuicuilco.txt), sleeps until its turn is reached, and deletes itself from the list after the labels/classes have been estimated              
     **Network options
         --AddNormalizationNode={1/0} Adds a normalization node at the end of the network
         --MakeLastPCANodeWhithening={1/0} Changes the last PCANode into a WhitheningNode
@@ -563,9 +590,11 @@ The options below may be used:
 if enable_svm:
     import svm as libsvm
 
+if load_and_append_output_features_dir is None:
+    num_features_to_append_to_input = 0
 
 if coherent_seeds:
-    print "experiment_datasets.experiment_seed=", experiment_seed
+    print "experimental_datasets.experiment_seed=", experiment_seed
     numpy.random.seed(experiment_seed+12121212)
 
 if enable_scheduler and n_parallel > 1:
@@ -577,11 +606,11 @@ if features_residual_information <= 0 and compute_input_information:
     print "ignoring flag compute_input_information=%d because  features_residual_information=%d <= 0"%(compute_input_information,features_residual_information)
     compute_input_information = False
     
-Parameters = DefaultExperimentDataset
+Parameters = DefaultExperimentalDataset
 Network = DefaultNetwork
 
 #Specific code for setting up the ParamsNatural experiment (requires run-time computations)
-if Parameters == experiment_datasets.ParamsNatural and input_filename != None:
+if Parameters == experimental_datasets.ParamsNatural and input_filename != None:
     (magic_num, iteration, numSamples, rbm_sfa_numHid, sampleSpan) = read_binary_header("", input_filename)
     print "Iteration Number=%d,"%iteration, "numSamples=%d"%numSamples,"rbm_sfa_numHid=%d,"%rbm_sfa_numHid
     
@@ -623,9 +652,9 @@ if enable_reduced_image_sizes:
         if isinstance(sSeq, list):
             for i, sSeq_vect in enumerate(sSeq):
                 print "sSeq_vect", sSeq_vect
-                if sSeq_vect != None:
+                if sSeq_vect is not None: #!= None:
                     for j, sSeq_entry in enumerate(sSeq_vect):
-                        if isinstance(sSeq_entry, SystemParameters.ParamsDataLoading):
+                        if isinstance(sSeq_entry, system_parameters.ParamsDataLoading):
                             #TODO: Avoid code repetition, even though readability compromised
                             scale_sSeq(sSeq_entry, reduction_factor)
                         else:
@@ -642,7 +671,7 @@ sTrain_set = Parameters.sTrain
 iTrain = take_0_k_th_from_2D_list(iTrain_set, k=dataset_for_display_train)
 sTrain = take_0_k_th_from_2D_list(sTrain_set, k=dataset_for_display_train)
 
-#take k=1? or choose from command line? NOPE. Take always first label. sSeq must compute proper classes for chosen label anyway.
+#take k=1? or choose from command line? NOPE. Take always first label (k=0). sSeq must compute proper classes for chosen label anyway.
 objective_label = 0
 if graph_exact_label_learning:
     if isinstance(iTrain_set, list):
@@ -755,7 +784,7 @@ if use_filter == "ColoredNoise" or use_filter == "1":
     my_filter = filter_colored_noise2D_imp((seq.subimage_height, seq.subimage_width), alpha)
 #back_type = None
 #filter = None
-elif use_filter=="None" or use_filter==None or use_filter == "0":
+elif use_filter == "None" or (use_filter is None) or (use_filter == "0"):
     my_filter = None
 else:
     print "Unknown filter: ", use_filter
@@ -806,7 +835,7 @@ if classifier_read_enabled and cache_available and (classifier_cache_read_dir !=
 else:
     classifier_read = None
 
-classifier_saving_enabled = True and False
+classifier_saving_enabled = True #and False
 if classifier_saving_enabled and cache_available and (classifier_cache_write_dir != None):
     classifier_write = cache.Cache(classifier_cache_write_dir, "")
 else:
@@ -829,7 +858,7 @@ for i, (network_filename, network_hash) in enumerate(network_hashes_base_filenam
     print "[%d]"%i, network_filename
 
 network_filename = None
-if len(network_hashes_base_filenames) > 0 and (ask_network_loading or load_network_number!=None):
+if len(network_hashes_base_filenames) > 0 and (ask_network_loading or load_network_number is not None):
 #    flow, layers, benchmark, Network, subimages_train, sl_seq_training = cache.unpickle_from_disk(network_filenames[-1])
     if ask_network_loading or load_network_number==None:
         selected_network = int(raw_input("Please select a network (-1=Train new network):"))
@@ -1058,29 +1087,35 @@ else:
                     print "Subimages training signal UNEXPECTEDLY NOT FOUND in cache:", signal_base_filename
                     quit()
  
-#Conversion from sSeq to data_sets, param_sets
+#Conversion from sSeq to data_sets (array or function), param_sets
 #Actually train_func_sets
     train_data_sets, train_params_sets = convert_sSeq_to_funcs_params_sets(seq_sets, verbose=False)
+    if load_and_append_output_features_dir != None:              
+        training_data_hash = cache.hash_object((iTrain,sTrain)).hexdigest()
+        training_data_hash = "0"
+        print "loading output features (training data) from dir: ", load_and_append_output_features_dir, "and hash:", training_data_hash
+        additional_features_training = cache.unpickle_array(base_dir=load_and_append_output_features_dir, base_filename="output_features_training_TrainingD"+training_data_hash)        
+        additional_features_training = 100000 * additional_features_training[:,0:num_features_to_append_to_input] + 10000.0 * numpy.random.normal(size=(iTrain.num_images, num_features_to_append_to_input))       
+        train_data_sets = system_parameters.expand_dataset_with_additional_features(train_data_sets, additional_features_training)        
+
     print "now building network"
     train_data_sets, train_params_sets = network_builder.expand_iSeq_sSeq_Layer_to_Network(train_data_sets, train_params_sets, Network)
+
+    
+    
     print "calling take_first_02D"
     params_node = take_0_k_th_from_2D_list(train_params_sets, k=dataset_for_display_train)
-
-       
+     
     block_size = params_node["block_size"]
     train_mode = params_node["train_mode"]
     
-    block_size_L0=block_size
-    block_size_L1=block_size
-    block_size_L2=block_size
-    block_size_L3=block_size
-    block_size_exec=block_size #(Used only for random walk)
-
     print "calling take_first_02D again"
     train_func = take_0_k_th_from_2D_list(train_data_sets, k=dataset_for_display_train)
+    print "train_func=", train_func
     if coherent_seeds:
         numpy.random.seed(experiment_seed+222222)
     subimages_train = train_func() 
+    #TODO: Here add pre computed features!!!??? Or do this during experiment definition??? 
      
     print "subimages_train[0,0]=%0.40f"%subimages_train[0,0]
 
@@ -1094,7 +1129,7 @@ else:
                 for j in range(len(train_data_sets[i])):
                     print "train_data_sets[%d][%d]="%(i,j), train_data_sets[i][j]
                     if train_data_sets[i][j] is func:
-                        print "Correction done"
+                        print "Correction done" #fdssf
                         train_data_sets[i][j] = subimages_train
 
     #TODO: Support train signal chache for generalized training
@@ -1165,12 +1200,12 @@ else:
     print "Creating hierarchy through network_builder"
     print "******************************************"
     #TODO: more primitive but potentially powerful flow specification here should be possible
-    flow, layers, benchmark = network_builder.CreateNetwork(Network, sTrain.subimage_width, sTrain.subimage_height, block_size=None, train_mode=None, benchmark=benchmark, in_channel_dim=in_channel_dim)
+    flow, layers, benchmark = network_builder.CreateNetwork(Network, sTrain.subimage_width, sTrain.subimage_height, block_size=None, train_mode=None, benchmark=benchmark, in_channel_dim=in_channel_dim, num_features_appended_to_input=num_features_to_append_to_input)
     
     
-    print "Making sure the first switchboard does not add any noise (noise adde during image loading)"
+    print "Making sure the first switchboard does not add any noise (noise added during image loading)"
     if isinstance(flow[0], mdp.nodes.PInvSwitchboard):
-        flow[0].noise_addition=0.0
+        flow[0].additive_noise_std=0.0
 
     #For display purposes we alter here the image shape artificially...
     #TODO: Improve this logic appropriately overall... shape should be really the shape, and in_channel_dim should be used
@@ -1180,6 +1215,7 @@ else:
     else:
         print "Patching subimage_shape for display purposes"
         subimage_shape = (subimage_shape[0], subimage_shape[1]*in_channel_dim) 
+    num_pixels_per_image = numpy.ones(subimage_shape).sum()
 
 #    add_normalization_node = True
     if add_normalization_node:
@@ -1276,8 +1312,9 @@ else:
     print "Since training is finished, making sure the switchboards do not add any noise from now on"
     for node in flow:
         if isinstance(node, mdp.nodes.PInvSwitchboard):
-            node.noise_addition=0.0
+            node.additive_noise_std=0.0
 
+    print "Executing for display purposes (subimages_train)..."
 #    For display purposes ignore output of training, and concentrate on display signal:
     sl_seq = sl_seq_training = flow.execute(subimages_train)
     if feature_cut_off_level > 0.0:
@@ -1309,6 +1346,11 @@ else:
         signal_base_filename = "sfa_signal_ndim%s_time%s_flow%s"%((signal_ndim, signal_time, flow_hash))
         signal_cache_write.update_cache(sl_seq_training, base_filename=signal_base_filename, overwrite=True, verbose=True)
     
+    if save_output_features_dir != None:
+        print "saving output features (training data)"
+        training_data_hash = cache.hash_object((iTrain,sTrain)).hexdigest()
+        cache.pickle_array(sl_seq_training, base_dir=save_output_features_dir, base_filename="output_features_training_TrainingD"+training_data_hash, overwrite=True, verbose=True)
+    
 print "taking into account objective_label=%d"%objective_label
 if len(iTrain.correct_labels.shape)==2:
     print "correction..."
@@ -1320,7 +1362,11 @@ if len(iTrain.correct_labels.shape)==2:
     Parameters.iSeenid.correct_classes = Parameters.iSeenid.correct_classes[:,objective_label].flatten()
     Parameters.iNewid[0][0].correct_classes = Parameters.iNewid[0][0].correct_classes[:,objective_label].flatten()
 print "iTrain.correct_classes=", iTrain.correct_classes
+print "iTrain.correct_labels=", iTrain.correct_labels
+print "Parameters.iNewid[0][0].correct_classes", Parameters.iNewid[0][0].correct_classes
+print "Parameters.iNewid[0][0].correct_labels", Parameters.iNewid[0][0].correct_labels
 print "Parameters.iSeenid.correct_classes=", Parameters.iSeenid.correct_classes
+print "Parameters.iSeenid.correct_labels=", Parameters.iSeenid.correct_labels
 print "done"
 
 
@@ -1355,7 +1401,7 @@ if hierarchy_out_dim != flow[-1].output_dim:
     print "Perhaps enable_reduced_image_sizes=True or enable_hack_image_size=True for linear network?"
     quit()
     
-results = SystemParameters.ExperimentResult()
+results = system_parameters.ExperimentResult()
 results.name = Parameters.name
 results.network_name = Network.name
 results.layers_name = []
@@ -1413,8 +1459,19 @@ elif seq.input_files == "LoadRawData":
     subimages_seenid = load_raw_data(seq.data_base_dir, seq.base_filename, input_dim=seq.input_dim, dtype=seq.dtype, select_samples=seq.samples, verbose=False)
 else:
 #W
-#    subimages_seenid = experiment_datasets.load_data_from_sSeq(seq)
+#    subimages_seenid = experimental_datasets.load_data_from_sSeq(seq)
     subimages_seenid = seq.load_data(seq)
+
+if load_and_append_output_features_dir != None:              
+    seenid_data_hash = cache.hash_object((iSeenid,sSeenid)).hexdigest()
+    seenid_data_hash = "0"
+    print "loading output features (seenid data) from dir: ", load_and_append_output_features_dir, "and hash:", seenid_data_hash
+    additional_features_seenid = cache.unpickle_array(base_dir=load_and_append_output_features_dir, base_filename="output_features_training_SeenidD"+seenid_data_hash)        
+    additional_features_seenid = 100000 * additional_features_seenid[:,0:num_features_to_append_to_input] + 0.0 * numpy.random.normal(size=(iSeenid.num_images, num_features_to_append_to_input))
+    print additional_features_seenid.shape
+    print subimages_seenid.shape
+    subimages_seenid = numpy.concatenate((subimages_seenid, additional_features_seenid), axis=1)
+#    train_data_sets = system_parameters.expand_dataset_with_additional_features(train_data_sets, additional_features_training)    
 
 t_load_images1 = time.time()
 
@@ -1458,6 +1515,11 @@ if add_noise_to_seenid:#Using uniform noise for speed over normal noise
 
 t_exec1 = time.time()
 print "Execution over Known Id in %0.3f s"% ((t_exec1 - t_exec0))
+
+if save_output_features_dir != None:
+    print "saving output features (seenid data)"
+    seenid_data_hash = cache.hash_object((iSeenid,sSeenid)).hexdigest()
+    cache.pickle_array(sl_seq_seenid, base_dir=save_output_features_dir, base_filename="output_features_training_SeenidD"+seenid_data_hash, overwrite=True, verbose=True)
 
 
 print "Computing typical delta, eta values for Seen Id SFA Signal"
@@ -1565,6 +1627,7 @@ if enable_ccc_Gauss_cfr == True:
     GC_node = mdp.nodes.GaussianClassifier()
     GC_node.train(x=cf_sl[:,0:reg_num_signals], labels = cf_correct_classes) #Functions for regression use class values!!!
     GC_node.stop_training()
+    GC_node.avg_labels = avg_labels
     
     t_classifier_train1 = time.time()
     benchmark.append(("Training Classifier/Regression GC", t_classifier_train1-t_classifier_train0))
@@ -1638,7 +1701,7 @@ if classifier_write and enable_ccc_Gauss_cfr:
     print "Saving Gaussian Classifier"
     cf_sl_hash = cache.hash_array(cf_sl).hexdigest() 
     #update cache is not adding the hash to the filename,so we add it manually
-    classifier_filename = "GaussianClassifier_NetName"+Network.name+"_ParName"+Parameters.name+"_NetH" + network_hash + "_CFSlowH"+ cf_sl_hash +"_NumSig%03d"%reg_num_signals
+    classifier_filename = "GaussianClassifier_NetName"+Network.name + "iTrainName" + iTrain.name + "_NetH" + network_hash + "_CFSlowH"+ cf_sl_hash +"_NumSig%03d"%reg_num_signals
     classifier_write.update_cache(GC_node, None, None, classifier_filename, overwrite=True, verbose=True)
 #****************************************************************
 ####TODO: make classifier cash work!
@@ -1867,12 +1930,22 @@ elif seq.input_files == "LoadRawData":
     subimages_newid = load_raw_data(seq.data_base_dir, seq.base_filename, input_dim=seq.input_dim, dtype=seq.dtype, select_samples=seq.samples, verbose=False)
 else:
 #W
-#    subimages_newid = experiment_datasets.load_data_from_sSeq(seq)
+#    subimages_newid = experimental_datasets.load_data_from_sSeq(seq)
     subimages_newid = seq.load_data(seq)
 #    subimages_newid = load_image_data(seq.input_files, seq.image_width, seq.image_height, seq.subimage_width, \
 #                            seq.subimage_height, seq.pixelsampling_x, seq.pixelsampling_y, \
 #                            seq.subimage_first_row, seq.subimage_first_column, seq.add_noise_L0, \
 #                            seq.convert_format, seq.translations_x, seq.translations_y, seq.trans_sampled, background_type=seq.background_type, color_background_filter=filter, verbose=False)
+
+if load_and_append_output_features_dir != None:              
+    newid_data_hash = cache.hash_object((iNewid,sNewid)).hexdigest()
+    newid_data_hash = "0"
+    print "loading output features (newid data) from dir: ", load_and_append_output_features_dir, "and hash:", newid_data_hash
+    additional_features_newid = cache.unpickle_array(base_dir=load_and_append_output_features_dir, base_filename="output_features_training_TestD"+newid_data_hash)        
+    additional_features_newid = 100000 * additional_features_newid[:,0:num_features_to_append_to_input] #
+    subimages_newid = numpy.concatenate((subimages_newid, additional_features_newid), axis=1)
+#    train_data_sets = system_parameters.expand_dataset_with_additional_features(train_data_sets, additional_features_training)    
+
 
 t_load_images1 = time.time()
 t11 = time.time()
@@ -1903,6 +1976,13 @@ sl_seq_newid[:,0:reg_num_signals] = sl_seq_newid[:,0:reg_num_signals] * corr_fac
 
 t_exec1 = time.time()
 print "Execution over New Id in %0.3f s"% ((t_exec1 - t_exec0))
+
+if save_output_features_dir != None:
+    print "saving output features (test data)"
+    testing_data_hash = cache.hash_object((iNewid,sNewid)).hexdigest()
+    cache.pickle_array(sl_seq_newid, base_dir=save_output_features_dir, base_filename="output_features_training_TestD"+testing_data_hash, overwrite=True, verbose=True)
+
+
 
 t_class0 = time.time()
 
@@ -2019,7 +2099,7 @@ if integer_label_estimation:
         regression2_svm_newid = numpy.rint(regression2_svm_newid)
         regression3_svm_newid = numpy.rint(regression3_svm_newid)
         regression_lr_newid = numpy.rint(regression_lr_newid)
-        quit()
+        #quit()
     print "regressionMAE_Gauss_newid[0:5]=", regressionMAE_Gauss_newid[0:5]
 
 
@@ -2447,7 +2527,7 @@ def binarize_array(arr):
     arr2[arr2 >= -0.05]=1
     return arr2
 
-if Parameters == experiment_datasets.ParamsGender or experiment_datasets.ParamsRAgeFunc:
+if Parameters == experimental_datasets.ParamsGender or experimental_datasets.ParamsRAgeFunc:
     print "Computing effective gender recognition:"
     binary_gender_estimation_training = binarize_array(regression_Gauss_training)
     binary_correct_labels_training = binarize_array(correct_labels_training)
@@ -2463,7 +2543,7 @@ if Parameters == experiment_datasets.ParamsGender or experiment_datasets.ParamsR
     print "Binary gender classification rate (newid) from continuous labels is:", binary_gender_estimation_rate_newid
 
     
-if Parameters == experiment_datasets.ParamsRGTSRBFunc and output_filename != None:
+if Parameters == experimental_datasets.ParamsRGTSRBFunc and output_filename != None:
     fd = open("G"+output_filename, "w")
     txt = ""
     for i, filename in enumerate(iNewid.input_files):
@@ -2586,8 +2666,9 @@ if save_sorted_incorrect_class_Gauss_newid:
     save_images_sorted_incorrect_class_Gauss_newid_base_dir = "/local/tmp/escalafl/Alberto/saved_images_sorted_incorrect_class_Gauss_newid"
     print "saving images to directory:", save_images_sorted_incorrect_class_Gauss_newid_base_dir
     decimate =  1
+    num_signals_per_image = subimage_shape[0]*subimage_shape[1]*in_channel_dim
     for i, i_x in enumerate(sorting_incorrect_Gauss_newid):
-        x = subimages_newid[i_x]
+        x = subimages_newid[i_x][0:num_signals_per_image]
         if i%decimate == 0:
             if seq.convert_format == "L":
                 im_raw = numpy.reshape(x, (sNewid.subimage_width, sNewid.subimage_height))
@@ -2611,7 +2692,7 @@ if export_data_to_libsvm:
 
 compute_background_detection = True #and False
 cutoff_backgrounds = [0.975, 0.98, 0.985, 0.99, 0.995, 0.998, 0.999, 0.9995, 0.99995]
-if compute_background_detection and Parameters == experiment_datasets.ParamsRFaceCentering:
+if compute_background_detection and Parameters == experimental_datasets.ParamsRFaceCentering:
     print "false_background should be as small as possible <= 0.01, correct_background should be large >= 0.8"
     for cutoff_background in cutoff_backgrounds:
         print "for cutoff_background = %f"%cutoff_background
@@ -2662,14 +2743,13 @@ if enable_display:
     #         (sNewid.subimage_height, sNewid.subimage_width)]
     #Note: sizes should be in practice the same, no need to generalize
     sizes = [subimage_shape, subimage_shape, subimage_shape]
-    
     for seqn in range(3):
         for im in range(num_images_per_set):
             tmp_sb = plt.subplot(3, num_images_per_set, num_images_per_set*seqn + im+1)
             y = im * (nums_images[seqn]-1) / (num_images_per_set - 1)
 #            print sequences[seqn][y].shape
 #            print sizes[seqn]         
-            subimage_im = sequences[seqn][y].reshape(sizes[seqn])
+            subimage_im = sequences[seqn][y][0:num_pixels_per_image].reshape(sizes[seqn])
                 
             tmp_sb.imshow(subimage_im.clip(0,max_clip), norm=None, vmin=0, vmax=max_clip, aspect='auto', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)
     #        subimage_im = subimage_im/256.0
@@ -2840,7 +2920,7 @@ if enable_display:
         pinv_zero = flow.inverse(sfa_zero)
     #WARNING L and RGB
     #    pinv_zero = pinv_zero.reshape((sTrain.subimage_height, sTrain.subimage_width))
-        pinv_zero = pinv_zero.reshape(subimage_shape)
+        pinv_zero = pinv_zero[0,0:num_pixels_per_image].reshape(subimage_shape)
     
         error_scale_disp=1.5
     #WARNING L and RGB
@@ -2867,7 +2947,7 @@ if enable_display:
     #Display Original Image
     #WARNING L and RGB
     #    subimage_im = subimages[y].reshape((sTrain.subimage_height, sTrain.subimage_width)) + 0.0
-        subimage_im = subimages[y].reshape(subimage_shape) + 0.0
+        subimage_im = subimages[y][0:num_pixels_per_image].reshape(subimage_shape) + 0.0        
         
         if show_translation_x:
             if sTrain.trans_sampled:
@@ -2887,12 +2967,12 @@ if enable_display:
     #Display Reconstructed Image
         data_out = sl_seq[y].reshape((1, hierarchy_out_dim))
         inverted_im = flow.inverse(data_out)
-        inverted_im = inverted_im.reshape(subimage_shape)
+        inverted_im = inverted_im[0][0:num_pixels_per_image].reshape(subimage_shape)
         f1a13.imshow(inverted_im.clip(0,max_clip), aspect='auto', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)        
         
     #Display Reconstruction Error
         error_scale_disp=1.5
-        error_im = subimages[y].reshape(subimage_shape) - inverted_im 
+        error_im = subimages[y][0:num_pixels_per_image].reshape(subimage_shape) - inverted_im 
         error_im_disp = scale_to(error_im, error_im.mean(), error_im.max()-error_im.min(), max_clip/2.0, max_clip, error_scale_disp, 'tanh')
         f1a21.imshow(error_im_disp.clip(0,max_clip), aspect='auto', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)       
         plt.axis = f1a21
@@ -2905,7 +2985,7 @@ if enable_display:
             y_next = y+1
         print "y_next=" + str(y_next)
         data_out2 = sl_seq[y_next].reshape((1, hierarchy_out_dim))
-        inverted_im2 = flow.inverse(data_out2).reshape(subimage_shape)
+        inverted_im2 = flow.inverse(data_out2)[0,0:num_pixels_per_image].reshape(subimage_shape)
         diff_im = inverted_im2 - inverted_im 
         diff_im_disp = scale_to(diff_im, diff_im.mean(), diff_im.max()-diff_im.min(), max_clip/2.0, max_clip, error_scale_disp, 'tanh')
         f1a22.imshow(diff_im_disp.clip(0,max_clip), aspect='auto', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)       
@@ -2999,26 +3079,26 @@ if enable_display:
     #Display Original Image
     #WARNING L and RGB
     #    subimage_im = subimages[y].reshape((sTrain.subimage_height, sTrain.subimage_width)) + 0.0
-        subimage_im = subimages_newid[y].reshape(subimage_shape) + 0.0              
+        subimage_im = subimages_newid[y][0:num_pixels_per_image].reshape(subimage_shape) + 0.0              
         f_kNNinv_a12.imshow(subimage_im.clip(0,max_clip), aspect='auto', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)      
         f_kNNinv_a12.set_xlabel("Selected image y=%d"%y)
       
     #Display Reconstructed Image kNN
         data_out = sl_seq_newid[y].reshape((1, hierarchy_out_dim))
         x_app_test = more_nodes.approximate_kNN_op(subimages_seenid, sl_seq_seenid, data_out, k=kNN_k, ignore_closest_match=True, operation="average")
-        inverted_im_kNNavg = x_app_test.reshape(subimage_shape)        
+        inverted_im_kNNavg = x_app_test[0, 0:num_pixels_per_image].reshape(subimage_shape)        
         f_kNNinv_a13.imshow(inverted_im_kNNavg.clip(0,max_clip), aspect='auto', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)        
     
     #Display Linearly Reconstructed Image
         data_out = sl_seq_newid[y].reshape((1, hierarchy_out_dim))
         x_app_test = subimages_newid_app[y]
-        inverted_im_LRec = x_app_test.reshape(subimage_shape)        
+        inverted_im_LRec = x_app_test[0:num_pixels_per_image].reshape(subimage_shape)        
         f_kNNinv_a14.imshow(inverted_im_LRec.clip(0,max_clip), aspect='auto', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)        
         
     #Display Reconstructed Image for kNN_k=1
         data_out = sl_seq_newid[y].reshape((1, hierarchy_out_dim))
         x_app_test = more_nodes.approximate_kNN_op(subimages_seenid, sl_seq_seenid, data_out, k=1, ignore_closest_match=False, operation="average")
-        inverted_im_kNN1 = x_app_test.reshape(subimage_shape)        
+        inverted_im_kNN1 = x_app_test[0, 0:num_pixels_per_image].reshape(subimage_shape)        
         f_kNNinv_a22.imshow(inverted_im_kNN1.clip(0,max_clip), aspect='auto', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)        
 
     #Display Reconstruction Error, kNN1
@@ -3579,14 +3659,14 @@ if enable_display:
     
         print "Displaying Original and Reconstructions"
     #Display Original Image
-        subimage_im = subimages[y].reshape(subimage_shape)
+        subimage_im = subimages[y][0:num_pixels_per_image].reshape(subimage_shape)
         ax6_12.imshow(subimage_im.clip(0,max_clip), vmin=0, vmax=max_clip, aspect='equal', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)
     
         if show_linear_inv == True:
             #Display Reconstructed Image
             data_out = sl_seq[y].reshape((1, hierarchy_out_dim))
             inverted_im = flow.inverse(data_out)
-            inverted_im = inverted_im.reshape(subimage_shape)
+            inverted_im = inverted_im[0, 0:num_pixels_per_image].reshape(subimage_shape)
             x_p = inverted_im
             inverted_im_ori = inverted_im.copy()
             ax6_13.imshow(inverted_im.clip(0,max_clip), vmin=0, vmax=max_clip, aspect='equal', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)        
@@ -3594,7 +3674,7 @@ if enable_display:
             #Display Re-Reconstructed Image
             re_data_out = flow.execute(inverted_im_ori.reshape((1, signals_per_image)))
             re_inverted_im = flow.inverse(re_data_out)
-            re_inverted_im = re_inverted_im.reshape(subimage_shape)
+            re_inverted_im = re_inverted_im[0, 0:num_pixels_per_image].reshape(subimage_shape)
             ax6_14.imshow(re_inverted_im.clip(0,max_clip), vmin=0, vmax=max_clip, aspect='equal', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)
         
         if show_linear_morphs == True:   
@@ -3612,7 +3692,7 @@ if enable_display:
             for slow_value, display_type, fig_axes in disp_data:
                 work_sfa[0][x] = slow_value
                 inverted_im = flow.inverse(work_sfa)
-                inverted_im = inverted_im.reshape(subimage_shape)
+                inverted_im = inverted_im[0, 0:num_pixels_per_image].reshape(subimage_shape)
                 if display_type == "inv":
                     fig_axes.imshow(inverted_im.clip(0,max_clip), vmin=0, vmax=max_clip, aspect='equal', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)        
                 elif display_type == "mor":
@@ -3620,7 +3700,7 @@ if enable_display:
                     delta_sfa = numpy.zeros((1, hierarchy_out_dim))
                     delta_sfa[0][x] = slow_value
                     delta_im = flow.inverse(delta_sfa)
-                    delta_im = delta_im.reshape(subimage_shape)                      
+                    delta_im = delta_im[0, 0:num_pixels_per_image].reshape(subimage_shape)                      
                     morphed_im = subimage_im - x_p + delta_im
         #            morphed_im = subimage_im - x_p + inverted_im - z_p
         #            morphed_im = morphed.reshape((sTrain.subimage_height, sTrain.subimage_width))           
@@ -3634,7 +3714,7 @@ if enable_display:
                     sfa_asterix = sl_seq[(slow_value + 2) * (num_images-1) / 4].reshape((1, hierarchy_out_dim))
                     delta_sfa = sfa_asterix - data_out
                     delta_im = flow.inverse(delta_sfa)
-                    delta_im = delta_im.reshape(subimage_shape)                      
+                    delta_im = delta_im[0, 0:num_pixels_per_image].reshape(subimage_shape)                      
                     morphed_im = subimage_im - x_p + delta_im
                     morphed_im_disp = morphed_im
                     fig_axes.imshow(morphed_im_disp.clip(0,max_clip), vmin=0, vmax=max_clip, aspect='equal', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)                 
@@ -3650,7 +3730,7 @@ if enable_display:
                     work_sfa = data_out.copy()
                     work_sfa[0][ma] = work_sfa[0][ma] + slow_value * lim_delta_sfa
                     mask_im = flow.inverse(work_sfa)
-                    mask_im = (mask_im.reshape(subimage_shape) - x_p) / lim_delta_sfa
+                    mask_im = (mask_im[0, 0:num_pixels_per_image].reshape(subimage_shape) - x_p) / lim_delta_sfa
                     if mask_normalize == True:
                         mask_im_disp = scale_to(mask_im, 0.0, mask_im.max()-mask_im.min(), max_clip/2.0, max_clip/2.0, error_scale_disp, 'tanh')
                     else:
@@ -3666,7 +3746,7 @@ if enable_display:
                     work_sfa = data_out.copy()
                     work_sfa[0][mask] += slow_value * lim_delta_sfa
                     mask_im = flow.inverse(work_sfa)
-                    mask_im = (mask_im.reshape(subimage_shape) - x_p) / lim_delta_sfa
+                    mask_im = (mask_im[0, 0:num_pixels_per_image].reshape(subimage_shape) - x_p) / lim_delta_sfa
                     if mask_normalize == True:
                         mask_im_disp = scale_to(mask_im, 0.0, mask_im.max()-mask_im.min(), max_clip/2.0, max_clip, error_scale_disp, 'tanh')
                     else:
@@ -3707,15 +3787,15 @@ if enable_display:
     
         print "Displaying Original and Reconstructions"
     #Display Original Image
-        subimage_im = subimages[y].reshape(subimage_shape)
+        subimage_im = subimages[y][0:num_pixels_per_image].reshape(subimage_shape)
         ax9_12.imshow(subimage_im.clip(0,max_clip), vmin=0, vmax=max_clip, aspect='equal', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)
     
         if show_localized_morphs == True: 
             #Display Localized Reconstructed Image
-            data_in = subimages[y].reshape((1, signals_per_image))
+            data_in = subimages[y][0:num_pixels_per_image].reshape((1, signals_per_image))
             data_out = sl_seq[y].reshape((1, hierarchy_out_dim))
             loc_inverted_im = flow.localized_inverse(data_in, data_out)
-            loc_inverted_im = loc_inverted_im.reshape(subimage_shape)
+            loc_inverted_im = loc_inverted_im[0, 0:num_pixels_per_image].reshape(subimage_shape)
             loc_inverted_im_ori = loc_inverted_im.copy()
             ax9_13.imshow(loc_inverted_im.clip(0,max_clip), vmin=0, vmax=max_clip, aspect='equal', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)        
         
@@ -3723,14 +3803,14 @@ if enable_display:
             loc_re_data_in = loc_inverted_im_ori.reshape((1, signals_per_image))
             loc_re_data_out = flow.execute(loc_re_data_in)
             loc_re_inverted_im = flow.localized_inverse(loc_re_data_in, loc_re_data_out)
-            loc_re_inverted_im = loc_re_inverted_im.reshape(subimage_shape)
+            loc_re_inverted_im = loc_re_inverted_im[0, 0:num_pixels_per_image].reshape(subimage_shape)
             ax9_14.imshow(loc_re_inverted_im.clip(0,max_clip), vmin=0, vmax=max_clip, aspect='equal', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)
             
             print "Displaying Masks Using Localized Inverses"
             error_scale_disp=1.0
             disp_data = [(-8, "lmsk", ax9_21), (-4.0, "lmsk", ax9_22), (2.0, "lmsk", ax9_23), (4.0, "lmsk", ax9_24), (8.0, "lmsk", ax9_25)]
         
-            data_in = subimages[y].reshape((1, signals_per_image))
+            data_in = subimages[y][0:num_pixels_per_image].reshape((1, signals_per_image))
             data_out = sl_seq[y].reshape((1, hierarchy_out_dim))  
             work_sfa = data_out.copy()
                
@@ -3758,10 +3838,10 @@ if enable_display:
                 print "Computing from class %d to class %d, slow_value %d"%(current_class, next_class, scale_factor)
                 work_sfa = data_out * (1-lim_delta_sfa) + data_out_next * lim_delta_sfa
                 t_loc_inv0 = time.time()
-                mask_im = flow.localized_inverse(data_in, work_sfa, verbose=False)
+                mask_im = flow.localized_inverse(data_in, work_sfa, verbose=False)[:, 0:num_pixels_per_image]
                 t_loc_inv1 = time.time()
                 print "Localized inverse computed in %0.3f s"% ((t_loc_inv1-t_loc_inv0)) 
-                mask_im = (mask_im - data_in).reshape(subimage_shape) / lim_delta_sfa
+                mask_im = (mask_im - data_in)[0, 0:num_pixels_per_image].reshape(subimage_shape) / lim_delta_sfa
                 if mask_normalize == True:
                     mask_im_disp = abs(scale_factor) * scale_to(mask_im, 0.0, mask_im.max()-mask_im.min(), max_clip/2.0, max_clip/2.0, error_scale_disp, 'tanh')
                 else:
@@ -3814,7 +3894,7 @@ if enable_display:
                         desired_next_sfa.append(sl_seq_training_mean[0])
                     #sl_seq[next_class*block_size:(next_class+1)*block_size,:].mean(axis=0))
         
-                data_in = subimages[y].reshape((1, signals_per_image))
+                data_in = subimages[y][0:num_pixels_per_image].reshape((1, signals_per_image))
                 data_out = sl_seq[y].reshape((1, hierarchy_out_dim))
                 for i, next_class in enumerate(desired_next_classes):
                     if next_class == -1:
@@ -3829,12 +3909,12 @@ if enable_display:
                     work_sfa = data_out * (1-lim_delta_sfa) + data_out_next * lim_delta_sfa
         
                     t_loc_inv0 = time.time()
-                    morphed_data = flow.localized_inverse(data_in, work_sfa, verbose=False)
+                    morphed_data = flow.localized_inverse(data_in, work_sfa, verbose=False)[0, 0:num_pixels_per_image] #TODO: last part might be unnecessary
                     t_loc_inv1 = time.time()
                     print "Localized inverse computed in %0.3f s"% ((t_loc_inv1-t_loc_inv0)) 
                     
                     morphed_data = data_in + (morphed_data - data_in)/lim_delta_sfa
-                    morphed_im_disp = morphed_data.reshape(subimage_shape) 
+                    morphed_im_disp = morphed_data[0:num_pixels_per_image].reshape(subimage_shape) 
         
                     if all_axes_morph[i] != None:
                         all_axes_morph[i].imshow(morphed_im_disp.clip(0,max_clip), vmin=0, vmax=max_clip, aspect='equal', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)           
@@ -3844,7 +3924,7 @@ if enable_display:
     
                     if all_axes_mask[i] != None:
                         loc_mask_data = morphed_data[0] - data_in[0]
-                        loc_mask_disp = loc_mask_data.reshape(subimage_shape) + max_clip/2.0
+                        loc_mask_disp = loc_mask_data[0:num_pixels_per_image].reshape(subimage_shape) + max_clip/2.0
                         loc_mask_disp = scale_to(loc_mask_disp, loc_mask_disp.mean(), loc_mask_disp.max() - loc_mask_disp.min(), 127.5, 255.0, scale_disp, 'tanh')
                         all_axes_mask[i].imshow(loc_mask_disp.clip(0,max_clip), vmin=0, vmax=max_clip, aspect='equal', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)           
                         all_axes_mask[i].set_title("Mask(cl %.1f -> %.1f)"%(current_class,next_class))

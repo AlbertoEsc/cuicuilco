@@ -1,5 +1,5 @@
-import SystemParameters
-#from SystemParameters import load_data_from_sSeq
+import system_parameters
+#from system_parameters import load_data_from_sSeq
 import numpy
 import scipy
 import mdp
@@ -29,23 +29,23 @@ activate_random_permutation = False
 activate_sfa_ordering = False
 if activate_random_permutation:
     print "Random Permutation Activated!!!"
-    SystemParameters.ParamsSFALayer.ord_node_class = more_nodes.RandomPermutationNode
-    SystemParameters.ParamsSFALayer.ord_args = {}
-    SystemParameters.ParamsSFASuperNode.ord_node_class = more_nodes.RandomPermutationNode
-    SystemParameters.ParamsSFASuperNode.ord_args = {}
+    system_parameters.ParamsSFALayer.ord_node_class = more_nodes.RandomPermutationNode
+    system_parameters.ParamsSFALayer.ord_args = {}
+    system_parameters.ParamsSFASuperNode.ord_node_class = more_nodes.RandomPermutationNode
+    system_parameters.ParamsSFASuperNode.ord_args = {}
 elif activate_sfa_ordering:
-    SystemParameters.ParamsSFALayer.ord_node_class = mdp.nodes.SFANode
-    SystemParameters.ParamsSFASuperNode.ord_node_class = mdp.nodes.SFANode
-    SystemParameters.ParamsSFALayer.ord_args = {}
-    SystemParameters.ParamsSFASuperNode.ord_args = {}
+    system_parameters.ParamsSFALayer.ord_node_class = mdp.nodes.GSFANode
+    system_parameters.ParamsSFASuperNode.ord_node_class = mdp.nodes.GSFANode
+    system_parameters.ParamsSFALayer.ord_args = {}
+    system_parameters.ParamsSFASuperNode.ord_args = {}
 else:
-    SystemParameters.ParamsSFALayer.ord_node_class = None
-    SystemParameters.ParamsSFASuperNode.ord_node_class = None
-    SystemParameters.ParamsSFALayer.ord_args = {}
-    SystemParameters.ParamsSFASuperNode.ord_args = {}
+    system_parameters.ParamsSFALayer.ord_node_class = None
+    system_parameters.ParamsSFASuperNode.ord_node_class = None
+    system_parameters.ParamsSFALayer.ord_args = {}
+    system_parameters.ParamsSFASuperNode.ord_args = {}
     
-print "SystemParameters.ParamsSFALayer.ord_node_class is:", SystemParameters.ParamsSFALayer.ord_node_class
-print "SystemParameters.ParamsSFALayer.ord_args is:", SystemParameters.ParamsSFALayer.ord_args
+print "system_parameters.ParamsSFALayer.ord_node_class is:", system_parameters.ParamsSFALayer.ord_node_class
+print "system_parameters.ParamsSFALayer.ord_args is:", system_parameters.ParamsSFALayer.ord_args
 
 def comp_layer_name(cloneLayer, exp_funcs, x_field_channels, y_field_channels, pca_out_dim, sfa_out_dim):
     name = ""
@@ -121,7 +121,7 @@ print "*******************************************************************"
 print "********    Creating Void Network            ******************"
 print "*******************************************************************"
 print "******** Setting Layer L0 Parameters          *********************"
-layer = pVoidLayer = SystemParameters.ParamsSFASuperNode()
+layer = pVoidLayer = system_parameters.ParamsSFASuperNode()
 layer.name = "Void Layer"
 layer.pca_node_class = None
 layer.exp_funcs = [identity,]
@@ -133,7 +133,7 @@ layer.sfa_out_dim = None
 ####################################################################
 ###########               Void NETWORK                ############
 ####################################################################  
-network = voidNetwork1L = SystemParameters.ParamsNetwork()
+network = voidNetwork1L = system_parameters.ParamsNetwork()
 network.name = "Void 1 Layer Network"
 network.L0 = pVoidLayer
 network.L1 = None
@@ -231,6 +231,12 @@ def QE_40(x):
 def QE_45(x):
     return QE(x[:,0:45])
 
+def QE_50(x):
+    return QE(x[:,0:50])
+
+def QE_55(x):
+    return QE(x[:,0:55])
+
 def CE_15(x):
     return CE(x[:,0:15])
 
@@ -278,28 +284,28 @@ def encode_signal_p9(x):
 print "*******************************************************************"
 print "*******    MNIST DIRECT NETWORK                   *****************"
 print "*******************************************************************"
-layer = pSFADirectLayer = SystemParameters.ParamsSFASuperNode()
+layer = pSFADirectLayer = system_parameters.ParamsSFASuperNode()
 layer.name = "Direct SFA Layer for MNIST"
 layer.pca_node_class = mdp.nodes.PCANode #None  #None
 layer.pca_args = {}
 layer.pca_out_dim = 100 #40 # 35 #WARNING: 100 or None
 layer.exp_funcs = [identity]
-layer.sfa_node_class =  mdp.nodes.SFANode #mdp.nodes.SFANode #mdp.nodes.SFANode
+layer.sfa_node_class =  mdp.nodes.GSFANode #mdp.nodes.GSFANode #mdp.nodes.GSFANode
 layer.sfa_out_dim = 35 #3 #49*2 # *3 # None
 
-layer = pSFADirectLayer2 = SystemParameters.ParamsSFASuperNode()
+layer = pSFADirectLayer2 = system_parameters.ParamsSFASuperNode()
 layer.name = "Direct SFA Layer2"
 layer.pca_node_class = None  #None
 layer.pca_args = {}
 #layer.exp_funcs = [identity, QE]
 layer.exp_funcs = [identity, QE, CE] #unsigned_08expo, signed_08expo
-layer.sfa_node_class = mdp.nodes.SFANode #mdp.nodes.SFANode
+layer.sfa_node_class = mdp.nodes.GSFANode #mdp.nodes.GSFANode
 layer.sfa_out_dim = 20 
 ####################################################################
 #####terms_NL_expansion == 15:
 #        One-Layer Linear SFA NETWORK              ############
 ####################################################################  
-network = MNIST_8C_DirectNetwork = SystemParameters.ParamsNetwork()
+network = MNIST_8C_DirectNetwork = system_parameters.ParamsNetwork()
 network.name = "SFA Direct Network for MNIST"
 network.L0 = pSFADirectLayer
 network.L1 = pSFADirectLayer2
@@ -309,13 +315,246 @@ network.L4 = None
 network.layers = [network.L0, network.L1]
 
 
+################ Simple network for face centering with direct GSFA
+layer = pPCA_GSFA_DirectLayer = system_parameters.ParamsSFASuperNode()
+layer.name = "Direct PCA-GSFA Layer for FaceCentering"
+layer.pca_node_class = mdp.nodes.PCANode #None  #None
+layer.pca_args = {}
+layer.pca_out_dim = 75 #40 # 35 #WARNING: 100 or None
+layer.exp_funcs = [identity, unsigned_08expo] 
+layer.sfa_node_class = mdp.nodes.GSFANode
+layer.sfa_out_dim = 30
+
+#NETWORK MNIST Net0
+network = PCA_GSFA_Network1L = system_parameters.ParamsNetwork()
+network.name = "Direct PCA-GSFA Network for FaceCentering"
+network.L0 = pPCA_GSFA_DirectLayer
+network.L1 = None #pSFADirectLayer2
+network.L2 = None
+network.L3 = None
+network.L4 = None
+network.layers = [network.L0]
+
+network = PCA_QE35_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [identity, QE_35] #unsigned_08expo
+
+#NETWORK MNIST Net1
+network = PCA_QE40_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [identity, QE_40] #unsigned_08expo
+
+#NETWORK MNIST NetB
+network = PCA_U08_QE40_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [identity, unsigned_08expo, QE_40] #unsigned_08expo
+
+
+network = PCA_control4linear_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control4_linear, ] #unsigned_08expo
+
+network = PCA_control4_QE20_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control4_QE20, ] #unsigned_08expo
+
+network = PCA_control4_QE30_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control4_QE30, ] #unsigned_08expo
+
+network = PCA_control4_QE40_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control4_QE40, ] #unsigned_08expo
+
+network = PCA_control1_QE40_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control1_QE40, ] #unsigned_08expo
+
+network = PCA_control2_QE40_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control2_QE40, ] #unsigned_08expo
+
+network = PCA_control2_QE60_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control2_QE60, ] #unsigned_08expo
+
+network = PCA_control3_QE40_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control3_QE40, ] #unsigned_08expo
+
+network = PCA_control5_QE40_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control5_QE40, ] #unsigned_08expo
+
+network = PCA_control6_QE40_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control6_QE40, ] #unsigned_08expo
+
+network = PCA_control6_QE50_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control6_QE50, ] #unsigned_08expo
+
+
+network = PCA_control4_QE50_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control4_QE50, ] #unsigned_08expo
+
+network = PCA_control4_QE60_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control4_QE60, ] #unsigned_08expo
+
+network = PCA_control5_QE60_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control5_QE60, ] #unsigned_08expo
+
+network = PCA_control6_QE60_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control6_QE60, ] #unsigned_08expo
+
+network = PCA_control8_QE60_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control8_QE60, ] #unsigned_08expo
+
+network = PCA_control9_QE60_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control9_QE60, ] #unsigned_08expo
+
+
+
+network = PCA_control2_QE40_CE10_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control2_QE40_CE10, ] #unsigned_08expo
+
+network = PCA_control2_QE40_CE15_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control2_QE40_CE15, ] #unsigned_08expo
+
+network = PCA_control2_QE40_CE20_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control2_QE40_CE20, ] #unsigned_08expo
+
+network = PCA_control2_QE40_CE25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control2_QE40_CE25, ] #unsigned_08expo
+
+network = PCA_control3_QE40_CE25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control3_QE40_CE25, ] #unsigned_08expo
+
+network = PCA_control2_QE40_CE30_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control2_QE40_CE30, ] #unsigned_08expo
+
+network = PCA_control2_QE40_CE35_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control2_QE40_CE35, ] #unsigned_08expo
+
+network = PCA_control2_QE50_CE25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control2_QE50_CE25, ] #unsigned_08expo
+
+network = PCA_control3_QE50_CE25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control3_QE50_CE25, ] #unsigned_08expo
+
+network = PCA_control6_QE50_CE10_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control6_QE50_CE10, ] #unsigned_08expo
+
+network = PCA_control6_QE50_CE15_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control6_QE50_CE15, ] #unsigned_08expo
+
+network = PCA_control6_QE50_CE20_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control6_QE50_CE20, ] #unsigned_08expo
+
+network = PCA_QE60_CE30_control6_QE40_CE10_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QE60_CE30_control6_QE40_CE10, ] #unsigned_08expo
+
+network = PCA_QE60_CE35_control6_QE40_CE10_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QE60_CE35_control6_QE40_CE10, ] #unsigned_08expo
+
+network = PCA_QE60_CE25_control3_QE40_CE10_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QE60_CE25_control3_QE40_CE10, ] #unsigned_08expo
+
+network = PCA_QE50_CE20_control9_QE30_CE5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QE50_CE20_control9_QE30_CE5, ] #unsigned_08expo
+
+network = PCA_QE50_CE20_control5_QE35_CE5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QE50_CE20_control5_QE35_CE5, ] #unsigned_08expo
+
+network = PCA_QE50_CE20_control5_QE40_CE5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QE50_CE20_control5_QE40_CE5, ] #unsigned_08expo
+
+network = PCA_QE50_CE20_control5_QE45_CE5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QE50_CE20_control5_QE45_CE5, ] #unsigned_08expo
+
+network = PCA_QE50_CE20_control5_QE50_CE5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QE50_CE20_control5_QE50_CE5, ] #unsigned_08expo
+
+network = PCA_QE50_CE20_control5_QE50_CE10_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QE50_CE20_control5_QE50_CE10, ] #unsigned_08expo
+
+network = PCA_QE50_CE20_control5_QE50_CE15_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QE50_CE20_control5_QE50_CE15, ] #unsigned_08expo
+
+
+network = PCA_QE40_CE25_control5_QE30_CE5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QE40_CE25_control5_QE30_CE5, ] #unsigned_08expo
+
+network = PCA_QE40_CE35_control5_QE30_CE5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QE40_CE35_control5_QE30_CE5, ] #unsigned_08expo
+
+network = PCA_QE40_CE30_control5_QE30_CE5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QE40_CE30_control5_QE30_CE5, ] #unsigned_08expo
+
+network = PCA_QE50_CE20_control9_QE40_CE5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QE50_CE20_control9_QE40_CE5, ] #unsigned_08expo
+
+network = PCA_QE60_CE30_control9_QE30_CE5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QE60_CE30_control9_QE30_CE5, ] #unsigned_08expo
+
+
+network = PCA_QE50_CE20_control9_QE25_CE5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QE50_CE20_control9_QE25_CE5, ] #unsigned_08expo
+
+network = PCA_QE50_CE20_control9_QE35_CE5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QE50_CE20_control9_QE35_CE5, ] #unsigned_08expo
+
+network = PCA_QE50_CE20_control9_QE45_CE5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QE50_CE20_control9_QE45_CE5, ] #unsigned_08expo
+
+network = PCA_QE60_CE35_control4_QE40_CE5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [QE60_CE35_control4_QE40_CE5, ] #unsigned_08expo
+
+#NETWORK MNIST NetA
+network = PCA_QE50_CE25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [identity, QE_50, CE_25, ] #unsigned_08expo
+
+
+network = PCA_control2_QE60_CE25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control2_QE60_CE25, ] #unsigned_08expo
+
+network = PCA_control2_QE70_CE25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control2_QE70_CE25, ] #unsigned_08expo
+
+network = PCA_control2_QE75_CE25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [control2_QE75_CE25, ] #unsigned_08expo
+
+
+
+network = PCA_QE40_CE15_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [identity, QE_40, CE_15] #unsigned_08expo
+
+network = PCA_QE40_CE20_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [identity, QE_40, CE_20] #unsigned_08expo
+
+network = PCA_QE40_CE25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [identity, QE_40, CE_25] #unsigned_08expo
+
+network = PCA_QE40_CE30_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [identity, QE_40, CE_30] #unsigned_08expo
+
+network = PCA_QE45_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [identity, QE_45] #unsigned_08expo
+
+network = PCA_QE45_CE25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [identity, QE_45, CE_25] #unsigned_08expo
+
+network = PCA_QE50_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [identity, QE_50] #unsigned_08expo
+
+network = PCA_QE50_CE25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [identity, QE_50, CE_25] #unsigned_08expo
+
+network = PCA_QE55_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [identity, QE_55] #unsigned_08expo
+
+network = PCA_QE35_CE25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [identity, QE_35, CE_25] #unsigned_08expo
+
+network = PCA_QE30_CE25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
+network.L0.exp_funcs = [identity, QE_30, CE_25] #unsigned_08expo
+
+
+#QE50_CE20_control9_QE30_CE5
+
 print "*******************************************************************"
 print "*******    Creating Direct Linear SFA Network     *****************"
 print "*******************************************************************"
 print "******** Setting Layer L0 Parameters          *********************"
-layer = pSFADirectLayer = SystemParameters.ParamsSFASuperNode()
+layer = pSFADirectLayer = system_parameters.ParamsSFASuperNode()
 layer.name = "Direct SFA Layer"
-#layer.pca_node_class = None # mdp.nodes.SFANode
+#layer.pca_node_class = None # mdp.nodes.GSFANode
 #W
 layer.pca_node_class = None #mdp.nodes.PCANode #None  #None
 #layer.pca_args = {}
@@ -327,15 +566,15 @@ layer.exp_funcs = [identity,] #unsigned_08expo, signed_08expo
 #layer.exp_funcs = [encode_signal_p9,] #For next experiment: [encode_signal_p9,]
 #layer.red_node_class = mdp.nodes.HeadNode
 #layer.red_out_dim = int(tuning_parameter)
-layer.sfa_node_class =  mdp.nodes.GSFANode #mdp.nodes.SFANode #mdp.nodes.SFANode
+layer.sfa_node_class =  mdp.nodes.GSFANode #mdp.nodes.GSFANode #mdp.nodes.GSFANode
 layer.sfa_out_dim = 100 #3 #49*2 # *3 # None
 
 
-layer = pSFADirectLayer2 = SystemParameters.ParamsSFASuperNode()
+layer = pSFADirectLayer2 = system_parameters.ParamsSFASuperNode()
 layer.name = "Direct SFA Layer2"
-#layer.pca_node_class = None # mdp.nodes.SFANode
+#layer.pca_node_class = None # mdp.nodes.GSFANode
 #W
-layer.pca_node_class = mdp.nodes.SFANode
+layer.pca_node_class = mdp.nodes.GSFANode
 layer.pca_args = {}
 layer.pca_out_dim = 3 #WARNING: 100 or None
 #layer.pca_out_dim = 35 #WARNING: 100 or None
@@ -346,13 +585,13 @@ layer.exp_funcs = [identity, P5, P4, CE, QE, unsigned_08expo, signed_08expo] #un
 #layer.exp_funcs = [encode_signal_p9,] #For next experiment: [encode_signal_p9,]
 #layer.red_node_class = mdp.nodes.HeadNode
 #layer.red_out_dim = int(tuning_parameter)
-layer.sfa_node_class = mdp.nodes.SFANode #mdp.nodes.SFANode
+layer.sfa_node_class = mdp.nodes.GSFANode #mdp.nodes.GSFANode
 layer.sfa_out_dim = 3 
 ####################################################################
 #####terms_NL_expansion == 15:
 #        One-Layer Linear SFA NETWORK              ############
 ####################################################################  
-network = SFADirectNetwork1L = SystemParameters.ParamsNetwork()
+network = SFADirectNetwork1L = system_parameters.ParamsNetwork()
 network.name = "SFA 1 Layer Direct Network"
 network.L0 = pSFADirectLayer
 network.L1 = None #pSFADirectLayer2
@@ -365,9 +604,9 @@ print "*******************************************************************"
 print "********    Creating One-Layer Linear SFA Network            ******************"
 print "*******************************************************************"
 print "******** Setting Layer L0 Parameters          *********************"
-layer = pSFAOneLayer = SystemParameters.ParamsSFASuperNode()
+layer = pSFAOneLayer = system_parameters.ParamsSFASuperNode()
 layer.name = "One-Node SFA Layer"
-#layer.pca_node_class = None # mdp.nodes.SFANode
+#layer.pca_node_class = None # mdp.nodes.GSFANode
 #W
 layer.pca_node_class = mdp.nodes.PCANode
 layer.pca_args = {}
@@ -379,7 +618,7 @@ layer.pca_out_dim = 35 #WARNING: 100 or None
 #layer.exp_funcs = [encode_signal_p9,] #For next experiment: [encode_signal_p9,]
 #layer.red_node_class = mdp.nodes.HeadNode
 #layer.red_out_dim = int(tuning_parameter)
-layer.sfa_node_class = mdp.nodes.IEVMLRecNode #mdp.nodes.SFANode
+layer.sfa_node_class = mdp.nodes.IEVMLRecNode #mdp.nodes.GSFANode
 #layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":"RandomSigmoids", "expansion_starting_point":"08Exp", "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999, "expansion_output_dim":4000} 
 #layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo],                       "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 #QE10, CE10, QE15, CE15, QE20, CE20, QE25, CE25,
@@ -409,7 +648,7 @@ layer.sfa_out_dim = 9 #49*2 # *3 # None
 #####terms_NL_expansion == 15:
 #        One-Layer Linear SFA NETWORK              ############
 ####################################################################  
-network = SFANetwork1L = SystemParameters.ParamsNetwork()
+network = SFANetwork1L = system_parameters.ParamsNetwork()
 network.name = "SFA 1 Layer Linear Network"
 network.L0 = pSFAOneLayer
 network.L1 = None
@@ -455,16 +694,16 @@ network.L0.sfa_args = {"exp_func":he.cos_exp_mix8_F, "factor_projection_out":0.9
 
 
 network = HeuristicPaperNetwork = copy.deepcopy(SFANetwork1L)
-network.L0.pca_node_class = mdp.nodes.SFANode
+network.L0.pca_node_class = mdp.nodes.GSFANode
 network.L0.pca_out_dim = 60
 network.exp_funcs = [identity]
-network.L0.sfa_node_class = mdp.nodes.SFANode
+network.L0.sfa_node_class = mdp.nodes.GSFANode
 network.L0.sfa_out_dim = 60 # *3
 
 ####################################################################
 ######        2-Layer Linear SFA NETWORK TUBE           ############
 ####################################################################  
-network = SFANetwork2T = SystemParameters.ParamsNetwork()
+network = SFANetwork2T = system_parameters.ParamsNetwork()
 network.name = "SFA 2 Layer Linear Network (Tube)"
 network.L0 = copy.deepcopy(pSFAOneLayer)
 network.L0.sfa_out_dim = 49
@@ -478,7 +717,7 @@ network.layers = [network.L0, network.L1]
 ####################################################################
 ######        3-Layer Linear SFA NETWORK TUBE           ############
 ####################################################################  
-network = SFANetwork3T = SystemParameters.ParamsNetwork()
+network = SFANetwork3T = system_parameters.ParamsNetwork()
 network.name = "SFA 2 Layer Linear Network (Tube)"
 network.L0 = copy.deepcopy(pSFAOneLayer)
 network.L1 = copy.deepcopy(pSFAOneLayer)
@@ -492,13 +731,13 @@ network.layers = [network.L0, network.L1, network.L2]
 ####################################################################
 ######        One-Layer NON-Linear SFA NETWORK          ############
 ####################################################################  
-#SFANetwork1L.layers[0].pca_node_class = mdp.nodes.SFANode
+#SFANetwork1L.layers[0].pca_node_class = mdp.nodes.GSFANode
 #unsigned_08expo, pair_prodsigmoid_04_adj2_ex, unsigned_2_08expo, sel_exp(42, unsigned_08expo)
 u08expoNetwork1L = NetworkSetExpFuncs([identity, sel_exp(42, unsigned_2_08expo), ], copy.deepcopy(SFANetwork1L))
 #W
 u08expoNetwork1L.layers[0].pca_node_class = mdp.nodes.PCANode
 u08expoNetwork1L.layers[0].pca_out_dim = 500/3 #49
-u08expoNetwork1L.layers[0].ord_node_class = None #mdp.nodes.SFANode
+u08expoNetwork1L.layers[0].ord_node_class = None #mdp.nodes.GSFANode
 u08expoNetwork1L.layers[0].ord_args = {"output_dim": 100}
 u08expoNetwork1L.layers[0].sfa_out_dim = 30 #49
 
@@ -511,22 +750,22 @@ u08expoNetwork1L.layers[0].sfa_out_dim = 30 #49
 ####################################################################
 ######        Two-Layer NON-Linear SFA NETWORK TUBE     ############
 ####################################################################  
-#SFANetwork1L.layers[0].pca_node_class = mdp.nodes.SFANode
+#SFANetwork1L.layers[0].pca_node_class = mdp.nodes.GSFANode
 u08expoNetwork2T = NetworkSetExpFuncs([identity, unsigned_08expo], copy.deepcopy(SFANetwork2T))
-#u08expoNetwork2T.layers[0].pca_node_class = mdp.nodes.SFANode
+#u08expoNetwork2T.layers[0].pca_node_class = mdp.nodes.GSFANode
 u08expoNetwork2T.layers[0].pca_node_class = None
-u08expoNetwork2T.layers[0].ord_node_class = mdp.nodes.SFANode
+u08expoNetwork2T.layers[0].ord_node_class = mdp.nodes.GSFANode
 u08expoNetwork2T.layers[0].ord_args = {"output_dim": 49}
 u08expoNetwork2T.layers[1].pca_node_class = None
 u08expoNetwork2T.layers[1].ord_node_class = None
-u08expoNetwork2T.layers[1].sfa_node_class = mdp.nodes.SFANode
+u08expoNetwork2T.layers[1].sfa_node_class = mdp.nodes.GSFANode
 u08expoNetwork2T.layers[1].sfa_out_dim = 49
 
 ####################################################################
 ######        One-Layer Quadratic SFA NETWORK          ############
 ####################################################################  
 quadraticNetwork1L = NetworkSetExpFuncs([identity, pair_prod_ex], copy.deepcopy(SFANetwork1L)) #QE? CE?
-quadraticNetwork1L.layers[0].pca_node_class = mdp.nodes.SFANode
+quadraticNetwork1L.layers[0].pca_node_class = mdp.nodes.GSFANode
 quadraticNetwork1L.layers[0].pca_out_dim = 16
 
 
@@ -535,18 +774,18 @@ quadraticNetwork1L.layers[0].pca_out_dim = 16
 ##GTSRBNetwork = copy.deepcopy(SFANetwork3T)
 ##GTSRBNetwork.L0.pca_node_class = mdp.nodes.PCANode
 ##GTSRBNetwork.L0.pca_out_dim = 60 #40*3=120, 32x32=1024
-##GTSRBNetwork.L0.ord_node_class = mdp.nodes.SFANode
+##GTSRBNetwork.L0.ord_node_class = mdp.nodes.GSFANode
 ##GTSRBNetwork.L0.ord_args = {"output_dim": 150} #65....75/3 = 25, This number of dimensions are not expanded!
 ##GTSRBNetwork.L0.exp_funcs = [identity, sel_exp(42, unsigned_08expo)] #pair_prodsigmoid_04_adj2_ex
-##GTSRBNetwork.L0.sfa_node_class = mdp.nodes.SFANode     
+##GTSRBNetwork.L0.sfa_node_class = mdp.nodes.GSFANode     
 ##GTSRBNetwork.L0.sfa_out_dim = 50 # 17*3 = 51  26*3 = 78
 ##
 ##GTSRBNetwork.L1.exp_funcs = [identity, sel_exp(42, unsigned_08expo)] #pair_prodsigmoid_04_adj2_ex
-##GTSRBNetwork.L1.sfa_node_class = mdp.nodes.SFANode     
+##GTSRBNetwork.L1.sfa_node_class = mdp.nodes.GSFANode     
 ##GTSRBNetwork.L1.sfa_out_dim = 55 # 35 * 2 = 70
 ##
 ##GTSRBNetwork.L2.exp_funcs = [identity, sel_exp(42, unsigned_08expo)] #pair_prodsigmoid_04_adj2_ex
-##GTSRBNetwork.L2.sfa_node_class = mdp.nodes.SFANode     
+##GTSRBNetwork.L2.sfa_node_class = mdp.nodes.GSFANode     
 ##GTSRBNetwork.L2.sfa_out_dim = 40 # 40 *1.5 = 60
 
 GTSRBNetwork = copy.deepcopy(SFANetwork1L)
@@ -556,7 +795,7 @@ GTSRBNetwork.L0.pca_args = {}
 #GTSRBNetwork.L0.pca_node_class = None
 #W 150
 GTSRBNetwork.L0.pca_out_dim = 200 #627 # int(1568/2.5) #300/3 # 200 #WW 50  #32x32x3=1024x3 
-#GTSRBNetwork.L0.ord_node_class = mdp.nodes.SFANode
+#GTSRBNetwork.L0.ord_node_class = mdp.nodes.GSFANode
 #GTSRBNetwork.L0.ord_args = {"output_dim": 120} #75/3 = 25, This number of dimensions are not expanded! sel_exp(42, unsigned_08expo)
 #GTSRBNetwork.L0.exp_funcs = [identity, unsigned_08expo] #pair_prodsigmoid_04_adj2_ex, unsigned_08expo, unsigned_2_08expo
 #GTSRBNetwork.L0.exp_funcs = [identity, unsigned_08expo, numpy.sign, pair_smax25_mix1_ex, pair_smax50_mix1_ex, pair_smax_mix1_ex], sel14_MaxE, pair_max_mix1_ex]
@@ -569,7 +808,7 @@ GTSRBNetwork.L0.exp_funcs = [identity, QE] #, QE, maximum_99mix2_s08_ex, sel80_Q
 #GTSRBNetwork.L0.exp_funcs = [identity,]
 #For SFA features on img: unsigned_08expo, for final system img+hog: unsigned_08expo also
 
-GTSRBNetwork.L0.sfa_node_class = mdp.nodes.SFANode     #SFANode
+GTSRBNetwork.L0.sfa_node_class = mdp.nodes.GSFANode     #SFANode
 GTSRBNetwork.L0.sfa_args = {}
 #GTSRBNetwork.L0.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":expansion,"max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999} 
 GTSRBNetwork.L0.sfa_out_dim = 75 # WW 26*3 # 17*3 = 51 ## FOR RGB 26, for L/HOG/SFA
@@ -579,18 +818,18 @@ Q_N_k1_d2_L = Q_N_L(k=1.0, d=2.0)
 
 
 ##GTSRBNetwork = copy.deepcopy(SFANetwork2T)
-##GTSRBNetwork.L0.pca_node_class = mdp.nodes.SFANode #SFAPCANode
+##GTSRBNetwork.L0.pca_node_class = mdp.nodes.GSFANode #SFAPCANode
 ##GTSRBNetwork.L0.pca_out_dim = 150 # 40 #32x32=1024
 ###GTSRBNetwork.L0.ord_node_class = mdp.nodes.SFAPCANode
 ###GTSRBNetwork.L0.ord_args = {"output_dim": 65} #75/3 = 25, This number of dimensions are not expanded!
 ##GTSRBNetwork.L0.exp_funcs = [identity, unsigned_08expo] #sel_exp(42, unsigned_08expo)] #pair_prodsigmoid_04_adj2_ex
-##GTSRBNetwork.L0.sfa_node_class = mdp.nodes.SFANode     #SFAPCANode
+##GTSRBNetwork.L0.sfa_node_class = mdp.nodes.GSFANode     #SFAPCANode
 ##GTSRBNetwork.L0.sfa_out_dim = 10 #200 # 17*3 = 51 
 ##
 ##
 ##GTSRBNetwork.L1.exp_funcs =  [identity, unsigned_08expo] # Q_N_k1_d2_L # [identity, unsigned_08expo] # sel_exp(42, unsigned_08expo)] #pair_prodsigmoid_04_adj2_ex
 ##GTSRBNetwork.L1.pca_node_class = None
-##GTSRBNetwork.L1.sfa_node_class = mdp.nodes.SFANode     #SFAPCANode
+##GTSRBNetwork.L1.sfa_node_class = mdp.nodes.GSFANode     #SFAPCANode
 ##GTSRBNetwork.L1.sfa_out_dim = 50
 
 
@@ -602,16 +841,16 @@ Q_N_k1_d2_L = Q_N_L(k=1.0, d=2.0)
 #GTSRBNetwork = copy.deepcopy(SFANetwork2T)
 #GTSRBNetwork.L0.pca_node_class = mdp.nodes.PCANode
 #GTSRBNetwork.L0.pca_out_dim = 75 #32x32=1024
-#GTSRBNetwork.L0.ord_node_class = mdp.nodes.SFANode
+#GTSRBNetwork.L0.ord_node_class = mdp.nodes.GSFANode
 #GTSRBNetwork.L0.ord_args = {"output_dim": 50} #75/3 = 25, This number of dimensions are not expanded!
 #GTSRBNetwork.L0.exp_funcs = [identity, unsigned_08expo] #pair_prodsigmoid_04_adj2_ex
-#GTSRBNetwork.L0.sfa_node_class = mdp.nodes.SFANode     
+#GTSRBNetwork.L0.sfa_node_class = mdp.nodes.GSFANode     
 #GTSRBNetwork.L0.sfa_out_dim = 20
 #
-##GTSRBNetwork.L0.ord_node_class = mdp.nodes.SFANode
+##GTSRBNetwork.L0.ord_node_class = mdp.nodes.GSFANode
 ##GTSRBNetwork.L0.ord_args = {"output_dim": 45} #75/3 = 25, This number of dimensions are not expanded!
 #GTSRBNetwork.L1.exp_funcs = [identity, unsigned_08expo] #pair_prodsigmoid_04_adj2_ex
-#GTSRBNetwork.L1.sfa_node_class = mdp.nodes.SFANode     
+#GTSRBNetwork.L1.sfa_node_class = mdp.nodes.GSFANode     
 #GTSRBNetwork.L1.sfa_out_dim = 25
 #
 #print u08expoNetwork1L
@@ -623,19 +862,19 @@ Q_N_k1_d2_L = Q_N_L(k=1.0, d=2.0)
 ##print "*****   Creating One-Layer Non-Linear SFA Network   ***************"
 ##print "*******************************************************************"
 ##print "******** Setting Layer L0 Parameters          *********************"
-##layer = pSFAOneNLayer = SystemParameters.ParamsSFASuperNode()
+##layer = pSFAOneNLayer = system_parameters.ParamsSFASuperNode()
 ##layer.name = "One-Node SFA NL Layer"
 ##layer.pca_node_class = None
 ##layer.exp_funcs = [identity,]
 ##layer.red_node_class = None
-##layer.sfa_node_class = mdp.nodes.SFANode
+##layer.sfa_node_class = mdp.nodes.GSFANode
 ##layer.sfa_args = {}
 ##layer.sfa_out_dim = None
 ##
 ######################################################################
 ########        One-Layer Linear SFA NETWORK              ############
 ######################################################################  
-##network = SFANetwork1L = SystemParameters.ParamsNetwork()
+##network = SFANetwork1L = system_parameters.ParamsNetwork()
 ##network.name = "SFA 1 Layer Linear Network"
 ##network.L0 = pSFAOneLayer
 ##network.L1 = None
@@ -648,7 +887,7 @@ print "*******************************************************************"
 print "********     Creating 2L Network for MNIST   ******************"
 print "*******************************************************************"
 print "******** Setting Layer L0 Parameters          *********************"
-pSFALayerL0 = SystemParameters.ParamsSFALayer()
+pSFALayerL0 = system_parameters.ParamsSFALayer()
 pSFALayerL0.name = "Homogeneous Linear Layer L0 6x6 2 Nodes"
 pSFALayerL0.x_field_channels=28
 pSFALayerL0.y_field_channels=28
@@ -673,7 +912,7 @@ pSFALayerL0.red_node_class = None
 pSFALayerL0.red_out_dim = 0
 pSFALayerL0.red_args = {}
 
-pSFALayerL0.sfa_node_class = mdp.nodes.IEVMLRecNode #mdp.nodes.SFANode
+pSFALayerL0.sfa_node_class = mdp.nodes.IEVMLRecNode #mdp.nodes.GSFANode
 pSFALayerL0.sfa_out_dim = 60
 pSFALayerL0.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":"RandomSigmoids", "expansion_starting_point":None, "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":4.99999, "expansion_output_dim":300} 
 
@@ -681,10 +920,10 @@ pSFALayerL0.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":"Rand
 
 pSFALayerL0.cloneLayer = False
 pSFALayerL0.name = comp_layer_name(pSFALayerL0.cloneLayer, pSFALayerL0.exp_funcs, pSFALayerL0.x_field_channels, pSFALayerL0.y_field_channels, pSFALayerL0.pca_out_dim, pSFALayerL0.sfa_out_dim)
-SystemParameters.test_object_contents(pSFALayerL0)
+system_parameters.test_object_contents(pSFALayerL0)
 
 
-pSFALayerL1 = SystemParameters.ParamsSFASuperNode()
+pSFALayerL1 = system_parameters.ParamsSFASuperNode()
 pSFALayerL1.name = "SFA Linear Super Node L3  all =>  9"
 #pSFALayerL1.in_channel_dim = pSFALayerL2.sfa_out_dim
 #pca_node_L3 = mdp.nodes.WhiteningNode(output_dim=pca_out_dim_L3) 
@@ -696,15 +935,15 @@ pSFALayerL1.exp_funcs = [identity,]
 
 pSFALayerL1.red_node_class = None
 
-pSFALayerL1.sfa_node_class = mdp.nodes.IEVMLRecNode #mdp.nodes.SFANode
+pSFALayerL1.sfa_node_class = mdp.nodes.IEVMLRecNode #mdp.nodes.GSFANode
 pSFALayerL1.sfa_out_dim = 9
 expansion_output_dim = int(tuning_parameter)
 pSFALayerL1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":"RandomSigmoids", "expansion_starting_point":None, "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":4.99999, "expansion_output_dim":expansion_output_dim} 
 pSFALayerL1.cloneLayer = False
 pSFALayerL1.name = comp_supernode_name(pSFALayerL1.exp_funcs, pSFALayerL1.pca_out_dim, pSFALayerL1.sfa_out_dim)
-SystemParameters.test_object_contents(pSFALayerL1)
+system_parameters.test_object_contents(pSFALayerL1)
 
-network = SFANetworkMNIST2L = SystemParameters.ParamsNetwork()
+network = SFANetworkMNIST2L = system_parameters.ParamsNetwork()
 network.name = "2L network 6x6 pixels (4x4=16 Nodes) for MNIST"
 network.L0 = copy.deepcopy(pSFALayerL0)
 network.L1 = copy.deepcopy(pSFALayerL1)
@@ -719,7 +958,7 @@ print "*******************************************************************"
 print "*****   Creating 7L MMNIST Network  MNISTNetwork_24x24_7L *********"
 print "*******************************************************************"
 print "******** Setting Layer L0 Parameters          *********************"
-pSFALayerL0 = SystemParameters.ParamsSFALayer()
+pSFALayerL0 = system_parameters.ParamsSFALayer()
 pSFALayerL0.name = "Homogeneous Linear Layer L0 3x3 8x8"
 pSFALayerL0.x_field_channels=3
 pSFALayerL0.y_field_channels=3
@@ -731,23 +970,23 @@ pSFALayerL0.pca_node_class = mdp.nodes.PCANode
 pSFALayerL0.pca_out_dim = 9
 pSFALayerL0.pca_args = {}
 
-#pSFALayerL0.ord_node_class = SystemParameters.ParamsSFALayer.ord_node_class
+#pSFALayerL0.ord_node_class = system_parameters.ParamsSFALayer.ord_node_class
 pSFALayerL0.exp_funcs = [identity,]
 
 pSFALayerL0.red_node_class = None
 pSFALayerL0.red_out_dim = 0
 pSFALayerL0.red_args = {}
 
-pSFALayerL0.sfa_node_class = mdp.nodes.IEVMLRecNode #mdp.nodes.SFANode
+pSFALayerL0.sfa_node_class = mdp.nodes.IEVMLRecNode #mdp.nodes.GSFANode
 pSFALayerL0.sfa_out_dim = 16
 pSFALayerL0.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 
 #pSFALayerL0.sfa_args = {"block_size": -1, "train_mode": -1}
 pSFALayerL0.cloneLayer = False
 pSFALayerL0.name = comp_layer_name(pSFALayerL0.cloneLayer, pSFALayerL0.exp_funcs, pSFALayerL0.x_field_channels, pSFALayerL0.y_field_channels, pSFALayerL0.pca_out_dim, pSFALayerL0.sfa_out_dim)
-SystemParameters.test_object_contents(pSFALayerL0)
+system_parameters.test_object_contents(pSFALayerL0)
 
-pSFALayerL2H = SystemParameters.ParamsSFALayer()
+pSFALayerL2H = system_parameters.ParamsSFALayer()
 pSFALayerL2H.name = "Homogeneous Linear Layer LH 2x1 4x8 Nodes"
 pSFALayerL2H.x_field_channels=2
 pSFALayerL2H.y_field_channels=1
@@ -762,17 +1001,17 @@ pSFALayerL2H.red_node_class = None
 pSFALayerL2H.red_out_dim = 0
 pSFALayerL2H.red_args = {}
 
-pSFALayerL2H.sfa_node_class = mdp.nodes.IEVMLRecNode #mdp.nodes.SFANode
+pSFALayerL2H.sfa_node_class = mdp.nodes.IEVMLRecNode #mdp.nodes.GSFANode
 pSFALayerL2H.sfa_out_dim = 16
 pSFALayerL2H.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 
 #pSFALayerL0.sfa_args = {"block_size": -1, "train_mode": -1}
 pSFALayerL2H.cloneLayer = False
 pSFALayerL2H.name = comp_layer_name(pSFALayerL2H.cloneLayer, pSFALayerL2H.exp_funcs, pSFALayerL2H.x_field_channels, pSFALayerL2H.y_field_channels, pSFALayerL2H.pca_out_dim, pSFALayerL2H.sfa_out_dim)
-SystemParameters.test_object_contents(pSFALayerL2H)
+system_parameters.test_object_contents(pSFALayerL2H)
 
 
-pSFALayerL2V = SystemParameters.ParamsSFALayer()
+pSFALayerL2V = system_parameters.ParamsSFALayer()
 pSFALayerL2V.name = "Homogeneous Linear Layer LH 2x1 4x8 Nodes"
 pSFALayerL2V.x_field_channels=1
 pSFALayerL2V.y_field_channels=2
@@ -787,14 +1026,14 @@ pSFALayerL2V.red_node_class = None
 pSFALayerL2V.red_out_dim = 0
 pSFALayerL2V.red_args = {}
 
-pSFALayerL2V.sfa_node_class = mdp.nodes.IEVMLRecNode #mdp.nodes.SFANode
+pSFALayerL2V.sfa_node_class = mdp.nodes.IEVMLRecNode #mdp.nodes.GSFANode
 pSFALayerL2V.sfa_out_dim = 16
 pSFALayerL2V.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 
 #pSFALayerL2V.sfa_args = {"block_size": -1, "train_mode": -1}
 pSFALayerL2V.cloneLayer = False
 pSFALayerL2V.name = comp_layer_name(pSFALayerL2V.cloneLayer, pSFALayerL2V.exp_funcs, pSFALayerL2V.x_field_channels, pSFALayerL2V.y_field_channels, pSFALayerL2V.pca_out_dim, pSFALayerL2V.sfa_out_dim)
-SystemParameters.test_object_contents(pSFALayerL2V)
+system_parameters.test_object_contents(pSFALayerL2V)
 
 
 pSFALayerL1H = copy.deepcopy(pSFALayerL2H)
@@ -814,7 +1053,7 @@ pSFALayerL3V.sfa_out_dim = 340 # 2*9 + 40
 pSFALayerL3V.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":"RandomSigmoids", "expansion_starting_point":"08Exp", "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999, "expansion_output_dim":800} 
 
 
-network = MNISTNetwork_24x24_7L = SystemParameters.ParamsNetwork()
+network = MNISTNetwork_24x24_7L = system_parameters.ParamsNetwork()
 network.name = "MNIST Network 7L 24x24"
 network.L0 = copy.deepcopy(pSFALayerL0)
 network.L1 = copy.deepcopy(pSFALayerL1H)
@@ -1154,7 +1393,7 @@ pSFALayerL3H_S2_D1.sfa_args["max_preserved_sfa"]=4
 pSFALayerL3V_S2_D1.sfa_args["max_preserved_sfa"]=9
 
 
-pSFALayerSupernode = SystemParameters.ParamsSFASuperNode() #L8
+pSFALayerSupernode = system_parameters.ParamsSFASuperNode() #L8
 pSFALayerSupernode.name = "SFA Super Node Layer"
 pSFALayerSupernode.pca_node_class = None
 pSFALayerSupernode.ord_node_class = mdp.nodes.HeadNode
@@ -1163,15 +1402,15 @@ pSFALayerSupernode.ord_args = {"output_dim":115}
 pSFALayerSupernode.exp_funcs = [identity, unsigned_08expo, signed_08expo, QE_90_AP08, CE_30_AP08,] #signed_08expo
 #pSFALayerSupernode.exp_funcs = [identity, QE, CE]
 #pSFALayerSupernode.red_node_class = None
-pSFALayerSupernode.sfa_node_class = mdp.nodes.SFANode
-#pSFALayerSupernode.sfa_node_class = mdp.nodes.IEVMLRecNode #mdp.nodes.SFANode
+pSFALayerSupernode.sfa_node_class = mdp.nodes.GSFANode
+#pSFALayerSupernode.sfa_node_class = mdp.nodes.IEVMLRecNode #mdp.nodes.GSFANode
 #pSFALayerSupernode.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QE_50, CE_30],                     "max_comp":1, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 #pSFALayerSupernode.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo_75],                     "max_comp":1, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 pSFALayerSupernode.sfa_out_dim = 80
 
 
 
-network = MNISTNetwork_24x24_7L_B = SystemParameters.ParamsNetwork()
+network = MNISTNetwork_24x24_7L_B = system_parameters.ParamsNetwork()
 network.name = "MNIST Network 7L 24x24_B"
 network.L0 = copy.deepcopy(pSFALayerL0_4x4)
 network.L1 = copy.deepcopy(pSFALayerL1H_S3_D2)
@@ -1191,7 +1430,7 @@ print "*******************************************************************"
 print "******** Creating Linear 4L SFA Network          ******************"
 print "*******************************************************************"
 print "******** Setting Layer L0 Parameters          *********************"
-pSFALayerL0 = SystemParameters.ParamsSFALayer()
+pSFALayerL0 = system_parameters.ParamsSFALayer()
 pSFALayerL0.name = "Homogeneous Linear Layer L0 5x5 => 15"
 pSFALayerL0.x_field_channels=5
 pSFALayerL0.y_field_channels=5
@@ -1199,12 +1438,12 @@ pSFALayerL0.x_field_spacing=5
 pSFALayerL0.y_field_spacing=5
 #pSFALayerL0.in_channel_dim=1
 
-pSFALayerL0.pca_node_class = mdp.nodes.SFANode
+pSFALayerL0.pca_node_class = mdp.nodes.GSFANode
 pSFALayerL0.pca_out_dim = 16
 #pSFALayerL0.pca_args = {"block_size": block_size}
 pSFALayerL0.pca_args = {"block_size": -1, "train_mode": -1}
 
-pSFALayerL0.ord_node_class = SystemParameters.ParamsSFALayer.ord_node_class
+pSFALayerL0.ord_node_class = system_parameters.ParamsSFALayer.ord_node_class
 
 pSFALayerL0.exp_funcs = [identity,]
 
@@ -1213,16 +1452,16 @@ pSFALayerL0.red_out_dim = 0.9999999
 pSFALayerL0.red_args = {}
 
 
-pSFALayerL0.sfa_node_class = mdp.nodes.SFANode
+pSFALayerL0.sfa_node_class = mdp.nodes.GSFANode
 pSFALayerL0.sfa_out_dim = 16
 #pSFALayerL0.sfa_args = {"block_size": -1, "train_mode": -1}
 
 pSFALayerL0.cloneLayer = False
 pSFALayerL0.name = comp_layer_name(pSFALayerL0.cloneLayer, pSFALayerL0.exp_funcs, pSFALayerL0.x_field_channels, pSFALayerL0.y_field_channels, pSFALayerL0.pca_out_dim, pSFALayerL0.sfa_out_dim)
-SystemParameters.test_object_contents(pSFALayerL0)
+system_parameters.test_object_contents(pSFALayerL0)
 
 print "******** Setting Layer L1 Parameters *********************"
-pSFALayerL1 = SystemParameters.ParamsSFALayer()
+pSFALayerL1 = system_parameters.ParamsSFALayer()
 pSFALayerL1.name = "Homogeneous Linear Layer L1 3x3 => 30"
 pSFALayerL1.x_field_channels=3
 pSFALayerL1.y_field_channels=3
@@ -1237,7 +1476,7 @@ pSFALayerL1.pca_out_dim = 125
 #pSFALayerL1.pca_args = {"block_size": block_size}
 pSFALayerL1.pca_args = {}
 
-pSFALayerL1.ord_node_class = SystemParameters.ParamsSFALayer.ord_node_class
+pSFALayerL1.ord_node_class = system_parameters.ParamsSFALayer.ord_node_class
 
 pSFALayerL1.exp_funcs = [identity,]
 
@@ -1245,7 +1484,7 @@ pSFALayerL1.red_node_class = mdp.nodes.WhiteningNode
 pSFALayerL1.red_out_dim = 125
 pSFALayerL1.red_args = {}
 
-pSFALayerL1.sfa_node_class = mdp.nodes.SFANode
+pSFALayerL1.sfa_node_class = mdp.nodes.GSFANode
 #sfa_out_dim_L1 = 12
 pSFALayerL1.sfa_out_dim = 30
 #pSFALayerL1.sfa_args = {"block_size": -1, "train_mode": -1}
@@ -1253,10 +1492,10 @@ pSFALayerL1.sfa_out_dim = 30
 #WARNING, DEFAULT IS: pSFALayerL1.cloneLayer = True
 pSFALayerL1.cloneLayer = False
 pSFALayerL1.name = comp_layer_name(pSFALayerL1.cloneLayer, pSFALayerL1.exp_funcs, pSFALayerL1.x_field_channels, pSFALayerL1.y_field_channels, pSFALayerL1.pca_out_dim, pSFALayerL1.sfa_out_dim)
-SystemParameters.test_object_contents(pSFALayerL1)
+system_parameters.test_object_contents(pSFALayerL1)
 
 print "******** Setting Layer L2 Parameters *********************"
-pSFALayerL2 = SystemParameters.ParamsSFALayer()
+pSFALayerL2 = system_parameters.ParamsSFALayer()
 pSFALayerL2.name = "Inhomogeneous Linear Layer L2 3x3 => 40"
 pSFALayerL2.x_field_channels=3
 pSFALayerL2.y_field_channels=3
@@ -1271,7 +1510,7 @@ pSFALayerL2.pca_out_dim = 200 #100
 #pSFALayerL2.pca_args = {"block_size": block_size}
 pSFALayerL2.pca_args = {}
 
-pSFALayerL2.ord_node_class = SystemParameters.ParamsSFALayer.ord_node_class
+pSFALayerL2.ord_node_class = system_parameters.ParamsSFALayer.ord_node_class
 
 pSFALayerL2.exp_funcs = [identity,]
 
@@ -1279,23 +1518,23 @@ pSFALayerL2.red_node_class = mdp.nodes.WhiteningNode
 pSFALayerL2.red_out_dim = 200
 pSFALayerL2.red_args = {}
 
-pSFALayerL2.sfa_node_class = mdp.nodes.SFANode
+pSFALayerL2.sfa_node_class = mdp.nodes.GSFANode
 #sfa_out_dim_L2 = 12
 pSFALayerL2.sfa_out_dim = 40
 #pSFALayerL2.sfa_args = {"block_size": -1, "train_mode": -1}
 #Default: cloneLayerL2 = False
 pSFALayerL2.cloneLayer = False
 pSFALayerL2.name = comp_layer_name(pSFALayerL2.cloneLayer, pSFALayerL2.exp_funcs, pSFALayerL2.x_field_channels, pSFALayerL2.y_field_channels, pSFALayerL2.pca_out_dim, pSFALayerL2.sfa_out_dim)
-SystemParameters.test_object_contents(pSFALayerL2)
+system_parameters.test_object_contents(pSFALayerL2)
 
 
 print "******** Setting Layer L3 Parameters *********************"
-pSFAL3 = SystemParameters.ParamsSFASuperNode()
+pSFAL3 = system_parameters.ParamsSFASuperNode()
 pSFAL3.name = "SFA Linear Super Node L3  all =>  300 => 40"
 #pSFAL3.in_channel_dim = pSFALayerL2.sfa_out_dim
 
 #pca_node_L3 = mdp.nodes.WhiteningNode(output_dim=pca_out_dim_L3) 
-pSFAL3.pca_node_class = mdp.nodes.SFANode
+pSFAL3.pca_node_class = mdp.nodes.GSFANode
 #pca_out_dim_L3 = 210
 #pca_out_dim_L3 = 0.999
 #WARNING!!! CHANGED PCA TO SFA
@@ -1303,7 +1542,7 @@ pSFAL3.pca_out_dim = 300
 #pSFALayerL1.pca_args = {"block_size": block_size}
 pSFAL3.pca_args = {"block_size": -1, "train_mode": -1}
 
-pSFAL3.ord_node_class = SystemParameters.ParamsSFALayer.ord_node_class
+pSFAL3.ord_node_class = system_parameters.ParamsSFALayer.ord_node_class
 
 #exp_funcs_L3 = [identity, pair_prod_ex, pair_prod_adj1_ex, pair_prod_adj2_ex, pair_prod_adj3_ex]
 pSFAL3.exp_funcs = [identity,]
@@ -1316,23 +1555,23 @@ pSFAL3.red_node_class = mdp.nodes.WhiteningNode
 pSFAL3.red_out_dim = 0.999999
 pSFAL3.red_args = {}
 
-pSFAL3.sfa_node_class = mdp.nodes.SFANode
+pSFAL3.sfa_node_class = mdp.nodes.GSFANode
 #sfa_out_dim_L1 = 12
 pSFAL3.sfa_out_dim = 40
 #pSFAL3.sfa_args = {"block_size": -1, "train_mode": -1}
 #Default: cloneLayerL1 = False
 pSFAL3.cloneLayer = False
 pSFAL3.name = comp_supernode_name(pSFAL3.exp_funcs, pSFAL3.pca_out_dim, pSFAL3.sfa_out_dim)
-SystemParameters.test_object_contents(pSFAL3)
+system_parameters.test_object_contents(pSFAL3)
 
 
 print "******** Setting Layer L4 Parameters *********************"
-pSFAL4 = SystemParameters.ParamsSFASuperNode()
+pSFAL4 = system_parameters.ParamsSFASuperNode()
 pSFAL4.name = "SFA Linear Super Node L4  all => 40 => 40"
 #pSFAL4.in_channel_dim = pSFAL3.sfa_out_dim
 
 #pca_node_L3 = mdp.nodes.WhiteningNode(output_dim=pca_out_dim_L3) 
-pSFAL4.pca_node_class = mdp.nodes.SFANode
+pSFAL4.pca_node_class = mdp.nodes.GSFANode
 #pca_out_dim_L3 = 210
 #pca_out_dim_L3 = 0.999
 #WARNING!!! CHANGED PCA TO SFA
@@ -1340,7 +1579,7 @@ pSFAL4.pca_out_dim = 40
 #pSFALayerL1.pca_args = {"block_size": block_size}
 pSFAL4.pca_args = {"block_size": -1, "train_mode": -1}
 
-pSFAL4.ord_node_class = SystemParameters.ParamsSFALayer.ord_node_class
+pSFAL4.ord_node_class = system_parameters.ParamsSFALayer.ord_node_class
 
 #exp_funcs_L3 = [identity, pair_prod_ex, pair_prod_adj1_ex, pair_prod_adj2_ex, pair_prod_adj3_ex]
 pSFAL4.exp_funcs = [identity,]
@@ -1353,20 +1592,20 @@ pSFAL4.red_node_class = mdp.nodes.WhiteningNode
 pSFAL4.red_out_dim = 0.999999
 pSFAL4.red_args = {}
 
-pSFAL4.sfa_node_class = mdp.nodes.SFANode
+pSFAL4.sfa_node_class = mdp.nodes.GSFANode
 #sfa_out_dim_L1 = 12
 pSFAL4.sfa_out_dim = 40
 #pSFAL4.sfa_args = {"block_size": -1, "train_mode": -1}
 #Default: cloneLayerL1 = False
 pSFAL4.cloneLayer = False
 pSFAL4.name = comp_supernode_name(pSFAL4.exp_funcs, pSFAL4.pca_out_dim, pSFAL4.sfa_out_dim)
-SystemParameters.test_object_contents(pSFAL4)
+system_parameters.test_object_contents(pSFAL4)
 
 
 ####################################################################
 ###########               LINEAR NETWORK                ############
 ####################################################################  
-linearNetwork4L = SystemParameters.ParamsNetwork()
+linearNetwork4L = system_parameters.ParamsNetwork()
 linearNetwork4L.name = "Linear 4 Layer Network"
 linearNetwork4L.L0 = pSFALayerL0
 linearNetwork4L.L1 = pSFALayerL1
@@ -1375,7 +1614,7 @@ linearNetwork4L.L3 = pSFAL3
 network = linearNetwork4L 
 network.layers = [network.L0, network.L1, network.L2, network.L3]
 
-linearNetwork5L = SystemParameters.ParamsNetwork()
+linearNetwork5L = system_parameters.ParamsNetwork()
 linearNetwork5L.name = "Linear 5 Layer Network"
 linearNetwork5L.L0 = pSFALayerL0
 linearNetwork5L.L1 = pSFALayerL1
@@ -1397,7 +1636,7 @@ print "*******************************************************************"
 print "******** Creating Non-Linear 4L SFA Network      ******************"
 print "*******************************************************************"
 print "******** Setting Layer NL0 Parameters          ********************"
-pSFALayerNL0 = SystemParameters.ParamsSFALayer()
+pSFALayerNL0 = system_parameters.ParamsSFALayer()
 pSFALayerNL0.name = "Homogeneous Non-Linear Layer L0 3x3 => 15"
 pSFALayerNL0.x_field_channels=5
 pSFALayerNL0.y_field_channels=5
@@ -1405,12 +1644,12 @@ pSFALayerNL0.x_field_spacing=5
 pSFALayerNL0.y_field_spacing=5
 #pSFALayerL0.in_channel_dim=1
 
-pSFALayerNL0.pca_node_class = mdp.nodes.SFANode
+pSFALayerNL0.pca_node_class = mdp.nodes.GSFANode
 pSFALayerNL0.pca_out_dim = 16
 #pSFALayerL0.pca_args = {"block_size": block_size}
 pSFALayerNL0.pca_args = {"block_size": -1, "train_mode": -1}
 
-pSFALayerNL0.ord_node_class = SystemParameters.ParamsSFALayer.ord_node_class
+pSFALayerNL0.ord_node_class = system_parameters.ParamsSFALayer.ord_node_class
 
 #exp_funcs_L3 = [identity, pair_prod_ex, pair_prod_adj1_ex, pair_prod_adj2_ex, pair_prod_adj3_ex]
 pSFALayerNL0.exp_funcs = [identity, pair_prod_mix1_ex]
@@ -1430,16 +1669,16 @@ pSFALayerNL0.red_node_class = mdp.nodes.WhiteningNode
 pSFALayerNL0.red_out_dim = 0.9999999
 pSFALayerNL0.red_args = {}
 
-pSFALayerNL0.sfa_node_class = mdp.nodes.SFANode
+pSFALayerNL0.sfa_node_class = mdp.nodes.GSFANode
 pSFALayerNL0.sfa_out_dim = 16
 #pSFALayerNL0.sfa_args = {"block_size": -1, "train_mode": -1}
 
 pSFALayerNL0.cloneLayer = True
 pSFALayerNL0.name = comp_layer_name(pSFALayerNL0.cloneLayer, pSFALayerNL0.exp_funcs, pSFALayerNL0.x_field_channels, pSFALayerNL0.y_field_channels, pSFALayerNL0.pca_out_dim, pSFALayerNL0.sfa_out_dim)
-SystemParameters.test_object_contents(pSFALayerNL0)
+system_parameters.test_object_contents(pSFALayerNL0)
 
 print "******** Setting Layer NL1 Parameters *********************"
-pSFALayerNL1 = SystemParameters.ParamsSFALayer()
+pSFALayerNL1 = system_parameters.ParamsSFALayer()
 pSFALayerNL1.name = "Homogeneous Non-Linear Layer L1 3x3 => 30"
 pSFALayerNL1.x_field_channels=3
 pSFALayerNL1.y_field_channels=3
@@ -1447,7 +1686,7 @@ pSFALayerNL1.x_field_spacing=3
 pSFALayerNL1.y_field_spacing=3
 #pSFALayerL1.in_channel_dim = pSFALayerL0.sfa_out_dim
 
-pSFALayerNL1.pca_node_class = mdp.nodes.SFANode
+pSFALayerNL1.pca_node_class = mdp.nodes.GSFANode
 #pSFALayerL0.pca_args = {"block_size": block_size}
 pSFALayerNL1.pca_args = {"block_size": -1, "train_mode": -1}
 
@@ -1458,7 +1697,7 @@ pSFALayerNL1.pca_out_dim = 125
 #pSFALayerL1.pca_args = {"block_size": block_size}
 #pSFALayerNL1.pca_args = {}
 
-pSFALayerNL1.ord_node_class = SystemParameters.ParamsSFALayer.ord_node_class
+pSFALayerNL1.ord_node_class = system_parameters.ParamsSFALayer.ord_node_class
 
 pSFALayerNL1.exp_funcs = [identity, pair_prod_mix1_ex ]
 pSFALayerNL1.inv_use_hint = True
@@ -1470,17 +1709,17 @@ pSFALayerNL1.red_node_class = mdp.nodes.WhiteningNode
 pSFALayerNL1.red_out_dim = 0.99999
 pSFALayerNL1.red_args = {}
 
-pSFALayerNL1.sfa_node_class = mdp.nodes.SFANode
+pSFALayerNL1.sfa_node_class = mdp.nodes.GSFANode
 #sfa_out_dim_L1 = 12
 pSFALayerNL1.sfa_out_dim = 30
 #pSFALayerNL1.sfa_args = {"block_size": -1, "train_mode": -1}
 #Default: cloneLayerL1 = False
 pSFALayerNL1.cloneLayer = True
 pSFALayerNL1.name = comp_layer_name(pSFALayerNL1.cloneLayer, pSFALayerNL1.exp_funcs, pSFALayerNL1.x_field_channels, pSFALayerNL1.y_field_channels, pSFALayerNL1.pca_out_dim, pSFALayerNL1.sfa_out_dim)
-SystemParameters.test_object_contents(pSFALayerNL1)
+system_parameters.test_object_contents(pSFALayerNL1)
 
 print "******** Setting Layer NL2 Parameters *********************"
-pSFALayerNL2 = SystemParameters.ParamsSFALayer()
+pSFALayerNL2 = system_parameters.ParamsSFALayer()
 pSFALayerNL2.name = "Inhomogeneous Non-Linear Layer L2 3x3 => 300 => 40"
 pSFALayerNL2.x_field_channels=3
 pSFALayerNL2.y_field_channels=3
@@ -1488,13 +1727,13 @@ pSFALayerNL2.x_field_spacing=3
 pSFALayerNL2.y_field_spacing=3
 #pSFALayerL2.in_channel_dim = pSFALayerL1.sfa_out_dim
 
-pSFALayerNL2.pca_node_class = mdp.nodes.SFANode
+pSFALayerNL2.pca_node_class = mdp.nodes.GSFANode
 #pca_out_dim_L2 = 90
 #pca_out_dim_L2 = sfa_out_dim_L0 x_field_channels_L2 * x_field_channels_L2 * 0.75 
 pSFALayerNL2.pca_out_dim = 270
 pSFALayerNL2.pca_args = {"block_size": -1, "train_mode": -1}
 
-pSFALayerNL2.ord_node_class = SystemParameters.ParamsSFALayer.ord_node_class
+pSFALayerNL2.ord_node_class = system_parameters.ParamsSFALayer.ord_node_class
 
 pSFALayerNL2.exp_funcs = [identity, pair_prod_mix1_ex]
 pSFALayerNL2.inv_use_hint = True
@@ -1506,23 +1745,23 @@ pSFALayerNL2.red_node_class = mdp.nodes.WhiteningNode
 pSFALayerNL2.red_out_dim = 0.99999
 pSFALayerNL2.red_args = {}
 
-pSFALayerNL2.sfa_node_class = mdp.nodes.SFANode
+pSFALayerNL2.sfa_node_class = mdp.nodes.GSFANode
 #sfa_out_dim_L2 = 12
 pSFALayerNL2.sfa_out_dim = 40
 #pSFALayerNL2.sfa_args = {"block_size": -1, "train_mode": -1}
 #Default: cloneLayerL2 = False
 pSFALayerNL2.cloneLayer = False
 pSFALayerNL2.name = comp_layer_name(pSFALayerNL2.cloneLayer, pSFALayerNL2.exp_funcs, pSFALayerNL2.x_field_channels, pSFALayerNL2.y_field_channels, pSFALayerNL2.pca_out_dim, pSFALayerNL2.sfa_out_dim)
-SystemParameters.test_object_contents(pSFALayerNL2)
+system_parameters.test_object_contents(pSFALayerNL2)
 
 
 print "******** Setting Layer NL3 Parameters *********************"
-pSFANL3 = SystemParameters.ParamsSFASuperNode()
+pSFANL3 = system_parameters.ParamsSFASuperNode()
 pSFANL3.name = "SFA Non-Linear Super Node L3  all => 300 => 40"
 #pSFAL3.in_channel_dim = pSFALayerL2.sfa_out_dim
 
 #pca_node_L3 = mdp.nodes.WhiteningNode(output_dim=pca_out_dim_L3) 
-pSFANL3.pca_node_class = mdp.nodes.SFANode
+pSFANL3.pca_node_class = mdp.nodes.GSFANode
 #pca_out_dim_L3 = 210
 #pca_out_dim_L3 = 0.999
 #WARNING!!! CHANGED PCA TO SFA
@@ -1530,7 +1769,7 @@ pSFANL3.pca_out_dim = 300
 #pSFALayerL1.pca_args = {"block_size": block_size}
 pSFANL3.pca_args = {"block_size": -1, "train_mode": -1}
 
-pSFANL3.ord_node_class = SystemParameters.ParamsSFALayer.ord_node_class
+pSFANL3.ord_node_class = system_parameters.ParamsSFALayer.ord_node_class
 
 #exp_funcs_L3 = [identity, pair_prod_ex, pair_prod_mix1_ex, pair_prod_adj2_ex, pair_prod_adj3_ex]
 pSFANL3.exp_funcs = [identity, pair_prod_mix1_ex]
@@ -1543,23 +1782,23 @@ pSFANL3.red_node_class = mdp.nodes.WhiteningNode
 pSFANL3.red_out_dim = 0.999999
 pSFANL3.red_args = {}
 
-pSFANL3.sfa_node_class = mdp.nodes.SFANode
+pSFANL3.sfa_node_class = mdp.nodes.GSFANode
 #sfa_out_dim_L1 = 12
 pSFANL3.sfa_out_dim = 40
 #pSFANL3.sfa_args = {"block_size": -1, "train_mode": -1}
 #Default: cloneLayerL1 = False
 pSFANL3.cloneLayer = False
 pSFANL3.name = comp_supernode_name(pSFANL3.exp_funcs, pSFANL3.pca_out_dim, pSFANL3.sfa_out_dim)
-SystemParameters.test_object_contents(pSFANL3)
+system_parameters.test_object_contents(pSFANL3)
 
 
 print "******** Setting Layer NL4 Parameters *********************"
-pSFANL4 = SystemParameters.ParamsSFASuperNode()
+pSFANL4 = system_parameters.ParamsSFASuperNode()
 pSFANL4.name = "SFA Linear Super Node L4  all => 40 => 40"
 #pSFAL4.in_channel_dim = pSFAL3.sfa_out_dim
 
 #pca_node_L3 = mdp.nodes.WhiteningNode(output_dim=pca_out_dim_L3) 
-pSFANL4.pca_node_class = mdp.nodes.SFANode
+pSFANL4.pca_node_class = mdp.nodes.GSFANode
 #pca_out_dim_L3 = 210
 #pca_out_dim_L3 = 0.999
 #WARNING!!! CHANGED PCA TO SFA
@@ -1567,7 +1806,7 @@ pSFANL4.pca_out_dim = 40
 #pSFALayerL1.pca_args = {"block_size": block_size}
 pSFANL4.pca_args = {"block_size": -1, "train_mode": -1}
 
-pSFANL4.ord_node_class = SystemParameters.ParamsSFALayer.ord_node_class
+pSFANL4.ord_node_class = system_parameters.ParamsSFALayer.ord_node_class
 
 #exp_funcs_L3 = [identity, pair_prod_ex, pair_prod_adj1_ex, pair_prod_adj2_ex, pair_prod_adj3_ex]
 pSFANL4.exp_funcs = [identity, pair_prod_mix1_ex]
@@ -1580,27 +1819,27 @@ pSFANL4.red_node_class = mdp.nodes.WhiteningNode
 pSFANL4.red_out_dim = 0.99999
 pSFANL4.red_args = {}
 
-pSFANL4.sfa_node_class = mdp.nodes.SFANode
+pSFANL4.sfa_node_class = mdp.nodes.GSFANode
 #sfa_out_dim_L1 = 12
 pSFANL4.sfa_out_dim = 40
 #pSFANL4.sfa_args = {"block_size": -1, "train_mode": -1}
 #Default: cloneLayerL1 = False
 pSFANL4.cloneLayer = False
 pSFANL4.name = comp_supernode_name(pSFANL4.exp_funcs, pSFANL4.pca_out_dim, pSFANL4.sfa_out_dim)
-SystemParameters.test_object_contents(pSFANL4)
+system_parameters.test_object_contents(pSFANL4)
 
 
 ####################################################################
 ###########            NON-LINEAR NETWORKS              ############
 ####################################################################  
-NL_Network4L = SystemParameters.ParamsNetwork()
+NL_Network4L = system_parameters.ParamsNetwork()
 NL_Network4L.name = "Fully Non-Linear 4 Layer Network"
 NL_Network4L.L0 = pSFALayerNL0
 NL_Network4L.L1 = pSFALayerNL1
 NL_Network4L.L2 = pSFALayerNL2
 NL_Network4L.L3 = pSFANL3
 
-NL_Network5L = SystemParameters.ParamsNetwork()
+NL_Network5L = system_parameters.ParamsNetwork()
 NL_Network5L.name = "Fully Non-Linear 5 Layer Network"
 NL_Network5L.L0 = pSFALayerNL0
 NL_Network5L.L1 = pSFALayerNL1
@@ -1608,7 +1847,7 @@ NL_Network5L.L2 = pSFALayerNL2
 NL_Network5L.L3 = pSFANL3
 NL_Network5L.L4 = pSFANL4
 
-Test_Network = SystemParameters.ParamsNetwork()
+Test_Network = system_parameters.ParamsNetwork()
 Test_Network.name = "Test 5 Layer Network"
 Test_Network.L0 = pSFALayerL0
 Test_Network.L1 = pSFALayerL1
@@ -1625,7 +1864,7 @@ print "*******************************************************************"
 print "******** Setting Layer L0 Parameters          *********************"
 # 15 / 5x5 = 0.60, 12 / 4x4 = 0.75
 layer=None
-layer = pSFATLayerL0 = SystemParameters.ParamsSFALayer()
+layer = pSFATLayerL0 = system_parameters.ParamsSFALayer()
 layer.name = "Homogeneous Thin Linear Layer L0 4x4 => 13 => x => 13"
 layer.x_field_channels=4
 layer.y_field_channels=4
@@ -1635,12 +1874,12 @@ layer.y_field_spacing=4
 
 #Warning!!!
 layer.pca_node_class = mdp.nodes.PCANode
-#layer.pca_node_class = mdp.nodes.SFANode
+#layer.pca_node_class = mdp.nodes.GSFANode
 layer.pca_out_dim = 13
 #layer.pca_args = {"block_size": block_size}
 layer.pca_args = {}
 
-layer.ord_node_class = SystemParameters.ParamsSFALayer.ord_node_class
+layer.ord_node_class = system_parameters.ParamsSFALayer.ord_node_class
 
 layer.exp_funcs = [identity,]
 
@@ -1651,18 +1890,18 @@ layer.red_out_dim = 0.9999999
 layer.red_args = {}
 
 
-layer.sfa_node_class = mdp.nodes.SFANode
+layer.sfa_node_class = mdp.nodes.GSFANode
 layer.sfa_out_dim = 13
 layer.sfa_args = {}
 
 #Warning, default: layer.cloneLayer = True
 layer.cloneLayer = False
 layer.name = comp_layer_name(layer.cloneLayer, layer.exp_funcs, layer.x_field_channels, layer.y_field_channels, layer.pca_out_dim, layer.sfa_out_dim)
-SystemParameters.test_object_contents(layer)
+system_parameters.test_object_contents(layer)
 
 print "******** Setting Layer L1 Parameters *********************"
 layer=None
-layer = pSFATLayerL1 = SystemParameters.ParamsSFALayer()
+layer = pSFATLayerL1 = system_parameters.ParamsSFALayer()
 
 layer.name = "Homogeneous Thin Linear Layer L1 2x2 => 47 x => 47, => 40"
 layer.x_field_channels=2
@@ -1679,7 +1918,7 @@ layer.pca_out_dim = 47
 #layer.pca_args = {"block_size": block_size}
 layer.pca_args = {}
 
-layer.ord_node_class = SystemParameters.ParamsSFALayer.ord_node_class
+layer.ord_node_class = system_parameters.ParamsSFALayer.ord_node_class
 
 layer.exp_funcs = [identity,]
 
@@ -1687,7 +1926,7 @@ layer.red_node_class = mdp.nodes.WhiteningNode
 layer.red_out_dim = 0.99999
 layer.red_args = {}
 
-layer.sfa_node_class = mdp.nodes.SFANode
+layer.sfa_node_class = mdp.nodes.GSFANode
 #sfa_out_dim_L1 = 12
 #30/(9*15) = 0.222, (4*12)
 layer.sfa_out_dim = 40
@@ -1695,11 +1934,11 @@ layer.sfa_args = {}
 #Default: cloneLayerL1 = False
 layer.cloneLayer = False
 layer.name = comp_layer_name(layer.cloneLayer, layer.exp_funcs, layer.x_field_channels, layer.y_field_channels, layer.pca_out_dim, layer.sfa_out_dim)
-SystemParameters.test_object_contents(layer)
+system_parameters.test_object_contents(layer)
 
 print "******** Setting Layer L2 Parameters *********************"
 layer = None
-layer = pSFATLayerL2 = SystemParameters.ParamsSFALayer()
+layer = pSFATLayerL2 = system_parameters.ParamsSFALayer()
 layer.name = "Inhomogeneous Thin Linear Layer L2 2x2 => 158 => 158 => 70"
 layer.x_field_channels=2
 layer.y_field_channels=2
@@ -1707,14 +1946,14 @@ layer.x_field_spacing=2
 layer.y_field_spacing=2
 #layer.in_channel_dim = layer.sfa_out_dim
 
-layer.pca_node_class = mdp.nodes.SFANode
+layer.pca_node_class = mdp.nodes.GSFANode
 #pca_out_dim_L2 = 90
 #pca_out_dim_L2 = sfa_out_dim_L1 x_field_channels_L2 * x_field_channels_L2 * 0.75 
 layer.pca_out_dim = 100
 #layer.pca_args = {"block_size": block_size}
 layer.pca_args = {}
 
-layer.ord_node_class = SystemParameters.ParamsSFALayer.ord_node_class
+layer.ord_node_class = system_parameters.ParamsSFALayer.ord_node_class
 
 layer.exp_funcs = [identity,]
 
@@ -1723,14 +1962,14 @@ layer.red_node_class = mdp.nodes.WhiteningNode
 layer.red_out_dim = len(sfa_libs.apply_funcs_to_signal(layer.exp_funcs, numpy.zeros(layer.pca_out_dim)))-2
 layer.red_args = {}
 
-layer.sfa_node_class = mdp.nodes.SFANode
+layer.sfa_node_class = mdp.nodes.GSFANode
 #sfa_out_dim_L2 = 12
 layer.sfa_out_dim = 70
 layer.sfa_args = {}
 #Default: cloneLayerL2 = False
 layer.cloneLayer = False
 layer.name = comp_layer_name(layer.cloneLayer, layer.exp_funcs, layer.x_field_channels, layer.y_field_channels, layer.pca_out_dim, layer.sfa_out_dim)
-SystemParameters.test_object_contents(layer)
+system_parameters.test_object_contents(layer)
 
 
 print "******** Setting Layer L3 Parameters *********************"
@@ -1743,14 +1982,14 @@ layer.x_field_spacing=2
 layer.y_field_spacing=2
 #layer.in_channel_dim = layer.sfa_out_dim
 
-layer.pca_node_class = mdp.nodes.SFANode
+layer.pca_node_class = mdp.nodes.GSFANode
 #pca_out_dim_L2 = 90
 #pca_out_dim_L2 = sfa_out_dim_L1 x_field_channels_L2 * x_field_channels_L2 * 0.75 
 layer.pca_out_dim = 100
 #layer.pca_args = {"block_size": block_size}
 layer.pca_args = {}
 
-layer.ord_node_class = SystemParameters.ParamsSFALayer.ord_node_class
+layer.ord_node_class = system_parameters.ParamsSFALayer.ord_node_class
 
 layer.exp_funcs = [identity,]
 
@@ -1758,14 +1997,14 @@ layer.red_node_class = mdp.nodes.WhiteningNode
 layer.red_out_dim = len(sfa_libs.apply_funcs_to_signal(layer.exp_funcs, numpy.zeros(layer.pca_out_dim)))-2
 layer.red_args = {}
 
-layer.sfa_node_class = mdp.nodes.SFANode
+layer.sfa_node_class = mdp.nodes.GSFANode
 #sfa_out_dim_L2 = 12
 layer.sfa_out_dim = 70
 layer.sfa_args = {}
 #Default: cloneLayerL2 = False
 layer.cloneLayer = False
 layer.name = comp_layer_name(layer.cloneLayer, layer.exp_funcs, layer.x_field_channels, layer.y_field_channels, layer.pca_out_dim, layer.sfa_out_dim)
-SystemParameters.test_object_contents(layer)
+system_parameters.test_object_contents(layer)
 
 
 print "******** Setting Layer L4 Parameters *********************"
@@ -1773,20 +2012,20 @@ layer = None
 layer = pSFATLayerL4 = copy.deepcopy(pSFATLayerL3)
 layer.name = "Inhomogeneous Thin Linear Layer L4 2x2 => 278 => 278 => 70"
 layer.name = comp_layer_name(layer.cloneLayer, layer.exp_funcs, layer.x_field_channels, layer.y_field_channels, layer.pca_out_dim, layer.sfa_out_dim)
-SystemParameters.test_object_contents(layer)
+system_parameters.test_object_contents(layer)
 
 print "******** Setting Layer L5 Parameters *********************"
 layer = None
 layer = pSFATLayerL5 = copy.deepcopy(pSFATLayerL4)
 layer.name = "Inhomogeneous Thin Linear Layer L5 2x2 => 278 => 278 => 70"
 layer.name = comp_layer_name(layer.cloneLayer, layer.exp_funcs, layer.x_field_channels, layer.y_field_channels, layer.pca_out_dim, layer.sfa_out_dim)
-SystemParameters.test_object_contents(layer)
+system_parameters.test_object_contents(layer)
 
 
 ####################################################################
 ###########           THIN LINEAR NETWORK               ############
 ####################################################################  
-network = linearNetworkT6L = SystemParameters.ParamsNetwork()
+network = linearNetworkT6L = system_parameters.ParamsNetwork()
 network.name = "Linear 6 Layer Network"
 
 network.L0 = pSFATLayerL0
@@ -1842,7 +2081,7 @@ layer.red_out_dim = len(sfa_libs.apply_funcs_to_signal(layer.exp_funcs, numpy.ze
 ####################################################################
 ###########           THIN Non-LINEAR NETWORK               ############
 ####################################################################  
-network = nonlinearNetworkT6L = SystemParameters.ParamsNetwork()
+network = nonlinearNetworkT6L = system_parameters.ParamsNetwork()
 network.name = "Non-Linear 6 Layer Network"
 network.L0 = pSFATLayerNL0
 network.L1 = pSFATLayerNL1
@@ -1852,7 +2091,7 @@ network.L4 = pSFATLayerNL4
 network.L5 = pSFATLayerNL5
 
 
-network = TestNetworkT6L = SystemParameters.ParamsNetwork()
+network = TestNetworkT6L = system_parameters.ParamsNetwork()
 network.name = "Test Non-Linear 6 Layer Network"
 network.L0 = pSFATLayerL0
 network.L1 = pSFATLayerL1
@@ -1873,7 +2112,7 @@ pSFAULayerL0 = copy.deepcopy(pSFATLayerL0)
 
 print "******** Setting Ultra Thin Layer L1 H Parameters *********************"
 layer=None
-layer = pSFAULayerL1_H = SystemParameters.ParamsSFALayer()
+layer = pSFAULayerL1_H = system_parameters.ParamsSFALayer()
 
 layer.name = "Homogeneous Ultra Thin Linear Layer L1 1x2 (>= 26) => 26 x => 26, => 20"
 layer.x_field_channels=2
@@ -1881,13 +2120,13 @@ layer.y_field_channels=1
 layer.x_field_spacing=2
 layer.y_field_spacing=1
 
-#WARNING!!!!! mdp.nodes.SFANode
-layer.pca_node_class = mdp.nodes.SFANode
+#WARNING!!!!! mdp.nodes.GSFANode
+layer.pca_node_class = mdp.nodes.GSFANode
 layer.pca_out_dim = 26
 #layer.pca_args = {"block_size": block_size, "train_mode": -1}
 layer.pca_args = {}
 
-layer.ord_node_class = SystemParameters.ParamsSFALayer.ord_node_class
+layer.ord_node_class = system_parameters.ParamsSFALayer.ord_node_class
 
 layer.exp_funcs = [identity,]
 
@@ -1895,19 +2134,19 @@ layer.red_node_class = None
 layer.red_out_dim = 0.99999
 layer.red_args = {}
 
-layer.sfa_node_class = mdp.nodes.SFANode
+layer.sfa_node_class = mdp.nodes.GSFANode
 layer.sfa_out_dim = 20
 layer.sfa_args = {}
 #Warning!!! layer.cloneLayer = True
 layer.cloneLayer = False
 layer.name = comp_layer_name(layer.cloneLayer, layer.exp_funcs, layer.x_field_channels, layer.y_field_channels, layer.pca_out_dim, layer.sfa_out_dim)
-SystemParameters.test_object_contents(layer)
+system_parameters.test_object_contents(layer)
 
 
 
 print "******** Setting Ultra Thin Layer L1 V Parameters *********************"
 layer=None
-layer = pSFAULayerL1_V = SystemParameters.ParamsSFALayer()
+layer = pSFAULayerL1_V = system_parameters.ParamsSFALayer()
 
 layer.name = "Homogeneous Ultra Thin Linear Layer L1 2x1 (>= 40) => 40 x => 40, => 35"
 layer.x_field_channels=1
@@ -1916,12 +2155,12 @@ layer.x_field_spacing=1
 layer.y_field_spacing=2
 
 #layer.in_channel_dim = pSFALayerL0.sfa_out_dim
-layer.pca_node_class = mdp.nodes.SFANode #WhiteningNode
+layer.pca_node_class = mdp.nodes.GSFANode #WhiteningNode
 layer.pca_out_dim = 40
 #layer.pca_args = {"block_size": block_size}
 layer.pca_args = {}
 
-layer.ord_node_class = SystemParameters.ParamsSFALayer.ord_node_class
+layer.ord_node_class = system_parameters.ParamsSFALayer.ord_node_class
 
 layer.exp_funcs = [identity]
 
@@ -1929,33 +2168,33 @@ layer.red_node_class = None
 layer.red_out_dim = 0.99999
 layer.red_args = {}
 
-layer.sfa_node_class = mdp.nodes.SFANode
+layer.sfa_node_class = mdp.nodes.GSFANode
 layer.sfa_out_dim = 35
 layer.sfa_args = {}
 #Warning!!!! layer.cloneLayer = True
 layer.cloneLayer = False
 layer.name = comp_layer_name(layer.cloneLayer, layer.exp_funcs, layer.x_field_channels, layer.y_field_channels, layer.pca_out_dim, layer.sfa_out_dim)
-SystemParameters.test_object_contents(layer)
+system_parameters.test_object_contents(layer)
 
 
 print "******** Setting Layer L2 H Parameters *********************"
 layer = None
-layer = pSFAULayerL2_H = SystemParameters.ParamsSFALayer()
+layer = pSFAULayerL2_H = system_parameters.ParamsSFALayer()
 layer.name = "Inhomogeneous Ultra Thin Linear Layer L2 1x2 (>=70) => 70 => x => (x-2) => 60"
 layer.x_field_channels=2
 layer.y_field_channels=1
 layer.x_field_spacing=2
 layer.y_field_spacing=1
 
-layer.pca_node_class = mdp.nodes.SFANode
+layer.pca_node_class = mdp.nodes.GSFANode
 #pca_out_dim_L2 = 90
 #pca_out_dim_L2 = sfa_out_dim_L1 x_field_channels_L2 * x_field_channels_L2 * 0.75 
 layer.pca_out_dim = 70
 #layer.pca_args = {"block_size": block_size}
 layer.pca_args = {}
 
-layer.ord_node_class = SystemParameters.ParamsSFALayer.ord_node_class
-layer.ord_args = SystemParameters.ParamsSFALayer.ord_args
+layer.ord_node_class = system_parameters.ParamsSFALayer.ord_node_class
+layer.ord_args = system_parameters.ParamsSFALayer.ord_args
 
 layer.exp_funcs = [identity,]
 
@@ -1965,33 +2204,33 @@ layer.red_node_class = None
 layer.red_out_dim = len(sfa_libs.apply_funcs_to_signal(layer.exp_funcs, numpy.zeros(layer.pca_out_dim)))-2
 layer.red_args = {}
 
-layer.sfa_node_class = mdp.nodes.SFANode
+layer.sfa_node_class = mdp.nodes.GSFANode
 #sfa_out_dim_L2 = 12
 layer.sfa_out_dim = 60
 #layer.sfa_args = {"block_size": -1, "train_mode": -1}
 #Default: cloneLayerL2 = False
 layer.cloneLayer = False
 layer.name = comp_layer_name(layer.cloneLayer, layer.exp_funcs, layer.x_field_channels, layer.y_field_channels, layer.pca_out_dim, layer.sfa_out_dim)
-SystemParameters.test_object_contents(layer)
+system_parameters.test_object_contents(layer)
 
 
 print "******** Setting Layer L2 V Parameters *********************"
 layer = None
-layer = pSFAULayerL2_V = SystemParameters.ParamsSFALayer()
+layer = pSFAULayerL2_V = system_parameters.ParamsSFALayer()
 layer.name = "Inhomogeneous Ultra Thin Linear Layer L2 2x1 (>=120) => 120 => x => (x-2) => 60"
 layer.x_field_channels=1
 layer.y_field_channels=2
 layer.x_field_spacing=1
 layer.y_field_spacing=2
 
-layer.pca_node_class = mdp.nodes.SFANode
+layer.pca_node_class = mdp.nodes.GSFANode
 #pca_out_dim_L2 = 90
 #pca_out_dim_L2 = sfa_out_dim_L1 x_field_channels_L2 * x_field_channels_L2 * 0.75 
 layer.pca_out_dim = 120
 #layer.pca_args = {"block_size": block_size}
 layer.pca_args = {"block_size": -1, "train_mode": -1}
 
-layer.ord_node_class = SystemParameters.ParamsSFALayer.ord_node_class
+layer.ord_node_class = system_parameters.ParamsSFALayer.ord_node_class
 
 layer.exp_funcs = [identity,]
 
@@ -2001,14 +2240,14 @@ layer.red_node_class = None
 layer.red_out_dim = len(sfa_libs.apply_funcs_to_signal(layer.exp_funcs, numpy.zeros(layer.pca_out_dim)))-2
 layer.red_args = {}
 
-layer.sfa_node_class = mdp.nodes.SFANode
+layer.sfa_node_class = mdp.nodes.GSFANode
 #sfa_out_dim_L2 = 12
 layer.sfa_out_dim = 60
 #layer.sfa_args = {"block_size": -1, "train_mode": -1}
 #Default: cloneLayerL2 = False
 layer.cloneLayer = False
 layer.name = comp_layer_name(layer.cloneLayer, layer.exp_funcs, layer.x_field_channels, layer.y_field_channels, layer.pca_out_dim, layer.sfa_out_dim)
-SystemParameters.test_object_contents(layer)
+system_parameters.test_object_contents(layer)
 
 
 print "******** Setting Layer L3 H Parameters *********************"
@@ -2021,28 +2260,28 @@ layer.x_field_spacing=2
 layer.y_field_spacing=1
 layer.exp_funcs = [identity,]
 layer.name = comp_layer_name(layer.cloneLayer, layer.exp_funcs, layer.x_field_channels, layer.y_field_channels, layer.pca_out_dim, layer.sfa_out_dim)
-SystemParameters.test_object_contents(layer)
+system_parameters.test_object_contents(layer)
 
 print "******** Setting Layer L3 V Parameters *********************"
 layer = None
 layer = pSFAULayerL3_V = copy.deepcopy(pSFAULayerL2_V)
 layer.name = "Inhomogeneous Ultra Linear Layer L3 2x1 (>=120) =>  120 => x => x-2 => 60"
 layer.name = comp_layer_name(layer.cloneLayer, layer.exp_funcs, layer.x_field_channels, layer.y_field_channels, layer.pca_out_dim, layer.sfa_out_dim)
-SystemParameters.test_object_contents(layer)
+system_parameters.test_object_contents(layer)
 
 print "******** Setting Layer L4 H Parameters *********************"
 layer = None
 layer = pSFAULayerL4_H = copy.deepcopy(pSFAULayerL3_H)
 layer.name = "Inhomogeneous Ultra Linear Layer L4 1x2 (>=120) =>  120 => x => x-2 => 60"
 layer.name = comp_layer_name(layer.cloneLayer, layer.exp_funcs, layer.x_field_channels, layer.y_field_channels, layer.pca_out_dim, layer.sfa_out_dim)
-SystemParameters.test_object_contents(layer)
+system_parameters.test_object_contents(layer)
 
 print "******** Setting Layer L4 V Parameters *********************"
 layer = None
 layer = pSFAULayerL4_V = copy.deepcopy(pSFAULayerL3_V)
 layer.name = "Inhomogeneous Ultra Linear Layer L3 2x1 (>=120) =>  120 => x => x-2 => 60"
 layer.name = comp_layer_name(layer.cloneLayer, layer.exp_funcs, layer.x_field_channels, layer.y_field_channels, layer.pca_out_dim, layer.sfa_out_dim)
-SystemParameters.test_object_contents(layer)
+system_parameters.test_object_contents(layer)
 
 
 print "******** Setting Layer L5 H Parameters *********************"
@@ -2050,19 +2289,19 @@ layer = None
 layer = pSFAULayerL5_H = copy.deepcopy(pSFAULayerL3_H)
 layer.name = "Inhomogeneous Ultra Linear Layer L4 1x2 (>=120) =>  120 => x => x-2 => 60"
 layer.name = comp_layer_name(layer.cloneLayer, layer.exp_funcs, layer.x_field_channels, layer.y_field_channels, layer.pca_out_dim, layer.sfa_out_dim)
-SystemParameters.test_object_contents(layer)
+system_parameters.test_object_contents(layer)
 
 print "******** Setting Layer L5 V Parameters *********************"
 layer = None
 layer = pSFAULayerL5_V = copy.deepcopy(pSFAULayerL3_V)
 layer.name = "Inhomogeneous Ultra Linear Layer L3 2x1 (>=120) =>  120 => x => x-2 => 60"
 layer.name = comp_layer_name(layer.cloneLayer, layer.exp_funcs, layer.x_field_channels, layer.y_field_channels, layer.pca_out_dim, layer.sfa_out_dim)
-SystemParameters.test_object_contents(layer)
+system_parameters.test_object_contents(layer)
 
 ####################################################################
 ###########           THIN LINEAR NETWORK               ############
 ####################################################################  
-network = linearNetworkU11L = SystemParameters.ParamsNetwork()
+network = linearNetworkU11L = system_parameters.ParamsNetwork()
 network.name = "Linear Ultra Thin 11 Layer Network"
 
 network.L0 = pSFAULayerL0
@@ -2089,7 +2328,7 @@ if setup_pca_sfa_expos:
         if i > 0:
             layer.pca_node_class = None
         else:
-            layer.pca_node_class = mdp.nodes.SFANode
+            layer.pca_node_class = mdp.nodes.GSFANode
             layer.pca_args["sfa_expo"] = 1
             layer.pca_args["pca_expo"] = 1        
 
@@ -2288,7 +2527,7 @@ for i, layer in enumerate(network.layers):
     #Q_AP_L(k=nan, d=0.8), Q_AN_exp
     #layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "max_preserved_sfa":2.0}
 #    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_comp":1, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based", "max_preserved_sfa":2.0}
-#    layer.sfa_args = {"pre_expansion_node_class":mdp.nodes.SFANode, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":2.0}
+#    layer.sfa_args = {"pre_expansion_node_class":mdp.nodes.GSFANode, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":2.0}
     layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.9999} #AGE ARTICLE: 1.99999 official, 1.99999, 2.0. Control2: 1.9999
     #sel60_unsigned_08expo sel_exp(60, unsigned_08expo), unsigned_08expo
 
@@ -2311,15 +2550,15 @@ if double_SFA_top_node:
     
 
 #WARNING, EXPERIMENTAL CODE TO TEST OTHER EXPANSIONS
-#network.layers[10].sfa_node_class = mdp.nodes.SFANode
+#network.layers[10].sfa_node_class = mdp.nodes.GSFANode
 #network.layers[6].sfa_args = {"expansion_funcs":[Q_exp], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "max_preserved_sfa":2.0}
 
 
 
 
 
-#Networks for Age estimation MORPH-II
 
+#Networks for Age estimation MORPH-II
 ################## NETWORK FOR TESTING ACCORDING TO GUO ET AL, USES 3 LABELS ######################################
 network = IEVMLRecNetworkU11L_Overlap6x6L0_GUO_3Labels = copy.deepcopy(linearPCANetworkU11L)
 rec_field_size = 6 #6 => 192x192, 5=> 160x160, 4=>128x128
@@ -2625,7 +2864,7 @@ for i, layer in enumerate(network.layers):
     #Q_AP_L(k=nan, d=0.8), Q_AN_exp
     #layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "max_preserved_sfa":2.0}
 #    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_comp":1, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based", "max_preserved_sfa":2.0}
-#    layer.sfa_args = {"pre_expansion_node_class":mdp.nodes.SFANode, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":2.0}
+#    layer.sfa_args = {"pre_expansion_node_class":mdp.nodes.GSFANode, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":2.0}
     layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.91} #only for tuning/experimentation, official is below 
     #layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99} #AGE ARTICLE: 1.99999 official, 1.99999, 2.0. Control2: 1.9999
     #sel60_unsigned_08expo sel_exp(60, unsigned_08expo), unsigned_08expos14u08ex
@@ -2969,7 +3208,7 @@ layer.red_out_dim = len(sfa_libs.apply_funcs_to_signal(layer.exp_funcs, numpy.ze
 ####################################################################
 ###########           THIN Non-LINEAR NETWORK               ############
 ####################################################################  
-network = nonlinearNetworkU11L = SystemParameters.ParamsNetwork()
+network = nonlinearNetworkU11L = system_parameters.ParamsNetwork()
 network.name = "Non-Linear Ultra Thin 11 Layer Network"
 
 network.L0 = pSFAULayerNL0
@@ -2988,7 +3227,7 @@ network.layers = [network.L0, network.L1, network.L2, network.L3, network.L4, ne
                   network.L8, network.L9, network.L10]
 
 #TODO: Correct bug in adj_k product, it should also work for very small input channels, like 2x2
-network = TestNetworkU11L = SystemParameters.ParamsNetwork()
+network = TestNetworkU11L = system_parameters.ParamsNetwork()
 network.name = "Test Non-Linear 11 Layer Thin Network"
 network.L0 = pSFAULayerNL0
 network.L1 = pSFAULayerNL1_H
@@ -3030,9 +3269,9 @@ u08expoNetworkU11L.L9.sfa_out_dim = 60
 
 
 #******************** GENDER NETWORK FOR ARTICLE ****************
-layer = Gender_top_layer = SystemParameters.ParamsSFASuperNode()
+layer = Gender_top_layer = system_parameters.ParamsSFASuperNode()
 layer.name = "top layer"
-#layer.pca_node_class = None # mdp.nodes.SFANode
+#layer.pca_node_class = None # mdp.nodes.GSFANode
 #W
 layer.pca_node_class = None
 #layer.pca_args = {}
@@ -3043,7 +3282,7 @@ layer.exp_funcs = [identity, unsigned_08expo] #unsigned_08expo, signed_08expo
 #layer.exp_funcs = [encode_signal_p9,] #For next experiment: [encode_signal_p9,]
 #layer.red_node_class = mdp.nodes.HeadNode
 #layer.red_out_dim = int(tuning_parameter)
-layer.sfa_node_class =  mdp.nodes.SFANode #mdp.nodes.SFANode #mdp.nodes.SFANode
+layer.sfa_node_class =  mdp.nodes.GSFANode #mdp.nodes.GSFANode #mdp.nodes.GSFANode
 layer.sfa_out_dim = 10 #3 #49*2 # *3 # None
 
 
@@ -3197,32 +3436,32 @@ HeuristicEvaluationExpansionsNetworkU11L = NetworkSetExpFuncs(S_d08_L, Heuristic
 u08expoS42NetworkU11L = NetworkSetExpFuncs([identity, sel_exp(42, unsigned_08expo)], copy.deepcopy(nonlinearNetworkU11L))
 u08expoS42NetworkU11L.L0.pca_node_class = mdp.nodes.PCANode
 u08expoS42NetworkU11L.L1.pca_out_dim = (39)/3
-#u08expoS42NetworkU11L.L0.ord_node_class = mdp.nodes.SFANode
+#u08expoS42NetworkU11L.L0.ord_node_class = mdp.nodes.GSFANode
 #u08expoS42NetworkU11L.L0.exp_funcs = [identity, unsigned_08expo]
-u08expoS42NetworkU11L.L0.sfa_node_class = mdp.nodes.HeadNode #mdp.nodes.SFANode
+u08expoS42NetworkU11L.L0.sfa_node_class = mdp.nodes.HeadNode #mdp.nodes.GSFANode
 u08expoS42NetworkU11L.L0.sfa_out_dim = 78/3 #No dim reduction!
 
-u08expoS42NetworkU11L.L1.pca_node_class = mdp.nodes.SFANode
+u08expoS42NetworkU11L.L1.pca_node_class = mdp.nodes.GSFANode
 u08expoS42NetworkU11L.L1.pca_out_dim = (55)/2
 u08expoS42NetworkU11L.L1.sfa_node_class = mdp.nodes.HeadNode
 u08expoS42NetworkU11L.L1.sfa_out_dim = (96)/2
 
-u08expoS42NetworkU11L.L2.pca_node_class = mdp.nodes.SFANode
+u08expoS42NetworkU11L.L2.pca_node_class = mdp.nodes.GSFANode
 u08expoS42NetworkU11L.L2.pca_out_dim = (55)/1.5
 u08expoS42NetworkU11L.L2.sfa_node_class = mdp.nodes.HeadNode
 u08expoS42NetworkU11L.L2.sfa_out_dim = (96)/1.5
 
-u08expoS42NetworkU11L.L3.pca_node_class = mdp.nodes.SFANode
+u08expoS42NetworkU11L.L3.pca_node_class = mdp.nodes.GSFANode
 u08expoS42NetworkU11L.L3.pca_out_dim = (55)
 u08expoS42NetworkU11L.L3.sfa_node_class = mdp.nodes.HeadNode
 u08expoS42NetworkU11L.L3.sfa_out_dim = (97)
 
-u08expoS42NetworkU11L.L4.pca_node_class = mdp.nodes.SFANode
+u08expoS42NetworkU11L.L4.pca_node_class = mdp.nodes.GSFANode
 u08expoS42NetworkU11L.L4.pca_out_dim = (42)
 u08expoS42NetworkU11L.L4.sfa_node_class = mdp.nodes.HeadNode
 u08expoS42NetworkU11L.L4.sfa_out_dim = (84)
 
-u08expoS42NetworkU11L.L5.pca_node_class = mdp.nodes.SFANode
+u08expoS42NetworkU11L.L5.pca_node_class = mdp.nodes.GSFANode
 u08expoS42NetworkU11L.L5.pca_out_dim = (42)
 u08expoS42NetworkU11L.L5.exp_funcs = [identity]
 u08expoS42NetworkU11L.L5.sfa_node_class = mdp.nodes.HeadNode
@@ -3233,7 +3472,7 @@ u08expoS42NetworkU11L.L6.pca_node_class = None
 #u08expoS42NetworkU11L.L6.pca_out_dim = (55)
 #W
 u08expoS42NetworkU11L.L6.exp_funcs = [identity]
-u08expoS42NetworkU11L.L6.sfa_node_class = mdp.nodes.SFANode
+u08expoS42NetworkU11L.L6.sfa_node_class = mdp.nodes.GSFANode
 u08expoS42NetworkU11L.L6.sfa_out_dim = (84)
 
 #u08expoS42NetworkU11L.L7 = None
@@ -3285,7 +3524,7 @@ network.L0.ord_node_class = None
 network.L0.ord_args = {}     
 network.L0.red_node_class = None
 network.L0.red_args = {}
-network.L0.sfa_node_class = mdp.nodes.SFANode
+network.L0.sfa_node_class = mdp.nodes.GSFANode
 network.L0.sfa_args = {}
 network.L0.cloneLayer = True
 
@@ -3296,7 +3535,7 @@ network.L1.ord_node_class = None
 network.L1.ord_args = {}     
 network.L1.red_node_class = None
 network.L1.red_args = {}
-network.L1.sfa_node_class = mdp.nodes.SFANode
+network.L1.sfa_node_class = mdp.nodes.GSFANode
 network.L1.sfa_args = {}
 network.L1.cloneLayer = True
 
@@ -3307,7 +3546,7 @@ network.L2.ord_node_class = None
 network.L2.ord_args = {}     
 network.L2.red_node_class = None
 network.L2.red_args = {}
-network.L2.sfa_node_class = mdp.nodes.SFANode
+network.L2.sfa_node_class = mdp.nodes.GSFANode
 network.L2.sfa_args = {}
 network.L2.cloneLayer = True
 
@@ -3318,7 +3557,7 @@ network.L3.ord_node_class = None
 network.L3.ord_args = {}     
 network.L3.red_node_class = None
 network.L3.red_args = {}
-network.L3.sfa_node_class = mdp.nodes.SFANode
+network.L3.sfa_node_class = mdp.nodes.GSFANode
 network.L3.sfa_args = {}
 network.L3.cloneLayer = False
 
@@ -3329,22 +3568,89 @@ network.L4.ord_node_class = None
 network.L4.ord_args = {}     
 network.L4.red_node_class = None
 network.L4.red_args = {}
-network.L4.sfa_node_class = mdp.nodes.SFANode
+network.L4.sfa_node_class = mdp.nodes.GSFANode
 network.L4.sfa_args = {}
 network.L4.cloneLayer = False
 
 
+
+#Network Useful for the face detection experiments
+network = IEVMLRecNetworkU11L_NoOverlap_4x4L0 = copy.deepcopy(u08expoNetworkU11L)
+rec_field_size = 4 #6 => 192x192, 5=> 160x160, 4=>128x128
+LRec_use_RGB_images = False #or True
+network.layers[0].x_field_channels = rec_field_size
+network.layers[0].y_field_channels = rec_field_size
+network.layers[0].x_field_spacing = rec_field_size
+network.layers[0].y_field_spacing = rec_field_size
+network.layers[0].pca_node_class = mdp.nodes.PCANode
+#if LRec_use_RGB_images:
+#    network.layers[0].pca_out_dim = 50 #50 Problem, more color components also remove higher frequency ones = code image as intensity+color!!!
+#else:
+#    network.layers[0].pca_out_dim = 20 #20 #30 #28 #20 #22 more_feats2, 50 for RGB
+
+#if LRec_use_RGB_images == False:
+#    IEVMLRecNet_out_dims = [ 28, 52, 75, 85, 90, 90, 85, 100, 75,75,75 ] #Experiment with control2: Dt=1.9999
+#    print "Number of network features set without RGB:", IEVMLRecNet_out_dims
+#else:
+#    IEVMLRecNet_out_dims = [ 39, 51, 65,70,70,70,70,70,70,70,70 ] #(less features)
+#    print "Adjusting number of network features due to RGB:", IEVMLRecNet_out_dims
+
+print "IEVMLRecNetworkU11L_NoOverlap_4x4L0 L0-10_SFA_out_dim = ", IEVMLRecNet_out_dims
+
+for i, layer in enumerate(network.layers):
+    layer.exp_funcs = [identity]
+    layer.sfa_node_class = mdp.nodes.IEVMLRecNode
+#    layer.sfa_out_dim = IEVMLRecNet_out_dims[i]
+    #Q_AP_L(k=nan, d=0.8), Q_AN_exp
+    #layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "max_preserved_sfa":2.0}
+#    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_comp":1, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based", "max_preserved_sfa":2.0}
+#    layer.sfa_args = {"pre_expansion_node_class":mdp.nodes.GSFANode, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":2.0}
+    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999} 
+
+
+
+delta_thresholds = [1.998, 1.996, 1.995, 1.99, 1.9855, 1.976, 1.97, 1.95, 1.94, 1.93, 1.92, 1.91]
+output_dims =      [   16,    28,    50,    75,    75,    75,   75,   75,   75,   75,   80,   80]
+network = IEVMLRecNetworkU11L_NoOverlap_4x4L0_mod = copy.deepcopy(IEVMLRecNetworkU11L_NoOverlap_4x4L0)
+for i, layer in enumerate(network.layers):
+    layer.sfa_args["max_preserved_sfa"] = delta_thresholds[i]
+    layer.sfa_out_dim = output_dims[i]
+
+delta_thresholds = [2, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4]
+output_dims =      [   15,    28,    50,    75,    75,    75,   75,   75,   75,   75,   80,   80]
+network = IEVMLRecNetworkU11L_NoOverlap_4x4L0_mod2 = copy.deepcopy(IEVMLRecNetworkU11L_NoOverlap_4x4L0)
+for i, layer in enumerate(network.layers):
+    layer.sfa_args["max_preserved_sfa"] = delta_thresholds[i]
+    layer.sfa_out_dim = output_dims[i]
+
+delta_thresholds = [3, 5, 8, 9, 9, 9, 9, 9, 9, 9, 9, 9]
+output_dims =      [   15,    28,    50,    75,    75,    75,   75,   75,   75,   75,   80,   80]
+network = IEVMLRecNetworkU11L_NoOverlap_4x4L0_mod4 = copy.deepcopy(IEVMLRecNetworkU11L_NoOverlap_4x4L0)
+for i, layer in enumerate(network.layers):
+    layer.sfa_args["max_preserved_sfa"] = delta_thresholds[i]
+    layer.sfa_out_dim = output_dims[i]
+
+#WARNING, ADDING AN ADDITIONAL SFA NODE IN THE LAST LAYER, 80x80 resolution (Node 9)
+#double_SFA_top_node = True and False
+#if double_SFA_top_node:
+#    layer = network.layers[8]
+#    layer.pca_node_class = mdp.nodes.IEVMLRecNode
+#    layer.pca_out_dim = IEVMLRecNet_out_dims[8]
+#    layer.pca_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, div2_sel75_unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} #2.0
+#    layer.sfa_node_class = mdp.nodes.IEVMLRecNode
+#    layer.sfa_out_dim = IEVMLRecNet_out_dims[8]
+#    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, sel8_04QE], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} #2.0
 
 
 
 
 #
 #print "******** Setting Layer L3 k-adj-prod Parameters *********************"
-#pSFAL3_L3KadjProd = SystemParameters.ParamsSFASuperNode()
+#pSFAL3_L3KadjProd = system_parameters.ParamsSFASuperNode()
 ##pSFAL3_L3KadjProd.in_channel_dim = pSFALayerL2.sfa_out_dim
 #
 ##pca_node_L3 = mdp.nodes.WhiteningNode(output_dim=pca_out_dim_L3) 
-#pSFAL3_L3KadjProd.pca_node_class = mdp.nodes.SFANode
+#pSFAL3_L3KadjProd.pca_node_class = mdp.nodes.GSFANode
 ##pca_out_dim_L3 = 210
 ##pca_out_dim_L3 = 0.999
 ##WARNING!!! CHANGED PCA TO SFA
@@ -3363,18 +3669,18 @@ network.L4.cloneLayer = False
 #pSFAL3_L3KadjProd.red_out_dim = 0.999999
 #pSFAL3_L3KadjProd.red_args = {}
 #
-#pSFAL3_L3KadjProd.sfa_node_class = mdp.nodes.SFANode
+#pSFAL3_L3KadjProd.sfa_node_class = mdp.nodes.GSFANode
 ##sfa_out_dim_L1 = 12
 #pSFAL3_L3KadjProd.sfa_out_dim = 40
 #pSFAL3_L3KadjProd.sfa_args = {"block_size": -1, "train_mode": -1}
 ##Default: cloneLayerL1 = False
 #pSFAL3_L3KadjProd.cloneLayer = False
-#SystemParameters.test_object_contents(pSFAL3_L3KadjProd)
+#system_parameters.test_object_contents(pSFAL3_L3KadjProd)
 #
 #####################################################################
 ############           NON-LINEAR NETWORK                ############
 #####################################################################  
-#Network4L = SystemParameters.ParamsNetwork()
+#Network4L = system_parameters.ParamsNetwork()
 #Network4L.name = "Linear 4 Layer Network"
 #Network4L.L0 = pSFALayerL0
 #Network4L.L1 = pSFALayerL1

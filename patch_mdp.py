@@ -3,7 +3,7 @@ import mdp
 from mdp import numx
 from mdp.utils import (mult, pinv, symeig, CovarianceMatrix, SymeigException)
 import more_nodes
-from GSFA_node import CovDCovMatrix, ComputeCovDcovMatrixMixed, ComputeCovDcovMatrixSerial, ComputeCovDcovMatrixClustered, ComputeCovMatrix
+from gsfa_node import CovDCovMatrix, ComputeCovDcovMatrixMixed, ComputeCovDcovMatrixSerial, ComputeCovDcovMatrixClustered, ComputeCovMatrix
 import histogram_equalization
 from sfa_libs import select_rows_from_matrix
 import inversion
@@ -549,8 +549,8 @@ def node_train_params(self, data, params=None, verbose=False):
         self._train_phase_started = True
         # this var is False if the complete training is finished
 #        self._training = False
-        if verbose:
-            quit()
+        if verbose or True:
+            #quit()
             print "params=",params
             print "list_train_params=", self.list_train_params
             print "all_params:", all_params

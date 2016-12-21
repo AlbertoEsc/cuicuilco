@@ -2296,4 +2296,190 @@ def o6_s15_d1_Q_N(x):
 def o6_s17_d1_Q_N(x):
     return Offset_sF_dD_Q_N(x, Off=6, F=17, d=1)
 
+def two_set_products(c, x):
+    num_samples, c_dim = c.shape
+    num_samples2, x_dim = x.shape
+    if num_samples != num_samples2:
+        er = "incorrect number of samples in control and data signals: %d vs. %d"%(num_samples,num_samples2)
+        raise Exception(er) 
+    result = numpy.zeros((num_samples, c_dim * x_dim))
+    for i in range(c_dim):
+        result[:, i*x_dim:(i+1)*x_dim] = x * c[:, i][:, numpy.newaxis]
+    return result
+
+def control4_linear(x):
+    return numpy.concatenate((x[:,4:], two_set_products(x[:,0:4], x[:,4:])), axis=1)
+
+def controlC_QEF(x, C, F):
+    xx = numpy.concatenate((x[:,C:], QE(x[:,C:F+C])), axis=1)
+    cc = x[:,0:C]    
+    return numpy.concatenate((xx, two_set_products(cc, xx)), axis=1)
+
+def control4_QE20(x):
+    return controlC_QEF(x, 4, 20)
+
+def control4_QE30(x):
+    return controlC_QEF(x, 4, 30)
+
+def control4_QE40(x):
+    return controlC_QEF(x, 4, 40)
+
+def control4_QE50(x):
+    return controlC_QEF(x, 4, 50)
+
+def control4_QE60(x):
+    return controlC_QEF(x, 4, 60)
+
+def control5_QE60(x):
+    return controlC_QEF(x, 5, 60)
+
+def control6_QE60(x):
+    return controlC_QEF(x, 6, 60)
+
+def control8_QE60(x):
+    return controlC_QEF(x, 8, 60)
+
+def control9_QE60(x):
+    return controlC_QEF(x, 9, 60)
+
+
+
+def control1_QE40(x):
+    return controlC_QEF(x, 1, 40)
+
+def control2_QE40(x):
+    return controlC_QEF(x, 2, 40)
+
+def control3_QE40(x):
+    return controlC_QEF(x, 3, 40)
+
+def control5_QE40(x):
+    return controlC_QEF(x, 5, 40)
+
+def control6_QE40(x):
+    return controlC_QEF(x, 6, 40)
+
+def control6_QE50(x):
+    return controlC_QEF(x, 6, 50)
+
+
+def control2_QE60(x):
+    return controlC_QEF(x, 2, 60)
+
+def controlC_QEF_CEG(x, C, F, G):
+    xx = numpy.concatenate((x[:,C:], QE(x[:,C:F+C]), CE(x[:,C:G+C])), axis=1)
+    cc = x[:,0:C]    
+    return numpy.concatenate((xx, two_set_products(cc, xx)), axis=1)
+
+def control2_QE40_CE10(x):
+    return controlC_QEF_CEG(x, 2, 40, 10)
+
+def control2_QE40_CE15(x):
+    return controlC_QEF_CEG(x, 2, 40, 15)
+
+def control2_QE40_CE20(x):
+    return controlC_QEF_CEG(x, 2, 40, 20)
+
+def control2_QE40_CE25(x):
+    return controlC_QEF_CEG(x, 2, 40, 25)
+
+def control3_QE40_CE25(x):
+    return controlC_QEF_CEG(x, 3, 40, 25)
+
+def control3_QE50_CE25(x):
+    return controlC_QEF_CEG(x, 3, 50, 25)
+
+
+def control2_QE40_CE30(x):
+    return controlC_QEF_CEG(x, 2, 40, 30)
+
+def control2_QE40_CE35(x):
+    return controlC_QEF_CEG(x, 2, 40, 35)
+
+def control2_QE50_CE25(x):
+    return controlC_QEF_CEG(x, 2, 50, 25)
+
+def control2_QE60_CE25(x):
+    return controlC_QEF_CEG(x, 2, 60, 25)
+
+def control2_QE70_CE25(x):
+    return controlC_QEF_CEG(x, 2, 70, 25)
+
+def control2_QE75_CE25(x):
+    return controlC_QEF_CEG(x, 2, 75, 25)
+
+def control6_QE50_CE10(x):
+    return controlC_QEF_CEG(x, 6, 50, 10)
+
+def control6_QE50_CE15(x):
+    return controlC_QEF_CEG(x, 6, 50, 15)
+
+def control6_QE50_CE20(x):
+    return controlC_QEF_CEG(x, 6, 50, 20)
+
+def QEA_CEB_controlC_QEF_CEG(x, A, B, C, F, G):
+    px = numpy.concatenate((x[:,C:], QE(x[:,C:A+C]), CE(x[:,C:B+C])), axis=1)
+    xx = numpy.concatenate((x[:,C:], QE(x[:,C:F+C]), CE(x[:,C:G+C])), axis=1)
+    cc = x[:,0:C]
+    return numpy.concatenate((px, two_set_products(cc, xx)), axis=1)
+
+def QE60_CE30_control6_QE40_CE10(x):
+    return QEA_CEB_controlC_QEF_CEG(x, 60, 30, 6, 40, 10)
+
+def QE60_CE35_control6_QE40_CE10(x):
+    return QEA_CEB_controlC_QEF_CEG(x, 60, 35, 6, 40, 10)
+
+def QE60_CE25_control3_QE40_CE10(x):
+    return QEA_CEB_controlC_QEF_CEG(x, 60, 25, 3, 40, 10)
+
+def QE50_CE20_control9_QE30_CE5(x):
+    return QEA_CEB_controlC_QEF_CEG(x, 50, 20, 9, 30, 5)
+
+def QE50_CE20_control5_QE35_CE5(x):
+    return QEA_CEB_controlC_QEF_CEG(x, 50, 20, 5, 35, 5)
+
+def QE50_CE20_control5_QE40_CE5(x):
+    return QEA_CEB_controlC_QEF_CEG(x, 50, 20, 5, 40, 5)
+
+def QE50_CE20_control5_QE45_CE5(x):
+    return QEA_CEB_controlC_QEF_CEG(x, 50, 20, 5, 45, 5)
+
+def QE50_CE20_control5_QE50_CE5(x):
+    return QEA_CEB_controlC_QEF_CEG(x, 50, 20, 5, 50, 5)
+
+def QE50_CE20_control5_QE50_CE10(x):
+    return QEA_CEB_controlC_QEF_CEG(x, 50, 20, 5, 50, 10)
+
+def QE50_CE20_control5_QE50_CE15(x):
+    return QEA_CEB_controlC_QEF_CEG(x, 50, 20, 5, 50, 15)
+
+
+def QE40_CE30_control5_QE30_CE5(x):
+    return QEA_CEB_controlC_QEF_CEG(x, 40, 30, 5, 30, 5)
+
+def QE40_CE25_control5_QE30_CE5(x):
+    return QEA_CEB_controlC_QEF_CEG(x, 40, 25, 5, 30, 5)
+
+def QE40_CE35_control5_QE30_CE5(x):
+    return QEA_CEB_controlC_QEF_CEG(x, 40, 35, 5, 30, 5)
+
+
+def QE50_CE20_control9_QE40_CE5(x):
+    return QEA_CEB_controlC_QEF_CEG(x, 50, 20, 9, 40, 5)
+
+def QE60_CE30_control9_QE30_CE5(x):
+    return QEA_CEB_controlC_QEF_CEG(x, 60, 30, 9, 30, 5)
+
+def QE50_CE20_control9_QE25_CE5(x):
+    return QEA_CEB_controlC_QEF_CEG(x, 50, 20, 9, 25, 5)
+
+def QE50_CE20_control9_QE35_CE5(x):
+    return QEA_CEB_controlC_QEF_CEG(x, 50, 20, 9, 35, 5)
+
+def QE50_CE20_control9_QE45_CE5(x):
+    return QEA_CEB_controlC_QEF_CEG(x, 50, 20, 9, 45, 5)
+
+def QE60_CE35_control4_QE40_CE5(x):
+    return QEA_CEB_controlC_QEF_CEG(x, 60, 35, 4, 40, 5)
+
 

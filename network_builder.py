@@ -11,9 +11,10 @@ from nonlinear_expansion import identity
 from sfa_libs import remove_Nones
 import copy
 import time
-import SystemParameters
+import system_parameters
+import numpy
 
-def CreateNetwork(Network, subimage_width, subimage_height, block_size, train_mode, benchmark, in_channel_dim=1):
+def CreateNetwork(Network, subimage_width, subimage_height, block_size, train_mode, benchmark, in_channel_dim=1, num_features_appended_to_input=0):
     """ This function creates a hierarchical network according to 
     the description stored in the object Network.
     
@@ -21,24 +22,29 @@ def CreateNetwork(Network, subimage_width, subimage_height, block_size, train_mo
     Network is instantiated from ParamsNetwork() and consists of several layers L0-L10
     """
     print "Using Hierarchical Network: ", Network.name
-    #TODO: Make this more flexible, no upper bound is needed (should use Network.layers only!)
-    L0 = copy.deepcopy(Network.L0)
 
-    L1 = copy.deepcopy(Network.L1)
-    L2 = copy.deepcopy(Network.L2)
-    L3 = copy.deepcopy(Network.L3)
-    L4 = copy.deepcopy(Network.L4)
-    L5 = copy.deepcopy(Network.L5)
-    L6 = copy.deepcopy(Network.L6)
-    L7 = copy.deepcopy(Network.L7)
-    L8 = copy.deepcopy(Network.L8)
-    L9 = copy.deepcopy(Network.L9)
-    L10 = copy.deepcopy(Network.L10)
-    
-    layers = []
-    for layer in [L0, L1, L2, L3, L4, L5, L6, L7, L8, L9, L10]:
-        if layer != None:
-            layers.append(layer)
+    if len(Network.layers) > 0:
+        layers = []
+        for layer in Network.layers:
+            if layer != None:
+                layers.append(layer)   
+    else:
+        L0 = copy.deepcopy(Network.L0)
+        L1 = copy.deepcopy(Network.L1)
+        L2 = copy.deepcopy(Network.L2)
+        L3 = copy.deepcopy(Network.L3)
+        L4 = copy.deepcopy(Network.L4)
+        L5 = copy.deepcopy(Network.L5)
+        L6 = copy.deepcopy(Network.L6)
+        L7 = copy.deepcopy(Network.L7)
+        L8 = copy.deepcopy(Network.L8)
+        L9 = copy.deepcopy(Network.L9)
+        L10 = copy.deepcopy(Network.L10)
+        
+        layers = []
+        for layer in [L0, L1, L2, L3, L4, L5, L6, L7, L8, L9, L10]:
+            if layer != None:
+                layers.append(layer)
 
     layers[0].in_channel_dim = in_channel_dim  #3, warning 1 for L, 3 for RGB
     for i in range(len(layers)):
@@ -64,31 +70,24 @@ def CreateNetwork(Network, subimage_width, subimage_height, block_size, train_mo
             layer.sfa_args["train_mode"] = train_mode         
 
     t1 = time.time()
-        
-    L0 = create_layer(None, L0, 0, subimage_height, subimage_width)
-    L1 = create_layer(L0, L1, 1)
-    L2 = create_layer(L1, L2, 2)
-    L3 = create_layer(L2, L3, 3)
-    L4 = create_layer(L3, L4, 4)
-    L5 = create_layer(L4, L5, 5)
-    L6 = create_layer(L5, L6, 6)
-    L7 = create_layer(L6, L7, 7)
-    L8 = create_layer(L7, L8, 8)
-    L9 = create_layer(L8, L9, 9)
-    L10 = create_layer(L9, L10, 10)
 
-    node_list = []
-    print layers
-    for layer in layers:
+    print "layers =", layers
+    node_list = []  
+    previous_layer = None
+    for i, layer in enumerate(layers):   
+        if i==0:
+            layer = create_layer(None, layer, i, subimage_height, subimage_width, num_features_appended_to_input)
+        else:
+            layer = create_layer(previous_layer, layer, i)
+        previous_layer = layer
         print "L=", layer
         print "L.node_list=", layer.node_list
         node_list.extend(layer.node_list)
-
+ 
     node_list = remove_Nones(node_list)
     print "Flow.node_list=", node_list
 
     flow = mdp.Flow(node_list, verbose=True)
-    
     t2 = time.time()
     
     print "Finished hierarchy construction, with total time %0.3f ms"% ((t2-t1)*1000.0) 
@@ -97,15 +96,15 @@ def CreateNetwork(Network, subimage_width, subimage_height, block_size, train_mo
     return flow, layers, benchmark
 
 
-def create_layer(prevLA, LA, num_layer, prevLA_height=None, prevLA_width=None):
+def create_layer(prevLA, LA, num_layer, prevLA_height=None, prevLA_width=None, num_features_appended_to_input=0):
     """Creates a new layer according to the specifications of LA, where
-    LA is of type SystemParameters.ParamsSFASuperNode or ParamsSFALayer
+    LA is of type system_parameters.ParamsSFASuperNode or ParamsSFALayer
     it uses prevLA to get info about the previous layer, but it's not 
     necessary for the first layer is prevLA_height and prevLA_width are given
     """
     if LA == None:
         return None
-    if isinstance(LA, SystemParameters.ParamsSFASuperNode):
+    if isinstance(LA, system_parameters.ParamsSFASuperNode):
         #Note, there is a bug in current MDP SFA Node, in which the output dimension is ignored if the input dimension is unknown. See function "_set_range()".
         print "************ Creating Layer *******"
         print "Creating ParamsSFASuperNode L%d"%num_layer
@@ -148,7 +147,7 @@ def create_layer(prevLA, LA, num_layer, prevLA_height=None, prevLA_width=None):
             
         LA.node_list = ([LA.pca_node, LA.ord_node, LA.exp_node, LA.red_node, LA.clip_node, LA.sfa_node])    
 
-    elif isinstance(LA, SystemParameters.ParamsSFALayer): 
+    elif isinstance(LA, system_parameters.ParamsSFALayer): 
         if prevLA != None:
             previous_layer_height, previous_layer_width, _ = prevLA.lat_mat.shape
         elif prevLA_height != None and prevLA_width != None:
@@ -175,8 +174,13 @@ def create_layer(prevLA, LA, num_layer, prevLA_height=None, prevLA_width=None):
         (LA.mat_connections, LA.lat_mat) = lattice.compute_lsrf_matrix_connections_with_input_dim(LA.v1, LA.v2, LA.preserve_mask, LA.preserve_mask_sparse, LA.x_in_channels, LA.y_in_channels, LA.in_channel_dim)
         #print "matrix connections La:"
         print LA.mat_connections
-        
-        LA.switchboard = more_nodes.PInvSwitchboard(LA.x_in_channels * LA.y_in_channels * LA.in_channel_dim, LA.mat_connections)
+        if num_features_appended_to_input > 0:
+            #Assuming the receptive fields have size LA.x_field_channels * LA.y_field_channels * LA.in_channel_dim
+            print "specifying %d appended features to the switchboard"
+            orig_node_input_dim = LA.x_field_channels * LA.y_field_channels * LA.in_channel_dim
+            orig_input_dim = LA.x_in_channels * LA.y_in_channels * LA.in_channel_dim
+            LA.mat_connections = add_additional_features_to_connections(LA.mat_connections, orig_node_input_dim, orig_input_dim, num_features_appended_to_input)
+        LA.switchboard = more_nodes.PInvSwitchboard(orig_input_dim + num_features_appended_to_input, LA.mat_connections)
             
         #LA.switchboard.connections
         LA.num_nodes = LA.lat_mat.size / 2 
@@ -185,7 +189,7 @@ def create_layer(prevLA, LA, num_layer, prevLA_height=None, prevLA_width=None):
             if LA.cloneLayer == True:
                 print "Layer L%d with "%num_layer, LA.num_nodes, " cloned PCA nodes will be created"
                 #print "Warning!!! layer L%d using cloned PCA instead of several independent copies!!!"%num_layer
-                LA.pca_node = LA.pca_node_class(input_dim=LA.preserve_mask_sparse.sum(), output_dim=LA.pca_out_dim, **LA.pca_args)
+                LA.pca_node = LA.pca_node_class(input_dim=LA.preserve_mask_sparse.sum()+num_features_appended_to_input, output_dim=LA.pca_out_dim, **LA.pca_args) #input_dim=LA.preserve_mask_sparse.sum()
                 #Create array of sfa_nodes (just one node, but cloned)
                 LA.pca_layer = mdp.hinet.CloneLayer(LA.pca_node, n_nodes=LA.num_nodes)
             else:
@@ -269,7 +273,7 @@ def expand_iSeq_sSeq_Layer_to_Network(iSeq_set, sSeq_set, Network):
     sSeq_set_exp = []
     for i, LA in enumerate(Network.layers):
         num_nodes = 0
-        if isinstance(LA, SystemParameters.ParamsSFASuperNode):
+        if isinstance(LA, system_parameters.ParamsSFASuperNode):
             if LA.pca_node_class != None:
                 num_nodes += 1
             if LA.ord_node_class != None:
@@ -282,7 +286,7 @@ def expand_iSeq_sSeq_Layer_to_Network(iSeq_set, sSeq_set, Network):
                 num_nodes += 1
             if LA.sfa_node_class != None:
                 num_nodes += 1
-        elif isinstance(LA, SystemParameters.ParamsSFALayer): 
+        elif isinstance(LA, system_parameters.ParamsSFALayer): 
             num_nodes += 1 #For the switchboard
             if LA.pca_node_class != None:
                 num_nodes += 1
@@ -306,3 +310,16 @@ def expand_iSeq_sSeq_Layer_to_Network(iSeq_set, sSeq_set, Network):
             sSeq_set_exp.append(sSeq_set[j])
         #print iSeq_set_exp
     return iSeq_set_exp, sSeq_set_exp
+
+
+def add_additional_features_to_connections(connections, components_per_node, original_input_dim, num_features_appended_to_input):
+    orig_out_dim = len(connections)
+    num_nodes = orig_out_dim / components_per_node
+    final_out_dim = orig_out_dim+num_features_appended_to_input
+    
+    connections_out = numpy.zeros(num_nodes*final_out_dim)
+    for i in range(num_nodes):
+        connections_out[i*final_out_dim:i*final_out_dim+orig_out_dim] = connections[i*orig_out_dim:(i+1)*orig_out_dim]
+    for i in range(num_nodes):
+        connections_out[i*final_out_dim+orig_out_dim:(i+1)*final_out_dim] = numpy.arange(original_input_dim, original_input_dim+num_features_appended_to_input)
+    return connections_out

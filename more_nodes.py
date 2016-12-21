@@ -115,6 +115,7 @@ class GeneralExpansionNode(mdp.Node):
         x = numpy.zeros((1,n))
         for func in self.funcs:
             outx = func(x)
+            #print "outx= ", outx
             exp_dim += outx.shape[1]
         return exp_dim
     def output_sizes(self, n):
@@ -368,12 +369,12 @@ class PInvSwitchboard(mdp.hinet.Switchboard):
         return True
 
     def _execute(self, x):
-        print "calling PInvSwitchboard/superclass _execute" #calling execute(x) instead of _execute(x) results in infinite loop!!!
-        print "super(PInvSwitchboard, self)=", super(PInvSwitchboard, self)
+        #print "calling PInvSwitchboard/superclass _execute" #calling execute(x) instead of _execute(x) results in infinite loop!!!
+        #print "super(PInvSwitchboard, self)=", super(PInvSwitchboard, self)
         x = numpy.array(x,order="FORTRAN")
         #print "super()=", super()
         y = super(PInvSwitchboard, self)._execute(x) * self.output_scales
-        print "y.shape", y.shape
+        #print "y.shape", y.shape
         #print "y computed"
         #quit()
         if self.additive_noise_std>0.0:
@@ -2144,7 +2145,7 @@ class IEVMLRecNode(mdp.Node):
         
         #Reorder/preprocess data before expansion, but only if there is an expansion.
         if self.pre_expansion_node_class != None and self.exp_node != None:
-            self.pre_expansion_node = mdp.nodes.SFANode()
+            self.pre_expansion_node = mdp.nodes.GSFANode()
             self.pre_expansion_node.train(x_zm, block_size=block_size, train_mode = train_mode)
             self.pre_expansion_node.stop_training()
             x_pre_exp = self.pre_expansion_node.execute(x_zm)
@@ -2163,7 +2164,7 @@ class IEVMLRecNode(mdp.Node):
         #Apply SFA to it
         #print "block_size=", block_size
         #print "train_mode=", train_mode
-        self.sfa_node = mdp.nodes.SFANode(output_dim=min(self.output_dim,self.expanded_dim) )
+        self.sfa_node = mdp.nodes.GSFANode(output_dim=min(self.output_dim,self.expanded_dim) )
         #print dir(mdp.nodes.SFANode)
         #print self.sfa_node.train
         #print "with args: ", inspect.getargspec(self.sfa_node.train)
@@ -2794,7 +2795,7 @@ def cumulative_score(ground_truth, estimation, largest_error, integer_rounding=T
 
 ##################### GSFA functions/classes ################
 #Special purpose object to compute the covariance matrices used by SFA.
-from GSFA_node import CovDCovMatrix, GSFANode, ComputeCovDcovMatrixMixed, ComputeCovDcovMatrixSerial, ComputeCovDcovMatrixClustered, ComputeCovMatrix
+from gsfa_node import CovDCovMatrix, GSFANode, ComputeCovDcovMatrixMixed, ComputeCovDcovMatrixSerial, ComputeCovDcovMatrixClustered, ComputeCovMatrix
 
 ######## Helper functions for parallel processing and CovDcovMatrices #########
 #This function appears to be obsolete
