@@ -2,59 +2,6 @@ import mdp
 import numpy as numx
 import numpy
 
-testing = False
-
-if testing:
-    num_samples = 1000
-    x = numpy.random.normal(size = num_samples)
-    
-    num_pivots = 50
-    y=x.copy()
-    y.sort()
-    indices_pivots=numpy.linspace(0, num_samples-1, num_pivots).round().astype(int)
-    print indices_pivots
-    pivots = y[indices_pivots]
-    print pivots
-    indices_sorting = numpy.searchsorted(pivots, x, side="left")
-    indices_sorting[indices_sorting <= 0] = 1
-    indices_sorting -= 1
-    print indices_sorting
-    
-    #print x
-    #print y
-    pivot_outputs = numpy.linspace(0, 1.0, num_pivots)
-    print pivot_outputs
-    
-    diff_pivot_outputs = pivot_outputs[1:]-pivot_outputs[:-1]
-    print diff_pivot_outputs
-    
-    diff_pivots = pivots[1:]-pivots[:-1]
-    print diff_pivots
-    
-    hx = pivot_outputs[indices_sorting]+(x-pivots[indices_sorting]) * diff_pivot_outputs[indices_sorting]/diff_pivots[indices_sorting]
-    hx.clip(pivots[0],pivots[-1])
-    print hx
-    
-    hy = hx.copy()
-    hy.sort()
-    print hy
-    
-    xx = numpy.random.normal(size = num_samples)
-    indices_sorting = numpy.searchsorted(pivots, xx, side="left")
-    indices_sorting[indices_sorting <= 0] = 1
-    indices_sorting[indices_sorting >= num_pivots-1] = num_pivots-2
-    indices_sorting -= 1
-    pivot_factor = diff_pivot_outputs/diff_pivots
-    
-    hxx = pivot_outputs[indices_sorting]+(xx-pivots[indices_sorting]) * diff_pivot_outputs[indices_sorting]/diff_pivots[indices_sorting]
-    
-    hxx = pivot_outputs[indices_sorting]+(xx-pivots[indices_sorting]) * pivot_factor[indices_sorting]
-    
-    #hxx = numpy.clip(hxx, 0.0,1.0)
-    
-    hyy = hxx.copy()
-    hyy.sort()
-    print hyy
 
 def learn_histogram_equalizer(x, num_pivots, linear_histogram=False, ignore_two_pivots = False):
     num_samples = x.shape[0]
@@ -76,6 +23,7 @@ def learn_histogram_equalizer(x, num_pivots, linear_histogram=False, ignore_two_
     pivot_factor = diff_pivot_outputs/diff_pivots
     return  pivots, pivot_outputs, pivot_factor
 
+
 def histogram_equalizer(y, num_pivots, pivots, pivot_outputs, pivot_factor):
     indices_sorting = numpy.searchsorted(pivots, y, side="left")
     indices_sorting[indices_sorting <= 0] = 1
@@ -84,35 +32,6 @@ def histogram_equalizer(y, num_pivots, pivots, pivot_outputs, pivot_factor):
     hy = pivot_outputs[indices_sorting]+(y-pivots[indices_sorting]) * pivot_factor[indices_sorting]
     return hy
 
-if testing:
-    num_samples = 1000
-    x = numpy.random.normal(size = num_samples)
-    eq_num_pivots = 200
-    eq_pivots, eq_pivot_outputs, eq_pivot_factor = learn_histogram_equalizer(x, eq_num_pivots)
-    hx = histogram_equalizer(x, eq_num_pivots, eq_pivots, eq_pivot_outputs, eq_pivot_factor)
-    sorting = numpy.argsort(x)
-    hx_sorted = hx[sorting]
-    hx_dif = hx_sorted[1:]-hx_sorted[:-1]
-    mask = hx_dif < 0
-    print "mask.sum()=", mask.sum()
-    hx.sort()
-    print "hx.sorted=", hx
-    print "pivots=", eq_pivots
-    print "pivot_outputs=", eq_pivot_outputs
-    print "pivot_factor=", eq_pivot_factor   
- 
-    num_samples_y = 50000
-    y = numpy.random.normal(size = num_samples_y)
-    y.sort()
-    hy = histogram_equalizer(y, eq_num_pivots, eq_pivots, eq_pivot_outputs, eq_pivot_factor)
-    print "hy[:20]=", hy[:20]
-    print "hy[-20:]=",hy[-20:]
-    #print  "hy.sorted=", hy
-    hy_dif = hy[1:]-hy[:-1]
-    mask = hy_dif < 0
-    print "mask.sum()=", mask.sum()
-    print "finished"
-    quit()
 
 class HistogramEqualizationNode(mdp.Node):
     def __init__(self, num_pivots = 10, a=0.0, b=1.0, input_dim = None, output_dim = None, dtype = None):
@@ -130,56 +49,17 @@ class HistogramEqualizationNode(mdp.Node):
         print "Trained: self.hx[0]=", self.hx[0]
         print "x[:,0]=", x[:,0]
     def _execute(self, x):
-	dim = len(self.hx)
+        dim = len(self.hx)
         y = numpy.zeros_like(x)
-	for i in range(dim):
+        for i in range(dim):
             hx = self.hx[i]
-	    y[:,i] = histogram_equalizer(x[:,i], num_pivots=self.num_pivots, pivots=hx[0], pivot_outputs=hx[1], pivot_factor=hx[2])      
-        #yy = y[:,0].copy()
-        #yy.sort()
-        #print "y[:,0] sorted =", yy
+            y[:,i] = histogram_equalizer(x[:,i], num_pivots=self.num_pivots, pivots=hx[0], pivot_outputs=hx[1], pivot_factor=hx[2])      
+            #yy = y[:,0].copy()
+            #yy.sort()
+            #print "y[:,0] sorted =", yy
         return y.clip(self.a,self.b)
     def _is_trainable(self):
         return True
-
-if testing:
-    num_samples = 10000
-    x = numpy.random.normal(size = (num_samples,2)) - 30
-    hen = HistogramEqualizationNode(num_pivots=300)
-    hen.train(x)
-    hen.stop_training()
-    x.sort(axis=0)    
-    hx = hen.execute(x)
-    print "hx (sorted) =", hx
-    print "hx[0] (sorted) =",hx[:,0]
-    print "eq_pivots=", hen.hx
-    y = numpy.random.normal(size = (num_samples*5,2)) - 30
-    y.sort(axis=0)
-    hy = hen.execute(y)
-    print "hy[0:100,0] (sorted) =",hy[:100,0]
-    print "hy[-100:,0] (sorted) =",hy[-100:,0]
-    quit()
-
-
-    num_samples = 1000
-    x = numpy.random.normal(size = (num_samples,2)) - 30
-    hen = HistogramEqualizationNode(num_pivots=20)
-    hen.train(x)
-    hen.stop_training()
-    hx = hen.execute(x)
-    hx.sort(axis=0)
-    print "hx.sorted=", hx
-    print "hx[0] (sorted) =",hx[:,0]
-    print "eq_pivots=", hen.hx 
-    #quit()
-
-
-if testing:            
-    x = numpy.random.normal(size=(5,10))
-    x = x-x.min(axis=0)
-    x = x / x.max(axis=0)
-    y1 = hypercubic_cosine_products(x, 2)
-    print "y1=", y1
 
 
 
@@ -187,6 +67,7 @@ def nmonomials(degree, nvariables):
     """Return the number of monomials of a given degree in a given number
     of variables."""
     return int(mdp.utils.comb(nvariables+degree-1, degree))
+
 
 class CosineExpansionNode(mdp.nodes.PolynomialExpansionNode):
     def _execute(self, x):
@@ -216,8 +97,6 @@ class CosineExpansionNode(mdp.nodes.PolynomialExpansionNode):
                 dexp[k:k+len_, :] = x[:, j] + factor
                 next_lens[j+1] = len_
                 k = k+len_
-
-
         return numx.cos(dexp.T*numx.pi)
 
 
@@ -259,11 +138,6 @@ def cos_exp_dD_F(x, degree, keep_identity=False):
         out = numx.cos(dexp.T*numx.pi)
     return out
 
-if testing:
-    cen = CosineExpansionNode(5) #Max factor
-    x = numpy.linspace(0,1,150).reshape(-1,1)
-    y2 = cen(x) #Assumes elements of x in [0,1]
-    print "y2=", y2
 
 def cos_exp_5D_F(x):
     return cos_exp_dD_F(x, degree=5, keep_identity=False)
@@ -302,9 +176,7 @@ def cos_exp_I_smart2D_F(x):
     else:
         return cos_exp_dD_F(x, degree=5, keep_identity=True) # 1 to 4
 
-if testing:
-    yy2 = cos_exp_5D_F(x)
-    print "yy2=", yy2
+
     
 class NormalizeABNode(mdp.Node):
     def __init__(self, a=0.0, b=1.0, input_dim = None, output_dim = None, dtype = None):
@@ -325,11 +197,6 @@ class NormalizeABNode(mdp.Node):
     def _is_trainable(self):
         return True
 
-if testing:
-    n01n= NormalizeABNode(a=-1, b=1)
-    n01n.train(x-0.3)
-    y3=n01n.execute(x-0.3)
-    print "y3=", y3
 
 class NLIPCANode(mdp.Node):
     def __init__(self, exp_func = None, norm_class = None, feats_at_once = 1, factor_projection_out=1.0, factor_mode = "constant", expand_chunkwise=False, input_dim = None, output_dim=None, dtype = None):
@@ -594,68 +461,6 @@ class NLIPCANode(mdp.Node):
 #         return True
 #     #TODO: code inversion function
     
-print "****************************************************"
-if testing: # or True:
-    numpy.random.seed(1)
-    num_samples = 101
-    x0 = numpy.linspace(0,1,num_samples)
-    x1 = numpy.random.normal(size=num_samples)
-    x2 = 0.5*numpy.random.normal(size=num_samples)
-    x3 = x0**2+x1+x2
-    x4 = 0.5*x0**3+0.2*x0**2-x0+x1*x2-x1*x0
-    x5 = 0.1 * numpy.random.normal(size=num_samples)
-
-    y0 = numpy.linspace(0,1,num_samples)+ 0.0001 * numpy.random.normal(size=num_samples)
-    y1 = numpy.random.normal(size=num_samples)
-    y2 = 0.5*numpy.random.normal(size=num_samples)
-    y3 = y0**2+y1+y2
-    y4 = 0.5*y0**3+0.2*y0**2-y0+ y1*y2 - y1*y0
-    y5 = 0.1 * numpy.random.normal(size=num_samples)
-            
-    x = numpy.dstack((x0,x1,x2,x3,x4,x5))[0]
-    xp = numpy.dstack((y0,y1,y2,y3,y4,y5))[0]
-
-    print "x=", x
-    # constant -> 0.7 
-    # increasing -> 0.35
-    # decreasing -> 0.4
-    nlipca_node = NLIPCANode(exp_func = cos_exp_I_5D_F, norm_class = NormalizeABNode, feats_at_once = 1, factor_projection_out=0.35, factor_mode = "increasing", input_dim = None, output_dim=4, dtype = None)
-    nlipca_node.train(x)
-    print "feature extraction"
-    y = nlipca_node.execute(x)
-    #print "y=", y
-    print "executing inverse function"
-    xx = nlipca_node.inverse(y)
-    print "using test data"
-    zp = nlipca_node.execute(xp)
-    #print "y=", y
-    print "executing inverse function"
-    xxp = nlipca_node.inverse(zp)
-
-    #print "xx=", xx
-    
-    print ""
-    nlipca_node2 = NLIPCANode(exp_func = cos_exp_I_5D_F, norm_class = NormalizeABNode, feats_at_once = 4, input_dim = None, output_dim=4, dtype = None)
-    print "training second node"
-    nlipca_node2.train(x)
-    print "feature extraction, second node"
-    y2 = nlipca_node2.execute(x)
-    #print "y=", y
-    print "executing inverse function, second node"
-    xx2 = nlipca_node2.inverse(y2)
-    print "using test data"
-    zp2 = nlipca_node2.execute(xp)
-    #print "y=", y
-    print "executing inverse function"
-    xxp2 = nlipca_node2.inverse(zp2)
-
-    
-    #print "xx2=", xx2
-    print "error1=", ((xx-x)**2).sum()
-    print "error2=", ((xx2-x)**2).sum()
-    print "test data"
-    print "error1=", ((xxp-xp)**2).sum()
-    print "error2=", ((xxp2-xp)**2).sum()
 
 def increment(feature_vector, degree, num_vars, max_sel_vars):
     feature_vector[degree-1] += 1
@@ -939,4 +744,201 @@ def cos_exp_mix60q_F(x):
     for a in expanded_data:
         print " a.shape is", a.shape,
     return numpy.hstack(expanded_data)
+
+testing = False #or True
+
+if testing:
+    print "testing histogram equalizer"
+    num_samples = 1000
+    x = numpy.random.normal(size = num_samples)
+    eq_num_pivots = 200
+    eq_pivots, eq_pivot_outputs, eq_pivot_factor = learn_histogram_equalizer(x, eq_num_pivots)
+    hx = histogram_equalizer(x, eq_num_pivots, eq_pivots, eq_pivot_outputs, eq_pivot_factor)
+    sorting = numpy.argsort(x)
+    hx_sorted = hx[sorting]
+    hx_dif = hx_sorted[1:]-hx_sorted[:-1]
+    mask = hx_dif < 0
+    print "mask.sum()=", mask.sum()
+    hx.sort()
+    print "hx.sorted=", hx
+    print "pivots=", eq_pivots
+    print "pivot_outputs=", eq_pivot_outputs
+    print "pivot_factor=", eq_pivot_factor   
+ 
+    num_samples_y = 50000
+    y = numpy.random.normal(size = num_samples_y)
+    y.sort()
+    hy = histogram_equalizer(y, eq_num_pivots, eq_pivots, eq_pivot_outputs, eq_pivot_factor)
+    print "hy[:20]=", hy[:20]
+    print "hy[-20:]=",hy[-20:]
+    #print  "hy.sorted=", hy
+    hy_dif = hy[1:]-hy[:-1]
+    mask = hy_dif < 0
+    print "mask.sum()=", mask.sum()
+    print "test finished\n"
+    #quit()
+
+if testing:
+    print "Testing HistogramEqualizationNode"
+    num_samples = 10000
+    x = numpy.random.normal(size = (num_samples,2)) - 30
+    hen = HistogramEqualizationNode(num_pivots=300)
+    hen.train(x)
+    hen.stop_training()
+    x.sort(axis=0)    
+    hx = hen.execute(x)
+    print "hx (sorted) =", hx
+    print "hx[0] (sorted) =",hx[:,0]
+    print "eq_pivots=", hen.hx
+    y = numpy.random.normal(size = (num_samples*5,2)) - 30
+    y.sort(axis=0)
+    hy = hen.execute(y)
+    print "hy[0:100,0] (sorted) =",hy[:100,0]
+    print "hy[-100:,0] (sorted) =",hy[-100:,0]
+
+
+    num_samples = 1000
+    x = numpy.random.normal(size = (num_samples,2)) - 30
+    hen = HistogramEqualizationNode(num_pivots=20)
+    hen.train(x)
+    hen.stop_training()
+    hx = hen.execute(x)
+    hx.sort(axis=0)
+    print "hx.sorted=", hx
+    print "hx[0] (sorted) =",hx[:,0]
+    print "eq_pivots=", hen.hx 
+    print "test finished\n"
+    #quit()
+
+
+if testing:
+    num_samples = 1000
+    x = numpy.random.normal(size = num_samples)
+    
+    num_pivots = 50
+    y=x.copy()
+    y.sort()
+    indices_pivots=numpy.linspace(0, num_samples-1, num_pivots).round().astype(int)
+    print indices_pivots
+    pivots = y[indices_pivots]
+    print pivots
+    indices_sorting = numpy.searchsorted(pivots, x, side="left")
+    indices_sorting[indices_sorting <= 0] = 1
+    indices_sorting -= 1
+    print indices_sorting
+    
+    #print x
+    #print y
+    pivot_outputs = numpy.linspace(0, 1.0, num_pivots)
+    print pivot_outputs
+    
+    diff_pivot_outputs = pivot_outputs[1:]-pivot_outputs[:-1]
+    print diff_pivot_outputs
+    
+    diff_pivots = pivots[1:]-pivots[:-1]
+    print diff_pivots
+    
+    hx = pivot_outputs[indices_sorting]+(x-pivots[indices_sorting]) * diff_pivot_outputs[indices_sorting]/diff_pivots[indices_sorting]
+    hx.clip(pivots[0],pivots[-1])
+    print hx
+    
+    hy = hx.copy()
+    hy.sort()
+    print hy
+    
+    xx = numpy.random.normal(size = num_samples)
+    indices_sorting = numpy.searchsorted(pivots, xx, side="left")
+    indices_sorting[indices_sorting <= 0] = 1
+    indices_sorting[indices_sorting >= num_pivots-1] = num_pivots-2
+    indices_sorting -= 1
+    pivot_factor = diff_pivot_outputs/diff_pivots
+    
+    hxx = pivot_outputs[indices_sorting]+(xx-pivots[indices_sorting]) * diff_pivot_outputs[indices_sorting]/diff_pivots[indices_sorting]
+    
+    hxx = pivot_outputs[indices_sorting]+(xx-pivots[indices_sorting]) * pivot_factor[indices_sorting]
+    
+    #hxx = numpy.clip(hxx, 0.0,1.0)
+    
+    hyy = hxx.copy()
+    hyy.sort()
+    print hyy
+
+print "****************************************************"
+if testing: # or True:
+    numpy.random.seed(1)
+    num_samples = 101
+    x0 = numpy.linspace(0,1,num_samples)
+    x1 = numpy.random.normal(size=num_samples)
+    x2 = 0.5*numpy.random.normal(size=num_samples)
+    x3 = x0**2+x1+x2
+    x4 = 0.5*x0**3+0.2*x0**2-x0+x1*x2-x1*x0
+    x5 = 0.1 * numpy.random.normal(size=num_samples)
+
+    y0 = numpy.linspace(0,1,num_samples)+ 0.0001 * numpy.random.normal(size=num_samples)
+    y1 = numpy.random.normal(size=num_samples)
+    y2 = 0.5*numpy.random.normal(size=num_samples)
+    y3 = y0**2+y1+y2
+    y4 = 0.5*y0**3+0.2*y0**2-y0+ y1*y2 - y1*y0
+    y5 = 0.1 * numpy.random.normal(size=num_samples)
+            
+    x = numpy.dstack((x0,x1,x2,x3,x4,x5))[0]
+    xp = numpy.dstack((y0,y1,y2,y3,y4,y5))[0]
+
+    print "x=", x
+    # constant -> 0.7 
+    # increasing -> 0.35
+    # decreasing -> 0.4
+    nlipca_node = NLIPCANode(exp_func = cos_exp_I_5D_F, norm_class = NormalizeABNode, feats_at_once = 1, factor_projection_out=0.35, factor_mode = "increasing", input_dim = None, output_dim=4, dtype = None)
+    nlipca_node.train(x)
+    print "feature extraction"
+    y = nlipca_node.execute(x)
+    #print "y=", y
+    print "executing inverse function"
+    xx = nlipca_node.inverse(y)
+    print "using test data"
+    zp = nlipca_node.execute(xp)
+    #print "y=", y
+    print "executing inverse function"
+    xxp = nlipca_node.inverse(zp)
+
+    #print "xx=", xx
+    
+    print ""
+    nlipca_node2 = NLIPCANode(exp_func = cos_exp_I_5D_F, norm_class = NormalizeABNode, feats_at_once = 4, input_dim = None, output_dim=4, dtype = None)
+    print "training second node"
+    nlipca_node2.train(x)
+    print "feature extraction, second node"
+    y2 = nlipca_node2.execute(x)
+    #print "y=", y
+    print "executing inverse function, second node"
+    xx2 = nlipca_node2.inverse(y2)
+    print "using test data"
+    zp2 = nlipca_node2.execute(xp)
+    #print "y=", y
+    print "executing inverse function"
+    xxp2 = nlipca_node2.inverse(zp2)
+
+    
+    #print "xx2=", xx2
+    print "error1=", ((xx-x)**2).sum()
+    print "error2=", ((xx2-x)**2).sum()
+    print "test data"
+    print "error1=", ((xxp-xp)**2).sum()
+    print "error2=", ((xxp2-xp)**2).sum()
+
+if testing:
+    cen = CosineExpansionNode(5) #Max factor
+    x = numpy.linspace(0,1,150).reshape(-1,1)
+    y2 = cen(x) #Assumes elements of x in [0,1]
+    print "y2=", y2
+    
+if testing:
+    yy2 = cos_exp_5D_F(x)
+    print "yy2=", yy2
+    
+if testing:
+    n01n= NormalizeABNode(a=-1, b=1)
+    n01n.train(x-0.3)
+    y3=n01n.execute(x-0.3)
+    print "y3=", y3
 

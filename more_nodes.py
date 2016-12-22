@@ -12,13 +12,14 @@ from inversion import invert_exp_funcs2
 import inspect
 
 from histogram_equalization import *
+####from igsfa_node import SFANode_reduce_output_dim, f_residual
 
 #using the provided average and standard deviation
 def gauss_noise(x, avg, std):
     return numpy.random.normal(avg, std, x.shape)
 
 #Zero centered
-def additive_gauss_noise(x, avg, std):
+def additive_gauss_noise(x, std):
     return x + numpy.random.normal(0, std, x.shape)
 
 class RandomizedMaskNode(mdp.Node):
@@ -2056,35 +2057,25 @@ class IEVMNode(mdp.Node):
         
         return x
 
-#Computes output errors dimension by dimension for a single sample: y - node.execute(x_app)
-#The library fails when dim(x_app) > dim(y), thus filling of x_app with zeros is recommended
-def f_residual(x_app_i, node, y_i):
-    #print "%",
-    #print "f_residual: x_appi_i=", x_app_i, "node.execute=", node.execute, "y_i=", y_i
-    res_long = numpy.zeros_like(y_i)
-    y_i = y_i.reshape((1,-1))
-    y_i_short = y_i[:,0:node.output_dim]
-#    x_app_i = x_app_i[0:node.input_dim]
-    res = (y_i_short - node.execute(x_app_i.reshape((1,-1)))).flatten()
-    #print "res_long=", res_long, "y_i=", y_i, "res", res
-    res_long[0:len(res)]=res
-#    res = (y_i - node.execute(x_app_i))
-    #print "returning resudial res=", res
-    return res_long
+# # # #Computes output errors dimension by dimension for a single sample: y - node.execute(x_app)
+# # # #The library fails when dim(x_app) > dim(y), thus filling of x_app with zeros is recommended
+# # # def f_residual(x_app_i, node, y_i):
+# # #     #print "%",
+# # #     #print "f_residual: x_appi_i=", x_app_i, "node.execute=", node.execute, "y_i=", y_i
+# # #     res_long = numpy.zeros_like(y_i)
+# # #     y_i = y_i.reshape((1,-1))
+# # #     y_i_short = y_i[:,0:node.output_dim]
+# # # #    x_app_i = x_app_i[0:node.input_dim]
+# # #     res = (y_i_short - node.execute(x_app_i.reshape((1,-1)))).flatten()
+# # #     #print "res_long=", res_long, "y_i=", y_i, "res", res
+# # #     res_long[0:len(res)]=res
+# # # #    res = (y_i - node.execute(x_app_i))
+# # #     #print "returning resudial res=", res
+# # #     return res_long
 
-def SFANode_force_output_dim(sfa_node, new_output_dim):
-    print "Updating output dimensionality of SFA node"
-    if new_output_dim > sfa_node.output_dim:
-        er = "Can only reduce output dimensionality of SFA node, not increase it"
-        raise Exception(er)
-    print "Before: sfa_node.d.shape=",sfa_node.d.shape, " sfa_node.sf.shape=",sfa_node.sf.shape, " sfa_node._bias.shape=",sfa_node._bias.shape
-    sfa_node.d = sfa_node.d[:new_output_dim]
-    sfa_node.sf = sfa_node.sf[:,:new_output_dim]
-    sfa_node._bias = sfa_node._bias[:new_output_dim]
-    sfa_node._output_dim = new_output_dim
-    print "After: sfa_node.d.shape=",sfa_node.d.shape, " sfa_node.sf.shape=",sfa_node.sf.shape, " sfa_node._bias.shape=",sfa_node._bias.shape
 
-#iGSFA node 
+
+#obsolete and replaced by igsfa_node.iGSFANode 
 #TODO: simplify this, remove experimental parts
 class IEVMLRecNode(mdp.Node):
 #     """Node implementing simple Incremental Explained Variance Maximization. 
@@ -2189,7 +2180,7 @@ class IEVMLRecNode(mdp.Node):
         if self.num_sfa_features_preserved > self.output_dim:
             self.num_sfa_features_preserved = self.output_dim
         
-        SFANode_force_output_dim(self.sfa_node, self.num_sfa_features_preserved)
+        SFANode_reduce_output_dim(self.sfa_node, self.num_sfa_features_preserved)
 
         #TODO: Make sure to adjust the matrix used by SFA to only consider num_sfa_features_preserved
         #self.num_sfa_features_preserved = 10
@@ -2629,7 +2620,7 @@ class SFAAdaptiveNLNode(mdp.Node):
         print "block_size =", block_size, ", train_mode =", train_mode
         print "x.shape=", x.shape, "self.starting_point=", self.starting_point  
 
-        #Remove mean before expansion
+        #TODO: Remove mean and normalize variance before expansion
 #        self.x_mean = x.mean(axis=0) 
 #        x_zm=x-self.x_mean
 
@@ -3010,3 +3001,39 @@ def compute_classification_performance(data_training, correct_classes_training, 
 
     return CR_expansion_training, CR_expansion_test
 
+
+
+def SFANode_reduce_output_dim(sfa_node, new_output_dim, verbose=False):
+    """ This function modifies an already trained SFA node (or GSFA node), 
+    reducing the number of preserved SFA features to new_output_dim features.
+    The modification takes place in place
+    """
+    if verbose:
+        print "Updating the output dimensionality of SFA node"
+    if new_output_dim > sfa_node.output_dim:
+        er = "Can only reduce output dimensionality of SFA node, not increase it"
+        raise Exception(er)
+    if verbose:
+        print "Before: sfa_node.d.shape=", sfa_node.d.shape, " sfa_node.sf.shape=",sfa_node.sf.shape, " sfa_node._bias.shape=",sfa_node._bias.shape
+    sfa_node.d = sfa_node.d[:new_output_dim]
+    sfa_node.sf = sfa_node.sf[:,:new_output_dim]
+    sfa_node._bias = sfa_node._bias[:new_output_dim]
+    sfa_node._output_dim = new_output_dim
+    if verbose:
+        print "After: sfa_node.d.shape=",sfa_node.d.shape, " sfa_node.sf.shape=",sfa_node.sf.shape, " sfa_node._bias.shape=",sfa_node._bias.shape
+
+#Computes output errors dimension by dimension for a single sample: y - node.execute(x_app)
+#The library fails when dim(x_app) > dim(y), thus filling of x_app with zeros is recommended
+def f_residual(x_app_i, node, y_i):
+    #print "%",
+    #print "f_residual: x_appi_i=", x_app_i, "node.execute=", node.execute, "y_i=", y_i
+    res_long = numpy.zeros_like(y_i)
+    y_i = y_i.reshape((1,-1))
+    y_i_short = y_i[:,0:node.output_dim]
+#    x_app_i = x_app_i[0:node.input_dim]
+    res = (y_i_short - node.execute(x_app_i.reshape((1,-1)))).flatten()
+    #print "res_long=", res_long, "y_i=", y_i, "res", res
+    res_long[0:len(res)]=res
+#    res = (y_i - node.execute(x_app_i))
+    #print "returning resudial res=", res
+    return res_long

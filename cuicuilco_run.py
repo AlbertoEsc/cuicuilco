@@ -587,9 +587,10 @@ The options below may be used:
                 else:
                     print "Argument not handled: ", opt
                     quit()
-        except getopt.GetoptError:
+        except getopt.GetoptError as err:
             print "Error parsing the arguments: ", argv[1:]
-            print "option:", getopt.GetoptError.opt, "message:", getopt.GetoptError.msg
+            print "Error: ", err
+            #print "option:", getopt.GetoptError.opt, "message:", getopt.GetoptError.msg
             sys.exit(2)
 
 if enable_svm:

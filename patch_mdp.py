@@ -3,7 +3,9 @@ import mdp
 from mdp import numx
 from mdp.utils import (mult, pinv, symeig, CovarianceMatrix, SymeigException)
 import more_nodes
-from gsfa_node import CovDCovMatrix, ComputeCovDcovMatrixMixed, ComputeCovDcovMatrixSerial, ComputeCovDcovMatrixClustered, ComputeCovMatrix
+from gsfa_node import CovDCovMatrix, ComputeCovDcovMatrixSerial, ComputeCovDcovMatrixClustered, ComputeCovMatrix
+import gsfa_node
+import igsfa_node
 import histogram_equalization
 from sfa_libs import select_rows_from_matrix
 import inversion
@@ -23,7 +25,8 @@ mdp.nodes.SFAPCANode = more_nodes.SFAPCANode
 mdp.nodes.IEVMNode = more_nodes.IEVMNode
 mdp.nodes.IEVMLRecNode = more_nodes.IEVMLRecNode
 mdp.nodes.SFAAdaptiveNLNode = more_nodes.SFAAdaptiveNLNode
-mdp.nodes.GSFANode = more_nodes.GSFANode
+mdp.nodes.GSFANode = gsfa_node.GSFANode
+mdp.nodes.iGSFANode = igsfa_node.iGSFANode
 
 mdp.nodes.NLIPCANode = histogram_equalization.NLIPCANode
 mdp.nodes.NormalizeABNode = histogram_equalization.NormalizeABNode
@@ -495,9 +498,11 @@ mdp.nodes.SFAPCANode.list_train_params = ["scheduler", "n_parallel", "train_mode
 mdp.nodes.PCANode.list_train_params = ["scheduler", "n_parallel"]
 mdp.nodes.IEVMNode.list_train_params = ["scheduler", "n_parallel", "train_mode", "block_size"]
 mdp.nodes.IEVMLRecNode.list_train_params = ["scheduler", "n_parallel", "train_mode", "block_size", "node_weights", "edge_weights"]
+mdp.nodes.GSFANode.list_train_params = ["scheduler", "n_parallel", "train_mode", "block_size", "node_weights", "edge_weights"]
+mdp.nodes.iGSFANode.list_train_params = ["scheduler", "n_parallel", "train_mode", "block_size", "node_weights", "edge_weights"]
 mdp.nodes.SFAAdaptiveNLNode.list_train_params = ["scheduler", "n_parallel", "train_mode", "block_size"]
 mdp.nodes.NLIPCANode.list_train_params = ["exp_func", "norm_class"]
-mdp.nodes.HistogramEqualizationNode.list_train_params = ["num_pivots"]#This function replaces the tradicional Node.train
+mdp.nodes.HistogramEqualizationNode.list_train_params = ["num_pivots"]#This function replaces the traditional Node.train
 #It extracts the relevant parameters from params according to Node.list_train_params (if available)
 #and passes it to train
 def extract_params_relevant_for_node_train(node, params):

@@ -3,196 +3,12 @@
 #Ruhr-University-Bochum, Institute of Neurocomputation, Group of Prof. Dr. Wiskott
 
 import numpy
-###import scipy
-###import scipy.optimize
-###import sfa_libs
-
 nan = numpy.nan
 
-def div2_sel65_unsigned_08expo_orig(x):
-    num_samples, dim = x.shape
-    if dim % 2:
-        ex = "Input dimensionality is odd, input array cannot be splitted."
-        raise Exception(ex)
-    split_size = min(dim/2, 65)
-    y = numpy.zeros((num_samples, split_size*2))
-    y[:, 0:split_size] = unsigned_08expo(x[:,0:split_size])
-    y[:, split_size:] = unsigned_08expo(x[:,dim/2:dim/2+split_size])
-    return y
-
-def div2_sel80_unsigned_08expo(x):
-    return divN_selK_unsigned_08expo(x, 2, 80)
-
-def div2_sel75_unsigned_08expo(x):
-    return divN_selK_unsigned_08expo(x, 2, 75)
-
-def div2_sel70_unsigned_08expo(x):
-    return divN_selK_unsigned_08expo(x, 2, 70)
-
-def div2_sel65_unsigned_08expo(x):
-    return divN_selK_unsigned_08expo(x, 2, 65)
-
-def div2_sel60_unsigned_08expo(x):
-    return divN_selK_unsigned_08expo(x, 2, 60)
-
-
-def divN_selK_unsigned_08expo(x, num_parts, max_feats_per_part):
-    num_samples, dim = x.shape
-    if dim % num_parts:
-        ex = "Input dimensionality is not a multiple of num_parts, input array cannot be splitted."
-        raise Exception(ex)
-    split_size = min(dim/num_parts, max_feats_per_part)
-    orig_part_size =  dim/num_parts
-    y = numpy.zeros((num_samples, split_size*num_parts))
-    for part in range(num_parts):
-        y[:, split_size*part:split_size*(part+1)] = unsigned_08expo(x[:, orig_part_size*part:orig_part_size*part+split_size])
-    return y
-    
-#Warning, the functions below are not compatible with networks that apply non-linearity after merging fan-in
-
-def sel14_QT(x):
-    return QT(x[:,0:14])
-
-def sel18_QT(x):
-    return QT(x[:,0:18])
-
-def sel20_QT(x):
-    return QT(x[:,0:20])
-
-def sel25_QT(x):
-    return QT(x[:,0:25])
-
-def sel30_QT(x):
-    return QT(x[:,0:30])
-
-def sel35_QT(x):
-    return QT(x[:,0:35])
-
-
-def sel40_QT(x):
-    return QT(x[:,0:40])
-
-def sel50_QT(x):
-    return QT(x[:,0:50])
-
-def sel60_QT(x):
-    return QT(x[:,0:60])
-
-def sel70_QT(x):
-    return QT(x[:,0:70])
-
-def sel80_QT(x):
-    return QT(x[:,0:80])
-
-def sel8_04QT(x):
-    return neg_expo(QT(x[:,0:8]), 0.4)
-
-def sel10_04QT(x):
-    return neg_expo(QT(x[:,0:10]), 0.4)
-
-def sel10_045QT(x):
-    return neg_expo(QT(x[:,0:10]), 0.45)
-
-def sel14_04QT(x):
-    return neg_expo(QT(x[:,0:14]), 0.4)
-
-def sel14_045QT(x):
-    return neg_expo(QT(x[:,0:14]), 0.45)
-
-def sel18_04QT(x):
-    return neg_expo(QT(x[:,0:18]), 0.4)
-
-def sel25_CT(x):
-    return CT(x[:,0:25])
-
-def sel30_CT(x):
-    return CT(x[:,0:30])
-
-def sel35_CT(x):
-    return CT(x[:,0:35])
-
-
-def sel90_unsigned_08expo(x):
-    return unsigned_08expo(x[:,0:90])
-
-def sel70_unsigned_08expo(x):
-    return unsigned_08expo(x[:,0:70])
-
-def sel65_unsigned_08expo(x):
-    return unsigned_08expo(x[:,0:65])
-
-def sel60_unsigned_08expo(x):
-    return unsigned_08expo(x[:,0:60])
-
-def sel50_unsigned_08expo(x):
-    return unsigned_08expo(x[:,0:50])
-
-def sel40_unsigned_08expo(x):
-    return unsigned_08expo(x[:,0:40])
-
-def sel30_unsigned_08expo(x):
-    return unsigned_08expo(x[:,0:30])
-
-#This function does not pickle!!!!
-def sel_exp(num_comp, func):
-    return lambda x: func(x[:, 0:num_comp])
-
-def first_k_signals(x, k=10):
-    return x[:,0:k]
-
-#Euclidean Magnitude (Norm2)
-#x is an mdp array, and norm2 is computed row-wise
-def norm2(x):
-    num_samples, dim = x.shape
-    return (((x**2).sum(axis=1) / dim )**0.5).reshape((num_samples, 1))
-
-def dist_to_closest_neighbour_old(x):
-    num_samples, dim = x.shape
-    zero = numpy.zeros((1, dim))*numpy.nan
-    distances = numpy.zeros(num_samples)
-
-    for i in range(num_samples):
-        x1 = x[i]
-        diffA = x[0:i, :]-x1
-        diffB = x[i+1:, :]-x1
-        diff = numpy.concatenate((diffA, zero, diffB))
-        sqr_dist = (diff*diff).sum(axis=1)
-        w = numpy.nanmin(sqr_dist)
-        distances[i] = w**0.5
-    return distances
-
-def dist_to_closest_neighbour(x, y=None):
-    if y is None:
-        y = x
-    num_samples, _ = x.shape
-#    zero = numpy.zeros((1, dim))*numpy.nan
-    distances = numpy.zeros(num_samples)
-#    indices = numpy.zeros(num_samples)
-
-    for i in range(num_samples):
-        x1 = x[i]
-        diff = y[:, :]-x1
-        sqr_dist = (diff*diff).sum(axis=1)
-        sqr_dist[sqr_dist == 0.0] = numpy.inf
-        index = numpy.argmin(sqr_dist)
-        distances[i] = sqr_dist[index]**0.5
-#        indices[i] = index
-    return distances #, indices
-
-def fix_mean_var(x):
-    x = (x-x.mean(axis=0))/x.std(axis=0)
-    return x
-
-def FuncListFromExpansion(Exp, k, d):
-    f = lambda x: Exp(x, k=k, d=d)
-    #WARNING, next line breaks pickling!!!!
-    #f.__name__ = "L:"+Exp.__name__ +" k=%f d=%f"%(k,d)
-    f.myname = "L:"+Exp.__name__ +" k=%f d=%f"%(k,d)
-    return [f,]
 
 #BASIC ELEMENTWISE TRANSFORMATION FUNCTIONS
 #functions suitable for any n-dimensional arrays
-#this function is so important that we give it a name although it does almost nothing
+#this function is so important that we give it a name although it does nothing
 def identity(x):
     return x
 
@@ -285,56 +101,139 @@ def multiply_sigmoid_08(x1, x2):
     expo=0.8
     return neg_expo(x1 * x2, expo)
  
-#This should be done faster.... iterating over rows is too slow!!!!!
-#Expansion with terms: f(x1,x1), f(x1,x2), ... f(x1,xn), f(x2,x2), ... f(xn,xn)
-#If reflexive=True include terms f(xj, xj)
-##This (twice commented) version is slower, so now it was replaced by the function bellow
-##see experiments_general_expansion for a benchmark
-##def pairwise_expansion(x, func, reflexive=True):
-##    """Computes func(xi, xj) over all possible indices i and j.
-##    if reflexive==False, only pairs with i!=j are considered
-##    """
-##    x_height, x_width = x.shape
-##    if reflexive==True:
-##        k=0
-##        out = numpy.zeros((x_height, x_width*(x_width+1)/2))
-##    else:
-##        k=1
-##        out = numpy.zeros((x_height, x_width*(x_width-1)/2))    
-##    mask = numpy.triu(numpy.ones((x_width,x_width)), k) > 0.5
-##    for i in range(0, x_height):
-##        y1 = x[i].reshape(x_width, 1)
-##        y2 = x[i].reshape(1, x_width)
-##        yexp = func(y1, y2)
-###        print "yexp=", yexp
-##        out[i] = yexp[mask]
-##    return out    
+
+########## FUNCTIONS APPLIED TO PAIRS OF ELEMENTS, POSSIBLY REPEATEDLY EX: f(f(x_i,x_j),x_k) for various i, j, k. ###########
+def pairwise_expansion(x, func, reflexive=True):
+    """Computes func(xi, xj) over all possible indices i and j.
+    if reflexive==False, only pairs with i!=j are considered
+    """
+    x_height, x_width = x.shape
+    if reflexive==True:
+        k=0
+        ### out = numpy.zeros((x_height, x_width*(x_width+1)/2))
+    else:
+        k=1
+        ### out = numpy.zeros((x_height, x_width*(x_width-1)/2))    
+    mask = numpy.triu(numpy.ones((x_width,x_width)), k) > 0.5
+#    mask = mask.reshape((1,x_width,x_width))
+    y1 = x.reshape(x_height, x_width, 1)
+    y2 = x.reshape(x_height, 1, x_width)
+    yexp = func(y1, y2)
+    
+#    print "yexp.shape=", yexp.shape
+#    print "mask.shape=", mask.shape
+    out = yexp[:, mask]  
+#    print "out.shape=", out.shape
+    #yexp.reshape((x_height, N*N))
+    return out 
+
 
 #FUNCTIONS THAT COMBINE TWO OR MORE ELEMENTS
+#default k=0 (all pairs), k=1 omits pairs (x_j, x_j)
+def products_2(x, func, k=0):
+    x_height, x_width = x.shape
 
-#Computes: func(func(func(func(func(func(func(func(xi1,xi2),xi3),xi4),xi5),xi6),xi7),xi8),xi9) for all i1<=i2<=i3<=i4<=i5<=i6<=i7<=i8<=i9
-def products_9(x, func):
+    mask = numpy.triu(numpy.ones((x_width,x_width)), k) > 0.5
+
+    z1 = x.reshape(x_height, x_width, 1)
+    z2 = x.reshape(x_height, 1, x_width)
+    yexp = func(z1, z2) # twice computation, but performance gain due to lack of loops
+
+    out = yexp[:, mask]
+    return out 
+
+
+#Computes: func(func(xi,xj),xk) for all i <= j <= k 
+def products_3(x, func):
     _, x_width = x.shape
 
     res = []
-    for i1 in range(x_width):
-        for i2 in range(i1, x_width):
-            prod1 = func(x[:,i1:i1+1], x[:,i2:i2+1])
-            for i3 in range(i2, x_width):
-                prod2 = func(x[:,i3:i3+1], prod1)
-                for i4 in range(i3, x_width):
-                    prod3 = func(x[:,i4:i4+1], prod2)
-                    for i5 in range(i4, x_width):
-                        prod4 = func(x[:,i5:i5+1], prod3)
-                        for i6 in range(i5, x_width):
-                            prod5 = func(x[:,i6:i6+1], prod4)
-                            for i7 in range(i6, x_width):
-                                prod6 = func(x[:,i7:i7+1], prod5)
-                                for i8 in range(i7, x_width):
-                                    prod7 = func(x[:,i8:i8+1], prod6)
-                                    for i9 in range(i8, x_width):
-                                        prod8 = func(x[:,i9:i9+1], prod7)
-                                        res.append(prod8)
+    for i in range(x_width):
+        for j in range(i, x_width):
+            prod1 = func(x[:,i:i+1], x[:,j:j+1])
+            for k in range(j, x_width):
+                prod2 = func(x[:,k:k+1], prod1)
+                res.append(prod2)
+    out = numpy.concatenate(res,axis=1)
+    return out
+
+
+#Computes: func(func(func(xi,xj),xk),xl) for all i <= j <= k <= l
+def products_4(x, func):
+    _, x_width = x.shape
+
+    res = []
+    for i in range(x_width):
+        for j in range(i, x_width):
+            prod1 = func(x[:,i:i+1], x[:,j:j+1])
+            for k in range(j, x_width):
+                prod2 = func(x[:,k:k+1], prod1)
+                for l in range(k, x_width):
+                    prod3 = func(x[:,l:l+1], prod2)
+                    res.append(prod3)
+    out = numpy.concatenate(res,axis=1)
+    return out
+
+
+#Computes: func(func(func(func(xi,xj),xk),xl),xm) for all i <= j <= k <= l <= m
+def products_5(x, func):
+    _, x_width = x.shape
+
+    res = []
+    for i in range(x_width):
+        for j in range(i, x_width):
+            prod1 = func(x[:,i:i+1], x[:,j:j+1])
+            for k in range(j, x_width):
+                prod2 = func(x[:,k:k+1], prod1)
+                for l in range(k, x_width):
+                    prod3 = func(x[:,l:l+1], prod2)
+                    for m in range(l, x_width):
+                        prod4 = func(x[:,m:m+1], prod3)
+                        res.append(prod4)
+    out = numpy.concatenate(res,axis=1)
+    return out
+
+
+#Computes: func(func(func(func(func(xi,xj),xk),xl),xm),xn) for all i <= j <= k <= l <= m <= n
+def products_6(x, func):
+    _, x_width = x.shape
+
+    res = []
+    for i in range(x_width):
+        for j in range(i, x_width):
+            prod1 = func(x[:,i:i+1], x[:,j:j+1])
+            for k in range(j, x_width):
+                prod2 = func(x[:,k:k+1], prod1)
+                for l in range(k, x_width):
+                    prod3 = func(x[:,l:l+1], prod2)
+                    for m in range(l, x_width):
+                        prod4 = func(x[:,m:m+1], prod3)
+                        for n in range(m, x_width):
+                            prod5 = func(x[:,n:n+1], prod4)
+                            res.append(prod5)
+    out = numpy.concatenate(res,axis=1)
+    return out
+
+
+#Computes: func(func(func(func(func(func(xi,xj),xk),xl),xm),xn),x0) for all i <= j <= k <= l <= m <= n <= o
+def products_7(x, func):
+    _, x_width = x.shape
+
+    res = []
+    for i in range(x_width):
+        for j in range(i, x_width):
+            prod1 = func(x[:,i:i+1], x[:,j:j+1])
+            for k in range(j, x_width):
+                prod2 = func(x[:,k:k+1], prod1)
+                for l in range(k, x_width):
+                    prod3 = func(x[:,l:l+1], prod2)
+                    for m in range(l, x_width):
+                        prod4 = func(x[:,m:m+1], prod3)
+                        for n in range(m, x_width):
+                            prod5 = func(x[:,n:n+1], prod4)
+                            for o in range(n, x_width):
+                                prod6 = func(x[:,o:o+1], prod5)
+                                res.append(prod6)
     out = numpy.concatenate(res,axis=1)
     return out
 
@@ -364,134 +263,32 @@ def products_8(x, func):
     return out
 
 
-#Computes: func(func(func(func(func(func(xi,xj),xk),xl),xm),xn),x0) for all i <= j <= k <= l <= m <= n <= o
-def products_7(x, func):
+#Computes: func(func(func(func(func(func(func(func(xi1,xi2),xi3),xi4),xi5),xi6),xi7),xi8),xi9) for all i1<=i2<=i3<=i4<=i5<=i6<=i7<=i8<=i9
+def products_9(x, func):
     _, x_width = x.shape
 
     res = []
-    for i in range(x_width):
-        for j in range(i, x_width):
-            prod1 = func(x[:,i:i+1], x[:,j:j+1])
-            for k in range(j, x_width):
-                prod2 = func(x[:,k:k+1], prod1)
-                for l in range(k, x_width):
-                    prod3 = func(x[:,l:l+1], prod2)
-                    for m in range(l, x_width):
-                        prod4 = func(x[:,m:m+1], prod3)
-                        for n in range(m, x_width):
-                            prod5 = func(x[:,n:n+1], prod4)
-                            for o in range(n, x_width):
-                                prod6 = func(x[:,o:o+1], prod5)
-                                res.append(prod6)
+    for i1 in range(x_width):
+        for i2 in range(i1, x_width):
+            prod1 = func(x[:,i1:i1+1], x[:,i2:i2+1])
+            for i3 in range(i2, x_width):
+                prod2 = func(x[:,i3:i3+1], prod1)
+                for i4 in range(i3, x_width):
+                    prod3 = func(x[:,i4:i4+1], prod2)
+                    for i5 in range(i4, x_width):
+                        prod4 = func(x[:,i5:i5+1], prod3)
+                        for i6 in range(i5, x_width):
+                            prod5 = func(x[:,i6:i6+1], prod4)
+                            for i7 in range(i6, x_width):
+                                prod6 = func(x[:,i7:i7+1], prod5)
+                                for i8 in range(i7, x_width):
+                                    prod7 = func(x[:,i8:i8+1], prod6)
+                                    for i9 in range(i8, x_width):
+                                        prod8 = func(x[:,i9:i9+1], prod7)
+                                        res.append(prod8)
     out = numpy.concatenate(res,axis=1)
     return out
 
-
-
-#Computes: func(func(func(func(func(xi,xj),xk),xl),xm),xn) for all i <= j <= k <= l <= m <= n
-def products_6(x, func):
-    _, x_width = x.shape
-
-    res = []
-    for i in range(x_width):
-        for j in range(i, x_width):
-            prod1 = func(x[:,i:i+1], x[:,j:j+1])
-            for k in range(j, x_width):
-                prod2 = func(x[:,k:k+1], prod1)
-                for l in range(k, x_width):
-                    prod3 = func(x[:,l:l+1], prod2)
-                    for m in range(l, x_width):
-                        prod4 = func(x[:,m:m+1], prod3)
-                        for n in range(m, x_width):
-                            prod5 = func(x[:,n:n+1], prod4)
-                            res.append(prod5)
-    out = numpy.concatenate(res,axis=1)
-    return out
-
-#Computes: func(func(func(func(xi,xj),xk),xl),xm) for all i <= j <= k <= l <= m
-def products_5(x, func):
-    _, x_width = x.shape
-
-    res = []
-    for i in range(x_width):
-        for j in range(i, x_width):
-            prod1 = func(x[:,i:i+1], x[:,j:j+1])
-            for k in range(j, x_width):
-                prod2 = func(x[:,k:k+1], prod1)
-                for l in range(k, x_width):
-                    prod3 = func(x[:,l:l+1], prod2)
-                    for m in range(l, x_width):
-                        prod4 = func(x[:,m:m+1], prod3)
-                        res.append(prod4)
-    out = numpy.concatenate(res,axis=1)
-    return out
-
-#Computes: func(func(func(xi,xj),xk),xl) for all i <= j <= k <= l
-def products_4(x, func):
-    _, x_width = x.shape
-
-    res = []
-    for i in range(x_width):
-        for j in range(i, x_width):
-            prod1 = func(x[:,i:i+1], x[:,j:j+1])
-            for k in range(j, x_width):
-                prod2 = func(x[:,k:k+1], prod1)
-                for l in range(k, x_width):
-                    prod3 = func(x[:,l:l+1], prod2)
-                    res.append(prod3)
-    out = numpy.concatenate(res,axis=1)
-    return out
-
-#Computes: func(func(xi,xj),xk) for all i <= j <= k 
-def products_3(x, func):
-    _, x_width = x.shape
-
-    res = []
-    for i in range(x_width):
-        for j in range(i, x_width):
-            prod1 = func(x[:,i:i+1], x[:,j:j+1])
-            for k in range(j, x_width):
-                prod2 = func(x[:,k:k+1], prod1)
-                res.append(prod2)
-    out = numpy.concatenate(res,axis=1)
-    return out
-
-#default k=0 (all pairs), k=1 omits pairs (x_j, x_j)
-def products_2(x, func, k=0):
-    x_height, x_width = x.shape
-
-    mask = numpy.triu(numpy.ones((x_width,x_width)), k) > 0.5
-
-    z1 = x.reshape(x_height, x_width, 1)
-    z2 = x.reshape(x_height, 1, x_width)
-    yexp = func(z1, z2) # twice computation, but performance gain due to lack of loops
-
-    out = yexp[:, mask]
-    return out 
-
-def pairwise_expansion(x, func, reflexive=True):
-    """Computes func(xi, xj) over all possible indices i and j.
-    if reflexive==False, only pairs with i!=j are considered
-    """
-    x_height, x_width = x.shape
-    if reflexive==True:
-        k=0
-        ### out = numpy.zeros((x_height, x_width*(x_width+1)/2))
-    else:
-        k=1
-        ### out = numpy.zeros((x_height, x_width*(x_width-1)/2))    
-    mask = numpy.triu(numpy.ones((x_width,x_width)), k) > 0.5
-#    mask = mask.reshape((1,x_width,x_width))
-    y1 = x.reshape(x_height, x_width, 1)
-    y2 = x.reshape(x_height, 1, x_width)
-    yexp = func(y1, y2)
-    
-#    print "yexp.shape=", yexp.shape
-#    print "mask.shape=", mask.shape
-    out = yexp[:, mask]  
-#    print "out.shape=", out.shape
-    #yexp.reshape((x_height, N*N))
-    return out 
 
 def Q_func(x, func):
     return products_2(x,func)
@@ -541,7 +338,6 @@ def P8(x):
 
 def P9(x):
     return P9_func(x,multiply)
-
 
 #AN=Asymmetric Normalize
 def Q_AN(x,k=1.0,d=0.6):
@@ -692,6 +488,198 @@ def halbs_multiply_ex(x):
 #print "xx=", xx
 #yy = halbs_multiply_ex(xx)
 #print "yy=", yy
+
+
+def div2_sel65_unsigned_08expo_orig(x):
+    num_samples, dim = x.shape
+    if dim % 2:
+        ex = "Input dimensionality is odd, input array cannot be splitted."
+        raise Exception(ex)
+    split_size = min(dim/2, 65)
+    y = numpy.zeros((num_samples, split_size*2))
+    y[:, 0:split_size] = unsigned_08expo(x[:,0:split_size])
+    y[:, split_size:] = unsigned_08expo(x[:,dim/2:dim/2+split_size])
+    return y
+
+def div2_sel80_unsigned_08expo(x):
+    return divN_selK_unsigned_08expo(x, 2, 80)
+
+def div2_sel75_unsigned_08expo(x):
+    return divN_selK_unsigned_08expo(x, 2, 75)
+
+def div2_sel70_unsigned_08expo(x):
+    return divN_selK_unsigned_08expo(x, 2, 70)
+
+def div2_sel65_unsigned_08expo(x):
+    return divN_selK_unsigned_08expo(x, 2, 65)
+
+def div2_sel60_unsigned_08expo(x):
+    return divN_selK_unsigned_08expo(x, 2, 60)
+
+
+def divN_selK_unsigned_08expo(x, num_parts, max_feats_per_part):
+    num_samples, dim = x.shape
+    if dim % num_parts:
+        ex = "Input dimensionality is not a multiple of num_parts, input array cannot be splitted."
+        raise Exception(ex)
+    split_size = min(dim/num_parts, max_feats_per_part)
+    orig_part_size =  dim/num_parts
+    y = numpy.zeros((num_samples, split_size*num_parts))
+    for part in range(num_parts):
+        y[:, split_size*part:split_size*(part+1)] = unsigned_08expo(x[:, orig_part_size*part:orig_part_size*part+split_size])
+    return y
+    
+def sel14_QT(x):
+    return QT(x[:,0:14])
+
+def sel18_QT(x):
+    return QT(x[:,0:18])
+
+def sel20_QT(x):
+    return QT(x[:,0:20])
+
+def sel25_QT(x):
+    return QT(x[:,0:25])
+
+def sel30_QT(x):
+    return QT(x[:,0:30])
+
+def sel35_QT(x):
+    return QT(x[:,0:35])
+
+def sel40_QT(x):
+    return QT(x[:,0:40])
+
+def sel50_QT(x):
+    return QT(x[:,0:50])
+
+def sel60_QT(x):
+    return QT(x[:,0:60])
+
+def sel70_QT(x):
+    return QT(x[:,0:70])
+
+def sel80_QT(x):
+    return QT(x[:,0:80])
+
+def sel8_04QT(x):
+    return neg_expo(QT(x[:,0:8]), 0.4)
+
+def sel10_04QT(x):
+    return neg_expo(QT(x[:,0:10]), 0.4)
+
+def sel10_045QT(x):
+    return neg_expo(QT(x[:,0:10]), 0.45)
+
+def sel14_04QT(x):
+    return neg_expo(QT(x[:,0:14]), 0.4)
+
+def sel14_045QT(x):
+    return neg_expo(QT(x[:,0:14]), 0.45)
+
+def sel18_04QT(x):
+    return neg_expo(QT(x[:,0:18]), 0.4)
+
+def sel25_CT(x):
+    return CT(x[:,0:25])
+
+def sel30_CT(x):
+    return CT(x[:,0:30])
+
+def sel35_CT(x):
+    return CT(x[:,0:35])
+
+
+def sel90_unsigned_08expo(x):
+    return unsigned_08expo(x[:,0:90])
+
+def sel70_unsigned_08expo(x):
+    return unsigned_08expo(x[:,0:70])
+
+def sel65_unsigned_08expo(x):
+    return unsigned_08expo(x[:,0:65])
+
+def sel60_unsigned_08expo(x):
+    return unsigned_08expo(x[:,0:60])
+
+def sel50_unsigned_08expo(x):
+    return unsigned_08expo(x[:,0:50])
+
+def sel40_unsigned_08expo(x):
+    return unsigned_08expo(x[:,0:40])
+
+def sel30_unsigned_08expo(x):
+    return unsigned_08expo(x[:,0:30])
+
+#This function does not pickle!!!!
+def sel_exp(num_comp, func):
+    return lambda x: func(x[:, 0:num_comp])
+
+#Euclidean Magnitude (Norm2)
+#x is an mdp array, and norm2 is computed row-wise
+def norm2(x):
+    num_samples, dim = x.shape
+    return (((x**2).sum(axis=1) / dim )**0.5).reshape((num_samples, 1))
+
+def dist_to_closest_neighbour_old(x):
+    num_samples, dim = x.shape
+    zero = numpy.zeros((1, dim))*numpy.nan
+    distances = numpy.zeros(num_samples)
+
+    for i in range(num_samples):
+        x1 = x[i]
+        diffA = x[0:i, :]-x1
+        diffB = x[i+1:, :]-x1
+        diff = numpy.concatenate((diffA, zero, diffB))
+        sqr_dist = (diff*diff).sum(axis=1)
+        w = numpy.nanmin(sqr_dist)
+        distances[i] = w**0.5
+    return distances
+
+def dist_to_closest_neighbour(x, y=None):
+    if y is None:
+        y = x
+    num_samples, _ = x.shape
+#    zero = numpy.zeros((1, dim))*numpy.nan
+    distances = numpy.zeros(num_samples)
+#    indices = numpy.zeros(num_samples)
+
+    for i in range(num_samples):
+        x1 = x[i]
+        diff = y[:, :]-x1
+        sqr_dist = (diff*diff).sum(axis=1)
+        sqr_dist[sqr_dist == 0.0] = numpy.inf
+        index = numpy.argmin(sqr_dist)
+        distances[i] = sqr_dist[index]**0.5
+#        indices[i] = index
+    return distances #, indices
+
+def fix_mean_var(x):
+    x = (x-x.mean(axis=0))/x.std(axis=0)
+    return x
+
+def FuncListFromExpansion(Exp, k, d):
+    f = lambda x: Exp(x, k=k, d=d)
+    #WARNING, next line breaks pickling!!!!
+    #f.__name__ = "L:"+Exp.__name__ +" k=%f d=%f"%(k,d)
+    f.myname = "L:"+Exp.__name__ +" k=%f d=%f"%(k,d)
+    return [f,]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 def unsigned_11expo(x):
     return numpy.abs(x) ** 1.1
@@ -1146,11 +1134,10 @@ def maximum_75mix2_ex(x):
 def maximum_99mix2_ex(x):
     return maximum_Fmix2_ex(x,99)
 
+
+########## Functions that compute 08expo terms with selection ######################
 def Fu08_ex(x,F):
     return unsigned_08expo(x[:,0:F])
-
-def oO_sS_u08(x, off, S):
-    return unsigned_08expo(x[:,off:off+S])
 
 def s10u08ex(x):
     return Fu08_ex(x, 10)
@@ -1203,15 +1190,6 @@ def s25u08ex(x):
 def s30u08(x):
     return Fu08_ex(x, 30)
 
-def o4s30u08(x):
-    return oO_sS_u08(x, 4, 30)
-
-def o5_s30_u08(x):
-    return oO_sS_u08(x, 5, 30)
-
-def o6s30u08(x):
-    return oO_sS_u08(x, 6, 30)
-
 def s31u08(x):
     return Fu08_ex(x, 31)
 
@@ -1251,6 +1229,22 @@ def s75u08ex(x):
 def s100u08ex(x):
     return Fu08_ex(x, 100)
 
+
+########## Functions that compute 08expo terms with selection and offset ######################
+def oO_sS_u08(x, off, S):
+    return unsigned_08expo(x[:,off:off+S])
+
+def o4s30u08(x):
+    return oO_sS_u08(x, 4, 30)
+
+def o5_s30_u08(x):
+    return oO_sS_u08(x, 5, 30)
+
+def o6s30u08(x):
+    return oO_sS_u08(x, 6, 30)
+
+
+################################### Functions that compute maximum of consequtive features with u08 post-processing ######################
 def maximum_Fmix2_sE_ex(x,F,expo):
     x1 = x[:, 0:F]
     x2 = x[:, 1:F+1]
@@ -1271,6 +1265,8 @@ def maximum_75mix2_s08_ex(x):
 def maximum_99mix2_s08_ex(x):
     return maximum_Fmix2_sE_ex(x,99,0.8)
 
+
+################################### Functions that compute quadratic terms with selection, and 3 channels ######################
 def ch3_sF_QT(x, F):
     ch = 3
     s = F
@@ -1280,19 +1276,6 @@ def ch3_sF_QT(x, F):
     xs[:,s:2*s] = x[:, dim/3:dim/3+s]
     xs[:,2*s:] = x[:, 2*dim/3:2*dim/3+s]
     return QT(xs)
-
-def ch3_Offset_sF_QT(x, Off, F):
-    ch = 3
-    s = F
-    ns, dim = x.shape
-    if (Off+F)*ch >= dim:
-        return QT(x)
-    else:
-        xs = numpy.zeros((ns, ch * s))
-        xs[:,0:s] = x[:,Off:Off+s]
-        xs[:,s:2*s] = x[:, dim/3+Off:dim/3+Off+s]
-        xs[:,2*s:] = x[:, 2*dim/3+Off:2*dim/3+Off+s]
-        return QT(xs)
 
 def ch3_s3_QT(x):
     return ch3_sF_QT(x, 3)
@@ -1305,6 +1288,20 @@ def ch3_s5_QT(x):
 
 def ch3_s10_QT(x):
     return ch3_sF_QT(x, 10)
+
+################################### Functions that compute quadratic terms with offset, selection, and 3 channels ######################
+def ch3_Offset_sF_QT(x, Off, F):
+    ch = 3
+    s = F
+    ns, dim = x.shape
+    if (Off+F)*ch >= dim:
+        return QT(x)
+    else:
+        xs = numpy.zeros((ns, ch * s))
+        xs[:,0:s] = x[:,Off:Off+s]
+        xs[:,s:2*s] = x[:, dim/3+Off:dim/3+Off+s]
+        xs[:,2*s:] = x[:, 2*dim/3+Off:2*dim/3+Off+s]
+        return QT(xs)
 
 def ch3o2s2QT(x):
     return ch3_Offset_sF_QT(x, Off=2, F=2)
@@ -1350,7 +1347,6 @@ def ch3o4s4QT(x):
 
 def ch3o5s4QT(x):
     return ch3_Offset_sF_QT(x, Off=5, F=4)
-
 
 def ch3o6s2QT(x):
     return ch3_Offset_sF_QT(x, Off=6, F=2)
@@ -1425,7 +1421,7 @@ def ch3o4s8QT(x):
     return ch3_Offset_sF_QT(x, Off=4, F=8)
 
 
-
+################################### Functions that compute quadratic terms with selection ######################
 def s2QT(x):
     return QT(x[:,0:2])
 
@@ -1514,8 +1510,7 @@ def s75QT(x):
     return QT(x[:,0:75])
 
 
-
-
+################################### Functions that compute cubic terms with selection ######################
 def s2CT(x):
     return CT(x[:,0:2])
 
@@ -1583,7 +1578,7 @@ def s40CT(x):
     return CT(x[:,0:40])
 
 
-
+################################### Functions that compute quadratic terms with offset and selection ######################
 def Offset_sF_QT(x, Off, F):
     s = F
     dim = x.shape[1]
@@ -1634,6 +1629,7 @@ def o4s21QT(x):
 def o4s24QT(x):
     return Offset_sF_QT(x, 4, 24)
 
+################################### Functions that compute maximum over consequtive pairs of features, exactly F-1 terms ######################
 def Fmaximum_mix1_ex(x, F):
     x1 = x[:, 0:F-1]
     x2 = x[:, 1:F]
@@ -1644,7 +1640,6 @@ def s10Max(x):
 
 def s11Max(x):
     return Fmaximum_mix1_ex(x, 11)
-
 
 def s12Max(x):
     return Fmaximum_mix1_ex(x, 12)
@@ -1676,6 +1671,8 @@ def s20Max(x):
 def s25Max(x):
     return Fmaximum_mix1_ex(x, 25)
 
+
+################################### Functions that compute the 08expo terms of the first k features of each channel, 3 channels assumed ######################
 def ch3_sF_u08(x, F):
     ch = 3
     ns, dim = x.shape
@@ -1699,28 +1696,6 @@ def ch3_oO_sF_u08(x, off, F):
         xs[:,F:2*F] = x[:, dim/3+off:dim/3+F+off]
         xs[:,2*F:] = x[:, 2*dim/3+off:2*dim/3+F+off]
         return unsigned_08expo(xs)
-
-def ch3_sF_max(x, F):
-    _, dim = x.shape
-    if 3*F >= dim:
-        return maximum_mix1_ex(x)
-    else:
-        x1 = x[:,0:F]
-        x2 = x[:, dim/3:dim/3+F]
-        x3 = x[:, 2*dim/3:2*dim/3+F]
-        return numpy.concatenate((maximum_mix1_ex(x1), maximum_mix1_ex(x2), maximum_mix1_ex(x3)), axis=1)
-
-def ch3_oO_sF_max(x, off, F):
-    ch = 3
-    _, dim = x.shape
-
-    if (off+F)*ch >= dim:
-        return maximum_mix1_ex(x)
-    else:
-        x1 = x[:, off:F+off]
-        x2 = x[:, dim/3+off:dim/3+F+off]
-        x3 = x[:, 2*dim/3+off:2*dim/3+F+off]
-        return numpy.concatenate((maximum_mix1_ex(x1), maximum_mix1_ex(x2), maximum_mix1_ex(x3)), axis=1)
 
 def ch3s8u08(x):
     return ch3_sF_u08(x, 8)
@@ -1920,7 +1895,29 @@ def ch3s84u08(x):
 def ch3s86u08(x):
     return ch3_sF_u08(x, 86)
 
+################################### Functions that take the maximum over pais of features among the first k features of each channel, 3 channels assumed ######################
+def ch3_sF_max(x, F):
+    _, dim = x.shape
+    if 3*F >= dim:
+        return maximum_mix1_ex(x)
+    else:
+        x1 = x[:,0:F]
+        x2 = x[:, dim/3:dim/3+F]
+        x3 = x[:, 2*dim/3:2*dim/3+F]
+        return numpy.concatenate((maximum_mix1_ex(x1), maximum_mix1_ex(x2), maximum_mix1_ex(x3)), axis=1)
 
+def ch3_oO_sF_max(x, off, F):
+    ch = 3
+    _, dim = x.shape
+
+    if (off+F)*ch >= dim:
+        return maximum_mix1_ex(x)
+    else:
+        x1 = x[:, off:F+off]
+        x2 = x[:, dim/3+off:dim/3+F+off]
+        x3 = x[:, 2*dim/3+off:2*dim/3+F+off]
+        return numpy.concatenate((maximum_mix1_ex(x1), maximum_mix1_ex(x2), maximum_mix1_ex(x3)), axis=1)
+        
 def ch3s5max(x):
     return ch3_sF_max(x, 5)
 
@@ -1996,6 +1993,82 @@ def ch3s25max(x):
 def ch3s27max(x):
     return ch3_sF_max(x, 27)
 
+
+################################### Functions that select the first k features ######################
+def sF_head(x,F):
+    return x[:,0:F]
+
+def s10(x):
+    return sF_head(x,10)
+
+def s12(x):
+    return sF_head(x,12)
+
+def s14(x):
+    return sF_head(x,14)
+
+def s15(x):
+    return sF_head(x,15)
+
+def s16(x):
+    return sF_head(x,16)
+
+def s17(x):
+    return sF_head(x,17)
+
+def s18(x):
+    return sF_head(x,18)
+
+def s20(x):
+    return sF_head(x,20)
+
+def s25(x):
+    return sF_head(x,25)
+
+def s30(x):
+    return sF_head(x,30)
+
+def s50(x):
+    return sF_head(x,50)
+
+def s55(x):
+    return sF_head(x,55)
+
+def s60(x):
+    return sF_head(x,60)
+
+def s62(x):
+    return sF_head(x,62)
+
+def s64(x):
+    return sF_head(x,64)
+
+def s65(x):
+    return sF_head(x,65)
+
+def s66(x):
+    return sF_head(x,66)
+
+def s68(x):
+    return sF_head(x,68)
+
+def s70(x):
+    return sF_head(x,70)
+
+def s72(x):
+    return sF_head(x,72)
+
+def s75(x):
+    return sF_head(x,75)
+
+def s80(x):
+    return sF_head(x,80)
+
+def s85(x):
+    return sF_head(x,85)
+
+
+################################### Functions that select the first k features of each channel, 3 channels assumed ######################
 def ch3_sF_head(x, F):
     _, dim = x.shape
     if 3*F >= dim:
@@ -2194,78 +2267,8 @@ def ch3s105(x):
 def ch3s115(x):
     return ch3_sF_head(x,115)
 
-def sF_head(x,F):
-    return x[:,0:F]
 
-def s10(x):
-    return sF_head(x,10)
-
-def s12(x):
-    return sF_head(x,12)
-
-def s14(x):
-    return sF_head(x,14)
-
-def s15(x):
-    return sF_head(x,15)
-
-def s16(x):
-    return sF_head(x,16)
-
-def s17(x):
-    return sF_head(x,17)
-
-def s18(x):
-    return sF_head(x,18)
-
-def s20(x):
-    return sF_head(x,20)
-
-def s25(x):
-    return sF_head(x,25)
-
-def s30(x):
-    return sF_head(x,30)
-
-def s50(x):
-    return sF_head(x,50)
-
-def s55(x):
-    return sF_head(x,55)
-
-def s60(x):
-    return sF_head(x,60)
-
-def s62(x):
-    return sF_head(x,62)
-
-def s64(x):
-    return sF_head(x,64)
-
-def s65(x):
-    return sF_head(x,65)
-
-def s66(x):
-    return sF_head(x,66)
-
-def s68(x):
-    return sF_head(x,68)
-
-def s70(x):
-    return sF_head(x,70)
-
-def s72(x):
-    return sF_head(x,72)
-
-def s75(x):
-    return sF_head(x,75)
-
-def s80(x):
-    return sF_head(x,80)
-
-def s85(x):
-    return sF_head(x,85)
-
+############### Functions that involve offsets and a three sources of the same size ##############
 def ch3_Offset_sF_dD_Q_N(x, Off, F, d):
     ch = 3
     s = F
@@ -2365,6 +2368,7 @@ def ch3_o6_s6_d1_Q_N(x):
     return ch3_Offset_sF_dD_Q_N(x, Off=6, F=6, d=1)
 
 
+############### Functions that involve offsets and a single source ##############
 def Offset_sF_dD_Q_N(x, Off, F, d):
     return Q_N(x[:,Off:Off+F], k=1.0, d=d)
 
@@ -2404,7 +2408,12 @@ def o6_s15_d1_Q_N(x):
 def o6_s17_d1_Q_N(x):
     return Offset_sF_dD_Q_N(x, Off=6, F=17, d=1)
 
+
+
+################################ Functions that implement a control mechanism that simulates top-down connections ##################
 def two_set_products(c, x):
+    """ Computes the product of all components in c and all components in x, 
+    where c and x are sets of features that should involve the same number of samples. """
     num_samples, c_dim = c.shape
     num_samples2, x_dim = x.shape
     if num_samples != num_samples2:
@@ -2591,6 +2600,7 @@ def QT60_CT35_control4_QT40_CT5(x):
     return QTA_CTB_controlC_QTF_CTG(x, 60, 35, 4, 40, 5)
 
 
+####################### FUNCTIONS THAT INVOLVE SIGMOIDS ###############
 def extract_sigmoid_features(x, c1, l1):
     if x.shape[1] != c1.shape[0] or c1.shape[1] != len(l1):
         er = "Array dimensions mismatch: x.shape =" + str(x.shape) + ", c1.shape =" + str(c1.shape) + ", l1.shape=" + str(l1.shape)

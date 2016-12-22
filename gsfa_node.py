@@ -1179,7 +1179,7 @@ class CovDCovMatrix(object):
             err = "Inconsistency error: num_samples (%d) is not a multiple of block_size (%d)"%(num_samples, block_size)
             raise Exception(err)
         num_blocks = num_samples / block_size
-        num_neighbours = block_size-1
+        ###num_neighbours = block_size-1
 
         #warning, plenty of dtype missing!!!!!!!!
 
@@ -1203,7 +1203,7 @@ class CovDCovMatrix(object):
             media[i] = x[i*block_size:(i+1)*block_size].sum(axis=0) * (1.0 / block_size)
     
         sum_prod_meds = mdp.utils.mult(media.T, media)
-        sum_diffs = numpy.zeros((1,dim))
+        ###sum_diffs = numpy.zeros((1,dim))
         #note there are N * (N-1) * B links
         #WARNING!
         #num_diffs = (block_size * (block_size-1)) * num_blocks
@@ -1211,17 +1211,17 @@ class CovDCovMatrix(object):
 #        num_diffs = (block_size-1) * num_blocks
 #TODO: why such factor 0.5???
         #BEFORE FIX1: num_diffs = block_size * 0.5 * num_blocks
-        num_diffs = num_blocks * block_size * (block_size-1) * 1/(block_size-1.0) #FIX1: AFTER DT in (0,4) normalization
-
+        num_diffs = num_blocks * block_size * (block_size-1) / (block_size-1) - 1 #FIX1: AFTER DT in (0,4) normalization
+        print "num_diffs in block:", num_diffs, " num_samples:", num_samples
         #WARNING!
         #sum_prod_diffs = (2 * block_size) * sum_prod_x - 2 * (block_size * block_size) * sum_prod_meds
 #TODO: why the extra factor block_size in both terms, why divide here by num_neighbors??? both terms almost cancel.
         #BEFORE FIX1: sum_prod_diffs = ((2 * block_size) * sum_prod_x - 2 * (block_size * block_size) * sum_prod_meds)/(num_neighbours)
 #        sum_prod_diffs = 2.0*(sum_prod_x - block_size * sum_prod_meds) #FIX1: AFTER DT in (0,4) normalization
-        sum_prod_diffs = 2.0*block_size*(sum_prod_x - block_size * sum_prod_meds) * 1/(block_size-1.0) #FIX6: Making sure the summation has the correct scaling from theory
+        sum_prod_diffs = 2.0*block_size*(sum_prod_x - block_size * sum_prod_meds) / (block_size-1)  #FIX6: Making sure the summation has the correct scaling from theory
 #        block_size / (block_size-1.0) #FIX2: making sure value sin range 2 are noise...
 
-        self.AddDiffs(sum_prod_diffs, num_diffs, weight)
+        self.AddDiffs(sum_prod_diffs, num_diffs, weight * 1.0)
         print "(Diag(complete)/num_diffs.avg)**0.5 =", ((numpy.diagonal(sum_prod_diffs)/num_diffs).mean())**0.5
 
     def update_compact_classes(self, x, block_sizes = None, Jdes=None, weight=1.0):       
@@ -1357,7 +1357,7 @@ class CovDCovMatrix(object):
             cov_x = (self.sum_prod_x - self.num_samples * prod_avg_x) / (self.num_samples-1.0)
         
         #Finalize covariance matrix of dx
-        if divide_by_num_samples_or_differences:
+        if divide_by_num_samples_or_differences or True:
             cov_dx = self.sum_prod_diffs / (1.0 * self.num_diffs)
         else:
             cov_dx = self.sum_prod_diffs / (self.num_diffs-1.0)

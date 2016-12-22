@@ -332,7 +332,7 @@ network = PCA_control2_QT40_CT15_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network
 network.L0.exp_funcs = [control2_QT40_CT15, ] #unsigned_08expo
 
 network = PCA_control2_QT40_CT20_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-network.L0.exp_funcs = [control2_QT40_CT20, ] #unsigned_08expo
+network.L0.exp_funcs = [control2_QT40_CT20, ] #unsigned_08expo 
 
 network = PCA_control2_QT40_CT25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
 network.L0.exp_funcs = [control2_QT40_CT25, ] #unsigned_08expo
@@ -535,16 +535,16 @@ layer.name = "One-Node SFA Layer"
 layer.pca_node_class = mdp.nodes.PCANode
 layer.pca_args = {}
 layer.pca_out_dim = 35 #WARNING: 100 or None
-#layer.ord_node_class = mdp.nodes.IEVMLRecNode
-#layer.ord_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, QT],"max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999, "output_dim":35} #output_dim":40
-#layer.ord_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity],"max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999, "output_dim":35} #output_dim":40
+#layer.ord_node_class = mdp.nodes.iGSFANode
+#layer.ord_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, QT],"max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999, "output_dim":35} #output_dim":40
+#layer.ord_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity],"max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999, "output_dim":35} #output_dim":40
 #layer.exp_funcs = [identity,]
 #layer.exp_funcs = [encode_signal_p9,] #For next experiment: [encode_signal_p9,]
 #layer.red_node_class = mdp.nodes.HeadNode
 #layer.red_out_dim = int(tuning_parameter)
-layer.sfa_node_class = mdp.nodes.IEVMLRecNode #mdp.nodes.GSFANode
-#layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":"RandomSigmoids", "expansion_starting_point":"08Exp", "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999, "expansion_output_dim":4000} 
-#layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo],                       "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+layer.sfa_node_class = mdp.nodes.iGSFANode #mdp.nodes.GSFANode
+#layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":"RandomSigmoids", "expansion_starting_point":"08Exp", "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999, "expansion_output_dim":4000} 
+#layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo],                       "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 #QT10, CT10, QT15, CT15, QT20, CT20, QT25, CT25,
 terms_NL_expansion = int(tuning_parameter)
 if terms_NL_expansion == 15:
@@ -565,7 +565,7 @@ else:
 
 expansion = [identity, QT, s30CT] 
 
-layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":expansion,"max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999} 
+layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":expansion,"max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999} 
 layer.sfa_out_dim = 9 #49*2 # *3 # None
 
 ####################################################################
@@ -734,7 +734,7 @@ GTSRBNetwork.L0.exp_funcs = [identity, QT] #, QT, maximum_99mix2_s08_ex, sel80_Q
 
 GTSRBNetwork.L0.sfa_node_class = mdp.nodes.GSFANode     #SFANode
 GTSRBNetwork.L0.sfa_args = {}
-#GTSRBNetwork.L0.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":expansion,"max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999} 
+#GTSRBNetwork.L0.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":expansion,"max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999} 
 GTSRBNetwork.L0.sfa_out_dim = 75 # WW 26*3 # 17*3 = 51 ## FOR RGB 26, for L/HOG/SFA
 GTSRBNetwork.layers=[GTSRBNetwork.L0]
 
@@ -836,9 +836,9 @@ pSFALayerL0.red_node_class = None
 pSFALayerL0.red_out_dim = 0
 pSFALayerL0.red_args = {}
 
-pSFALayerL0.sfa_node_class = mdp.nodes.IEVMLRecNode #mdp.nodes.GSFANode
+pSFALayerL0.sfa_node_class = mdp.nodes.iGSFANode #mdp.nodes.GSFANode
 pSFALayerL0.sfa_out_dim = 60
-pSFALayerL0.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":"RandomSigmoids", "expansion_starting_point":None, "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":4.99999, "expansion_output_dim":300} 
+pSFALayerL0.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":"RandomSigmoids", "expansion_starting_point":None, "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":4.99999, "expansion_output_dim":300} 
 
 #pSFALayerL0.sfa_args = {"block_size": -1, "train_mode": -1}
 
@@ -859,10 +859,10 @@ pSFALayerL1.exp_funcs = [identity,]
 
 pSFALayerL1.red_node_class = None
 
-pSFALayerL1.sfa_node_class = mdp.nodes.IEVMLRecNode #mdp.nodes.GSFANode
+pSFALayerL1.sfa_node_class = mdp.nodes.iGSFANode #mdp.nodes.GSFANode
 pSFALayerL1.sfa_out_dim = 9
 expansion_output_dim = int(tuning_parameter)
-pSFALayerL1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":"RandomSigmoids", "expansion_starting_point":None, "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":4.99999, "expansion_output_dim":expansion_output_dim} 
+pSFALayerL1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":"RandomSigmoids", "expansion_starting_point":None, "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":4.99999, "expansion_output_dim":expansion_output_dim} 
 pSFALayerL1.cloneLayer = False
 pSFALayerL1.name = comp_supernode_name(pSFALayerL1.exp_funcs, pSFALayerL1.pca_out_dim, pSFALayerL1.sfa_out_dim)
 system_parameters.test_object_contents(pSFALayerL1)
@@ -901,9 +901,9 @@ pSFALayerL0.red_node_class = None
 pSFALayerL0.red_out_dim = 0
 pSFALayerL0.red_args = {}
 
-pSFALayerL0.sfa_node_class = mdp.nodes.IEVMLRecNode #mdp.nodes.GSFANode
+pSFALayerL0.sfa_node_class = mdp.nodes.iGSFANode #mdp.nodes.GSFANode
 pSFALayerL0.sfa_out_dim = 16
-pSFALayerL0.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+pSFALayerL0.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999999} 
 
 #pSFALayerL0.sfa_args = {"block_size": -1, "train_mode": -1}
 pSFALayerL0.cloneLayer = False
@@ -925,9 +925,9 @@ pSFALayerL2H.red_node_class = None
 pSFALayerL2H.red_out_dim = 0
 pSFALayerL2H.red_args = {}
 
-pSFALayerL2H.sfa_node_class = mdp.nodes.IEVMLRecNode #mdp.nodes.GSFANode
+pSFALayerL2H.sfa_node_class = mdp.nodes.iGSFANode #mdp.nodes.GSFANode
 pSFALayerL2H.sfa_out_dim = 16
-pSFALayerL2H.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+pSFALayerL2H.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 
 #pSFALayerL0.sfa_args = {"block_size": -1, "train_mode": -1}
 pSFALayerL2H.cloneLayer = False
@@ -950,9 +950,9 @@ pSFALayerL2V.red_node_class = None
 pSFALayerL2V.red_out_dim = 0
 pSFALayerL2V.red_args = {}
 
-pSFALayerL2V.sfa_node_class = mdp.nodes.IEVMLRecNode #mdp.nodes.GSFANode
+pSFALayerL2V.sfa_node_class = mdp.nodes.iGSFANode #mdp.nodes.GSFANode
 pSFALayerL2V.sfa_out_dim = 16
-pSFALayerL2V.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+pSFALayerL2V.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 
 #pSFALayerL2V.sfa_args = {"block_size": -1, "train_mode": -1}
 pSFALayerL2V.cloneLayer = False
@@ -967,18 +967,20 @@ pSFALayerL2V = copy.deepcopy(pSFALayerL2V)
 pSFALayerL3H = copy.deepcopy(pSFALayerL2H)
 pSFALayerL3V = copy.deepcopy(pSFALayerL2V)
 
-pSFALayerL0.sfa_out_dim = 14 # 9 + 5 
-pSFALayerL1H.sfa_out_dim = 28 # 2*9 + 10
+pSFALayerL0.sfa_out_dim = 10 # 9 + 4 
+pSFALayerL1H.sfa_out_dim = 23 # 2*9 + 10
 pSFALayerL1V.sfa_out_dim = 50 # 2*9 + 28
 pSFALayerL2H.sfa_out_dim = 75 # 2*9 + 25
 pSFALayerL2V.sfa_out_dim = 125 # 2*9 + 30
 pSFALayerL3H.sfa_out_dim = 160 # 2*9 + 35
-pSFALayerL3V.sfa_out_dim = 340 # 2*9 + 40
-pSFALayerL3V.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":"RandomSigmoids", "expansion_starting_point":"08Exp", "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999, "expansion_output_dim":800} 
+pSFALayerL3V.sfa_out_dim = 329 # 2*9 + 40
+pSFALayerL3V.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "expansion_starting_point":None, "max_comp":10, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999, "expansion_output_dim":None} 
+#THIS CODE IMPLEMENTS A NEW TYPE OF EXPANSION
+#pSFALayerL3V.sfa_args = {"pre_expansion_node_class":none, "expansion_funcs":"RandomSigmoids", "expansion_starting_point":"08Exp", "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999, "expansion_output_dim":800} 
 
 
-network = MNISTNetwork_24x24_7L = system_parameters.ParamsNetwork()
-network.name = "MNIST Network 7L 24x24"
+network = HiGSFA_MNISTNetwork_24x24_7L = system_parameters.ParamsNetwork()
+network.name = "HiGSFA MNIST Network 7L 24x24"
 network.L0 = copy.deepcopy(pSFALayerL0)
 network.L1 = copy.deepcopy(pSFALayerL1H)
 network.L2 = copy.deepcopy(pSFALayerL1V)
@@ -1225,7 +1227,7 @@ pSFALayerL0_4x4.y_field_channels=4
 pSFALayerL0_4x4.x_field_spacing=2 #2 for 24x24and 28x28, 3 for 29x29
 pSFALayerL0_4x4.y_field_spacing=2
 pSFALayerL0_4x4.pca_out_dim = 13 #12 for 24x24and 28x28, 20 for 29x29
-pSFALayerL0_4x4.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+pSFALayerL0_4x4.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 
 pSFALayerL1H_S3_D2 = copy.deepcopy(pSFALayerL1H) #L2
 pSFALayerL1H_S3_D2.name = "Homogeneous Linear Layer L1H S=3x1 D=2x1"
@@ -1233,8 +1235,8 @@ pSFALayerL1H_S3_D2.x_field_channels=3
 pSFALayerL1H_S3_D2.y_field_channels=1
 pSFALayerL1H_S3_D2.x_field_spacing=2
 pSFALayerL1H_S3_D2.y_field_spacing=1
-#pSFALayerL1H_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_3Split_15], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
-pSFALayerL1H_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerL1H_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_3Split_15], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+pSFALayerL1H_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 
 pSFALayerL2H_S3_D2 = copy.deepcopy(pSFALayerL1H) #L4
 pSFALayerL2H_S3_D2.name = "Homogeneous Linear Layer L2H S=3x1 D=2x1"
@@ -1242,9 +1244,9 @@ pSFALayerL2H_S3_D2.x_field_channels=2 #3 for 24x24 and 29x29, 2 for 28x28
 pSFALayerL2H_S3_D2.y_field_channels=1
 pSFALayerL2H_S3_D2.x_field_spacing=2 #2 for 24x24, 1 for 29x29
 pSFALayerL2H_S3_D2.y_field_spacing=1
-#pSFALayerL2H_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_3Split_25, CT_3Split_20], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
-#pSFALayerL2H_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo,  QT_2Split_15_AP08], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
-pSFALayerL2H_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerL2H_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_3Split_25, CT_3Split_20], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerL2H_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo,  QT_2Split_15_AP08], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+pSFALayerL2H_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 
 pSFALayerL3H_S2_D1 = copy.deepcopy(pSFALayerL1H) #L6
 pSFALayerL3H_S2_D1.name = "Homogeneous Linear Layer L3H S=2x1 D=1x1"
@@ -1252,10 +1254,10 @@ pSFALayerL3H_S2_D1.x_field_channels=3 #2 for 24x24 and 29x29, 3 for 28x28
 pSFALayerL3H_S2_D1.y_field_channels=1
 pSFALayerL3H_S2_D1.x_field_spacing=1
 pSFALayerL3H_S2_D1.y_field_spacing=1
-#sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_2Split_25, CT_2Split_20], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
-#pSFALayerL3H_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_2Split_50], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
-#pSFALayerL3H_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo,  QT_3Split_35_AP08], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
-pSFALayerL3H_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_2Split_25, CT_2Split_20], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerL3H_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_2Split_50], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerL3H_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo,  QT_3Split_35_AP08], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+pSFALayerL3H_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 
 #***************************************************************************
 pSFALayerL1V_S3_D2 = copy.deepcopy(pSFALayerL1H) #L3 
@@ -1264,8 +1266,8 @@ pSFALayerL1V_S3_D2.x_field_channels=1
 pSFALayerL1V_S3_D2.y_field_channels=3
 pSFALayerL1V_S3_D2.x_field_spacing=1
 pSFALayerL1V_S3_D2.y_field_spacing=2
-#sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_3Split_20, CT_3Split_15], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
-pSFALayerL1V_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_3Split_20, CT_3Split_15], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+pSFALayerL1V_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 
 pSFALayerL2V_S3_D2 = copy.deepcopy(pSFALayerL1H) #L5
 pSFALayerL2V_S3_D2.name = "Homogeneous Linear Layer L2V S=1x3 D=1x2"
@@ -1273,8 +1275,8 @@ pSFALayerL2V_S3_D2.x_field_channels=1
 pSFALayerL2V_S3_D2.y_field_channels=2
 pSFALayerL2V_S3_D2.x_field_spacing=1
 pSFALayerL2V_S3_D2.y_field_spacing=2 #2 for 24x24, 1 for 29x29
-#sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_3Split_25, CT_3Split_20], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
-pSFALayerL2V_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_3Split_25, CT_3Split_20], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+pSFALayerL2V_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 
 pSFALayerL3V_S2_D1 = copy.deepcopy(pSFALayerL1H) #L7
 pSFALayerL3V_S2_D1.name = "Homogeneous Linear Layer L3V S=1x2 D=1x1"
@@ -1282,9 +1284,9 @@ pSFALayerL3V_S2_D1.x_field_channels=1
 pSFALayerL3V_S2_D1.y_field_channels=3
 pSFALayerL3V_S2_D1.x_field_spacing=1
 pSFALayerL3V_S2_D1.y_field_spacing=1
-#sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_2Split_25, CT_2Split_20], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
-#pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_2Split_35, CT_2Split_25], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
-pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":1, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_2Split_25, CT_2Split_20], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_2Split_35, CT_2Split_25], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":1,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 
 pSFALayerL0_4x4.sfa_out_dim = 13 #Was 15 #Usually 16 L1 # 9 + 5 
 pSFALayerL1H_S3_D2.sfa_out_dim = 20 #Was 28 #Usually 30 L2 # 2*9 + 10
@@ -1293,9 +1295,9 @@ pSFALayerL2H_S3_D2.sfa_out_dim = 70 #L4 #60 # 2*9 + 25
 pSFALayerL2V_S3_D2.sfa_out_dim = 90 #L5 #70 # 2*9 + 30
 pSFALayerL3H_S2_D1.sfa_out_dim = 120 #L6 #70 #44 #265 # 2*9 + 35
 pSFALayerL3V_S2_D1.sfa_out_dim = 160 #L7 #130 #150 # 2*9 + 40
-#pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
-#pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":"RandomSigmoids", "expansion_starting_point":"08Exp", "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999, "expansion_output_dim":2000} 
-#pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, QT, CT], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":"RandomSigmoids", "expansion_starting_point":"08Exp", "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999, "expansion_output_dim":2000} 
+#pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, QT, CT], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 pSFALayerL0_4x4.sfa_args["max_preserved_sfa"]=4
 pSFALayerL1H_S3_D2.sfa_args["max_preserved_sfa"]=4
 pSFALayerL1V_S3_D2.sfa_args["max_preserved_sfa"]=4
@@ -1315,9 +1317,9 @@ pSFALayerSupernode.exp_funcs = [identity, unsigned_08expo, signed_08expo, QT_90_
 #pSFALayerSupernode.exp_funcs = [identity, QT, CT]
 #pSFALayerSupernode.red_node_class = None
 pSFALayerSupernode.sfa_node_class = mdp.nodes.GSFANode
-#pSFALayerSupernode.sfa_node_class = mdp.nodes.IEVMLRecNode #mdp.nodes.GSFANode
-#pSFALayerSupernode.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_50, CT_30],                     "max_comp":1, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
-#pSFALayerSupernode.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo_75],                     "max_comp":1, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerSupernode.sfa_node_class = mdp.nodes.iGSFANode #mdp.nodes.GSFANode
+#pSFALayerSupernode.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_50, CT_30],                     "max_comp":1, ,  "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerSupernode.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo_75],                     "max_comp":1, ,  "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 pSFALayerSupernode.sfa_out_dim = 80
 
 
@@ -2379,12 +2381,12 @@ for i, layer in enumerate(network.layers):
     layer.sfa_node_class = mdp.nodes.WhiteningNode
 
 
-network = IEVMLRecNetworkU11L_5x5L0 = copy.deepcopy(linearPCANetworkU11L)
+network = HiGSFANetworkU11L_5x5L0 = copy.deepcopy(linearPCANetworkU11L)
 # Original:
-#IEVMLRecNet_out_dims = [ 13, 20,35,60,60,60,60,60,60,60,60 ]
+#HiGSFANet_out_dims = [ 13, 20,35,60,60,60,60,60,60,60,60 ]
 # Accomodating more space for principal components
-#IEVMLRecNet_out_dims = [ 22, 35, 45,60,60,60,60,60,60,60,60 ]
-#IEVMLRecNet_out_dims = [ 25, 35,45,60,60,60,60,60,60,60,60 ]
+#HiGSFANet_out_dims = [ 22, 35, 45,60,60,60,60,60,60,60,60 ]
+#HiGSFANet_out_dims = [ 25, 35,45,60,60,60,60,60,60,60,60 ]
 
 #Enable 80x80 images
 rec_field_size = 5 #6 => 192x192, 5=> 160x160, 4=>128x128
@@ -2406,41 +2408,41 @@ else:
 if LRec_use_RGB_images == False:
 #25+14=39 => 30 (16 PCA/25); 16+13=29 => 22 (9 PCA/16)
 #First 80x80 Network:
-#IEVMLRecNet_out_dims = [ 30, 42, 52,60,60,60,60,60,60,60,60 ] 
+#HiGSFANet_out_dims = [ 30, 42, 52,60,60,60,60,60,60,60,60 ] 
 #Improved 80x80 Network: (more feats 2) ******* TOP PARAMS for grayscale
-#    IEVMLRecNet_out_dims = [ 31, 42, 60,70,70,70,70,70,70,70,70 ] #Official for SFA Net
-#    IEVMLRecNet_out_dims = [ 31, 42, 60,75,75,75,75,75,75,75,75 ] #OFFICIAL LRecNet
-#    IEVMLRecNet_out_dims = [ 31, 52, 75, 85, 90, 90, 85, 100, 75,75,75 ] #OFFICIAL FOR AGE ARTICLE HGSFA+PC, TOP NETWORK, 3 FEATS
-    IEVMLRecNet_out_dims = [ 28, 52, 75, 85, 90, 90, 85, 100, 75,75,75 ] #Experiment with control2: Dt=1.9999
-#    IEVMLRecNet_out_dims = [ 22, 49, 75, 85, 90, 90, 85, 100, 75,75,75 ] #Experiment with control2: Dt=1.999
-#    IEVMLRecNet_out_dims = [ 21, 43, 75, 85, 90, 90, 85, 100, 75,75,75 ] #Experiment with control2: Dt=1.99
-#    IEVMLRecNet_out_dims = [ 20, 40, 75, 85, 90, 90, 85, 100, 75,75,75 ] #Experiment with control2: Dt=1.9
-#    IEVMLRecNet_out_dims = [ 20, 30, 43, 70, 82, 76, 84, 82, 75, 75, 75] #CONTROL EXPERIMENT FOR AGE ARTICLE, HGSFA, PLAIN SFA ARCHITECTURE WITHOUT PRINCIPAL COMPONENTS, 3Feats
+#    HiGSFANet_out_dims = [ 31, 42, 60,70,70,70,70,70,70,70,70 ] #Official for SFA Net
+#    HiGSFANet_out_dims = [ 31, 42, 60,75,75,75,75,75,75,75,75 ] #OFFICIAL LRecNet
+#    HiGSFANet_out_dims = [ 31, 52, 75, 85, 90, 90, 85, 100, 75,75,75 ] #OFFICIAL FOR AGE ARTICLE HGSFA+PC, TOP NETWORK, 3 FEATS
+    HiGSFANet_out_dims = [ 28, 52, 75, 85, 90, 90, 85, 100, 75,75,75 ] #Experiment with control2: Dt=1.9999
+#    HiGSFANet_out_dims = [ 22, 49, 75, 85, 90, 90, 85, 100, 75,75,75 ] #Experiment with control2: Dt=1.999
+#    HiGSFANet_out_dims = [ 21, 43, 75, 85, 90, 90, 85, 100, 75,75,75 ] #Experiment with control2: Dt=1.99
+#    HiGSFANet_out_dims = [ 20, 40, 75, 85, 90, 90, 85, 100, 75,75,75 ] #Experiment with control2: Dt=1.9
+#    HiGSFANet_out_dims = [ 20, 30, 43, 70, 82, 76, 84, 82, 75, 75, 75] #CONTROL EXPERIMENT FOR AGE ARTICLE, HGSFA, PLAIN SFA ARCHITECTURE WITHOUT PRINCIPAL COMPONENTS, 3Feats
     
-#    IEVMLRecNet_out_dims = [ 31, 42, 60,80,80,80,80,80,80,80,80 ] #Test F2
+#    HiGSFANet_out_dims = [ 31, 42, 60,80,80,80,80,80,80,80,80 ] #Test F2
 #Even more features:
-#IEVMLRecNet_out_dims = [ 32, 46, 65,75,75,75,75,75,75,75,75 ] #Is this official for IEVMLRec Net?
+#HiGSFANet_out_dims = [ 32, 46, 65,75,75,75,75,75,75,75,75 ] #Is this official for HiGSFA Net?
 #Base 96x96 Network: (more feats 4)
-#IEVMLRecNet_out_dims = [ 38, 48, 65,70,70,70,70,70,70,70,70 ]
+#HiGSFANet_out_dims = [ 38, 48, 65,70,70,70,70,70,70,70,70 ]
 #Base 96x96 Network: (more feats 5)
-#IEVMLRecNet_out_dims = [ 40, 50, 70,70,70,70,70,70,70,70,70 ]
-    print "Number of network features set without RGB:", IEVMLRecNet_out_dims
+#HiGSFANet_out_dims = [ 40, 50, 70,70,70,70,70,70,70,70,70 ]
+    print "Number of network features set without RGB:", HiGSFANet_out_dims
 else:
 #Improved 80x80 Network, RGB version (more feats 2)
-#    IEVMLRecNet_out_dims = [ 48, 60, 70,70,70,70,70,70,70,70,70 ] #(Orig)
-    IEVMLRecNet_out_dims = [ 39, 51, 65,70,70,70,70,70,70,70,70 ] #(less features)
-    print "Adjusting number of network features due to RGB:", IEVMLRecNet_out_dims
+#    HiGSFANet_out_dims = [ 48, 60, 70,70,70,70,70,70,70,70,70 ] #(Orig)
+    HiGSFANet_out_dims = [ 39, 51, 65,70,70,70,70,70,70,70,70 ] #(less features)
+    print "Adjusting number of network features due to RGB:", HiGSFANet_out_dims
 
-print "IEVMLRecNetworkU11L_5x5L0 L0-10_SFA_out_dim = ", IEVMLRecNet_out_dims
+print "HiGSFANetworkU11L_5x5L0 L0-10_SFA_out_dim = ", HiGSFANet_out_dims
 
 for i, layer in enumerate(network.layers):
-    layer.sfa_node_class = mdp.nodes.IEVMLRecNode
-    layer.sfa_out_dim = IEVMLRecNet_out_dims[i]
+    layer.sfa_node_class = mdp.nodes.iGSFANode
+    layer.sfa_out_dim = HiGSFANet_out_dims[i]
     #QT_AP_L(k=nan, d=0.8), Q_AN_exp
-    #layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "max_preserved_sfa":2.0}
-#    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_comp":1, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based", "max_preserved_sfa":2.0}
-#    layer.sfa_args = {"pre_expansion_node_class":mdp.nodes.GSFANode, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":2.0}
-    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.9999} #AGE ARTICLE: 1.99999 official, 1.99999, 2.0. Control2: 1.9999
+    #layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_comp":10, ,  "max_preserved_sfa":2.0}
+#    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_comp":1, ,  "offsetting_mode":"sensitivity_based", "max_preserved_sfa":2.0}
+#    layer.sfa_args = {"pre_expansion_node_class":mdp.nodes.GSFANode, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":2.0}
+    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.9999} #AGE ARTICLE: 1.99999 official, 1.99999, 2.0. Control2: 1.9999
     #sel60_unsigned_08expo sel_exp(60, unsigned_08expo), unsigned_08expo
 
     #"offsetting_mode": "QR_decomposition", "sensitivity_based_pure", "sensitivity_based_normalized", "max_comp features"
@@ -2453,17 +2455,17 @@ for i, layer in enumerate(network.layers):
 double_SFA_top_node = True #and False
 if double_SFA_top_node:
     layer = network.layers[8]
-    layer.pca_node_class = mdp.nodes.IEVMLRecNode
-    layer.pca_out_dim = IEVMLRecNet_out_dims[8]
-    layer.pca_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, div2_sel75_unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} #2.0
-    layer.sfa_node_class = mdp.nodes.IEVMLRecNode
-    layer.sfa_out_dim = IEVMLRecNet_out_dims[8]
-    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, sel8_04QT], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} #2.0
+    layer.pca_node_class = mdp.nodes.iGSFANode
+    layer.pca_out_dim = HiGSFANet_out_dims[8]
+    layer.pca_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, div2_sel75_unsigned_08expo], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} #2.0
+    layer.sfa_node_class = mdp.nodes.iGSFANode
+    layer.sfa_out_dim = HiGSFANet_out_dims[8]
+    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, sel8_04QT], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} #2.0
     
 
 #WARNING, EXPERIMENTAL CODE TO TEST OTHER EXPANSIONS
 #network.layers[10].sfa_node_class = mdp.nodes.GSFANode
-#network.layers[6].sfa_args = {"expansion_funcs":[Q_exp], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "max_preserved_sfa":2.0}
+#network.layers[6].sfa_args = {"expansion_funcs":[Q_exp], "max_comp":10,   "max_preserved_sfa":2.0}
 
 
 
@@ -2472,7 +2474,7 @@ if double_SFA_top_node:
 
 #Networks for Age estimation MORPH-II
 ################## NETWORK FOR TESTING ACCORDING TO GUO ET AL, USES 3 LABELS ######################################
-network = IEVMLRecNetworkU11L_Overlap6x6L0_GUO_3Labels = copy.deepcopy(linearPCANetworkU11L)
+network = HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels = copy.deepcopy(linearPCANetworkU11L)
 rec_field_size = 6 #6 => 192x192, 5=> 160x160, 4=>128x128
 LRec_use_RGB_images = False #or True
 network.layers[0].x_field_channels = rec_field_size
@@ -2501,22 +2503,22 @@ for i in range(2,len(network.layers),2):
     network.layers[i].y_field_spacing = 2
 
 if LRec_use_RGB_images == False:
-    IEVMLRecNet_out_dims = [ 18, 27, 37, 66, 79, 88, 88, 93, 95, 75, 75 ] #New test
-    #IEVMLRecNet_out_dims = [ 16, 24, 33, 60, 72, 80, 80, 85, 75, 75, 75 ] #Experiment with control2: Dt=1.9999
-#    IEVMLRecNet_out_dims = [ 16, 24, 33, 60, 72, 80, 80, 75, 75, 50, 75 ] #Experiment with control2: Dt=1.9999
-    print "Number of network features set without RGB:", IEVMLRecNet_out_dims
+    HiGSFANet_out_dims = [ 18, 27, 37, 66, 79, 88, 88, 93, 95, 75, 75 ] #New test
+    #HiGSFANet_out_dims = [ 16, 24, 33, 60, 72, 80, 80, 85, 75, 75, 75 ] #Experiment with control2: Dt=1.9999
+#    HiGSFANet_out_dims = [ 16, 24, 33, 60, 72, 80, 80, 75, 75, 50, 75 ] #Experiment with control2: Dt=1.9999
+    print "Number of network features set without RGB:", HiGSFANet_out_dims
 else:
     print "unsupported"
     quit()
-    IEVMLRecNet_out_dims = [ 39, 51, 65,70,70,70,70,70,70,70,70 ] #(less features)
-    print "Adjusting number of network features due to RGB:", IEVMLRecNet_out_dims
+    HiGSFANet_out_dims = [ 39, 51, 65,70,70,70,70,70,70,70,70 ] #(less features)
+    print "Adjusting number of network features due to RGB:", HiGSFANet_out_dims
 
-print "IEVMLRecNetworkU11L_Overlap6x6L0 L0-10_SFA_out_dim = ", IEVMLRecNet_out_dims
+print "HiGSFANetworkU11L_Overlap6x6L0 L0-10_SFA_out_dim = ", HiGSFANet_out_dims
 
 for i, layer in enumerate(network.layers):
-    layer.sfa_node_class = mdp.nodes.IEVMLRecNode
-    layer.sfa_out_dim = IEVMLRecNet_out_dims[i]
-    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.91} #1.85, 1.91 #only for tuning/experimentation, official is below 
+    layer.sfa_node_class = mdp.nodes.iGSFANode
+    layer.sfa_out_dim = HiGSFANet_out_dims[i]
+    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.91} #1.85, 1.91 #only for tuning/experimentation, official is below 
 
 network.layers[0].sfa_args["expansion_funcs"]= [s18, s15u08ex, s17Max, s10QT] # ** s18, s15u08ex, s17Max, s10QT] #identity, s14u08ex, s14Max, s1QT, QT, s14u08ex, unsigned_08expo, s14QT, maximum_mix1_ex, s16QT, s10Max
 network.layers[0].sfa_args["max_preserved_sfa"]= 3 #T 2 #1 #! 2 # **1 #1 3
@@ -2551,12 +2553,12 @@ if double_SFA_top_node:
     print "adding additional top node (two nodes in layer 8)"
     layer = network.layers[8]
     #NODE 19
-    layer.pca_node_class = mdp.nodes.IEVMLRecNode
-    layer.pca_out_dim = IEVMLRecNet_out_dims[8]
+    layer.pca_node_class = mdp.nodes.iGSFANode
+    layer.pca_out_dim = HiGSFANet_out_dims[8]
     layer.pca_args = dict(layer.sfa_args)
     #NODE 20 / layer[9]
-    layer.sfa_node_class = mdp.nodes.IEVMLRecNode
-    layer.sfa_out_dim = IEVMLRecNet_out_dims[9]
+    layer.sfa_node_class = mdp.nodes.iGSFANode
+    layer.sfa_out_dim = HiGSFANet_out_dims[9]
     layer.sfa_args = dict(layer.sfa_args)
     layer.sfa_args["expansion_funcs"]= [s75, s34u08, o7s15QT, s3QT] # ** s75, s30u08ex, o5s15QT #s50u08ex, o4s18QT , s3QT
     layer.sfa_args["max_preserved_sfa"]= 1.9 #! 1.81 # ** 1.81
@@ -2569,7 +2571,7 @@ network.layers[8].pca_args["max_preserved_sfa"] = my_DT
 
 
 ################## NETWORK FOR TESTING ACCORDING TO GUO ET AL, USES 1 LABEL ######################################
-network = IEVMLRecNetworkU11L_Overlap6x6L0_GUO_1Label = copy.deepcopy(IEVMLRecNetworkU11L_Overlap6x6L0_GUO_3Labels)
+network = HiGSFANetworkU11L_Overlap6x6L0_GUO_1Label = copy.deepcopy(HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels)
 if LRec_use_RGB_images:
     network.layers[0].pca_out_dim = 56 #50 Problem, more color components also remove higher frequency ones = code image as intensity+color!!!
 else:
@@ -2590,18 +2592,18 @@ for i in range(2,len(network.layers),2):
     network.layers[i].y_field_spacing = 2
 
 if LRec_use_RGB_images == False:
-    IEVMLRecNet_out_dims = [ 16, 25, 35, 64, 77, 86, 86, 92, 93, 75, 75 ] #
-#    IEVMLRecNet_out_dims = [ 18, 27, 37, 66, 79, 88, 88, 93, 95, 75, 75 ] #New test
-    #IEVMLRecNet_out_dims = [ 16, 24, 33, 60, 72, 80, 80, 85, 75, 75, 75 ] #Experiment with control2: Dt=1.9999
-#    IEVMLRecNet_out_dims = [ 16, 24, 33, 60, 72, 80, 80, 75, 75, 50, 75 ] #Experiment with control2: Dt=1.9999
-    print "Number of network features set without RGB:", IEVMLRecNet_out_dims
+    HiGSFANet_out_dims = [ 16, 25, 35, 64, 77, 86, 86, 92, 93, 75, 75 ] #
+#    HiGSFANet_out_dims = [ 18, 27, 37, 66, 79, 88, 88, 93, 95, 75, 75 ] #New test
+    #HiGSFANet_out_dims = [ 16, 24, 33, 60, 72, 80, 80, 85, 75, 75, 75 ] #Experiment with control2: Dt=1.9999
+#    HiGSFANet_out_dims = [ 16, 24, 33, 60, 72, 80, 80, 75, 75, 50, 75 ] #Experiment with control2: Dt=1.9999
+    print "Number of network features set without RGB:", HiGSFANet_out_dims
 else:
     print "unsupported"
     quit()
-    IEVMLRecNet_out_dims = [ 39, 51, 65,70,70,70,70,70,70,70,70 ] #(less features)
-    print "Adjusting number of network features due to RGB:", IEVMLRecNet_out_dims
+    HiGSFANet_out_dims = [ 39, 51, 65,70,70,70,70,70,70,70,70 ] #(less features)
+    print "Adjusting number of network features due to RGB:", HiGSFANet_out_dims
 
-print "IEVMLRecNetworkU11L_Overlap6x6L0_GUO_1Label L0-10_SFA_out_dim = ", IEVMLRecNet_out_dims
+print "HiGSFANetworkU11L_Overlap6x6L0_GUO_1Label L0-10_SFA_out_dim = ", HiGSFANet_out_dims
 
 network.layers[0].sfa_args["expansion_funcs"]= [s18, s15u08ex, s17Max, s10QT] # ** s18, s15u08ex, s17Max, s10QT] #identity, s14u08ex, s14Max, s1QT, QT, s14u08ex, unsigned_08expo, s14QT, maximum_mix1_ex, s16QT, s10Max
 network.layers[0].sfa_args["max_preserved_sfa"]= 1 #T 2 #1 #! 2 # **1 #1 3
@@ -2636,12 +2638,12 @@ if double_SFA_top_node:
     print "adding additional top node (two nodes in layer 8)"
     layer = network.layers[8]
     #NODE 19
-    layer.pca_node_class = mdp.nodes.IEVMLRecNode
-    layer.pca_out_dim = IEVMLRecNet_out_dims[8]
+    layer.pca_node_class = mdp.nodes.iGSFANode
+    layer.pca_out_dim = HiGSFANet_out_dims[8]
     layer.pca_args = dict(layer.sfa_args)
     #NODE 20 / layer[9]
-    layer.sfa_node_class = mdp.nodes.IEVMLRecNode
-    layer.sfa_out_dim = IEVMLRecNet_out_dims[9]
+    layer.sfa_node_class = mdp.nodes.iGSFANode
+    layer.sfa_out_dim = HiGSFANet_out_dims[9]
     layer.sfa_args = dict(layer.sfa_args)
     layer.sfa_args["expansion_funcs"]= [s75, s34u08, o7s15QT, ] # ** s75, s30u08ex, o5s15QT #s50u08ex, o4s18QT , s3QT
     layer.sfa_args["max_preserved_sfa"]= 1.9 #! 1.81 # ** 1.81
@@ -2665,7 +2667,7 @@ DT = [3, 4, 1.96, 1.96, 1.96, 1.96, 1.96, 1.96, 1.96, 1.96, 1.96] #last entry is
 #DT = [3, 4, 1.9375, 1.9395, 1.9403, 1.9611, 1.973, 1.98, 1.98, 1.9, 1.9] #last entry is not used
 #DT = [3, 4, 1.98, 1.98, 1.98, 1.98, 1.98, 1.98, 1.98, 1.98, 1.98] #last entry is not used
 
-network = SFANetworkU11L_Overlap6x6L0_GUO_3Labels = copy.deepcopy(IEVMLRecNetworkU11L_Overlap6x6L0_GUO_3Labels)
+network = SFANetworkU11L_Overlap6x6L0_GUO_3Labels = copy.deepcopy(HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels)
 for i, layer in enumerate(network.layers):
     if use_sfapc_nodes:
         layer.sfa_args["max_preserved_sfa"] = DT[i]
@@ -2704,7 +2706,7 @@ network.layers[8].sfa_args["expansion_funcs"]= [s66, s34u08, s3QT] #s66, s34u08,
 
 
 ############################## NETWORK FOR AGE ESTIMATION, STANDAR ARQUITECTURE ######################
-network = IEVMLRecNetworkU11L_Overlap6x6L0_1Label = copy.deepcopy(linearPCANetworkU11L)
+network = HiGSFANetworkU11L_Overlap6x6L0_1Label = copy.deepcopy(linearPCANetworkU11L)
 rec_field_size = 6 #6 => 192x192, 5=> 160x160, 4=>128x128
 LRec_use_RGB_images = False #or True
 network.layers[0].x_field_channels = rec_field_size
@@ -2758,27 +2760,27 @@ for i in range(2,len(network.layers),2):
 #quit()
 
 if LRec_use_RGB_images == False:
-    IEVMLRecNet_out_dims = [ 40, 24, 33, 60, 72, 80, 80, 85, 75, 75, 75 ] #WARNING 
-#    IEVMLRecNet_out_dims = [ 16, 24, 33, 60, 72, 80, 80, 85, 75, 75, 75 ] 
-#    IEVMLRecNet_out_dims = [ 16, 24, 33, 60, 72, 80, 80, 75, 75, 50, 75 ] #Experiment with control2: Dt=1.9999
-    print "Number of network features set without RGB:", IEVMLRecNet_out_dims
+    HiGSFANet_out_dims = [ 40, 24, 33, 60, 72, 80, 80, 85, 75, 75, 75 ] #WARNING 
+#    HiGSFANet_out_dims = [ 16, 24, 33, 60, 72, 80, 80, 85, 75, 75, 75 ] 
+#    HiGSFANet_out_dims = [ 16, 24, 33, 60, 72, 80, 80, 75, 75, 50, 75 ] #Experiment with control2: Dt=1.9999
+    print "Number of network features set without RGB:", HiGSFANet_out_dims
 else:
     print "unsupported"
     quit()
-    IEVMLRecNet_out_dims = [ 39, 51, 65,70,70,70,70,70,70,70,70 ] #(less features)
-    print "Adjusting number of network features due to RGB:", IEVMLRecNet_out_dims
+    HiGSFANet_out_dims = [ 39, 51, 65,70,70,70,70,70,70,70,70 ] #(less features)
+    print "Adjusting number of network features due to RGB:", HiGSFANet_out_dims
 
-print "IEVMLRecNetworkU11L_Overlap6x6L0 L0-10_SFA_out_dim = ", IEVMLRecNet_out_dims
+print "HiGSFANetworkU11L_Overlap6x6L0 L0-10_SFA_out_dim = ", HiGSFANet_out_dims
 
 for i, layer in enumerate(network.layers):
-    layer.sfa_node_class = mdp.nodes.IEVMLRecNode
-    layer.sfa_out_dim = IEVMLRecNet_out_dims[i]
+    layer.sfa_node_class = mdp.nodes.iGSFANode
+    layer.sfa_out_dim = HiGSFANet_out_dims[i]
     #QT_AP_L(k=nan, d=0.8), Q_AN_exp
-    #layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "max_preserved_sfa":2.0}
-#    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_comp":1, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based", "max_preserved_sfa":2.0}
-#    layer.sfa_args = {"pre_expansion_node_class":mdp.nodes.GSFANode, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":2.0}
-    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.91} #only for tuning/experimentation, official is below 
-    #layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99} #AGE ARTICLE: 1.99999 official, 1.99999, 2.0. Control2: 1.9999
+    #layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_comp":10,   "max_preserved_sfa":2.0}
+#    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_comp":1,   "offsetting_mode":"sensitivity_based", "max_preserved_sfa":2.0}
+#    layer.sfa_args = {"pre_expansion_node_class":mdp.nodes.GSFANode, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":2.0}
+    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.91} #only for tuning/experimentation, official is below 
+    #layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99} #AGE ARTICLE: 1.99999 official, 1.99999, 2.0. Control2: 1.9999
     #sel60_unsigned_08expo sel_exp(60, unsigned_08expo), unsigned_08expos14u08ex
 
 
@@ -2823,12 +2825,12 @@ if double_SFA_top_node:
     print "adding additional top node (two nodes in layer 8)"
     layer = network.layers[8]
     #NODE 19
-    layer.pca_node_class = mdp.nodes.IEVMLRecNode
-    layer.pca_out_dim = IEVMLRecNet_out_dims[8]
+    layer.pca_node_class = mdp.nodes.iGSFANode
+    layer.pca_out_dim = HiGSFANet_out_dims[8]
     layer.pca_args = dict(layer.sfa_args)
     #NODE 20 / layer[9]
-    layer.sfa_node_class = mdp.nodes.IEVMLRecNode
-    layer.sfa_out_dim = IEVMLRecNet_out_dims[9]
+    layer.sfa_node_class = mdp.nodes.iGSFANode
+    layer.sfa_out_dim = HiGSFANet_out_dims[9]
     layer.sfa_args = dict(layer.sfa_args)
     layer.sfa_args["expansion_funcs"]= [identity, s40u08ex, o4s15QT] #s50u08ex, o4s18QT
     
@@ -2839,7 +2841,7 @@ for i, layer in enumerate(network.layers):
     if i==9:
         layer.pca_args["expansion_funcs"]= [identity]
 #********************************************************************************************************
-network = IEVMLRecNetworkU11L_Overlap6x6L0_3Labels = copy.deepcopy(IEVMLRecNetworkU11L_Overlap6x6L0_1Label)
+network = HiGSFANetworkU11L_Overlap6x6L0_3Labels = copy.deepcopy(HiGSFANetworkU11L_Overlap6x6L0_1Label)
 if LRec_use_RGB_images:
     network.layers[0].pca_out_dim = 56 #50 Problem, more color components also remove higher frequency ones = code image as intensity+color!!!
 else:
@@ -2849,20 +2851,20 @@ network.layers[0].red_node_class = mdp.nodes.HeadNode
 network.layers[0].red_out_dim = 18 #18
 
 if LRec_use_RGB_images == False:
-    IEVMLRecNet_out_dims = [ 18, 27, 35, 62, 74, 82, 82, 87, 77, 75, 75 ] #increased output dims by 2
-#    IEVMLRecNet_out_dims = [ 16, 24, 33, 60, 72, 80, 80, 85, 75, 75, 75 ] #Experiment with control2: Dt=1.9999
-#    IEVMLRecNet_out_dims = [ 16, 24, 33, 60, 72, 80, 80, 75, 75, 50, 75 ] #Experiment with control2: Dt=1.9999
-    print "Number of network features set without RGB:", IEVMLRecNet_out_dims
+    HiGSFANet_out_dims = [ 18, 27, 35, 62, 74, 82, 82, 87, 77, 75, 75 ] #increased output dims by 2
+#    HiGSFANet_out_dims = [ 16, 24, 33, 60, 72, 80, 80, 85, 75, 75, 75 ] #Experiment with control2: Dt=1.9999
+#    HiGSFANet_out_dims = [ 16, 24, 33, 60, 72, 80, 80, 75, 75, 50, 75 ] #Experiment with control2: Dt=1.9999
+    print "Number of network features set without RGB:", HiGSFANet_out_dims
 else:
     print "unsupported"
     quit()
-    IEVMLRecNet_out_dims = [ 39, 51, 65,70,70,70,70,70,70,70,70 ] #(less features)
-    print "Adjusting number of network features due to RGB:", IEVMLRecNet_out_dims
+    HiGSFANet_out_dims = [ 39, 51, 65,70,70,70,70,70,70,70,70 ] #(less features)
+    print "Adjusting number of network features due to RGB:", HiGSFANet_out_dims
 
-print "IEVMLRecNetworkU11L_Overlap6x6L0_3Labels L0-10_SFA_out_dim = ", IEVMLRecNet_out_dims
+print "HiGSFANetworkU11L_Overlap6x6L0_3Labels L0-10_SFA_out_dim = ", HiGSFANet_out_dims
 for i, layer in enumerate(network.layers):
-    layer.sfa_node_class = mdp.nodes.IEVMLRecNode
-    layer.sfa_out_dim = IEVMLRecNet_out_dims[i]
+    layer.sfa_node_class = mdp.nodes.iGSFANode
+    layer.sfa_out_dim = HiGSFANet_out_dims[i]
 
 def delta_map(delta):
     return delta
@@ -2905,18 +2907,18 @@ if double_SFA_top_node:
     print "adding additional top node (two nodes in layer 8)"
     layer = network.layers[8]
     #NODE 19
-    layer.pca_node_class = mdp.nodes.IEVMLRecNode
-    layer.pca_out_dim = IEVMLRecNet_out_dims[8]
+    layer.pca_node_class = mdp.nodes.iGSFANode
+    layer.pca_out_dim = HiGSFANet_out_dims[8]
     layer.pca_args = dict(layer.sfa_args)
     #NODE 20 / layer[9]
-    layer.sfa_node_class = mdp.nodes.IEVMLRecNode
-    layer.sfa_out_dim = IEVMLRecNet_out_dims[9]
+    layer.sfa_node_class = mdp.nodes.iGSFANode
+    layer.sfa_out_dim = HiGSFANet_out_dims[9]
     layer.sfa_args = dict(layer.sfa_args)
     layer.sfa_args["expansion_funcs"]= [ch3s75, s40u08ex, o6_s15_d1_Q_N] #identity, s40u08ex, o6s15QT/o6_s15_d1_Q_N
 
 
 #********************************************************************************************************
-network = IEVMLRecNetworkU11L_Overlap6x6L0_2Labels = copy.deepcopy(IEVMLRecNetworkU11L_Overlap6x6L0_1Label)
+network = HiGSFANetworkU11L_Overlap6x6L0_2Labels = copy.deepcopy(HiGSFANetworkU11L_Overlap6x6L0_1Label)
 if LRec_use_RGB_images:
     network.layers[0].pca_out_dim = 56 #50 Problem, more color components also remove higher frequency ones = code image as intensity+color!!!
 else:
@@ -2926,16 +2928,16 @@ network.layers[0].red_node_class = mdp.nodes.HeadNode
 network.layers[0].red_out_dim = 18 #18
 
 if LRec_use_RGB_images == False:
-    IEVMLRecNet_out_dims = [ 16, 24, 33, 60, 72, 80, 80, 85, 75, 75, 75 ] #Experiment with control2: Dt=1.9999
-#    IEVMLRecNet_out_dims = [ 16, 24, 33, 60, 72, 80, 80, 75, 75, 50, 75 ] #Experiment with control2: Dt=1.9999
-    print "Number of network features set without RGB:", IEVMLRecNet_out_dims
+    HiGSFANet_out_dims = [ 16, 24, 33, 60, 72, 80, 80, 85, 75, 75, 75 ] #Experiment with control2: Dt=1.9999
+#    HiGSFANet_out_dims = [ 16, 24, 33, 60, 72, 80, 80, 75, 75, 50, 75 ] #Experiment with control2: Dt=1.9999
+    print "Number of network features set without RGB:", HiGSFANet_out_dims
 else:
     print "unsupported"
     quit()
-    IEVMLRecNet_out_dims = [ 39, 51, 65,70,70,70,70,70,70,70,70 ] #(less features)
-    print "Adjusting number of network features due to RGB:", IEVMLRecNet_out_dims
+    HiGSFANet_out_dims = [ 39, 51, 65,70,70,70,70,70,70,70,70 ] #(less features)
+    print "Adjusting number of network features due to RGB:", HiGSFANet_out_dims
 
-print "IEVMLRecNetworkU11L_Overlap6x6L0_3Labels L0-10_SFA_out_dim = ", IEVMLRecNet_out_dims
+print "HiGSFANetworkU11L_Overlap6x6L0_3Labels L0-10_SFA_out_dim = ", HiGSFANet_out_dims
 
 network.layers[0].sfa_args["expansion_funcs"]= [identity, s14u08ex, s17Max, s10_d1_Q_N] #identity, s14u08ex, s17Max, s10QT/s10_d1_Q_N
 network.layers[0].sfa_args["max_preserved_sfa"]= 2 #2 
@@ -2969,19 +2971,19 @@ if double_SFA_top_node:
     print "adding additional top node (two nodes in layer 8)"
     layer = network.layers[8]
     #NODE 19
-    layer.pca_node_class = mdp.nodes.IEVMLRecNode
-    layer.pca_out_dim = IEVMLRecNet_out_dims[8]
+    layer.pca_node_class = mdp.nodes.iGSFANode
+    layer.pca_out_dim = HiGSFANet_out_dims[8]
     layer.pca_args = dict(layer.sfa_args)
     #NODE 20 / layer[9]
-    layer.sfa_node_class = mdp.nodes.IEVMLRecNode
-    layer.sfa_out_dim = IEVMLRecNet_out_dims[9]
+    layer.sfa_node_class = mdp.nodes.iGSFANode
+    layer.sfa_out_dim = HiGSFANet_out_dims[9]
     layer.sfa_args = dict(layer.sfa_args)
     layer.sfa_args["expansion_funcs"]= [identity, s40u08ex, o5_s15_d1_Q_N] #identity, s40u08ex, o6s15QT/o6_s15_d1_Q_N
 
 
 
 ##########################################################################################################################
-network = IEVMLRecNetworkU11L_Overlap4x4L0  = copy.deepcopy(IEVMLRecNetworkU11L_Overlap6x6L0_1Label)
+network = HiGSFANetworkU11L_Overlap4x4L0  = copy.deepcopy(HiGSFANetworkU11L_Overlap6x6L0_1Label)
 rec_field_size = 4 #6 => 192x192, 5=> 160x160, 4=>128x128
 network.layers[0].x_field_channels = rec_field_size
 network.layers[0].y_field_channels = rec_field_size
@@ -2989,10 +2991,10 @@ network.layers[0].x_field_spacing = rec_field_size/2
 network.layers[0].y_field_spacing = rec_field_size/2
 network.layers[0].pca_out_dim = 16
 
-IEVMLRecNet4x4_out_dims = [ 16, 24, 33, 60, 72, 80, 80, 75, 75, 50, 75 ]
+HiGSFANet4x4_out_dims = [ 16, 24, 33, 60, 72, 80, 80, 75, 75, 50, 75 ]
 for i, layer in enumerate(network.layers):
-    layer.sfa_out_dim = IEVMLRecNet4x4_out_dims[i]
-    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.9999} 
+    layer.sfa_out_dim = HiGSFANet4x4_out_dims[i]
+    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.9999} 
 
 network = IEMNetworkU11L = copy.deepcopy(linearPCANetworkU11L)
 IEMNet_out_dims = [ 13, 20, 35, 60,60,60,60,60,60,60,60 ]
@@ -3000,7 +3002,7 @@ IEMNet_out_dims = [ 30, 45, 60, 70,70,75,75,60,60,60,60 ]
 print "IEMNetworkU11L L0-10_SFA_out_dim = ", IEMNet_out_dims
 
 for i, layer in enumerate(network.layers):
-    layer.sfa_node_class = mdp.nodes.IEVMLRecNode
+    layer.sfa_node_class = mdp.nodes.iGSFANode
     layer.sfa_out_dim = IEMNet_out_dims[i]
  
 #    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "use_pca":True, "max_comp":1, "max_num_samples_for_ev":800, "max_test_samples_for_ev":200, "k":8}
@@ -3011,7 +3013,7 @@ for i, layer in enumerate(network.layers):
 ################## Default:
 #    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "use_pca":True, "use_sfa":True, "operation":"average", "max_comp":10, "max_num_samples_for_ev":600, "max_test_samples_for_ev":600, "k":48, "max_preserved_sfa":2.0, "out_sfa_filter":False}
 ################## Reconstruction only
-    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99} #2.0
+    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99} #2.0
 #    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "use_pca":True, "use_sfa":False, "operation":"average", "max_comp":20, "max_num_samples_for_ev":1200, "max_test_samples_for_ev":1200, "k":92, "max_preserved_sfa":1.99, "out_sfa_filter":False}
 #    layer.sfa_args = {"expansion_funcs":None, "use_pca":True, "operation":"lin_app", "max_comp":10, "max_num_samples_for_ev":1200, "max_test_samples_for_ev":1200, "k":200}
 #    layer.sfa_args = {"expansion_funcs":None, "use_pca":True, "max_comp":6, "max_num_samples_for_ev":600, "max_test_samples_for_ev":600, "k":16}
@@ -3487,7 +3489,7 @@ network.L4.cloneLayer = False
 
 
 #Network Useful for the face detection experiments
-network = IEVMLRecNetworkU11L_NoOverlap_4x4L0 = copy.deepcopy(u08expoNetworkU11L)
+network = HiGSFANetworkU11L_NoOverlap_4x4L0 = copy.deepcopy(u08expoNetworkU11L)
 rec_field_size = 4 #6 => 192x192, 5=> 160x160, 4=>128x128
 LRec_use_RGB_images = False #or True
 network.layers[0].x_field_channels = rec_field_size
@@ -3501,43 +3503,43 @@ network.layers[0].pca_node_class = mdp.nodes.PCANode
 #    network.layers[0].pca_out_dim = 20 #20 #30 #28 #20 #22 more_feats2, 50 for RGB
 
 #if LRec_use_RGB_images == False:
-#    IEVMLRecNet_out_dims = [ 28, 52, 75, 85, 90, 90, 85, 100, 75,75,75 ] #Experiment with control2: Dt=1.9999
-#    print "Number of network features set without RGB:", IEVMLRecNet_out_dims
+#    HiGSFANet_out_dims = [ 28, 52, 75, 85, 90, 90, 85, 100, 75,75,75 ] #Experiment with control2: Dt=1.9999
+#    print "Number of network features set without RGB:", HiGSFANet_out_dims
 #else:
-#    IEVMLRecNet_out_dims = [ 39, 51, 65,70,70,70,70,70,70,70,70 ] #(less features)
-#    print "Adjusting number of network features due to RGB:", IEVMLRecNet_out_dims
+#    HiGSFANet_out_dims = [ 39, 51, 65,70,70,70,70,70,70,70,70 ] #(less features)
+#    print "Adjusting number of network features due to RGB:", HiGSFANet_out_dims
 
-print "IEVMLRecNetworkU11L_NoOverlap_4x4L0 L0-10_SFA_out_dim = ", IEVMLRecNet_out_dims
+print "HiGSFANetworkU11L_NoOverlap_4x4L0 L0-10_SFA_out_dim = ", HiGSFANet_out_dims
 
 for i, layer in enumerate(network.layers):
     layer.exp_funcs = [identity]
-    layer.sfa_node_class = mdp.nodes.IEVMLRecNode
-#    layer.sfa_out_dim = IEVMLRecNet_out_dims[i]
+    layer.sfa_node_class = mdp.nodes.iGSFANode
+#    layer.sfa_out_dim = iGSFANet_out_dims[i]
     #QT_AP_L(k=nan, d=0.8), Q_AN_exp
-    #layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "max_preserved_sfa":2.0}
-#    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_comp":1, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based", "max_preserved_sfa":2.0}
-#    layer.sfa_args = {"pre_expansion_node_class":mdp.nodes.GSFANode, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":2.0}
-    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999} 
+    #layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_comp":10,   "max_preserved_sfa":2.0}
+#    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_comp":1,   "offsetting_mode":"sensitivity_based", "max_preserved_sfa":2.0}
+#    layer.sfa_args = {"pre_expansion_node_class":mdp.nodes.GSFANode, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":2.0}
+    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999} 
 
 
 
 delta_thresholds = [1.998, 1.996, 1.995, 1.99, 1.9855, 1.976, 1.97, 1.95, 1.94, 1.93, 1.92, 1.91]
 output_dims =      [   16,    28,    50,    75,    75,    75,   75,   75,   75,   75,   80,   80]
-network = IEVMLRecNetworkU11L_NoOverlap_4x4L0_mod = copy.deepcopy(IEVMLRecNetworkU11L_NoOverlap_4x4L0)
+network = HiGSFANetworkU11L_NoOverlap_4x4L0_mod = copy.deepcopy(HiGSFANetworkU11L_NoOverlap_4x4L0)
 for i, layer in enumerate(network.layers):
     layer.sfa_args["max_preserved_sfa"] = delta_thresholds[i]
     layer.sfa_out_dim = output_dims[i]
 
 delta_thresholds = [2, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4]
 output_dims =      [   15,    28,    50,    75,    75,    75,   75,   75,   75,   75,   80,   80]
-network = IEVMLRecNetworkU11L_NoOverlap_4x4L0_mod2 = copy.deepcopy(IEVMLRecNetworkU11L_NoOverlap_4x4L0)
+network = HiGSFANetworkU11L_NoOverlap_4x4L0_mod2 = copy.deepcopy(HiGSFANetworkU11L_NoOverlap_4x4L0)
 for i, layer in enumerate(network.layers):
     layer.sfa_args["max_preserved_sfa"] = delta_thresholds[i]
     layer.sfa_out_dim = output_dims[i]
 
 delta_thresholds = [3, 5, 8, 9, 9, 9, 9, 9, 9, 9, 9, 9]
 output_dims =      [   15,    28,    50,    75,    75,    75,   75,   75,   75,   75,   80,   80]
-network = IEVMLRecNetworkU11L_NoOverlap_4x4L0_mod4 = copy.deepcopy(IEVMLRecNetworkU11L_NoOverlap_4x4L0)
+network = HiGSFANetworkU11L_NoOverlap_4x4L0_mod4 = copy.deepcopy(HiGSFANetworkU11L_NoOverlap_4x4L0)
 for i, layer in enumerate(network.layers):
     layer.sfa_args["max_preserved_sfa"] = delta_thresholds[i]
     layer.sfa_out_dim = output_dims[i]
@@ -3546,12 +3548,12 @@ for i, layer in enumerate(network.layers):
 #double_SFA_top_node = True and False
 #if double_SFA_top_node:
 #    layer = network.layers[8]
-#    layer.pca_node_class = mdp.nodes.IEVMLRecNode
-#    layer.pca_out_dim = IEVMLRecNet_out_dims[8]
-#    layer.pca_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, div2_sel75_unsigned_08expo], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} #2.0
-#    layer.sfa_node_class = mdp.nodes.IEVMLRecNode
-#    layer.sfa_out_dim = IEVMLRecNet_out_dims[8]
-#    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, sel8_04QT], "max_comp":10, "max_num_samples_for_ev":None, "max_test_samples_for_ev":None, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} #2.0
+#    layer.pca_node_class = mdp.nodes.iGSFANode
+#    layer.pca_out_dim = HiGSFANet_out_dims[8]
+#    layer.pca_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, div2_sel75_unsigned_08expo], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} #2.0
+#    layer.sfa_node_class = mdp.nodes.iGSFANode
+#    layer.sfa_out_dim = HiGSFANet_out_dims[8]
+#    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, sel8_04QT], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} #2.0
 
 
 

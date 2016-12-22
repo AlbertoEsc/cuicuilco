@@ -2,10 +2,8 @@
 #By Alberto Escalante. Alberto.Escalante@neuroinformatik.ruhr-uni-bochum.de First Version 10 Dec 2009
 #Ruhr-University-Bochum, Institute of Neurocomputation, Group of Prof. Dr. Wiskott
 
-#import numpy
 import mdp
 import more_nodes
-#import patch_mdp
 import lattice
 from nonlinear_expansion import identity
 from sfa_libs import remove_Nones
@@ -29,6 +27,9 @@ def CreateNetwork(Network, subimage_width, subimage_height, block_size, train_mo
             if layer != None:
                 layers.append(layer)   
     else:
+        er = "Obsolete code? Network.layers should have at least one layer!"
+        raise Exception(er)
+
         L0 = copy.deepcopy(Network.L0)
         L1 = copy.deepcopy(Network.L1)
         L2 = copy.deepcopy(Network.L2)
@@ -174,11 +175,11 @@ def create_layer(prevLA, LA, num_layer, prevLA_height=None, prevLA_width=None, n
         (LA.mat_connections, LA.lat_mat) = lattice.compute_lsrf_matrix_connections_with_input_dim(LA.v1, LA.v2, LA.preserve_mask, LA.preserve_mask_sparse, LA.x_in_channels, LA.y_in_channels, LA.in_channel_dim)
         #print "matrix connections La:"
         print LA.mat_connections
+        orig_input_dim = LA.x_in_channels * LA.y_in_channels * LA.in_channel_dim
         if num_features_appended_to_input > 0:
             #Assuming the receptive fields have size LA.x_field_channels * LA.y_field_channels * LA.in_channel_dim
             print "specifying %d appended features to the switchboard"
             orig_node_input_dim = LA.x_field_channels * LA.y_field_channels * LA.in_channel_dim
-            orig_input_dim = LA.x_in_channels * LA.y_in_channels * LA.in_channel_dim
             LA.mat_connections = add_additional_features_to_connections(LA.mat_connections, orig_node_input_dim, orig_input_dim, num_features_appended_to_input)
         LA.switchboard = more_nodes.PInvSwitchboard(orig_input_dim + num_features_appended_to_input, LA.mat_connections)
             
