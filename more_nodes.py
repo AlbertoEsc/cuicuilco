@@ -538,8 +538,8 @@ def display_node_eigenvalues(node, i, mode="All"):
         elif isinstance(node.nodes[0], mdp.nodes.IEVMNode):
             if node.nodes[0].use_sfa:
                 print "Node %d is a CloneLayer that contains an IEVMNode containing an SFA node with num_sfa_features_preserved=%d and d="%(i, node.nodes[0].num_sfa_features_preserved), node.nodes[0].sfa_node.d
-        elif isinstance(node.nodes[0], mdp.nodes.IEVMLRecNode):
-            print "Node %d is a CloneLayer that contains an IEVMLRecNode containing an SFA node with num_sfa_features_preserved=%d and d="%(i, node.nodes[0].num_sfa_features_preserved), node.nodes[0].sfa_node.d
+        elif isinstance(node.nodes[0], mdp.nodes.iGSFANode):
+            print "Node %d is a CloneLayer that contains an iGSFANode containing an SFA node with num_sfa_features_preserved=%d and d="%(i, node.nodes[0].num_sfa_features_preserved), node.nodes[0].sfa_node.d
         elif isinstance(node.nodes[0], mdp.nodes.PCANode):
             print "Node %d is a CloneLayer that contains a PCANode with d="%i, node.nodes[0].d
 
@@ -592,7 +592,7 @@ def display_node_eigenvalues(node, i, mode="All"):
                 else:
                     er = 'Unknown mode in display_eigenvalues, try "FirstNodeInLayer", "Average" or "All"'
                     raise Exception(er)
-        elif isinstance(node.nodes[0], mdp.nodes.IEVMLRecNode):
+        elif isinstance(node.nodes[0], mdp.nodes.iGSFANode):
             if mode == "Average":
                 evar_avg = 0.0
                 d_avg = 0.0
@@ -605,13 +605,13 @@ def display_node_eigenvalues(node, i, mode="All"):
                 d_avg /=  len(node.nodes)
                 evar_avg /=  len(node.nodes)
                 avg_num_sfa_features /=  len(node.nodes)
-                print "Node %d is a Layer that contains IEVMLRecNodes containing SFANodes with avg(num_sfa_features_preserved)=%f and avg(d)=%s and avg(evar)=%f"%(i,avg_num_sfa_features, str(d_avg), evar_avg)
+                print "Node %d is a Layer that contains iGSFANodes containing SFANodes with avg(num_sfa_features_preserved)=%f and avg(d)=%s and avg(evar)=%f"%(i,avg_num_sfa_features, str(d_avg), evar_avg)
             elif mode == "All":
-                print "Node %d is a Layer that contains IEVMLRecNodes:"%i
+                print "Node %d is a Layer that contains iGSFANodeRecNodes:"%i
                 for n in node.nodes:
-                    print "  IEVMLRecNode containing an SFANode with num_sfa_features_preserved=%f, d=%s and evar=%f"%(n.num_sfa_features_preserved, str(n.sfa_node.d), n.evar)
+                    print "  iGSFANode containing an SFANode with num_sfa_features_preserved=%f, d=%s and evar=%f"%(n.num_sfa_features_preserved, str(n.sfa_node.d), n.evar)
             elif mode == "FirstNodeInLayer":
-                print "Node %d is a Layer, and its first IEVMLRecNode"%i
+                print "Node %d is a Layer, and its first iGSFANode"%i
                 print "contains an SFANode with num_sfa_features_preserved)=%f, d=%s and evar=%f"%(node.nodes[0].num_sfa_features_preserved, str(node.nodes[0].sfa_node.d), node.nodes[0].evar)
             else:
                 er = 'Unknown mode in display_eigenvalues, try "FirstNodeInLayer", "Average" or "All"'
@@ -657,8 +657,8 @@ def display_node_eigenvalues(node, i, mode="All"):
     elif isinstance(node, mdp.nodes.IEVMNode):
         if node.use_sfa:
             print "Node %d is an IEVMNode containing an SFA node with num_sfa_features_preserved=%d and d="%(i, node.num_sfa_features_preserved), node.sfa_node.d
-    elif isinstance(node, mdp.nodes.IEVMLRecNode):
-        print "Node %d is an IEVMLRecNode containing an SFA node with num_sfa_features_preserved=%d and d="%(i, node.num_sfa_features_preserved), node.sfa_node.d
+    elif isinstance(node, mdp.nodes.iGSFANode):
+        print "Node %d is an iGSFANode containing an SFA node with num_sfa_features_preserved=%d and d="%(i, node.num_sfa_features_preserved), node.sfa_node.d
     elif isinstance(node, mdp.nodes.PCANode):
         print "Node %d is a PCANode with d=%s and evar=%f"%(i, str(node.d), node.explained_variance)
     else:
@@ -2786,7 +2786,7 @@ def cumulative_score(ground_truth, estimation, largest_error, integer_rounding=T
 
 ##################### GSFA functions/classes ################
 #Special purpose object to compute the covariance matrices used by SFA.
-from gsfa_node import CovDCovMatrix, GSFANode, ComputeCovDcovMatrixMixed, ComputeCovDcovMatrixSerial, ComputeCovDcovMatrixClustered, ComputeCovMatrix
+#from gsfa_node import CovDCovMatrix, GSFANode, ComputeCovDcovMatrixMixed, ComputeCovDcovMatrixSerial, ComputeCovDcovMatrixClustered, ComputeCovMatrix
 
 ######## Helper functions for parallel processing and CovDcovMatrices #########
 #This function appears to be obsolete

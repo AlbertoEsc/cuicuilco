@@ -536,15 +536,15 @@ layer.pca_node_class = mdp.nodes.PCANode
 layer.pca_args = {}
 layer.pca_out_dim = 35 #WARNING: 100 or None
 #layer.ord_node_class = mdp.nodes.iGSFANode
-#layer.ord_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, QT],"max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999, "output_dim":35} #output_dim":40
-#layer.ord_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity],"max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999, "output_dim":35} #output_dim":40
+#layer.ord_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, QT],"max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999, "output_dim":35} #output_dim":40
+#layer.ord_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity],"max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999, "output_dim":35} #output_dim":40
 #layer.exp_funcs = [identity,]
 #layer.exp_funcs = [encode_signal_p9,] #For next experiment: [encode_signal_p9,]
 #layer.red_node_class = mdp.nodes.HeadNode
 #layer.red_out_dim = int(tuning_parameter)
 layer.sfa_node_class = mdp.nodes.iGSFANode #mdp.nodes.GSFANode
-#layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":"RandomSigmoids", "expansion_starting_point":"08Exp", "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999, "expansion_output_dim":4000} 
-#layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo],                       "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":"RandomSigmoids", "expansion_starting_point":"08Exp", "max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999, "expansion_output_dim":4000} 
+#layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo],                       "max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 #QT10, CT10, QT15, CT15, QT20, CT20, QT25, CT25,
 terms_NL_expansion = int(tuning_parameter)
 if terms_NL_expansion == 15:
@@ -565,7 +565,7 @@ else:
 
 expansion = [identity, QT, s30CT] 
 
-layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":expansion,"max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999} 
+layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":expansion,"max_lenght_slow_part":None,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999} 
 layer.sfa_out_dim = 9 #49*2 # *3 # None
 
 ####################################################################
@@ -734,7 +734,7 @@ GTSRBNetwork.L0.exp_funcs = [identity, QT] #, QT, maximum_99mix2_s08_ex, sel80_Q
 
 GTSRBNetwork.L0.sfa_node_class = mdp.nodes.GSFANode     #SFANode
 GTSRBNetwork.L0.sfa_args = {}
-#GTSRBNetwork.L0.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":expansion,"max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999} 
+#GTSRBNetwork.L0.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":expansion,"max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999} 
 GTSRBNetwork.L0.sfa_out_dim = 75 # WW 26*3 # 17*3 = 51 ## FOR RGB 26, for L/HOG/SFA
 GTSRBNetwork.layers=[GTSRBNetwork.L0]
 
@@ -838,7 +838,7 @@ pSFALayerL0.red_args = {}
 
 pSFALayerL0.sfa_node_class = mdp.nodes.iGSFANode #mdp.nodes.GSFANode
 pSFALayerL0.sfa_out_dim = 60
-pSFALayerL0.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":"RandomSigmoids", "expansion_starting_point":None, "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":4.99999, "expansion_output_dim":300} 
+pSFALayerL0.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":"RandomSigmoids", "expansion_starting_point":None, "max_lenght_slow_part":None,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":4.99999, "expansion_output_dim":300} 
 
 #pSFALayerL0.sfa_args = {"block_size": -1, "train_mode": -1}
 
@@ -862,7 +862,7 @@ pSFALayerL1.red_node_class = None
 pSFALayerL1.sfa_node_class = mdp.nodes.iGSFANode #mdp.nodes.GSFANode
 pSFALayerL1.sfa_out_dim = 9
 expansion_output_dim = int(tuning_parameter)
-pSFALayerL1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":"RandomSigmoids", "expansion_starting_point":None, "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":4.99999, "expansion_output_dim":expansion_output_dim} 
+pSFALayerL1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":"RandomSigmoids", "expansion_starting_point":None, "max_lenght_slow_part":None,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":4.99999, "expansion_output_dim":expansion_output_dim} 
 pSFALayerL1.cloneLayer = False
 pSFALayerL1.name = comp_supernode_name(pSFALayerL1.exp_funcs, pSFALayerL1.pca_out_dim, pSFALayerL1.sfa_out_dim)
 system_parameters.test_object_contents(pSFALayerL1)
@@ -903,7 +903,7 @@ pSFALayerL0.red_args = {}
 
 pSFALayerL0.sfa_node_class = mdp.nodes.iGSFANode #mdp.nodes.GSFANode
 pSFALayerL0.sfa_out_dim = 16
-pSFALayerL0.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999999} 
+pSFALayerL0.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.9999} 
 
 #pSFALayerL0.sfa_args = {"block_size": -1, "train_mode": -1}
 pSFALayerL0.cloneLayer = False
@@ -927,7 +927,7 @@ pSFALayerL2H.red_args = {}
 
 pSFALayerL2H.sfa_node_class = mdp.nodes.iGSFANode #mdp.nodes.GSFANode
 pSFALayerL2H.sfa_out_dim = 16
-pSFALayerL2H.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+pSFALayerL2H.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 
 #pSFALayerL0.sfa_args = {"block_size": -1, "train_mode": -1}
 pSFALayerL2H.cloneLayer = False
@@ -952,7 +952,7 @@ pSFALayerL2V.red_args = {}
 
 pSFALayerL2V.sfa_node_class = mdp.nodes.iGSFANode #mdp.nodes.GSFANode
 pSFALayerL2V.sfa_out_dim = 16
-pSFALayerL2V.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+pSFALayerL2V.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 
 #pSFALayerL2V.sfa_args = {"block_size": -1, "train_mode": -1}
 pSFALayerL2V.cloneLayer = False
@@ -967,16 +967,16 @@ pSFALayerL2V = copy.deepcopy(pSFALayerL2V)
 pSFALayerL3H = copy.deepcopy(pSFALayerL2H)
 pSFALayerL3V = copy.deepcopy(pSFALayerL2V)
 
-pSFALayerL0.sfa_out_dim = 10 # 9 + 4 
-pSFALayerL1H.sfa_out_dim = 23 # 2*9 + 10
+pSFALayerL0.sfa_out_dim = 12 # 9 + 4 
+pSFALayerL1H.sfa_out_dim = 28 # 2*9 + 10
 pSFALayerL1V.sfa_out_dim = 50 # 2*9 + 28
 pSFALayerL2H.sfa_out_dim = 75 # 2*9 + 25
 pSFALayerL2V.sfa_out_dim = 125 # 2*9 + 30
 pSFALayerL3H.sfa_out_dim = 160 # 2*9 + 35
 pSFALayerL3V.sfa_out_dim = 329 # 2*9 + 40
-pSFALayerL3V.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "expansion_starting_point":None, "max_comp":10, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999, "expansion_output_dim":None} 
+pSFALayerL3V.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "expansion_starting_point":None, "max_lenght_slow_part":10, "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999, "expansion_output_dim":None} 
 #THIS CODE IMPLEMENTS A NEW TYPE OF EXPANSION
-#pSFALayerL3V.sfa_args = {"pre_expansion_node_class":none, "expansion_funcs":"RandomSigmoids", "expansion_starting_point":"08Exp", "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999, "expansion_output_dim":800} 
+#pSFALayerL3V.sfa_args = {"pre_expansion_node_class":none, "expansion_funcs":"RandomSigmoids", "expansion_starting_point":"08Exp", "max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999, "expansion_output_dim":800} 
 
 
 network = HiGSFA_MNISTNetwork_24x24_7L = system_parameters.ParamsNetwork()
@@ -1227,7 +1227,7 @@ pSFALayerL0_4x4.y_field_channels=4
 pSFALayerL0_4x4.x_field_spacing=2 #2 for 24x24and 28x28, 3 for 29x29
 pSFALayerL0_4x4.y_field_spacing=2
 pSFALayerL0_4x4.pca_out_dim = 13 #12 for 24x24and 28x28, 20 for 29x29
-pSFALayerL0_4x4.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+pSFALayerL0_4x4.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 
 pSFALayerL1H_S3_D2 = copy.deepcopy(pSFALayerL1H) #L2
 pSFALayerL1H_S3_D2.name = "Homogeneous Linear Layer L1H S=3x1 D=2x1"
@@ -1235,8 +1235,8 @@ pSFALayerL1H_S3_D2.x_field_channels=3
 pSFALayerL1H_S3_D2.y_field_channels=1
 pSFALayerL1H_S3_D2.x_field_spacing=2
 pSFALayerL1H_S3_D2.y_field_spacing=1
-#pSFALayerL1H_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_3Split_15], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
-pSFALayerL1H_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerL1H_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_3Split_15], "max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+pSFALayerL1H_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 
 pSFALayerL2H_S3_D2 = copy.deepcopy(pSFALayerL1H) #L4
 pSFALayerL2H_S3_D2.name = "Homogeneous Linear Layer L2H S=3x1 D=2x1"
@@ -1244,9 +1244,9 @@ pSFALayerL2H_S3_D2.x_field_channels=2 #3 for 24x24 and 29x29, 2 for 28x28
 pSFALayerL2H_S3_D2.y_field_channels=1
 pSFALayerL2H_S3_D2.x_field_spacing=2 #2 for 24x24, 1 for 29x29
 pSFALayerL2H_S3_D2.y_field_spacing=1
-#pSFALayerL2H_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_3Split_25, CT_3Split_20], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
-#pSFALayerL2H_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo,  QT_2Split_15_AP08], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
-pSFALayerL2H_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerL2H_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_3Split_25, CT_3Split_20], "max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerL2H_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo,  QT_2Split_15_AP08], "max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+pSFALayerL2H_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 
 pSFALayerL3H_S2_D1 = copy.deepcopy(pSFALayerL1H) #L6
 pSFALayerL3H_S2_D1.name = "Homogeneous Linear Layer L3H S=2x1 D=1x1"
@@ -1254,10 +1254,10 @@ pSFALayerL3H_S2_D1.x_field_channels=3 #2 for 24x24 and 29x29, 3 for 28x28
 pSFALayerL3H_S2_D1.y_field_channels=1
 pSFALayerL3H_S2_D1.x_field_spacing=1
 pSFALayerL3H_S2_D1.y_field_spacing=1
-#sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_2Split_25, CT_2Split_20], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
-#pSFALayerL3H_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_2Split_50], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
-#pSFALayerL3H_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo,  QT_3Split_35_AP08], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
-pSFALayerL3H_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_2Split_25, CT_2Split_20], "max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerL3H_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_2Split_50], "max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerL3H_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo,  QT_3Split_35_AP08], "max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+pSFALayerL3H_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 
 #***************************************************************************
 pSFALayerL1V_S3_D2 = copy.deepcopy(pSFALayerL1H) #L3 
@@ -1266,8 +1266,8 @@ pSFALayerL1V_S3_D2.x_field_channels=1
 pSFALayerL1V_S3_D2.y_field_channels=3
 pSFALayerL1V_S3_D2.x_field_spacing=1
 pSFALayerL1V_S3_D2.y_field_spacing=2
-#sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_3Split_20, CT_3Split_15], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
-pSFALayerL1V_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_3Split_20, CT_3Split_15], "max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+pSFALayerL1V_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 
 pSFALayerL2V_S3_D2 = copy.deepcopy(pSFALayerL1H) #L5
 pSFALayerL2V_S3_D2.name = "Homogeneous Linear Layer L2V S=1x3 D=1x2"
@@ -1275,8 +1275,8 @@ pSFALayerL2V_S3_D2.x_field_channels=1
 pSFALayerL2V_S3_D2.y_field_channels=2
 pSFALayerL2V_S3_D2.x_field_spacing=1
 pSFALayerL2V_S3_D2.y_field_spacing=2 #2 for 24x24, 1 for 29x29
-#sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_3Split_25, CT_3Split_20], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
-pSFALayerL2V_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_3Split_25, CT_3Split_20], "max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+pSFALayerL2V_S3_D2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 
 pSFALayerL3V_S2_D1 = copy.deepcopy(pSFALayerL1H) #L7
 pSFALayerL3V_S2_D1.name = "Homogeneous Linear Layer L3V S=1x2 D=1x1"
@@ -1284,9 +1284,9 @@ pSFALayerL3V_S2_D1.x_field_channels=1
 pSFALayerL3V_S2_D1.y_field_channels=3
 pSFALayerL3V_S2_D1.x_field_spacing=1
 pSFALayerL3V_S2_D1.y_field_spacing=1
-#sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_2Split_25, CT_2Split_20], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
-#pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_2Split_35, CT_2Split_25], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
-pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_comp":1,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_2Split_25, CT_2Split_20], "max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_2Split_35, CT_2Split_25], "max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ], "max_lenght_slow_part":1,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 
 pSFALayerL0_4x4.sfa_out_dim = 13 #Was 15 #Usually 16 L1 # 9 + 5 
 pSFALayerL1H_S3_D2.sfa_out_dim = 20 #Was 28 #Usually 30 L2 # 2*9 + 10
@@ -1295,9 +1295,9 @@ pSFALayerL2H_S3_D2.sfa_out_dim = 70 #L4 #60 # 2*9 + 25
 pSFALayerL2V_S3_D2.sfa_out_dim = 90 #L5 #70 # 2*9 + 30
 pSFALayerL3H_S2_D1.sfa_out_dim = 120 #L6 #70 #44 #265 # 2*9 + 35
 pSFALayerL3V_S2_D1.sfa_out_dim = 160 #L7 #130 #150 # 2*9 + 40
-#pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
-#pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":"RandomSigmoids", "expansion_starting_point":"08Exp", "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999, "expansion_output_dim":2000} 
-#pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, QT, CT], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":"RandomSigmoids", "expansion_starting_point":"08Exp", "max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999, "expansion_output_dim":2000} 
+#pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, QT, CT], "max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 pSFALayerL0_4x4.sfa_args["max_preserved_sfa"]=4
 pSFALayerL1H_S3_D2.sfa_args["max_preserved_sfa"]=4
 pSFALayerL1V_S3_D2.sfa_args["max_preserved_sfa"]=4
@@ -1318,8 +1318,8 @@ pSFALayerSupernode.exp_funcs = [identity, unsigned_08expo, signed_08expo, QT_90_
 #pSFALayerSupernode.red_node_class = None
 pSFALayerSupernode.sfa_node_class = mdp.nodes.GSFANode
 #pSFALayerSupernode.sfa_node_class = mdp.nodes.iGSFANode #mdp.nodes.GSFANode
-#pSFALayerSupernode.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_50, CT_30],                     "max_comp":1, ,  "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
-#pSFALayerSupernode.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo_75],                     "max_comp":1, ,  "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerSupernode.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, QT_50, CT_30],                     "max_lenght_slow_part":1, ,  "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+#pSFALayerSupernode.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo_75],                     "max_lenght_slow_part":1, ,  "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 pSFALayerSupernode.sfa_out_dim = 80
 
 
@@ -2439,15 +2439,15 @@ for i, layer in enumerate(network.layers):
     layer.sfa_node_class = mdp.nodes.iGSFANode
     layer.sfa_out_dim = HiGSFANet_out_dims[i]
     #QT_AP_L(k=nan, d=0.8), Q_AN_exp
-    #layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_comp":10, ,  "max_preserved_sfa":2.0}
-#    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_comp":1, ,  "offsetting_mode":"sensitivity_based", "max_preserved_sfa":2.0}
-#    layer.sfa_args = {"pre_expansion_node_class":mdp.nodes.GSFANode, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":2.0}
-    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.9999} #AGE ARTICLE: 1.99999 official, 1.99999, 2.0. Control2: 1.9999
+    #layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_lenght_slow_part":10, ,  "max_preserved_sfa":2.0}
+#    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_lenght_slow_part":1, ,  "offsetting_mode":"sensitivity_based", "max_preserved_sfa":2.0}
+#    layer.sfa_args = {"pre_expansion_node_class":mdp.nodes.GSFANode, "expansion_funcs":[identity, unsigned_08expo], "max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":2.0}
+    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_lenght_slow_part":None,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.9999} #AGE ARTICLE: 1.99999 official, 1.99999, 2.0. Control2: 1.9999
     #sel60_unsigned_08expo sel_exp(60, unsigned_08expo), unsigned_08expo
 
     #"offsetting_mode": "QR_decomposition", "sensitivity_based_pure", "sensitivity_based_normalized", "max_comp features"
-#    layer.sfa_args = {"expansion_funcs":None, "use_pca":True, "operation":"lin_app", "max_comp":10, "max_num_samples_for_ev":1200, "max_test_samples_for_ev":1200, "k":200}
-#    layer.sfa_args = {"expansion_funcs":None, "use_pca":True, "max_comp":6, "max_num_samples_for_ev":600, "max_test_samples_for_ev":600, "k":16}
+#    layer.sfa_args = {"expansion_funcs":None, "use_pca":True, "operation":"lin_app", ""max_lenght_slow_part"":10, "max_num_samples_for_ev":1200, "max_test_samples_for_ev":1200, "k":200}
+#    layer.sfa_args = {"expansion_funcs":None, "use_pca":True, "max_lenght_slow_part":6, "max_num_samples_for_ev":600, "max_test_samples_for_ev":600, "k":16}
 #network.layers[0].pca_node_class = mdp.nodes.PCANode
 #network.layers[0].pca_out_dim = 13
 
@@ -2457,22 +2457,22 @@ if double_SFA_top_node:
     layer = network.layers[8]
     layer.pca_node_class = mdp.nodes.iGSFANode
     layer.pca_out_dim = HiGSFANet_out_dims[8]
-    layer.pca_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, div2_sel75_unsigned_08expo], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} #2.0
+    layer.pca_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, div2_sel75_unsigned_08expo], "max_lenght_slow_part":None,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} #2.0
     layer.sfa_node_class = mdp.nodes.iGSFANode
     layer.sfa_out_dim = HiGSFANet_out_dims[8]
-    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, sel8_04QT], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} #2.0
+    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, sel8_04QT], "max_lenght_slow_part":None,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} #2.0
     
 
 #WARNING, EXPERIMENTAL CODE TO TEST OTHER EXPANSIONS
 #network.layers[10].sfa_node_class = mdp.nodes.GSFANode
-#network.layers[6].sfa_args = {"expansion_funcs":[Q_exp], "max_comp":10,   "max_preserved_sfa":2.0}
+#network.layers[6].sfa_args = {"expansion_funcs":[Q_exp], "max_lenght_slow_part":10,   "max_preserved_sfa":2.0}
 
 
 
 
 
 
-#Networks for Age estimation MORPH-II
+#Networks for AGE estimation MORPH-II
 ################## NETWORK FOR TESTING ACCORDING TO GUO ET AL, USES 3 LABELS ######################################
 network = HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels = copy.deepcopy(linearPCANetworkU11L)
 rec_field_size = 6 #6 => 192x192, 5=> 160x160, 4=>128x128
@@ -2518,7 +2518,7 @@ print "HiGSFANetworkU11L_Overlap6x6L0 L0-10_SFA_out_dim = ", HiGSFANet_out_dims
 for i, layer in enumerate(network.layers):
     layer.sfa_node_class = mdp.nodes.iGSFANode
     layer.sfa_out_dim = HiGSFANet_out_dims[i]
-    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.91} #1.85, 1.91 #only for tuning/experimentation, official is below 
+    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_lenght_slow_part":None,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.91} #1.85, 1.91 #only for tuning/experimentation, official is below 
 
 network.layers[0].sfa_args["expansion_funcs"]= [s18, s15u08ex, s17Max, s10QT] # ** s18, s15u08ex, s17Max, s10QT] #identity, s14u08ex, s14Max, s1QT, QT, s14u08ex, unsigned_08expo, s14QT, maximum_mix1_ex, s16QT, s10Max
 network.layers[0].sfa_args["max_preserved_sfa"]= 3 #T 2 #1 #! 2 # **1 #1 3
@@ -2776,11 +2776,11 @@ for i, layer in enumerate(network.layers):
     layer.sfa_node_class = mdp.nodes.iGSFANode
     layer.sfa_out_dim = HiGSFANet_out_dims[i]
     #QT_AP_L(k=nan, d=0.8), Q_AN_exp
-    #layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_comp":10,   "max_preserved_sfa":2.0}
-#    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_comp":1,   "offsetting_mode":"sensitivity_based", "max_preserved_sfa":2.0}
-#    layer.sfa_args = {"pre_expansion_node_class":mdp.nodes.GSFANode, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":2.0}
-    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.91} #only for tuning/experimentation, official is below 
-    #layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99} #AGE ARTICLE: 1.99999 official, 1.99999, 2.0. Control2: 1.9999
+    #layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_lenght_slow_part":10,   "max_preserved_sfa":2.0}
+#    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_lenght_slow_part":1,   "offsetting_mode":"sensitivity_based", "max_preserved_sfa":2.0}
+#    layer.sfa_args = {"pre_expansion_node_class":mdp.nodes.GSFANode, "expansion_funcs":[identity, unsigned_08expo], "max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":2.0}
+    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_lenght_slow_part":None,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.91} #only for tuning/experimentation, official is below 
+    #layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99} #AGE ARTICLE: 1.99999 official, 1.99999, 2.0. Control2: 1.9999
     #sel60_unsigned_08expo sel_exp(60, unsigned_08expo), unsigned_08expos14u08ex
 
 
@@ -2994,7 +2994,7 @@ network.layers[0].pca_out_dim = 16
 HiGSFANet4x4_out_dims = [ 16, 24, 33, 60, 72, 80, 80, 75, 75, 50, 75 ]
 for i, layer in enumerate(network.layers):
     layer.sfa_out_dim = HiGSFANet4x4_out_dims[i]
-    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.9999} 
+    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_lenght_slow_part":None,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.9999} 
 
 network = IEMNetworkU11L = copy.deepcopy(linearPCANetworkU11L)
 IEMNet_out_dims = [ 13, 20, 35, 60,60,60,60,60,60,60,60 ]
@@ -3005,18 +3005,18 @@ for i, layer in enumerate(network.layers):
     layer.sfa_node_class = mdp.nodes.iGSFANode
     layer.sfa_out_dim = IEMNet_out_dims[i]
  
-#    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "use_pca":True, "max_comp":1, "max_num_samples_for_ev":800, "max_test_samples_for_ev":200, "k":8}
-#    layer.sfa_args = {"expansion_funcs":None, "use_pca":True, "max_comp":10, "max_num_samples_for_ev":800, "max_test_samples_for_ev":800, "k":92}
-#    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "use_pca":True, "operation":"average", "max_comp":10, "max_num_samples_for_ev":1200, "max_test_samples_for_ev":1200, "k":92}
-#    layer.sfa_args = {"expansion_funcs":None, "use_pca":True, "use_sfa":True, "operation":"average", "max_comp":10, "max_num_samples_for_ev":600, "max_test_samples_for_ev":600, "k":92}
-##    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "use_pca":True, "use_sfa":True, "operation":"average", "max_comp":10, "max_num_samples_for_ev":400, "max_test_samples_for_ev":400, "k":48, "max_preserved_sfa":2.0}
+#    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "use_pca":True, "max_lenght_slow_part":1, "max_num_samples_for_ev":800, "max_test_samples_for_ev":200, "k":8}
+#    layer.sfa_args = {"expansion_funcs":None, "use_pca":True, "max_lenght_slow_part":10, "max_num_samples_for_ev":800, "max_test_samples_for_ev":800, "k":92}
+#    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "use_pca":True, "operation":"average", "max_lenght_slow_part":10, "max_num_samples_for_ev":1200, "max_test_samples_for_ev":1200, "k":92}
+#    layer.sfa_args = {"expansion_funcs":None, "use_pca":True, "use_sfa":True, "operation":"average", "max_lenght_slow_part":10, "max_num_samples_for_ev":600, "max_test_samples_for_ev":600, "k":92}
+##    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "use_pca":True, "use_sfa":True, "operation":"average", "max_lenght_slow_part":10, "max_num_samples_for_ev":400, "max_test_samples_for_ev":400, "k":48, "max_preserved_sfa":2.0}
 ################## Default:
-#    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "use_pca":True, "use_sfa":True, "operation":"average", "max_comp":10, "max_num_samples_for_ev":600, "max_test_samples_for_ev":600, "k":48, "max_preserved_sfa":2.0, "out_sfa_filter":False}
+#    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "use_pca":True, "use_sfa":True, "operation":"average", "max_lenght_slow_part":10, "max_num_samples_for_ev":600, "max_test_samples_for_ev":600, "k":48, "max_preserved_sfa":2.0, "out_sfa_filter":False}
 ################## Reconstruction only
-    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99} #2.0
-#    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "use_pca":True, "use_sfa":False, "operation":"average", "max_comp":20, "max_num_samples_for_ev":1200, "max_test_samples_for_ev":1200, "k":92, "max_preserved_sfa":1.99, "out_sfa_filter":False}
-#    layer.sfa_args = {"expansion_funcs":None, "use_pca":True, "operation":"lin_app", "max_comp":10, "max_num_samples_for_ev":1200, "max_test_samples_for_ev":1200, "k":200}
-#    layer.sfa_args = {"expansion_funcs":None, "use_pca":True, "max_comp":6, "max_num_samples_for_ev":600, "max_test_samples_for_ev":600, "k":16}
+    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_lenght_slow_part":None,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99} #2.0
+#    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "use_pca":True, "use_sfa":False, "operation":"average", "max_lenght_slow_part":20, "max_num_samples_for_ev":1200, "max_test_samples_for_ev":1200, "k":92, "max_preserved_sfa":1.99, "out_sfa_filter":False}
+#    layer.sfa_args = {"expansion_funcs":None, "use_pca":True, "operation":"lin_app", "max_lenght_slow_part":10, "max_num_samples_for_ev":1200, "max_test_samples_for_ev":1200, "k":200}
+#    layer.sfa_args = {"expansion_funcs":None, "use_pca":True, "max_lenght_slow_part":6, "max_num_samples_for_ev":600, "max_test_samples_for_ev":600, "k":16}
 network.layers[0].pca_node_class = mdp.nodes.PCANode
 network.layers[0].pca_out_dim = 30 #adsfa 
 
@@ -3024,7 +3024,7 @@ print "*******************************************************************"
 print "******** Creating Non-Linear Ultra Thin 11L SFA Network ******************"
 print "*******************************************************************"
 #Warning, this is based on the linear network, thus modifications to the linear 
-#network also afect this non linear network
+#network also affect this non linear network
 #exp_funcs = [identity, pair_prod_ex, pair_prod_mix1_ex, pair_prod_adj2_ex, pair_prod_adj3_ex]
 
 #layer_exp_funcs = range(11)
@@ -3516,10 +3516,10 @@ for i, layer in enumerate(network.layers):
     layer.sfa_node_class = mdp.nodes.iGSFANode
 #    layer.sfa_out_dim = iGSFANet_out_dims[i]
     #QT_AP_L(k=nan, d=0.8), Q_AN_exp
-    #layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_comp":10,   "max_preserved_sfa":2.0}
-#    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_comp":1,   "offsetting_mode":"sensitivity_based", "max_preserved_sfa":2.0}
-#    layer.sfa_args = {"pre_expansion_node_class":mdp.nodes.GSFANode, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":2.0}
-    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999} 
+    #layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_lenght_slow_part":10,   "max_preserved_sfa":2.0}
+#    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_lenght_slow_part":1,   "offsetting_mode":"sensitivity_based", "max_preserved_sfa":2.0}
+#    layer.sfa_args = {"pre_expansion_node_class":mdp.nodes.GSFANode, "expansion_funcs":[identity, unsigned_08expo], "max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":2.0}
+    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_lenght_slow_part":None,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999} 
 
 
 
@@ -3550,10 +3550,10 @@ for i, layer in enumerate(network.layers):
 #    layer = network.layers[8]
 #    layer.pca_node_class = mdp.nodes.iGSFANode
 #    layer.pca_out_dim = HiGSFANet_out_dims[8]
-#    layer.pca_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, div2_sel75_unsigned_08expo], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} #2.0
+#    layer.pca_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, div2_sel75_unsigned_08expo], "max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} #2.0
 #    layer.sfa_node_class = mdp.nodes.iGSFANode
 #    layer.sfa_out_dim = HiGSFANet_out_dims[8]
-#    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, sel8_04QT], "max_comp":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} #2.0
+#    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, sel8_04QT], "max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} #2.0
 
 
 
@@ -3566,7 +3566,7 @@ for i, layer in enumerate(network.layers):
 ##pca_node_L3 = mdp.nodes.WhiteningNode(output_dim=pca_out_dim_L3) 
 #pSFAL3_L3KadjProd.pca_node_class = mdp.nodes.GSFANode
 ##pca_out_dim_L3 = 210
-##pca_out_dim_L3 = 0.999
+##pca_out_dim_L3 = 0.999HiGSFANetworkU11L_NoOverlap_4x4L0
 ##WARNING!!! CHANGED PCA TO SFA
 #pSFAL3_L3KadjProd.pca_out_dim = 300
 ##pSFALayerL1.pca_args = {"block_size": block_size}

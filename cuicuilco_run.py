@@ -678,6 +678,7 @@ iTrain = take_0_k_th_from_2D_list(iTrain_set, k=dataset_for_display_train)
 sTrain = take_0_k_th_from_2D_list(sTrain_set, k=dataset_for_display_train)
 
 #take k=1? or choose from command line? NOPE. Take always first label (k=0). sSeq must compute proper classes for chosen label anyway.
+#TODO: let the user choose objective_label through a command line argument
 objective_label = 0
 if graph_exact_label_learning:
     if isinstance(iTrain_set, list):

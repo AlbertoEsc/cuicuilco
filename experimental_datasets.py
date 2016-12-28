@@ -6484,7 +6484,7 @@ normalized_base_dir_INIBilder = "/local/escalafl/Alberto/INIBilder/INIBilderNorm
 continuous = True #and False
 
 slow_var = "All" #"X", "PAng" # "Y", "Scale"
-iteration = 1 # 0, 1, 2 (only 4Labels)
+iteration = 0 # 0, 1, 2 (only 4Labels)
 
 
 if slow_var == "All":
