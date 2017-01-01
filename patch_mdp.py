@@ -788,7 +788,7 @@ def GaussianRegression(self, data, avg_labels):
     probabilities = self.class_probabilities(data)
     value = numpy.dot(probabilities, avg_labels)
     value[numpy.isnan(value)] = avg_labels.mean() #TODO:compute real mean of all labels
-    print "value.shape=", value.shape
+    #print "value.shape=", value.shape
     return value
 
 
