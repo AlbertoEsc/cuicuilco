@@ -102,7 +102,34 @@ def multiply_sigmoid_06(x1, x2):
 def multiply_sigmoid_08(x1, x2):
     expo=0.8
     return neg_expo(x1 * x2, expo)
- 
+
+
+def compute_quadratic_indices(dim):
+    indices1 = numpy.zeros(dim*(dim+1)/2, dtype=int)
+    indices2 = indices1.copy()
+
+    current_pos = 0
+    for x in range(dim):
+        indices1[current_pos:current_pos+(dim-x)] = x
+        current_pos += (dim-x)
+
+    all_vars = numpy.arange(dim)
+    current_pos = 0
+    for x in range(dim):
+        indices2[current_pos:current_pos+(dim-x)] = all_vars[x:]
+        current_pos += (dim-x)
+        
+    return indices1, indices2 
+
+quadratic_indices_dict = {}
+def products_2_fast(x):
+    dim = x.shape[1]
+    if dim not in quadratic_indices_dict:
+        indices1, indices2 = compute_quadratic_indices(dim)
+        quadratic_indices_dict[dim] = (indices1, indices2)
+    else:
+        indices1, indices2 = quadratic_indices_dict[dim]
+    return x[:, indices1] * x[:, indices2]
 
 ########## FUNCTIONS APPLIED TO PAIRS OF ELEMENTS, POSSIBLY REPEATEDLY EX: f(f(x_i,x_j),x_k) for various i, j, k. ###########
 def pairwise_expansion(x, func, reflexive=True):
