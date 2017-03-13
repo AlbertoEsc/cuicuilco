@@ -376,14 +376,25 @@ def load_image_data_monoprocessor(image_files, image_array, image_width, image_h
             else:
                 act_im_num_indices[image_file] = [act_im_num]
         print "loading/processing"
+        info_displayed = False 
         for image_file in unique_image_files:
             #print "Loading unique image", image_file
             if image_array is None:
                 im_orig = Image.open(image_file)   
-            else:
-    #                print "image_file=",image_file
-    #                print "image_array=",image_array
+            elif isinstance(image_array, PIL.Image.Image):
+                if (not info_displayed) or verbose: #Display information only once, unless in verbose mode
+                    print "considering image_array as PIL.Image.Image"
+                    info_displayed = True
+                im_orig = image_array
+            elif isinstance(image_array, numpy.ndarray):
+                if (not info_displayed) or verbose: #Display information only once, unless in verbose mode
+                    print "considering image_array as ndarray"
+                    info_displayed = True
                 im_orig = scipy.misc.toimage(image_array[image_file], mode='L')
+            else:
+                er = "unknown type of image_array:" + str(type(image_array))
+                raise Exception(er)
+
             for act_im_num in act_im_num_indices[image_file]:              
                 #print "Computing image for act_im_num:", act_im_num
 
@@ -529,7 +540,7 @@ def load_image_data_monoprocessor(image_files, image_array, image_width, image_h
                         else:
                             print "Unhandled contrast enhance method"
                             quit()
-                    elif contrast_enhance is None:
+                    elif (contrast_enhance is None) or str(contrast_enhance).startswith("array_mean_std"):
                         im_contrasted = im_rotated
                         Delta_x_rotated = Delta_y_rotated = 0
                     else:
@@ -630,7 +641,7 @@ def load_image_data_monoprocessor(image_files, image_array, image_width, image_h
                         else:
                             print "Incorrect method (unknown constant enhancement)", contrast_enhance
                             quit()
-                    elif contrast_enhance is None:
+                    elif (contrast_enhance is None) or str(contrast_enhance).startswith("array_mean_std"):
                         im_contrasted = im_rotated
                     else:
                         print "Unknown contrast_enhance method!!!, ", contrast_enhance
@@ -746,6 +757,15 @@ def load_image_data_monoprocessor(image_files, image_array, image_width, image_h
         
     if convert_format == "RGB":
         subimages = subimages / 256.0
+    if str(contrast_enhance).startswith("array_mean_std"):
+        _, mean, std = contrast_enhance.split("-")
+        mean = float(mean)
+        std = float(std)
+        print "Contrast enhancement directly on array. Fixing mean to %f and std to %f (approx)"%(mean, std)
+        print "Before: avg_min=", subimages.min(axis=1).mean(), "avg_max=", subimages.min(axis=1).max()
+        image_array_contrast_normalize_avg_std(subimages, mean=mean, std=std)
+        quit()
+
     t1 = time.time()
     if verbose:
         print num_images, " Images loaded in %0.3f ms"% ((t1-t0)*1000.0)
@@ -957,6 +977,14 @@ def load_multiple_image_data(unique_image_files_subset, act_im_num_indices, subi
             subimages[image_counter] = load_single_image_data(im_orig, im_params)
             image_counter += 1
 
+    if str(contrast_enhance).startswith("array_mean_std"):
+        _, mean, std = contrast_enhance.split("-")
+        mean = float(mean)
+        std = float(std)
+        print "Contrast enhancement directly on array. Fixing mean to %f and std to %f (approx)"%(mean, std)
+        print "Before: avg_min=", subimages.min(axis=1).mean(), "avg_max=", subimages.max(axis=1).mean()
+        image_array_contrast_normalize_avg_std(subimages, mean=mean, std=std)
+        
     queue.put((subset_indices, subimages))
 
 #Translations are given in original image coordinates
@@ -1163,9 +1191,9 @@ def contrast_enhance_image(im_rotated, x0, x1, y0, y1, obj_avg, obj_std, contras
             ex = "Incorrect method (unknown constant enhancement) %s"%contrast_enhance
             raise Exception(ex)
 
-    elif contrast_enhance is None:
+    elif (contrast_enhance is None) or str(contrast_enhance).startswith("array_mean_std"):
         im_contrasted = im_rotated
-        Delta_x_rotated = Delta_y_rotated = 0 #why this assignment???
+        ##Delta_x_rotated = Delta_y_rotated = 0 #why this assignment???
     else:
         ex = "Unknown contrast_enhance method!!!  %s"%contrast_enhance
         raise Exception(ex)
@@ -1587,7 +1615,11 @@ def rotate_improved(self, angle, resample=Image.NEAREST, expand=0, force_odd_out
     test_im_aff = self.transform((out_width, out_height), Image.AFFINE, matrix, resample)
     return test_im_aff
 
-
+def image_array_contrast_normalize_avg_std(subimages_array, mean=0.0, std=0.2):
+    subimages_array -= subimages_array.mean(axis=1).reshape((-1,1)) 
+    subimages_array /= (subimages_array.std(axis=1).reshape((-1,1)) / std) + 0.00000001 # std ends up being multiplied, division over zero is avoided
+    subimages_array += mean 
+    numpy.clip(subimages_array, 0.0, 255.0, subimages_array)
 
 #import matplotlib as mpl
 #import matplotlib.pyplot as plt

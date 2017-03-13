@@ -1323,9 +1323,9 @@ pSFALayerSupernode.sfa_node_class = mdp.nodes.GSFANode
 pSFALayerSupernode.sfa_out_dim = 80
 
 
-
-network = MNISTNetwork_24x24_7L_B = system_parameters.ParamsNetwork()
-network.name = "MNIST Network 7L 24x24_B"
+########################################## New Improved Network for MNIST ############################
+network = MNISTNetwork_24x24_7L_Overlap = system_parameters.ParamsNetwork()
+network.name = "MNIST Network 7L 24x24_Overlap"
 network.L0 = copy.deepcopy(pSFALayerL0_4x4)
 network.L1 = copy.deepcopy(pSFALayerL1H_S3_D2)
 network.L2 = copy.deepcopy(pSFALayerL1V_S3_D2)
@@ -1338,7 +1338,55 @@ network.layers = [network.L0, network.L1, network.L2, network.L3, network.L4, ne
 #network.L1 = network.L2 = network.L3 = network.L4 = network.L5 = network.L6 = None
 #network.layers = [network.L0, None, None, None, None, None, None]
 
+network = MNISTNetwork_24x24_5L_OverlapNew = copy.deepcopy(MNISTNetwork_24x24_7L_Overlap)
+network.L0 = system_parameters.ParamsSFALayer()
+network.L0.x_field_channels=6
+network.L0.y_field_channels=6
+network.L0.x_field_spacing=3
+network.L0.y_field_spacing=3
+network.L0.pca_node_class = mdp.nodes.PCANode
+network.L0.pca_args = {}
+network.L0.sfa_node_class = mdp.nodes.iGSFANode #mdp.nodes.GSFANode
+network.L0.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, s7QT], "max_lenght_slow_part":9,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+network.L0.cloneLayer = False
 
+network.L1 = system_parameters.ParamsSFALayer()
+network.L1.x_field_channels=3
+network.L1.y_field_channels=1
+network.L1.x_field_spacing=2
+network.L1.y_field_spacing=1
+network.L1.pca_node_class = None
+network.L1.sfa_node_class = mdp.nodes.iGSFANode #mdp.nodes.GSFANode
+network.L1.sfa_out_dim = 35
+network.L1.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ch3o3s3QT, ch3o0s3QT], "max_lenght_slow_part":9,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+network.L1.cloneLayer = False
+
+network.L2 = system_parameters.ParamsSFALayer()
+network.L2.x_field_channels=1
+network.L2.y_field_channels=3
+network.L2.x_field_spacing=1
+network.L2.y_field_spacing=2
+network.L2.pca_node_class = None
+network.L2.sfa_node_class = mdp.nodes.iGSFANode #mdp.nodes.GSFANode
+network.L2.sfa_out_dim = 45
+network.L2.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ch3o4s9QT, ch3o0s4QT], "max_lenght_slow_part":9,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+network.L2.cloneLayer = False
+
+network.L3 = copy.deepcopy(network.L1)
+network.L3.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ch3o6s16QT, ch3o0s4QT], "max_lenght_slow_part":9,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+
+network.L4 = copy.deepcopy(network.L2)
+network.L4.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, ch3o9s24QT, ch3o9s13CT], "max_lenght_slow_part":9,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
+
+
+network.layers = [network.L0,network.L1,network.L2,network.L3,network.L4 ] #,network.L5,network.L6]
+network.L0.pca_out_dim = 30
+HiGSFANet_out_dims = [30, 45, 60, 75, 75]
+
+max_preserved_sfas = [3, 4, 6, 9, 9]
+for i in range(len(network.layers)):
+    network.layers[i].sfa_out_dim = HiGSFANet_out_dims[i]
+    network.layers[i].sfa_args["max_preserved_sfa"] = max_preserved_sfas[i]
 
 print "*******************************************************************"
 print "******** Creating Linear 4L SFA Network          ******************"
@@ -2568,7 +2616,8 @@ for i in range(2, 9):
     network.layers[i].sfa_args["max_preserved_sfa"] = my_DT
 network.layers[8].pca_args["max_preserved_sfa"] = my_DT
 
-
+HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96 = copy.deepcopy(HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels)
+HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96.layers = HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96.layers[0:9]
 
 ################## NETWORK FOR TESTING ACCORDING TO GUO ET AL, USES 1 LABEL ######################################
 network = HiGSFANetworkU11L_Overlap6x6L0_GUO_1Label = copy.deepcopy(HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels)
@@ -2840,6 +2889,7 @@ for i, layer in enumerate(network.layers):
         layer.sfa_args["expansion_funcs"]= [identity]
     if i==9:
         layer.pca_args["expansion_funcs"]= [identity]
+
 #********************************************************************************************************
 network = HiGSFANetworkU11L_Overlap6x6L0_3Labels = copy.deepcopy(HiGSFANetworkU11L_Overlap6x6L0_1Label)
 if LRec_use_RGB_images:
@@ -3181,6 +3231,11 @@ u08expoNetworkU11L.L7.sfa_out_dim = 60 # was 60
 u08expoNetworkU11L.L8.sfa_out_dim = 60 # was 60     
 u08expoNetworkU11L.L9.sfa_out_dim = 60
 
+u08expoNetworkU11L_128x128 = copy.deepcopy(u08expoNetworkU11L)
+u08expoNetworkU11L_64x64 = copy.deepcopy(u08expoNetworkU11L)
+u08expoNetworkU11L_64x64.layers = u08expoNetworkU11L_128x128.layers[:-2]
+u08expoNetworkU11L_32x32 = copy.deepcopy(u08expoNetworkU11L)
+u08expoNetworkU11L_32x32.layers = u08expoNetworkU11L_128x128.layers[:-4]
 
 #******************** GENDER NETWORK FOR ARTICLE ****************
 layer = Gender_top_layer = system_parameters.ParamsSFASuperNode()
@@ -3543,6 +3598,48 @@ network = HiGSFANetworkU11L_NoOverlap_4x4L0_mod4 = copy.deepcopy(HiGSFANetworkU1
 for i, layer in enumerate(network.layers):
     layer.sfa_args["max_preserved_sfa"] = delta_thresholds[i]
     layer.sfa_out_dim = output_dims[i]
+
+####################### NETWORKS FOR EYE DETECTION WITHOUT OVERLAP ####################################
+delta_thresholds = [3, 8, 14, 24, 28, 34, 40, 40, 40, 40, 40, 40]
+output_dims =      [   16,    28,    50,    75,    75,    75,   75,   75,   75,   75,   80,   80]
+network = HiGSFANetworkU11L_NoOverlap_4x4L0_EyeL = copy.deepcopy(HiGSFANetworkU11L_NoOverlap_4x4L0)
+for i, layer in enumerate(network.layers):
+    layer.sfa_args["max_preserved_sfa"] = delta_thresholds[i]
+    layer.sfa_out_dim = output_dims[i]
+
+HiGSFANetworkU11L_NoOverlap_4x4L0_EyeL_128x128 = copy.deepcopy(HiGSFANetworkU11L_NoOverlap_4x4L0_EyeL)
+
+HiGSFANetworkU11L_NoOverlap_4x4L0_EyeL_64x64 = copy.deepcopy(HiGSFANetworkU11L_NoOverlap_4x4L0_EyeL_128x128)
+HiGSFANetworkU11L_NoOverlap_4x4L0_EyeL_64x64.layers = HiGSFANetworkU11L_NoOverlap_4x4L0_EyeL_64x64.layers[0:-2]
+
+HiGSFANetworkU11L_NoOverlap_4x4L0_EyeL_32x32 = copy.deepcopy(HiGSFANetworkU11L_NoOverlap_4x4L0_EyeL_64x64)
+HiGSFANetworkU11L_NoOverlap_4x4L0_EyeL_32x32.layers = HiGSFANetworkU11L_NoOverlap_4x4L0_EyeL_32x32.layers[0:-2]
+
+####################### NETWORKS FOR EYE DETECTION WITH OVERLAP ####################################
+network = HiGSFANetworkU11L_Overlap_4x4L0_EyeL_128x128 = copy.deepcopy(HiGSFANetworkU11L_NoOverlap_4x4L0_EyeL_128x128)
+rec_field_size = 4
+network.layers[0].x_field_channels = rec_field_size
+network.layers[0].y_field_channels = rec_field_size
+network.layers[0].x_field_spacing = rec_field_size/2
+network.layers[0].y_field_spacing = rec_field_size/2
+for i in range(1, len(network.layers)):
+    if i%2 == 0: #A vertical layer
+        network.layers[i].x_field_channels = 1
+        network.layers[i].y_field_channels = 3
+        network.layers[i].x_field_spacing = 1
+        network.layers[i].y_field_spacing = 2        
+    else: #An horizontal layer
+        network.layers[i].x_field_channels = 3
+        network.layers[i].y_field_channels = 1
+        network.layers[i].x_field_spacing = 2
+        network.layers[i].y_field_spacing = 1
+    
+HiGSFANetworkU11L_Overlap_4x4L0_EyeL_64x64 = copy.deepcopy(HiGSFANetworkU11L_Overlap_4x4L0_EyeL_128x128)
+HiGSFANetworkU11L_Overlap_4x4L0_EyeL_64x64.layers = HiGSFANetworkU11L_Overlap_4x4L0_EyeL_64x64.layers[0:-2]
+
+HiGSFANetworkU11L_Overlap_4x4L0_EyeL_32x32 = copy.deepcopy(HiGSFANetworkU11L_Overlap_4x4L0_EyeL_64x64)
+HiGSFANetworkU11L_Overlap_4x4L0_EyeL_32x32.layers = HiGSFANetworkU11L_Overlap_4x4L0_EyeL_32x32.layers[0:-2]
+
 
 #WARNING, ADDING AN ADDITIONAL SFA NODE IN THE LAST LAYER, 80x80 resolution (Node 9)
 #double_SFA_top_node = True and False

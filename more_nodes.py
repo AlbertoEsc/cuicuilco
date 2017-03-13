@@ -40,9 +40,9 @@ class RandomizedMaskNode(mdp.Node):
         self.x_std = None
         self.type=dtype
 
-        if remove_mask != None and input_dim == None:
+        if remove_mask != None and input_dim is None:
             input_dim = remove_mask.size
-        elif remove_mask == None and input_dim != None: 
+        elif remove_mask is None and input_dim != None: 
             remove_mask = numpy.zeros(input_dim) > 0.5
         elif remove_mask != None and input_dim != None:
             if remove_mask.size != input_dim:
@@ -66,7 +66,7 @@ class RandomizedMaskNode(mdp.Node):
         return True
 
     def _train(self, x):
-        if self.x_avg == None:
+        if self.x_avg is None:
             self.x_avg = numpy.zeros(self.input_dim, dtype=self.type)
             self.x_std = numpy.zeros(self.input_dim, dtype=self.type)
         new_samples = x.shape[0]
@@ -158,7 +158,7 @@ class GeneralExpansionNode(mdp.Node):
     
             l1[0:input_dim] = numpy.ones(input_dim) * 1.0 #Code identity
             l1[input_dim:2*input_dim] = numpy.ones(input_dim) * 0.8 #Code abs(x)**0.8  
-        elif starting_point == None:
+        elif starting_point is None:
             print "starting_point: no starting point"
         else:
             er= "Unknown starting_point", starting_point
@@ -230,7 +230,7 @@ class PointwiseFunctionNode(mdp.Node):
 
 #MEGAWARNING!!!!!!!!!!!!!!!!!
     def is_invertible(self):
-        if self.inv_func == None:
+        if self.inv_func is None:
             return True
         else:
             return True
@@ -282,7 +282,8 @@ class PInvSwitchboard(mdp.hinet.Switchboard):
         self.output_dim = len(connections) 
         self.output_scales = None
         self.additive_noise_std = additive_noise_std 
-        if self.inverse_connections == None:
+        print "self.inverse_connections=", self.inverse_connections, "self.slow_inv=", self.slow_inv
+        if self.inverse_connections is None: #WARNING! IF/ELIF doesn't make any sense! what are the semantics of inverse_connections
             print "type(connections)", type(connections)
             all_outputs = numpy.arange(self.output_dim)
 
@@ -291,7 +292,7 @@ class PInvSwitchboard(mdp.hinet.Switchboard):
                 self.inverse_indices[i] = all_outputs[connections==i]
                 #print "inverse_indices[%d]="%i, self.inverse_indices[i]
             #print "inverse_indices =", self.inverse_indices
-        elif self.inverse_connections == None and self.slow_inv == False:
+        elif self.inverse_connections is None and self.slow_inv == False:
             index_array = numpy.argsort(connections)
             value_array = connections[index_array]
                       
@@ -305,7 +306,7 @@ class PInvSwitchboard(mdp.hinet.Switchboard):
                     self.inverse_indices[i]= index_array[ value_range[i][0]: value_range[i][1] ]
             print "inverse_indices computed in PINVSB"
 
-        elif self.inverse_connections == None and self.slow_inv == True:
+        elif self.inverse_connections is None and self.slow_inv == True:
             print "warning using slow inversion in PInvSwitchboard!!!"
             #find input variables not used by connections:
             used_inputs = numpy.unique(connections)
@@ -337,7 +338,7 @@ class PInvSwitchboard(mdp.hinet.Switchboard):
             print "Inverse connections already given, in PInvSwitchboard"
 
         if output_scaling:
-            if self.inverse_connections == None and self.slow_inv == False:
+            if self.inverse_connections is None and self.slow_inv == False:
                 print "**A",
                 if self.type_inverse != "average":
                     err = "self.type_inverse not supported " + self.type_inverse
@@ -351,7 +352,7 @@ class PInvSwitchboard(mdp.hinet.Switchboard):
                         self.output_scales[j] = (1.0/multiplicity)**0.5
                         tt += 1
                 print "connections in switchboard considered: ", tt, "output dimension=", self.output_dim
-            elif self.inverse_connections == None and self.slow_inv == True:
+            elif self.inverse_connections is None and self.slow_inv == True:
                 print "**B",
                 err = "use of self.slow_inv = True is obsolete"
                 raise Exception(err)
@@ -372,16 +373,25 @@ class PInvSwitchboard(mdp.hinet.Switchboard):
     def _execute(self, x):
         #print "calling PInvSwitchboard/superclass _execute" #calling execute(x) instead of _execute(x) results in infinite loop!!!
         #print "super(PInvSwitchboard, self)=", super(PInvSwitchboard, self)
-        x = numpy.array(x,order="FORTRAN")
+        force_float32_type = False
+        if force_float32_type:
+            x = x.astype("float32") 
+        use_fortran_ordering = False
+        if use_fortran_ordering:
+            x = numpy.array(x,order="FORTRAN")
         #print "super()=", super()
-        y = super(PInvSwitchboard, self)._execute(x) * self.output_scales
-        #print "y.shape", y.shape
-        #print "y computed"
+        y = super(PInvSwitchboard, self)._execute(x) 
+        print "y computed"
+        print "y.shape", y.shape
+        print "output_scales ", self.output_scales       
+        y *= self.output_scales # y * elf.output_scales
+        print "output scales adjusted"
+ 
         #quit()
-        if self.additive_noise_std>0.0:
-            steps=10
-            print "PInvSwitchboard is adding noise to the output features with std", self.additive_noise_std, " computation in %d steps"%steps
+        if self.additive_noise_std>0.0:            
             n, dim = y.shape
+            steps= int(n/9000+1)
+            print "PInvSwitchboard is adding noise to the output features with std", self.additive_noise_std, " computation in %d steps"%steps
             step_size= int(n/steps)
             #y += numpy.random.uniform(low=-(3**0.5)*self.additive_noise_std, high=(3**0.5)*self.additive_noise_std, size=y.shape)
             for s in range(steps):
@@ -391,12 +401,13 @@ class PInvSwitchboard(mdp.hinet.Switchboard):
                 rest= n-step_size * steps
                 y[step_size*steps:step_size*steps+rest] += numpy.random.uniform(low=-(3**0.5)*self.additive_noise_std, high=(3**0.5)*self.additive_noise_std, size=(rest, dim))                
                 print "remaining noise block added"                
+        #quit()
         return y
 
     #If true inverse is present, just use it, otherwise compute it by means of the pseudoinverse                    
     def _inverse(self, x):
         x = x * (1.0 / self.output_scales) 
-        if self.inverse_connections == None and self.slow_inv == False:
+        if self.inverse_connections is None and self.slow_inv == False:
             height_x = x.shape[0]
             mat2 = numpy.zeros((height_x, self.input_dim))
             for row in range(height_x):
@@ -410,7 +421,7 @@ class PInvSwitchboard(mdp.hinet.Switchboard):
                         err = "self.type_inverse not supported: " + self.type_inverse
                         raise Exception(err)
             output = mat2
-        elif self.inverse_connections == None and self.slow_inv == True:
+        elif self.inverse_connections is None and self.slow_inv == True:
             print "x=", x
             height_x = x.shape[0]
             full_x = numpy.concatenate((x, 255*numpy.ones((height_x, self.num_unused_inputs))), axis=1)
@@ -454,18 +465,18 @@ class RandomPermutationNode(mdp.Node):
     def _train(self, x, verbose=True):
         n=x.shape[1]
 
-        if self.input_dim == None:
+        if self.input_dim is None:
             self.set_input_dim(n)
         
-        if self.input_dim == None:
+        if self.input_dim is None:
             print "*******Really Setting input_dim to ", n           
             self.input_dim = n
 
-        if self.output_dim == None:
+        if self.output_dim is None:
             print "*******Really Setting output_dim to ", n           
             self.output_dim = n
 
-        if self.permutation == None:
+        if self.permutation is None:
             if verbose:
                 print "Creating new random permutation"
                 print "Permutation=", self.permutation
@@ -785,7 +796,7 @@ class HeadNode(mdp.Node):
         return True
 
     def _execute(self, x):
-        if self.output_dim == None:
+        if self.output_dim is None:
             er = "Warning 12345..."
             raise Exception(er)
         return x[:, 0:self.output_dim]
@@ -860,7 +871,7 @@ class SFAPCANode(mdp.Node):
         Cproy =  numpy.dot(PS, numpy.dot(C, PS.T))
         Cpca = C - Cproy
 
-        if self.output_dim == None:
+        if self.output_dim is None:
             self.output_dim = dim
             
         pca_output_dim = self.output_dim - sfa_output_dim
@@ -1678,10 +1689,10 @@ class IEVMNode(mdp.Node):
     def _train(self, x, block_size=None, train_mode = None, node_weights=None, edge_weights=None, scheduler = None, n_parallel=None, **argv):
         num_samples, self.input_dim = x.shape
        
-        if self.output_dim == None:
+        if self.output_dim is None:
             self.output_dim = self.input_dim
 
-        if self.max_comp == None:
+        if self.max_comp is None:
             self.max_comp = min(self.input_dim, self.output_dim)
         else:
             self.max_comp = min(self.max_comp, self.input_dim, self.output_dim)
@@ -2120,10 +2131,10 @@ class IEVMLRecNode(mdp.Node):
     def _train(self, x, block_size=None, train_mode = None, node_weights=None, edge_weights=None, scheduler = None, n_parallel=None, **argv):
         self.input_dim = x.shape[1]
        
-        if self.output_dim == None:
+        if self.output_dim is None:
             self.output_dim = self.input_dim
 
-        if self.max_comp == None:
+        if self.max_comp is None:
             self.max_comp = min(self.input_dim, self.output_dim)
         else:
             self.max_comp = min(self.max_comp, self.input_dim, self.output_dim)
@@ -2263,7 +2274,7 @@ class IEVMLRecNode(mdp.Node):
             self.magn_n_sfa_x = sens * ((x_pca_app**2).sum(axis=1).mean() / sens.sum())
             s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x ** self.exponent_variance
             print "method: sensitivity_based_normalized enforced" 
-        elif self.offsetting_mode == None:
+        elif self.offsetting_mode is None:
             self.magn_n_sfa_x = 1
             s_n_sfa_x = n_sfa_x
         else:
@@ -2613,7 +2624,7 @@ class SFAAdaptiveNLNode(mdp.Node):
     def _train(self, x, block_size=None, train_mode = None, node_weights=None, edge_weights=None, scheduler = None, n_parallel=None, **argv):
         self.input_dim = x.shape[1]
        
-        if self.output_dim == None:
+        if self.output_dim is None:
             self.output_dim = self.input_dim
 
         print "Training SFAAdaptiveNLNode..."

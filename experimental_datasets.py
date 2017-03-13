@@ -29,56 +29,61 @@ print "PosXseed. experiment_seed=", experiment_seed
 numpy.random.seed(experiment_seed) #seed|-5789
 print "experiment_seed=", experiment_seed
 
-
+experiment_basedir = os.getenv("CUICUILCO_EXPERIMENT_BASEDIR") #1112223339 #1112223339
+if not experiment_basedir:
+    ex = "CUICUILCO_EXPERIMENT_BASEDIR unset. \nPlease use this environment variable to indicate the base directory of all databases"
+    raise Exception(ex)
 
 
 import os
 
-on_lok21 = os.path.lexists("/local2/tmp/escalafl/")
-on_zappa01 = os.path.lexists("/local/escalafl/on_zappa01")
-on_lok09 = os.path.lexists("/local/escalafl/on_lok09/")
-on_lok10 = os.path.lexists("/local/escalafl/on_lok10")
-local_available = os.path.lexists("/local/escalafl/")
-if on_lok21:
-    user_base_dir = "/local2/tmp/escalafl/"
-    frgc_normalized_base_dir = "/local2/tmp/escalafl/Alberto/FRGC_Normalized"
-    frgc_noface_base_dir = "/local/escalafl/Alberto/FRGC_NoFace"
-    alldb_noface_base_dir = "/local/escalafl/Alberto/AllDB_NoFace"
-    frgc_eyeL_normalized_base_dir = "/local/escalafl/Alberto/FRGC_EyeL"
-    print "Running on Lok21"
-elif on_lok09 or on_lok10:
-    user_base_dir = "/local/escalafl/"
-    frgc_normalized_base_dir = "/local/escalafl/Alberto/FRGC_Normalized"
-    frgc_noface_base_dir = "/local/escalafl/Alberto/FRGC_NoFace"
-    alldb_noface_base_dir = "/local/escalafl/Alberto/AllDB_NoFace"
-    alldbnormalized_base_dir = "/local/escalafl/Alberto/AllDBNormalized"    
-    frgc_eyeL_normalized_base_dir = "/local/escalafl/Alberto/FRGC_EyeL"
-    #age_eyes_normalized_base_dir =  "/local/escalafl/Alberto/MORPH_normalizedEyesZByAge"
-    print "Running on Lok09 or Lok10"
-elif local_available:
-    user_base_dir = "/local/escalafl/"
-    frgc_normalized_base_dir = "/local/escalafl/Alberto/FRGC_Normalized"
-    frgc_noface_base_dir = "/local/escalafl/Alberto/FRGC_NoFace"
-    alldb_noface_base_dir = "/local/escalafl/Alberto/AllDB_NoFace"
-    alldbnormalized_base_dir = "/local/escalafl/Alberto/AllDBNormalized"
-    frgc_eyeL_normalized_base_dir = "/local/escalafl/Alberto/FRGC_EyeL"
-    #age_eyes_normalized_base_dir =  "/local/escalafl/Alberto/MORPH_normalizedEyesZByAge"
-    print "Unknown host, but /local/escalafl available"
-else:
-    user_base_dir = "/local/tmp/escalafl/"
-    frgc_normalized_base_dir ="/local/tmp/escalafl/Alberto/FRGC_Normalized"    
-    frgc_noface_base_dir = "/local/escalafl/Alberto/FRGC_NoFace"
-    alldb_noface_base_dir = "/local/escalafl/Alberto/AllDB_NoFace"
-    alldbnormalized_base_dir = "/local/escalafl/Alberto/AllDBNormalized"
-    frgc_eyeL_normalized_base_dir = "/local/escalafl/Alberto/FRGC_EyeL"
-    print "Running on unknown host"
-    quit()
+# # on_lok21 = os.path.lexists("/local2/tmp/escalafl/")
+# # on_zappa01 = os.path.lexists("/local/escalafl/on_zappa01")
+# # on_lok09 = os.path.lexists("/local/escalafl/on_lok09/")
+# # on_lok10 = os.path.lexists("/local/escalafl/on_lok10")
+# # local_available = os.path.lexists("/local/escalafl/")
+# # if on_lok21:
+# #     user_base_dir = "/local2/tmp/escalafl/"
+# #     frgc_normalized_base_dir = "/local2/tmp/escalafl/Alberto/FRGC_Normalized"
+# #     frgc_noface_base_dir = "/local/escalafl/Alberto/FRGC_NoFace"
+# #     alldb_noface_base_dir = "/local/escalafl/Alberto/AllDB_NoFace"
+# #     frgc_eyeL_normalized_base_dir = "/local/escalafl/Alberto/FRGC_EyeL"
+# #     print "Running on Lok21"
+# # elif on_lok09 or on_lok10:
+# #     user_base_dir = "/local/escalafl/"
+# #     frgc_normalized_base_dir = "/local/escalafl/Alberto/FRGC_Normalized"
+# #     frgc_noface_base_dir = "/local/escalafl/Alberto/FRGC_NoFace"
+# #     alldb_noface_base_dir = "/local/escalafl/Alberto/AllDB_NoFace"
+# #     alldbnormalized_base_dir = "/local/escalafl/Alberto/AllDBNormalized"    
+# #     frgc_eyeL_normalized_base_dir = "/local/escalafl/Alberto/FRGC_EyeL"
+# #     #age_eyes_normalized_base_dir =  "/local/escalafl/Alberto/MORPH_normalizedEyesZByAge"
+# #     print "Running on Lok09 or Lok10"
+# # elif local_available:
+# #     user_base_dir = "/local/escalafl/"
+# #     frgc_normalized_base_dir = "/local/escalafl/Alberto/FRGC_Normalized"
+# #     frgc_noface_base_dir = "/local/escalafl/Alberto/FRGC_NoFace"
+# #     alldb_noface_base_dir = "/local/escalafl/Alberto/AllDB_NoFace"
+# #     alldbnormalized_base_dir = "/local/escalafl/Alberto/AllDBNormalized"
+# #     frgc_eyeL_normalized_base_dir = "/local/escalafl/Alberto/FRGC_EyeL"
+# #     #age_eyes_normalized_base_dir =  "/local/escalafl/Alberto/MORPH_normalizedEyesZByAge"
+# #     print "Unknown host, but /local/escalafl available"
+# # else:
+
+user_base_dir = experiment_basedir #"/local/tmp/escalafl/Alberto"
+frgc_normalized_base_dir = experiment_basedir + "/FRGC_Normalized"    
+frgc_noface_base_dir = experiment_basedir + "/FRGC_NoFace"
+alldb_noface_base_dir = experiment_basedir + "/AllDB_NoFace"
+alldbnormalized_base_dir = experiment_basedir + "/AllDBNormalized"
+frgc_eyeL_normalized_base_dir = experiment_basedir + "/FRGC_EyeL"
+alldb_eyeLR_normalized_base_dir = experiment_basedir + "/AllDB_EyeLR" 
+print "Running on unknown host"
+    
 
 def repeat_list_elements(lista, rep):
     return [element for it in range(rep) for element in lista]
 
 print "******** Setting Training Information Parameters for Gender (simulated faces) **********"
-def iSeqCreateGender(first_id = 0, num_ids = 25, user_base_dir=user_base_dir, data_dir="Alberto/RenderingsGender60x200", gender_continuous=True, seed=None):
+def iSeqCreateGender(first_id = 0, num_ids = 25, user_base_dir=user_base_dir, data_dir="RenderingsGender60x200", gender_continuous=True, seed=None):
     if seed >= 0 or seed is None:
         numpy.random.seed(seed)
         print "Gender. Using seed", seed
@@ -89,7 +94,7 @@ def iSeqCreateGender(first_id = 0, num_ids = 25, user_base_dir=user_base_dir, da
     iSeq.name = "Gender60x200"
 
     iSeq.gender_continuous = gender_continuous     
-    iSeq.data_base_dir = user_base_dir + data_dir
+    iSeq.data_base_dir = user_base_dir + "/" + data_dir
     iSeq.ids = numpy.arange(first_id,first_id+num_ids) #160, but 180 for paper!
     iSeq.ages = [999]
     iSeq.MIN_GENDER = -3
@@ -174,7 +179,7 @@ def sSeqCreateGender(iSeq, contrast_enhance, seed=-1):
 # # 
 # # iTrainGender = system_parameters.ParamsInput()
 # # iTrainGender.name = "Gender60x200"
-# # iTrainGender.data_base_dir = user_base_dir + "Alberto/RenderingsGender60x200"
+# # iTrainGender.data_base_dir = user_base_dir  + "/" +  "RenderingsGender60x200"
 # # iTrainGender.ids = numpy.arange(0,25) #160, but 180 for paper!
 # # iTrainGender.ages = [999]
 # # iTrainGender.MIN_GENDER = -3
@@ -251,7 +256,7 @@ def sSeqCreateGender(iSeq, contrast_enhance, seed=-1):
 # # print "****** Setting Seen Id Test Information Parameters for Gender ********"
 # # iSeenidGender = system_parameters.ParamsInput()
 # # iSeenidGender.name = "Gender60x200Seenid"
-# # iSeenidGender.data_base_dir =user_base_dir + "Alberto/RenderingsGender60x200"
+# # iSeenidGender.data_base_dir =user_base_dir  + "/" + "RenderingsGender60x200"
 # # iSeenidGender.ids = numpy.arange(0,180) # #160, (0,180) for paper!
 # # iSeenidGender.ages = [999]
 # # iSeenidGender.MIN_GENDER = -3
@@ -317,7 +322,7 @@ def sSeqCreateGender(iSeq, contrast_enhance, seed=-1):
 # # print "** Setting New Id Test Information Parameters for Gender **********"
 # # iNewidGender = system_parameters.ParamsInput()
 # # iNewidGender.name = "Gender60x200Newid"
-# # iNewidGender.data_base_dir =user_base_dir + "Alberto/RenderingsGender60x200"
+# # iNewidGender.data_base_dir =user_base_dir  + "/" + "RenderingsGender60x200"
 # # iNewidGender.ids = range(180,200)#160,200, 180-200 for paper!
 # # iNewidGender.ages = [999]
 # # iNewidGender.MIN_GENDER = -3
@@ -388,22 +393,22 @@ def sSeqCreateGender(iSeq, contrast_enhance, seed=-1):
 numpy.random.seed(experiment_seed+987987987)
 contrast_enhance = "ContrastGenderMultiply"
 #WARNING!!!
-#iTrainGender0 = iSeqCreateGender(first_id = 0, num_ids = 180, user_base_dir=user_base_dir, data_dir="Alberto/RenderingsGender60x200", gender_continuous=True, seed=-1)
-iTrainGender0 = iSeqCreateGender(first_id = 0, num_ids = 180, user_base_dir=user_base_dir, data_dir="Alberto/RenderingsGender60x200", gender_continuous=True, seed=-1)
+#iTrainGender0 = iSeqCreateGender(first_id = 0, num_ids = 180, user_base_dir=user_base_dir, data_dir="RenderingsGender60x200", gender_continuous=True, seed=-1)
+iTrainGender0 = iSeqCreateGender(first_id = 0, num_ids = 180, user_base_dir=user_base_dir, data_dir="RenderingsGender60x200", gender_continuous=True, seed=-1)
 sTrainGender0 = sSeqCreateGender(iTrainGender0, contrast_enhance, seed=-1)
 
-iTrainGender1 = iSeqCreateGender(first_id = 0, num_ids = 10, user_base_dir=user_base_dir, data_dir="Alberto/RenderingsGender60x200", gender_continuous=True, seed=-1)
+iTrainGender1 = iSeqCreateGender(first_id = 0, num_ids = 10, user_base_dir=user_base_dir, data_dir="RenderingsGender60x200", gender_continuous=True, seed=-1)
 sTrainGender1 = sSeqCreateGender(iTrainGender1, contrast_enhance, seed=-1)
 
-#iTrainGender2 = iSeqCreateGender(first_id = 40, num_ids = 150, user_base_dir=user_base_dir, data_dir="Alberto/RenderingsGender60x200", gender_continuous=True, seed=-1)
+#iTrainGender2 = iSeqCreateGender(first_id = 40, num_ids = 150, user_base_dir=user_base_dir, data_dir="RenderingsGender60x200", gender_continuous=True, seed=-1)
 #sTrainGender2 = sSeqCreateGender(iTrainGender2, seed=-1)
 #sTrainGender2.train_mode = "ignore_data"
 
-#iSeenidGender = iSeqCreateGender(first_id = 0, num_ids = 180, user_base_dir=user_base_dir, data_dir="Alberto/RenderingsGender60x200", gender_continuous=True, seed=-1)
-iSeenidGender = iSeqCreateGender(first_id = 0, num_ids = 180, user_base_dir=user_base_dir, data_dir="Alberto/RenderingsGender60x200", gender_continuous=True, seed=-1)
+#iSeenidGender = iSeqCreateGender(first_id = 0, num_ids = 180, user_base_dir=user_base_dir, data_dir="RenderingsGender60x200", gender_continuous=True, seed=-1)
+iSeenidGender = iSeqCreateGender(first_id = 0, num_ids = 180, user_base_dir=user_base_dir, data_dir="RenderingsGender60x200", gender_continuous=True, seed=-1)
 sSeenidGender = sSeqCreateGender(iSeenidGender, contrast_enhance, seed=-1)
 
-iNewidGender = iSeqCreateGender(first_id = 180, num_ids = 20, user_base_dir=user_base_dir, data_dir="Alberto/RenderingsGender60x200", gender_continuous=True, seed=-1)
+iNewidGender = iSeqCreateGender(first_id = 180, num_ids = 20, user_base_dir=user_base_dir, data_dir="RenderingsGender60x200", gender_continuous=True, seed=-1)
 sNewidGender = sSeqCreateGender(iNewidGender, contrast_enhance, seed=-1)
 
 #LABEL TRANSFORMATIONS FOR EXACT LABEL LEARNING
@@ -526,7 +531,7 @@ sampled_by_gender = True #and False
 #False, False, True, True => learn only gender 
 
 if add_skin_color_label_classes:
-    skin_color_labels_map = load_GT_labels(user_base_dir+"Alberto/RenderingsGender60x200"+"/GT_average_color_labels.txt", age_included=False, rAge_included=False, gender_included=False, race_included=False, avgColor_included=True)
+    skin_color_labels_map = load_GT_labels(user_base_dir+"/RenderingsGender60x200"+"/GT_average_color_labels.txt", age_included=False, rAge_included=False, gender_included=False, race_included=False, avgColor_included=True)
     
     example_filename = "output133_a999_g362_rt999_e0_c0_p0_i0.tif"
     filename_len = len(example_filename)
@@ -652,7 +657,7 @@ ParamsGender.enable_hack_image_size = True
 print "******** Setting Train Information Parameters for Identity ***********"
 iTrainIdentity = system_parameters.ParamsInput()
 iTrainIdentity.name = "Identities20x500"
-iTrainIdentity.data_base_dir =user_base_dir + "Alberto/Renderings20x500"
+iTrainIdentity.data_base_dir =user_base_dir + "/Renderings20x500"
 iTrainIdentity.ids = numpy.arange(0,18)
 iTrainIdentity.ages = [999]
 #iTrainIdentity.MIN_GENDER = -3
@@ -706,7 +711,7 @@ system_parameters.test_object_contents(sTrainIdentity)
 print "******** Setting Seen Id Information Parameters for Identity *********"
 iSeenidIdentity = system_parameters.ParamsInput()
 iSeenidIdentity.name = "Identities20x500"
-iSeenidIdentity.data_base_dir =user_base_dir + "Alberto/Renderings20x500"
+iSeenidIdentity.data_base_dir =user_base_dir + "/Renderings20x500"
 iSeenidIdentity.ids = numpy.arange(0,18)
 iSeenidIdentity.ages = [999]
 iSeenidIdentity.MIN_GENDER = -3
@@ -759,7 +764,7 @@ system_parameters.test_object_contents(sSeenidIdentity)
 print "******** Setting New Id Information Parameters for Identity **********"
 iNewidIdentity = system_parameters.ParamsInput()
 iNewidIdentity.name = "Identities20x500"
-iNewidIdentity.data_base_dir =user_base_dir + "Alberto/Renderings20x500"
+iNewidIdentity.data_base_dir =user_base_dir + "/Renderings20x500"
 iNewidIdentity.ids = numpy.arange(18,20, dtype="int")
 iNewidIdentity.ages = [999]
 iNewidIdentity.MIN_GENDER = -3
@@ -830,7 +835,7 @@ ParamsIdentity.analysis = None
 print "******** Setting Train Information Parameters for Angle **************"
 iTrainAngle = system_parameters.ParamsInput()
 iTrainAngle.name = "Angle20x500"
-iTrainAngle.data_base_dir =user_base_dir + "Alberto/Renderings20x500"
+iTrainAngle.data_base_dir =user_base_dir + "/Renderings20x500"
 iTrainAngle.ids = numpy.arange(0,18)
 iTrainAngle.ages = [999]
 #iTrainAngle.MIN_GENDER = -3
@@ -885,7 +890,7 @@ system_parameters.test_object_contents(sTrainAngle)
 print "******** Setting Seen Id Information Parameters for Angle ************"
 iSeenidAngle = system_parameters.ParamsInput()
 iSeenidAngle.name = "Angle20x500"
-iSeenidAngle.data_base_dir =user_base_dir + "Alberto/Renderings20x500"
+iSeenidAngle.data_base_dir =user_base_dir + "/Renderings20x500"
 iSeenidAngle.ids = numpy.arange(0,18)
 iSeenidAngle.ages = [999]
 iSeenidAngle.MIN_GENDER = -3
@@ -939,7 +944,7 @@ system_parameters.test_object_contents(sSeenidAngle)
 print "******** Setting New Id Information Parameters for Angle *************"
 iNewidAngle = system_parameters.ParamsInput()
 iNewidAngle.name = "Angle20x500"
-iNewidAngle.data_base_dir =user_base_dir + "Alberto/Renderings20x500"
+iNewidAngle.data_base_dir =user_base_dir + "/Renderings20x500"
 iNewidAngle.ids = numpy.arange(18,20)
 iNewidAngle.ages = [999]
 iNewidAngle.MIN_GENDER = -3
@@ -1014,7 +1019,7 @@ ParamsAngle.analysis = None
 print "***** Setting Training Information Parameters for Translation X ******"
 iTrainTransX = system_parameters.ParamsInput()
 iTrainTransX.name = "Translation X: 60Genders x 200 identities"
-iTrainTransX.data_base_dir = user_base_dir + "Alberto/RenderingsGender60x200"
+iTrainTransX.data_base_dir = user_base_dir + "/RenderingsGender60x200"
 iTrainTransX.ids = numpy.arange(0,150) # 160
 iTrainTransX.trans = numpy.arange(-50, 50, 2)
 if len(iTrainTransX.ids) % len(iTrainTransX.trans) != 0:
@@ -1084,7 +1089,7 @@ system_parameters.test_object_contents(sTrainTransX)
 print "***** Setting Seen ID Information Parameters for Translation X *******"
 iSeenidTransX = system_parameters.ParamsInput()
 iSeenidTransX.name = "Test Translation X: 60Genders x 200 identities, dx = 1 pixel"
-iSeenidTransX.data_base_dir = user_base_dir + "Alberto/RenderingsGender60x200"
+iSeenidTransX.data_base_dir = user_base_dir + "/RenderingsGender60x200"
 iSeenidTransX.ids = numpy.arange(0,50) # 160
 iSeenidTransX.trans = iTrainTransX.trans + 1
 if len(iSeenidTransX.ids) % len(iSeenidTransX.trans) != 0:
@@ -1152,7 +1157,7 @@ system_parameters.test_object_contents(sSeenidTransX)
 print "******** Setting New Id Information Parameters for Translation X *****"
 iNewidTransX = system_parameters.ParamsInput()
 iNewidTransX.name = "New ID Translation X: 60Genders x 200 identities, dx = 1 pixel"
-iNewidTransX.data_base_dir =user_base_dir + "Alberto/RenderingsGender60x200"
+iNewidTransX.data_base_dir =user_base_dir + "/RenderingsGender60x200"
 iNewidTransX.ids = numpy.arange(150,200) # 160
 iNewidTransX.trans = numpy.arange(-50,50,2)
 if len(iNewidTransX.ids) % len(iNewidTransX.trans) != 0:
@@ -1240,7 +1245,7 @@ ParamsTransX.analysis = None
 print "***** Setting Training Information Parameters for Age (simulated faces) ******"
 iTrainAge = system_parameters.ParamsInput()
 iTrainAge.name = "Age: 23 Ages x 200 identities"
-iTrainAge.data_base_dir =user_base_dir + "Alberto/RendersAge200x23"
+iTrainAge.data_base_dir =user_base_dir + "/RendersAge200x23"
 iTrainAge.im_base_name = "age"
 iTrainAge.ids = numpy.arange(0,180) # 180, warning speeding up
 #Available ages: iTrainAge.ages = [15, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 35, 36, 40, 42, 44, 45, 46, 48, 50, 55, 60, 65]
@@ -1304,7 +1309,7 @@ system_parameters.test_object_contents(sTrainAge)
 print "***** Setting Seen Id Test Information Parameters for Age ******"
 iSeenidAge = system_parameters.ParamsInput()
 iSeenidAge.name = "Age: 23 Ages x 200 identities"
-iSeenidAge.data_base_dir =user_base_dir + "Alberto/RendersAge200x23"
+iSeenidAge.data_base_dir =user_base_dir + "/RendersAge200x23"
 iSeenidAge.im_base_name = "age"
 iSeenidAge.ids = numpy.arange(0,180) # 180
 #Available ages: iSeenidAge.ages = numpy.array([15, 16, 18, 20, 22, 24, 25, 26, 28, 30, 32, 34, 35, 36, 40, 42, 44, 45, 46, 48, 50, 55, 60, 65])
@@ -1365,7 +1370,7 @@ system_parameters.test_object_contents(sSeenidAge)
 print "***** Setting New Id Test Information Parameters for Age ******"
 iNewidAge = system_parameters.ParamsInput()
 iNewidAge.name = "Age: 23 Ages x 200 identities"
-iNewidAge.data_base_dir =user_base_dir + "Alberto/RendersAge200x23"
+iNewidAge.data_base_dir =user_base_dir + "/RendersAge200x23"
 iNewidAge.im_base_name = "age"
 iNewidAge.ids = numpy.arange(180,200) # 180,200
 #Available ages: iNewidAge.ages = numpy.array([15, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 35, 36, 40, 42, 44, 45, 46, 48, 50, 55, 60, 65])
@@ -2244,15 +2249,15 @@ print "Studienprojekt. Illumination estimation datasets. By Jan and Stephan and 
 print "***** Setting Training Information Parameters for Illumination ******"
 iSeq = iTrainRIllumination = system_parameters.ParamsInput()
 iSeq.name = "Real Illumination:"
-on_Jan = os.path.lexists("/home/jan")
-if on_lok21:
-    pathIllumination = "/local2/escalafl/Alberto/Erg"
-if on_Jan:
-    pathIllumination = "/home/jan/Dokumente/Studienprojekt/Pictures Illumination Cars/NewImages"
-elif on_zappa01:
-    pathIllumination = "/local/escalafl/Alberto/NewImages"
-else:
-    pathIllumination = "/local/escalafl/Alberto/Erg"
+# on_Jan = os.path.lexists("/home/jan")
+# if on_lok21:
+#     pathIllumination = "/local2/escalafl/Alberto/Erg"
+# if on_Jan:
+#     pathIllumination = "/home/jan/Dokumente/Studienprojekt/Pictures Illumination Cars/NewImages"
+# elif on_zappa01:
+#     pathIllumination = "/local/escalafl/Alberto/NewImages"
+# else:
+pathIllumination = user_base_dir + "/Erg"
 
 available_cars = numpy.arange(1,32)
 numpy.random.shuffle(available_cars)
@@ -2470,13 +2475,14 @@ print "Studienprojekt. Rotation estimation datasets. By Jan and Stephan and Albe
 print "***** Setting Training Information Parameters for Rotation ******"
 iSeq = iTrainRRotation = system_parameters.ParamsInput()
 iSeq.name = "Real Rotation: "
-on_Jan = os.path.lexists("/home/jan")
-if on_lok21:
-    pathRotation = "/local2/escalafl/Alberto/Erg"
-if on_Jan:
-    pathRotation = "/media/7270C6F570C6BF5B/Pictures Rotation/Single Pictures"
-else:
-    pathRotation = "/home/Stephan/Erg"
+# on_Jan = os.path.lexists("/home/jan")
+# if on_lok21:
+#     pathRotation = "/local2/escalafl/Alberto/Erg"
+# if on_Jan:
+#     pathRotation = "/media/7270C6F570C6BF5B/Pictures Rotation/Single Pictures"
+# else:
+#     pathRotation = "/home/Stephan/Erg"
+pathRotation = user_base_dir + "/Erg"
 available_cars = numpy.arange(1,40)
 numpy.random.shuffle(available_cars)
 
@@ -4557,10 +4563,173 @@ ParamsREyeTransY.hack_image_size = 32
 ParamsREyeTransY.enable_hack_image_size = True
 
 
-
 ############################################################
 ########## Function Defined Data Sources ###################
 ############################################################
+
+
+# EYE_L_XYFunc
+# Dataset for joint estimation of PosX and PosY for the left eye, uses 32x32 resolution
+#This network actually supports images in the closed intervals: [-eye_dx, eye_dx], [-eye_dy, eye_dy], [eye_smin0, eye_smax0]
+def iSeqCreateREyePosXY(num_images, eyeLR_normalized_base_dir, all_eyeLR_available_images, first_image=0, slow_var="PosX", num_classes=30, eye_dx=10, eye_dy=10, repetition_factor=8, seed=-1):
+    if seed >= 0 or seed is None: #also works for 
+        numpy.random.seed(seed)
+    #else seed <0 then, do not change seed
+    
+    print "***** Setting information Parameters for REyePosXY******"
+    iSeq = system_parameters.ParamsInput()
+    # (0.55+1.1)/2 = 0.825, 0.55/2 = 0.275, 0.55/4 = 0.1375, .825 + .1375 = .9625, .825 - .55/4 = .6875
+    iSeq.name = "Real EYE LOCATION (PosX / PosY)"
+
+    iSeq.data_base_dir = eyeLR_normalized_base_dir
+    iSeq.ids = all_eyeLR_available_images[numpy.arange(first_image, first_image+num_images)] # 6000 8000, 7965
+
+    iSeq.ages = [None]
+    iSeq.genders = [None]
+    iSeq.racetweens = [None]
+    iSeq.expressions = [None]
+    iSeq.morphs = [None]
+    iSeq.poses = [None]
+    iSeq.lightings = [None]
+    iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
+    iSeq.step = 1
+    iSeq.offset = 0
+    iSeq.input_files = imageLoader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+                                                iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
+                                                iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
+    iSeq.input_files = iSeq.input_files * repetition_factor # warning!!! 8
+    #To avoid grouping similar images next to one other
+    numpy.random.shuffle(iSeq.input_files)  
+    
+    iSeq.num_images = len(iSeq.input_files)
+
+    iSeq.translations_x = numpy.random.uniform(-1 * eye_dx, eye_dx, iSeq.num_images)
+    iSeq.translations_y = numpy.random.uniform(-1 * eye_dy, eye_dy, iSeq.num_images)
+
+    if slow_var=="PosX":        
+        iSeq.translations_x.sort()
+        print "iSeq.translations_x=", iSeq.translations_x
+    elif slow_var=="PosY":
+        iSeq.translations_y.sort()
+    else:
+        er = "slow_var must be either PosX or PosY" 
+        raise Exception(er)
+
+    
+    #if len(iSeq.ids) != len(iSeq.translations_x):
+    #    ex="Here the number of translations must be equal to the number of identities: ", len(iSeq.translations_x),len(iSeq.ids)
+    #    raise Exception(ex)
+
+    iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, iSeq.poses, iSeq.lightings]
+    iSeq.block_size = iSeq.num_images / num_classes
+
+    iSeq.train_mode = "serial" #TODO:should learn both labels simultaneously
+    all_classes = numpy.arange(iSeq.num_images)*num_classes/iSeq.num_images
+    correct_classes_X = numpy.zeros(iSeq.num_images)
+    correct_classes_Y = numpy.zeros(iSeq.num_images)
+    correct_classes_X[numpy.argsort(iSeq.translations_x)] = all_classes.copy()
+    correct_classes_Y[numpy.argsort(iSeq.translations_y)] = all_classes.copy()
+
+    print "correct_classes_X=", correct_classes_X
+    print "correct_classes_Y=", correct_classes_Y
+    
+    iSeq.correct_classes = numpy.stack((correct_classes_X, correct_classes_Y)).T
+    iSeq.correct_labels = numpy.stack((iSeq.translations_x, iSeq.translations_y)).T       
+    
+    system_parameters.test_object_contents(iSeq)
+    return iSeq
+
+def sSeqCreateREyePosXY(iSeq, eye_smax=0.84, eye_smin=0.81, eye_da=22.5, seed=-1):
+    if seed >= 0 or seed is None: #also works for 
+        numpy.random.seed(seed)
+    #else seed <0 then, do not change seed
+    print "******** Setting Training Data Parameters for Real Eye TransX  ****************"
+    sSeq = system_parameters.ParamsDataLoading()
+    sSeq.input_files = iSeq.input_files
+    sSeq.num_images = iSeq.num_images
+    sSeq.block_size = iSeq.block_size
+    sSeq.train_mode = iSeq.train_mode
+    sSeq.image_width = 256
+    sSeq.image_height = 192
+    sSeq.subimage_width = 64
+    sSeq.subimage_height = 64 
+    
+    sSeq.trans_x_max = eye_dx
+    sSeq.trans_x_min = -eye_dx
+    sSeq.trans_y_max = eye_dy
+    sSeq.trans_y_min = -eye_dy
+    sSeq.min_sampling = eye_smin
+    sSeq.max_sampling = eye_smax
+
+    
+    sSeq.translations_x = iSeq.translations_x
+    sSeq.translations_y = iSeq.translations_y
+    sSeq.rotations = numpy.random.uniform(low=-eye_da, high=eye_da, size=sSeq.num_images)
+    sSeq.pixelsampling_x = numpy.random.uniform(low=sSeq.min_sampling, high=sSeq.max_sampling, size=sSeq.num_images) 
+    sSeq.pixelsampling_y = sSeq.pixelsampling_x.copy()
+    sSeq.subimage_first_row =  sSeq.image_height/2.0-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
+    sSeq.subimage_first_column = sSeq.image_width/2.0-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
+    sSeq.contrast_enhance = None #"array_mean_std-127.5-45.0"
+    sSeq.add_noise_L0 = True
+    sSeq.convert_format = "L"
+    sSeq.background_type = None   
+    sSeq.trans_sampled = False #the translations are specified according to the original image, not according to the sampled patch
+
+    sSeq.name = "REyePosXY Dx in (%d, %d) Dy in (%d, %d), sampling in (%d, %d)"%(sSeq.trans_x_min, 
+        sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, int(sSeq.min_sampling*100), int(sSeq.max_sampling*100))
+    iSeq.name = sSeq.name
+    print sSeq.name
+    
+    sSeq.load_data = load_data_from_sSeq
+    
+    system_parameters.test_object_contents(sSeq)
+
+    return sSeq
+
+ParamsREyeTransXYFunc = system_parameters.ParamsSystem()
+ParamsREyeTransXYFunc.network = "linearNetwork4L"
+all_eyeLR_available_images = numpy.arange(7000, 45000) #51434 #Only use a fraction of the FRGC images (the first images are more important because they have more variations)
+numpy.random.shuffle(all_eyeLR_available_images)
+learn_all_variables = True #Combine two graphs for PosX and PosY
+
+eye_dx = 10.7 #6 #12
+eye_dy = 10.7 #6 #12
+eye_smax= (0.94875 + .01725)*2.0   #*2.5   # (0.825 + 0.015)*2.5 * 1.25 #Factor 1.05 is for an experiment only
+eye_smin= (0.94875 - .01725)*2.0   #*2.5   #(0.825 - 0.015)*2.5 * 1.25
+eye_da = 10 #22.5 #30.0 , 22.5
+ParamsREyeTransXYFunc.iTrain = [[iSeqCreateREyePosXY(30000, alldb_eyeLR_normalized_base_dir, all_eyeLR_available_images, first_image=0, slow_var="PosX", num_classes=50, eye_dx=eye_dx, eye_dy=eye_dy, repetition_factor=4, seed=-1)]] #4
+ParamsREyeTransXYFunc.sTrain = [[sSeqCreateREyePosXY(ParamsREyeTransXYFunc.iTrain[0][0], eye_smax=eye_smax, eye_smin=eye_smin, eye_da=eye_da, seed=-1)]] 
+ParamsREyeTransXYFunc.iSeenid =  iSeqCreateREyePosXY(4000, alldb_eyeLR_normalized_base_dir, all_eyeLR_available_images, first_image=30000, slow_var="PosX", num_classes=50, eye_dx=eye_dx, eye_dy=eye_dy, repetition_factor=2, seed=-1) #2
+ParamsREyeTransXYFunc.sSeenid = sSeqCreateREyePosXY(ParamsREyeTransXYFunc.iSeenid, eye_smax=eye_smax, eye_smin=eye_smin, eye_da=eye_da, seed=-1)
+ParamsREyeTransXYFunc.iNewid = [[iSeqCreateREyePosXY(4000, alldb_eyeLR_normalized_base_dir, all_eyeLR_available_images, first_image=34000, slow_var="PosX", num_classes=50, eye_dx=eye_dx, eye_dy=eye_dy, repetition_factor=1, seed=-1)]]
+ParamsREyeTransXYFunc.sNewid = [[sSeqCreateREyePosXY(ParamsREyeTransXYFunc.iNewid[0][0], eye_smax=eye_smax, eye_smin=eye_smin, eye_da=eye_da, seed=-1)]]
+ParamsREyeTransXYFunc.name = ParamsREyeTransXYFunc.sTrain[0][0].name
+ParamsREyeTransXYFunc.block_size = ParamsREyeTransXYFunc.iTrain[0][0].block_size
+ParamsREyeTransXYFunc.train_mode = 'serial' #ignored
+ParamsREyeTransXYFunc.analysis = None
+ParamsREyeTransXYFunc.enable_reduced_image_sizes = True
+ParamsREyeTransXYFunc.reduction_factor = 1.0
+ParamsREyeTransXYFunc.hack_image_size = 64
+ParamsREyeTransXYFunc.enable_hack_image_size = True
+
+if learn_all_variables: # and False:
+    iSeq = ParamsREyeTransXYFunc.iTrain[0][0]
+    sSeq = ParamsREyeTransXYFunc.sTrain[0][0]
+    sSeq.train_mode = [sSeq.train_mode, ("serial_regression50", iSeq.correct_labels[:,1], 1.0)]
+
+
+ParamsREyeTransXYFunc_64x64 = copy.deepcopy(ParamsREyeTransXYFunc)
+ParamsREyeTransXYFunc_32x32 = copy.deepcopy(ParamsREyeTransXYFunc)
+ParamsREyeTransXYFunc_32x32.reduction_factor = 2.0
+ParamsREyeTransXYFunc_32x32.hack_image_size = 32
+
+#print ParamsREyeTransXYFunc.iTrain[0][0].correct_labels[:,0]
+#print ParamsREyeTransXYFunc.sTrain[0][0].translations_x
+
+
+###############################################################################
+############################### FACE CENTERING ################################
+###############################################################################
 def iSeqCreateRFaceCentering(num_images, alldbnormalized_available_images, alldb_noface_available_images, first_image=0, first_image_no_face=0, repetition_factor=1, seed=-1):
     if seed >= 0 or seed is None: #also works for 
         numpy.random.seed(seed)
@@ -4708,7 +4877,7 @@ def sSeqCreateRFaceCentering(iSeq, pipeline_fd, pipeline_factor=2.0, seed=-1):
     sSeq.add_noise_L0 = True
     sSeq.convert_format = "L"
     sSeq.background_type = None
-    sSeq.trans_sampled = True
+    sSeq.trans_sampled = True 
     
     sSeq.name = "Face Centering. Dx %d, Dy %d, Da %d, sampling in (%d, %d)"%(sSeq.trans_x_max, sSeq.trans_y_max, int(sSeq.min_sampling*1000), int(sSeq.max_sampling*1000),
         int(sSeq.min_sampling*1000), int(sSeq.max_sampling*1000))
@@ -6218,8 +6387,8 @@ pipeline_fd_1Label = dict(dx0 = 40, dy0 = 20, da0=22.5, smin0 = 0.55,  smax0 = 1
                           dx1 = 20, dy1 = 10, da1=11.3, smin1 = 0.775, smax1 = 1.05)                    
 
 pipeline_fd_4Labels = dict(dx0 = 40,  dy0 = 20,  da0=22.5, smin0 = 0.694,  smax0 = 0.981,
-                           dx1 = 14,  dy1 = 13,  da1=21.3, smin1 = 0.694,  smax1 = 0.981,
-                           dx2 = 7.5, dy2 = 8.0, da2=16.5, smin2 = 0.694,  smax2 = 0.981)                    
+                           dx1 = 14,  dy1 = 13,  da1=21.3, smin1 = 0.694,  smax1 = 0.981, #why am I not reducing the scale range???!!!!!
+                           dx2 = 7.5, dy2 = 8.0, da2=16.5, smin2 = 0.694,  smax2 = 0.981) #ERROR, THIS IS A BUG                   
 
 #####For 4 lables, try next options for iter 1
 #####13, 13.5, 18, 0.73, 1.075, 
@@ -6351,7 +6520,7 @@ def iSeqCreateRTransXYPAngScale(dx=45, dy=20, da=22.5, smin=0.55, smax=1.1, num_
 #        iSeq.train_mode = "mirror_window64" # "mirror_window32" "smirror_window32" # None, "regular", "window32", "fwindow16", "fwindow32", "fwindow64", "fwindow128", 
 
 #        quit()
-    iSeq.train_mode = "serial" #"mirror_window256" #"mirror_window32" # "mirror_window32", "regular", "fwindow16" "serial" "mixed", None
+    iSeq.train_mode = "serial" #"mirror_window256" "mirror_window32", "regular", "fwindow16", "serial", "mixed", None
 #        iSeq.train_mode = None 
 
     print "BLOCK SIZE =", iSeq.block_size
@@ -6457,6 +6626,7 @@ def sSeqCreateRTransXYPAngScale(iSeq, seed=-1):
     sSeq.subimage_first_row =  sSeq.image_height/2.0-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
     sSeq.subimage_first_column = sSeq.image_width/2.0-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
 
+    sSeq.contrast_enhance = "array_mean_std-137.5-45.0" #None #"array_mean_std-127.5-45.0"
     sSeq.trans_sampled = True #TODO: Why are translations specified according to the sampled images?
     
     sSeq.name = "RTansXYPAngScale %s Dx in (%d, %d) Dy in (%d, %d), sampling in (%d, %d)"%(iSeq.slow_var, sSeq.trans_x_min, 
@@ -6483,7 +6653,7 @@ normalized_base_dir_INIBilder = "/local/escalafl/Alberto/INIBilder/INIBilderNorm
 ## CASE [[F]]iSeqCreateRTransXYPAngScale(dx=45, dy=20, smin=0.55, smax=1.1, num_steps=20, slow_var = "X", continuous=False, num_images_used=10000, images_base_dir= alldbnormalized_base_dir, normalized_images = alldbnormalized_available_images, first_image_index=0, repetition_factor=1, seed=-1):
 continuous = True #and False
 
-slow_var = "All" #"X", "PAng" # "Y", "Scale"
+slow_var = "All" # "All", "X", "PAng", "Y", "Scale"
 iteration = 0 # 0, 1, 2 (only 4Labels)
 
 
@@ -6530,7 +6700,12 @@ elif slow_var == "Scale":
 else:
     er = "incorrect slow_var " + str(slow_var)
     raise Exception(er)
-    
+
+#dx=45.0
+#dy=20.0
+#da=10.0
+#smin = 0.55
+#smax = 1.1
 iSeq_set = iTrainRTransXYPAngScale = [[iSeqCreateRTransXYPAngScale(dx=dx, dy=dy, da=da, smin=smin, smax=smax, num_steps=50, slow_var=slow_var, continuous=continuous, num_images_used=30000, #30000 
                                                       images_base_dir=alldbnormalized_base_dir, normalized_images = alldbnormalized_available_images, 
                                                       first_image_index=0, pre_mirroring="none", repetition_factor=2, seed=-1)]]
@@ -6538,11 +6713,11 @@ iSeq_set = iTrainRTransXYPAngScale = [[iSeqCreateRTransXYPAngScale(dx=dx, dy=dy,
 #iSeq_set = iTrainRTransXYPAngScale = [[iSeqCreateRTransXYPAngScale(dx=45, dy=2, da=da, smin=0.85, smax=0.95, num_steps=50, slow_var = "X", continuous=continuous, num_images_used=15000, #30000 
 #                                                      images_base_dir=alldbnormalized_base_dir, normalized_images = alldbnormalized_available_images, 
 #                                                      first_image_index=0, repetition_factor=1, seed=-1)]]
-
 #For generating INI images
-#iSeq_set = iTrainRTransXYPAngScale = [[iSeqCreateRTransXYPAngScale(dx=45, dy=20, da=da, smin=0.55, smax=1.1, num_steps=71, slow_var = "X", continuous=continuous, num_images_used=71, #30000 
-#                                                      images_base_dir=normalized_base_dir_INIBilder, normalized_images = numpy.arange(0, 71), 
-#                                                      first_image_index=0, repetition_factor=1, seed=143)]]
+#da=10.0
+#iSeq_set = iTrainRTransXYPAngScale = [[iSeqCreateRTransXYPAngScale(dx=45, dy=20, da=da, smin=0.55, smax=1.1, num_steps=79, slow_var = "X", continuous=continuous, num_images_used=79, #30000 
+#                                                      images_base_dir=normalized_base_dir_INIBilder, normalized_images = numpy.arange(0, 79), 
+#                                                      first_image_index=0, repetition_factor=10, seed=143)]]
 sSeq_set = sTrainRTransXYPAngScale = [[sSeqCreateRTransXYPAngScale(iSeq_set[0][0], seed=-1)]]
 
 #iSeq_set = iTrainRTransY2 = [[copy.deepcopy(iSeq0), iSeqCreateRTransY(900, av_fim, first_image=4500, repetition_factor=1, seed=-1)], 
@@ -6565,7 +6740,9 @@ iSeq_set = iNewidRTransXYPAngScale = [[iSeqCreateRTransXYPAngScale(dx=dx, dy=dy,
 #iSeq_set = iNewidRTransXYPAngScale = [[iSeqCreateRTransXYPAngScale(dx=45, dy=2, da=da, smin=0.85, smax=0.95, num_steps=50, slow_var = "X", continuous=True, num_images_used=2000, #9000 
 #                                                      images_base_dir=alldbnormalized_base_dir, normalized_images = alldbnormalized_available_images, 
 #                                                      first_image_index=55000, repetition_factor=1, seed=-1)]]
-
+#iSeq_set = iNewidRTransXYPAngScale = [[iSeqCreateRTransXYPAngScale(dx=45, dy=20, da=da, smin=0.55, smax=1.1, num_steps=79, slow_var = "X", continuous=continuous, num_images_used=79, #30000 
+#                                                      images_base_dir=normalized_base_dir_INIBilder, normalized_images = numpy.arange(0, 79), 
+#                                                      first_image_index=0, repetition_factor=20, seed=143)]]
 
 sSeq_set = sNewidRTransXYPAngScale = [[sSeqCreateRTransXYPAngScale(iSeq_set[0][0], seed=-1)]]
 
@@ -6633,8 +6810,8 @@ ParamsRTransXYPAngScaleFunc.block_size = iTrainRTransXYPAngScale[0][0].block_siz
     
 ParamsRTransXYPAngScaleFunc.analysis = None
 ParamsRTransXYPAngScaleFunc.enable_reduced_image_sizes = True
-ParamsRTransXYPAngScaleFunc.reduction_factor = 2.0 # WARNING 1.0, 2.0, 4.0, 8.0  / 1.0 2.0 ... 
-ParamsRTransXYPAngScaleFunc.hack_image_size = 64 # WARNING   128,  64,  32 , 16 / 160  80 ...
+ParamsRTransXYPAngScaleFunc.reduction_factor = 1.0 # WARNING 1.0, 2.0, 4.0, 8.0  / 1.0 2.0 ... 
+ParamsRTransXYPAngScaleFunc.hack_image_size = 128 # WARNING   128,  64,  32 , 16 / 160  80 ...
 ParamsRTransXYPAngScaleFunc.enable_hack_image_size = True
 
 #quit()
@@ -7466,7 +7643,7 @@ if leave_k_out_MORPH == 0:
     select_k_images_newid = 8000
 #select_k_images_seenid = 1500 #16000 #4000 #3000 #3750
 
-option_setup_CNN = 0 # 1=CNN setup, 0=my setup
+option_setup_CNN = 1 # 1=CNN setup, 0=my setup
 if option_setup_CNN: 
     leave_k_out_MORPH = 0 #to speed on unnecessary computation 
     select_k_images_newid = 1000
@@ -7655,6 +7832,7 @@ else:
 age_files_list_set1 = list_available_images(age_eyes_normalized_base_dir_set1, from_subdirs=None, verbose=False)
 age_labeled_files_list_set1 = append_GT_labels_to_files(age_files_list_set1, age_all_labels_map_MORPH)
 age_clusters_set1 = age_cluster_labeled_files(age_labeled_files_list_set1, repetition=22, num_clusters=32, trim_number=None, shuffle_each_cluster=False) #r=22
+#WARNING, should be: repetition=22
 #age_clusters_set1 = age_cluster_labeled_files(age_labeled_files_list_set1, repetition=16, num_clusters=33, trim_number=None, shuffle_each_cluster=False)
   
 #age_clusters_set1 = age_cluster_list(age_files_dict_set1, repetition=pre_repetitions, smallest_number_images=age_trim_number_set1, largest_number_images=age_trim_number_set1) #Cluster so that all clusters have size at least 1400 
@@ -7872,7 +8050,7 @@ sSeq_set = sSeenidRAge = sSeqCreateRAge(iSeq_set, seed=-1, use_RGB_images=age_us
 #iSeq_set = iNewidRAge = [[iSeqCreateRAge(dx=0, dy=0, smin=0.8833+scale_offset, smax=0.8833+scale_offset, delta_rotation=0.0, pre_mirroring="none", contrast_enhance=True, 
 #160x160: use_orig_label_as_class 
 #TODO:get rid of this conditional. Add Leave-k-out for MORPH+FGNet
-testing_INIBilder = (num_images_per_cluster_used_INIBilder > 0) #and False
+testing_INIBilder = (num_images_per_cluster_used_INIBilder > 0) and False
 testing_FGNet = True and False
 if (not testing_INIBilder) and (not testing_FGNet): 
     if leave_k_out_MORPH==0 and option_setup_CNN==0:
@@ -8420,9 +8598,9 @@ def iSeqCreateMNIST(dx=0, dy=0, smin=1.0, smax=1.00, delta_rotation=0.0, pre_mir
     for digit in clusters.keys():
         cluster = clusters[digit]
         if num_images_per_cluster_used >= 0:
-            cluster_id =  cluster[first_image_index:first_image_index+num_images_per_cluster_used]*repetition_factor #image numbers
+            cluster_id =  cluster[first_image_index:first_image_index+num_images_per_cluster_used].repeat(repetition_factor) #image numbers
         else:
-            cluster_id = cluster[first_image_index:] * repetition_factor
+            cluster_id = cluster[first_image_index:].repeat(repetition_factor)
         iSeq.ids.extend(cluster_id)
 
         if num_images_per_cluster_used >= 0:
@@ -8546,8 +8724,8 @@ def sSeqCreateMNIST(iSeq, images_array, seed=-1, use_RGB_images=False):
     sSeq.include_latest = iSeq.include_latest
     sSeq.image_width = 28
     sSeq.image_height = 28 #192
-    sSeq.subimage_width = 28 #192 # 160 #128 
-    sSeq.subimage_height = 28 #192 # 160 #128 
+    sSeq.subimage_width = 24 #28 #192 # 160 #128 
+    sSeq.subimage_height = 24 #28 #192 # 160 #128 
     sSeq.pre_mirror_flags = iSeq.pre_mirror_flags
     
     sSeq.trans_x_max = iSeq.dx
@@ -8571,13 +8749,17 @@ def sSeqCreateMNIST(iSeq, images_array, seed=-1, use_RGB_images=False):
 
     sSeq.offset_translation_x = 0.0 
     sSeq.offset_translation_y = 0.0
+    
+    #sSeq.translations_x = numpy.random.uniform(sSeq.trans_x_min, sSeq.trans_x_max, sSeq.num_images) + sSeq.offset_translation_x 
+    #sSeq.translations_y = numpy.random.uniform(sSeq.trans_y_min, sSeq.trans_y_max, sSeq.num_images) + sSeq.offset_translation_y 
+    
     sSeq.translations_x = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, sSeq.num_images) + sSeq.offset_translation_x
     sSeq.translations_y = numpy.random.random_integers(sSeq.trans_y_min, sSeq.trans_y_max, sSeq.num_images) + sSeq.offset_translation_y
+    
     #print "sSeq.translations_x=", sSeq.translations_x 
 
     sSeq.pixelsampling_x = numpy.random.uniform(low=sSeq.min_sampling, high=sSeq.max_sampling, size=sSeq.num_images)
     sSeq.pixelsampling_y = sSeq.pixelsampling_x + 0.0
-
     if sSeq.delta_rotation != None:
         sSeq.rotation = numpy.random.uniform(-sSeq.delta_rotation, sSeq.delta_rotation, sSeq.num_images)
     else:
@@ -8622,14 +8804,20 @@ else:
 
 numpy.random.seed(experiment_seed+987987987)
 
+
+enable_distortions = False
+dx=1.0
+dy=1.0
+delta_rotation = None
+
 base_scale = 1.0
 factor_training = 1.0 
 factor_seenid = 1.0  
 scale_offset = 0.00  
 
 #5421 images for digit 5 WARNING, here use only 5000!!!!
-iSeq_set1 = iSeqCreateMNIST(dx=0.0, dy=0.0, smin=1.0, smax=1.0, delta_rotation=None, pre_mirroring="none", contrast_enhance=None, obj_avg_std=0.0, obj_std_min=0.20, obj_std_max=0.20,
-                    clusters=clusters_MNIST, first_image_index=421, num_images_per_cluster_used=5000, repetition_factor=1, seed=-1, use_orig_label=True, increasing_orig_label=True) #5000, num_images_per_cluster_used=-1
+iSeq_set1 = iSeqCreateMNIST(dx=dx, dy=dy, smin=1.0, smax=1.0, delta_rotation=delta_rotation, pre_mirroring="none", contrast_enhance=None, obj_avg_std=0.0, obj_std_min=0.20, obj_std_max=0.20,
+                    clusters=clusters_MNIST, first_image_index=421, num_images_per_cluster_used=5000, repetition_factor=4, seed=-1, use_orig_label=True, increasing_orig_label=True) #5000, num_images_per_cluster_used=-1
 sSeq_set1 = sSeqCreateMNIST(iSeq_set1, images_array_MNIST, seed=-1, use_RGB_images=age_use_RGB_images)
 
 semi_supervised_learning = True and False
@@ -8650,8 +8838,8 @@ print "len(iSeq_set.input_files)=",len(iSeq_set[0][0].input_files)
 print "len(sSeq_set.input_files)=",len(sSeq_set[0][0].input_files)
 
 #WARNING HERE USE index 5000 and 421 images per cluster!!!
-iSeq_set = iSeenidMNIST = iSeqCreateMNIST(dx=0.0, dy=0.0, smin=1.0, smax=1.0, delta_rotation=None, pre_mirroring="none", contrast_enhance=None, obj_avg_std=0.0, obj_std_min=0.20, obj_std_max=0.20,
-                    clusters=clusters_MNIST, first_image_index=0, num_images_per_cluster_used=1421, repetition_factor=1, seed=-1, use_orig_label=True, increasing_orig_label=True) #421
+iSeq_set = iSeenidMNIST = iSeqCreateMNIST(dx=dx, dy=dy, smin=1.0, smax=1.0, delta_rotation=delta_rotation, pre_mirroring="none", contrast_enhance=None, obj_avg_std=0.0, obj_std_min=0.20, obj_std_max=0.20,
+                    clusters=clusters_MNIST, first_image_index=0, num_images_per_cluster_used=1421, repetition_factor=2, seed=-1, use_orig_label=True, increasing_orig_label=True) #421
 #WARNING, should be 421, not 1421. The latter causes overlap between training and seenid
 
 
@@ -8679,10 +8867,10 @@ if iTrainMNIST != None and iTrainMNIST[0][0]!=None:
     ParamsMNISTFunc.block_size = iTrainMNIST[0][0].block_size
 ParamsMNISTFunc.train_mode = "Weird Mode" #Ignored for the moment 
 ParamsMNISTFunc.analysis = None
-ParamsMNISTFunc.enable_reduced_image_sizes = True
+ParamsMNISTFunc.enable_reduced_image_sizes = False # True
 ParamsMNISTFunc.reduction_factor = 1.0 # T=1.0 WARNING 1.0, 2.0, 3, 4
-ParamsMNISTFunc.hack_image_size = 28 # T=24 WARNING      24, 12, 8, 6 #IS IT 24 or 28!!!!! 28=2*2*7, 24=2*2*2*3
-ParamsMNISTFunc.enable_hack_image_size = True
+ParamsMNISTFunc.hack_image_size = 24 # 28, T=24 WARNING      24, 12, 8, 6 #IS IT 24 or 28!!!!! 28=2*2*7, 24=2*2*2*3
+ParamsMNISTFunc.enable_hack_image_size = False #True
 ParamsMNISTFunc.patch_network_for_RGB = False # 
 
 

@@ -992,7 +992,8 @@ if patch_layer:
         """Perform single training step by training the internal nodes."""
         start_index = 0
         stop_index = 0
-
+        
+        print "memory efficient layer training that supports a scheduler"
         if self.homogeneous is True:
             layer_input_dim = x.shape[1]
             self.set_input_dim(layer_input_dim)
@@ -1493,7 +1494,7 @@ if patch_flow:
             if exec_signal_in_cache == False:
                 
                 data_vec = self.flow[i].execute_data_vec(data_vec)
-                print "Post3 self.flow[i].output_dim=", self.flow[i].output_dim
+                print "Post3 self.flow[%d].output_dim="%i, self.flow[i].output_dim
                 print "data_vec", data_vec
                 print "len(data_vec)", len(data_vec)
                 print "data_vec[0].shape", data_vec[0].shape

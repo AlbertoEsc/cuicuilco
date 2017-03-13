@@ -26,14 +26,14 @@ class GSFANode(mdp.nodes.SFANode):
         self.block_size= block_size
         self.train_mode = train_mode
     
-        self.sum_prod_x = None
-        self.sum_x = None
-        self.num_samples = 0
-        self.sum_diff = None 
-        self.sum_prod_diff = None  
-        self.num_diffs = 0
+        #self.sum_prod_x = None
+        #self.sum_x = None
+        #self.num_samples = 0
+        #self.sum_diff = None 
+        #self.sum_prod_diff = None  
+        #self.num_diffs = 0
         
-        self._myvar = None
+        ###self._myvar = None
         self._covdcovmtx = CovDCovMatrix(block_size)
         self.list_train_params = ["scheduler", "n_parallel", "train_mode", "block_size"] #Parameters accepted during training
 
@@ -64,7 +64,7 @@ class GSFANode(mdp.nodes.SFANode):
             #raise Exception(er)
             block_size = self.block_size
         
-        self._myvar=1
+        ###self._myvar=1
         self.set_input_dim(x.shape[1])
     
         ## update the covariance matrices
@@ -421,7 +421,7 @@ class GSFANode(mdp.nodes.SFANode):
             print "self._covdcovmtx.num_diffs= ", self._covdcovmtx.num_diffs
             self.cov_mtx, self.avg, self.dcov_mtx = self._covdcovmtx.fix()
                    
-            print "Finishing GSFA training: ",  self.num_samples, " num_samples, and ", self.num_diffs, " num_diffs"
+            print "Finishing GSFA training: ",  self._covdcovmtx.num_samples, " num_samples, and ", self._covdcovmtx.num_diffs, " num_diffs"
             #        print "Avg[0:3] is", self.avg[0:4]
             #        print "Prod_avg_x[0:3,0:3] is", prod_avg_x[0:3,0:3]
             #        print "Cov[0:3,0:3] is", self.cov_mtx[0:3,0:3]
@@ -455,6 +455,9 @@ class GSFANode(mdp.nodes.SFANode):
             raise Exception(errstr)
     
         del self._covdcovmtx
+        del self.cov_mtx
+        del self.dcov_mtx
+        self.cov_mtx = self.dcov_mtx = self._covdcovmtx = None
         # store bias
         self._bias = mult(self.avg, self.sf)
         print "shape of GSFANode.sf is=", self.sf.shape

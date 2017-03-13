@@ -37,6 +37,7 @@ class iGSFANode(mdp.Node):
         
         ###self.max_num_samples_for_ev = max_num_samples_for_ev
         ###self.max_test_samples_for_ev = max_test_samples_for_ev
+        self.useless_var = 5 #Wa
 
         self.feature_scaling_factor = 0.5  #Factor that prevents the amplitude of the features from growing too much through the layers of the network
         self.exponent_variance = 0.5
@@ -95,9 +96,9 @@ class iGSFANode(mdp.Node):
         #Decide how many slow features are preserved (either use Delta_T=max_preserved_sfa when 
         #max_preserved_sfa is a float, or preserve max_preserved_sfa features when max_preserved_sfa is an integer)
         if isinstance(self.max_preserved_sfa, float):
-            self.num_sfa_features_preserved = (self.sfa_node.d <= self.max_preserved_sfa).sum()
+            self.num_sfa_features_preserved = (self.sfa_node.d <= self.max_preserved_sfa).sum()  ### here self.max_lenght_slow_part should be considered
         elif isinstance(self.max_preserved_sfa, int):
-            self.num_sfa_features_preserved = self.max_preserved_sfa
+            self.num_sfa_features_preserved = self.max_preserved_sfa  ### here self.max_lenght_slow_part should be considered
         else:
             ex = "Cannot handle type of self.max_preserved_sfa"
             print ex
@@ -111,7 +112,7 @@ class iGSFANode(mdp.Node):
         sfa_x = self.sfa_node.execute(exp_x)
           
         #Truncate leaving only slowest features (this might be redundant)
-        sfa_x = sfa_x[:,0:self.num_sfa_features_preserved]
+        #sfa_x = sfa_x[:,0:self.num_sfa_features_preserved].copy() #WARNING, MODIFIED
         
         #normalize sfa_x                    
         self.sfa_x_mean = sfa_x.mean(axis=0)
@@ -188,7 +189,8 @@ class iGSFANode(mdp.Node):
             raise Exception(er)
 
         print "training PCA..."
-        self.pca_node = mdp.nodes.PCANode(reduce=True) #output_dim = pca_out_dim)
+        pca_output_dim = self.output_dim - self.num_sfa_features_preserved
+        self.pca_node = mdp.nodes.PCANode(output_dim = pca_output_dim) #reduce=True) #output_dim = pca_out_dim) #WARNING; WHY AM I EXTRACTING ALL PCA COMPONENTS!!?? INEFFICIENT!!!!
         self.pca_node.train(sfa_removed_x)
         self.pca_node.stop_training()
 
@@ -197,7 +199,7 @@ class iGSFANode(mdp.Node):
  
         pca_x = self.pca_node.execute(sfa_removed_x)
         
-        if self.pca_node.output_dim + self.num_sfa_features_preserved < self.output_dim:
+        if self.pca_node.output_dim + self.num_sfa_features_preserved < self.output_dim: 
             er = "Error, the number of features computed is SMALLER than the output dimensionality of the node: " + \
             "self.pca_node.output_dim=", self.pca_node.output_dim, "self.num_sfa_features_preserved=", self.num_sfa_features_preserved, "self.output_dim=", self.output_dim
             raise Exception(er)
@@ -205,7 +207,7 @@ class iGSFANode(mdp.Node):
         #Finally output is the concatenation of scaled slow features and remaining pca components
         sfa_pca_x = numpy.concatenate((s_n_sfa_x, pca_x), axis=1)
         
-        sfa_pca_x_truncated =  sfa_pca_x[:,0:self.output_dim]
+        sfa_pca_x_truncated =  sfa_pca_x[:,0:self.output_dim] 
         
         #Compute explained variance from amplitudes of output compared to amplitudes of input
         #Only works because amplitudes of SFA are scaled to be equal to explained variance, and because PCA is a rotation
@@ -233,7 +235,8 @@ class iGSFANode(mdp.Node):
             exp_x = x_pre_exp
 
         sfa_x = self.sfa_node.execute(exp_x)
-        sfa_x = sfa_x[:,0:self.num_sfa_features_preserved]
+        
+        #sfa_x = sfa_x[:,0:self.num_sfa_features_preserved] #WARNING, REMOVED THIS REDUNDANT STEP
         
         n_sfa_x = (sfa_x - self.sfa_x_mean) / self.sfa_x_std
             
@@ -275,9 +278,9 @@ class iGSFANode(mdp.Node):
         #Finally output is the concatenation of scaled slow features and remaining pca components
         sfa_pca_x = numpy.concatenate((s_n_sfa_x, pca_x), axis=1)
         
-        sfa_pca_x_truncated =  sfa_pca_x[:,0:self.output_dim]
+        #sfa_pca_x_truncated =  sfa_pca_x[:,0:self.output_dim] #WARNING. REMOVED THIS REDUNDANT STEP
 
-        return sfa_pca_x_truncated
+        return sfa_pca_x #sfa_pca_x_truncated
 
 #        verbose=False
 #        if verbose:

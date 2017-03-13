@@ -312,6 +312,7 @@ def take_first_02D(obj_list):
 
 def take_0_k_th_from_2D_list(obj_list, k=0):
     if isinstance(obj_list, list):
+        print "obj_list is:", obj_list
         if isinstance(obj_list[0], list):
             return obj_list[0][k]
         else:

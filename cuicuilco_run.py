@@ -643,6 +643,7 @@ max_cutoff =  1.0e200 #10 # 30.0
 
 enable_reduced_image_sizes = Parameters.enable_reduced_image_sizes
 reduction_factor =  Parameters.reduction_factor
+print "reduction_factor=", reduction_factor
 hack_image_size =  Parameters.hack_image_size
 enable_hack_image_size =  Parameters.enable_hack_image_size
 
@@ -916,7 +917,7 @@ if network_filename != None:
 
     sl_seq_training = network_read.load_array_from_cache(network_hash, network_cache_read_dir, "SLSeqData", verbose=True)   
     print "Done loading sl_seq_training: ", sl_seq_training.shape
-    
+
 else:
     print "Generating Network..."
     #Usually true for voidNetwork1L, but might be also activated for other networks
@@ -951,37 +952,36 @@ else:
 
     #Possibly skip some of the last layers of the network if the data resolution has been artificially reduced
     skip_layers = 0
-    if (hack_image_size == 8) & (enable_hack_image_size == True):
-        Network.L3 = None
-        Network.L4 = None
-        Network.L5 = None
-        Network.L6 = None
-        Network.L7 = None
-        Network.L8 = None
-        Network.L9 = None 
-        Network.L10 = None
-        skip_layers = 8
-        
-    if (hack_image_size == 16) & (enable_hack_image_size == True):
-        Network.L5 = None
-        Network.L6 = None
-        Network.L7 = None
-        Network.L8 = None
-        Network.L9 = None 
-        Network.L10 = None
-        skip_layers = 6
-        
-    if (hack_image_size == 32) & (enable_hack_image_size == True):
-        Network.L7 = None 
-        Network.L8 = None
-        Network.L9 = None 
-        Network.L10 = None
-        skip_layers = 4
-        
-    if (hack_image_size == 64 or hack_image_size == 72 or hack_image_size == 80 or hack_image_size == 95 or hack_image_size == 96) & (enable_hack_image_size == True):      
-        Network.L9 = None 
-        Network.L10 = None
-        skip_layers = 2
+    trim_network_layers = False #trim_network_layers is obsolete, one must manually chose the proper network and data version
+    if trim_network_layers:
+        if (hack_image_size == 8) & (enable_hack_image_size == True):
+            Network.L3 = None
+            Network.L4 = None
+            Network.L5 = None
+            Network.L6 = None
+            Network.L7 = None
+            Network.L8 = None
+            Network.L9 = None 
+            Network.L10 = None
+            skip_layers = 8
+        if (hack_image_size == 16) & (enable_hack_image_size == True):
+            Network.L5 = None
+            Network.L6 = None
+            Network.L7 = None
+            Network.L8 = None
+            Network.L9 = None 
+            Network.L10 = None
+            skip_layers = 6
+        if (hack_image_size == 32) & (enable_hack_image_size == True):
+            Network.L7 = None 
+            Network.L8 = None
+            Network.L9 = None 
+            Network.L10 = None
+            skip_layers = 4
+        if (hack_image_size == 64 or hack_image_size == 72 or hack_image_size == 80 or hack_image_size == 95 or hack_image_size == 96) & (enable_hack_image_size == True):      
+            Network.L9 = None 
+            Network.L10 = None
+            skip_layers = 2
     
     for l in Network.layers:
         print l
@@ -1018,12 +1018,14 @@ else:
                     if "pca_expo" in Network.layers[i+skip_layers].sfa_args:
                         layer.sfa_args["pca_expo"] = Network.layers[i+skip_layers].sfa_args["pca_expo"]
 
-    Network.layers = []
-    for layer in [Network.L0, Network.L1, Network.L2, Network.L3, Network.L4, Network.L5, Network.L6, Network.L7, Network.L8, Network.L9, Network.L10 ]:
-        if layer == None:
-            break
-        else:
-            Network.layers.append(layer)
+    if skip_layers > 0:
+        Network.layers = Network.layers[:-skip_layers]
+    #Network.layers = []
+    #for layer in [Network.L0, Network.L1, Network.L2, Network.L3, Network.L4, Network.L5, Network.L6, Network.L7, Network.L8, Network.L9, Network.L10 ]:
+    #    if layer == None:
+    #        break
+    #    else:
+    #        Network.layers.append(layer)
 
     print "sfa_expo and pca_expo across the network:"
     for i, layer in enumerate(Network.layers):
@@ -1108,8 +1110,9 @@ else:
     print "now building network"
     train_data_sets, train_params_sets = network_builder.expand_iSeq_sSeq_Layer_to_Network(train_data_sets, train_params_sets, Network)
 
-    
-    
+
+    print "train_params_sets=", train_params_sets
+    print "dataset_for_display_train=", dataset_for_display_train
     print "calling take_first_02D"
     params_node = take_0_k_th_from_2D_list(train_params_sets, k=dataset_for_display_train)
      
@@ -1222,7 +1225,7 @@ else:
     else:
         print "Patching subimage_shape for display purposes"
         subimage_shape = (subimage_shape[0], subimage_shape[1]*in_channel_dim) 
-    num_pixels_per_image = numpy.ones(subimage_shape).sum()
+    
 
 #    add_normalization_node = True
     if add_normalization_node:
@@ -1357,7 +1360,8 @@ else:
         print "saving output features (training data)"
         training_data_hash = cache.hash_object((iTrain,sTrain)).hexdigest()
         cache.pickle_array(sl_seq_training, base_dir=save_output_features_dir, base_filename="output_features_training_TrainingD"+training_data_hash, overwrite=True, verbose=True)
-    
+
+num_pixels_per_image = numpy.ones(subimage_shape).sum()
 print "taking into account objective_label=%d"%objective_label
 if len(iTrain.correct_labels.shape)==2:
     print "correction..."
@@ -1440,7 +1444,7 @@ correct_labels_training = iTrain.correct_labels
 if convert_labels_days_to_years:
     correct_labels_training = correct_labels_training / DAYS_IN_A_YEAR
     if integer_label_estimation:
-        correct_labels_training = (correct_labels_training+0.0006).astype(int)
+        correct_labels_training = (correct_labels_training+0.0006).astype(int)*1.0 #Otherwise MSE computation is erroneous!
 
 print "Loading test images, seen ids..."
 t_load_images0 = time.time()
@@ -1680,7 +1684,7 @@ if classifier_write and enable_ccc_Gauss_cfr:
     print "Saving Gaussian Classifier"
     cf_sl_hash = cache.hash_array(cf_sl).hexdigest() 
     #update cache is not adding the hash to the filename,so we add it manually
-    classifier_filename = "GaussianClassifier_NetName"+Network.name + "iTrainName" + iTrain.name + "_NetH" + network_hash + "_CFSlowH"+ cf_sl_hash +"_NumSig%03d"%reg_num_signals
+    classifier_filename = "GaussianClassifier_NetName"+Network.name + "iTrainName" + iTrain.name + "_NetH" + network_hash + "_CFSlowH"+ cf_sl_hash +"_NumSig%03d"%reg_num_signals+"_L"+str(objective_label)
     classifier_write.update_cache(GC_node, None, None, classifier_filename, overwrite=True, verbose=True)
 
 ############################################################
@@ -2534,7 +2538,7 @@ if save_sorted_AE_Gauss_newid:
     
     save_images_sorted_error_Gauss_newid_base_dir = "/local/tmp/escalafl/Alberto/saved_images_sorted_AE_Gauss_newid"
     print "saving images to directory:", save_images_sorted_error_Gauss_newid_base_dir
-    decimate =  100
+    decimate =  1 # 100
     for i, i_x in enumerate(sorting_error_Gauss_newid):
         x = subimages_newid[i_x]
         if i%decimate == 0:

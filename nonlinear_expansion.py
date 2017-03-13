@@ -1294,14 +1294,18 @@ def ch3_Offset_sF_QT(x, Off, F):
     ch = 3
     s = F
     ns, dim = x.shape
-    if (Off+F)*ch >= dim:
-        return QT(x)
+    if (Off+F)*ch > dim:
+        er = "Incorrect parameters for ch3_Offset_sF_QT: Off=%d, F=%d, ch=%d, but data dim=%d"%(Off, F, ch, dim)
+        raise Exception(er)
     else:
         xs = numpy.zeros((ns, ch * s))
         xs[:,0:s] = x[:,Off:Off+s]
         xs[:,s:2*s] = x[:, dim/3+Off:dim/3+Off+s]
         xs[:,2*s:] = x[:, 2*dim/3+Off:2*dim/3+Off+s]
         return QT(xs)
+
+def ch3o0s2QT(x):
+    return ch3_Offset_sF_QT(x, Off=0, F=2)
 
 def ch3o2s2QT(x):
     return ch3_Offset_sF_QT(x, Off=2, F=2)
@@ -1330,6 +1334,18 @@ def ch3o4s3QT(x):
 def ch3o5s3QT(x):
     return ch3_Offset_sF_QT(x, Off=5, F=3)
 
+def ch3o6s3QT(x):
+    return ch3_Offset_sF_QT(x, Off=6, F=3)
+
+def ch3o7s3QT(x):
+    return ch3_Offset_sF_QT(x, Off=7, F=3)
+
+def ch3o8s3QT(x):
+    return ch3_Offset_sF_QT(x, Off=8, F=3)
+
+def ch3o9s3QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=3)
+
 def ch3o0s4QT(x):
     return ch3_Offset_sF_QT(x, Off=0, F=4)
 
@@ -1347,6 +1363,27 @@ def ch3o4s4QT(x):
 
 def ch3o5s4QT(x):
     return ch3_Offset_sF_QT(x, Off=5, F=4)
+
+def ch3o6s4QT(x):
+    return ch3_Offset_sF_QT(x, Off=6, F=4)
+
+def ch3o7s4QT(x):
+    return ch3_Offset_sF_QT(x, Off=7, F=4)
+
+def ch3o8s4QT(x):
+    return ch3_Offset_sF_QT(x, Off=8, F=4)
+
+def ch3o9s4QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=4)
+
+def ch3o9s5QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=5)
+
+def ch3o9s6QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=6)
+
+def ch3o9s7QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=7)
 
 def ch3o6s2QT(x):
     return ch3_Offset_sF_QT(x, Off=6, F=2)
@@ -1399,6 +1436,9 @@ def ch3o4s6QT(x):
 def ch3o5s6QT(x):
     return ch3_Offset_sF_QT(x, Off=5, F=6)
 
+def ch3o6s6QT(x):
+    return ch3_Offset_sF_QT(x, Off=6, F=6)
+
 def ch3o1s7QT(x):
     return ch3_Offset_sF_QT(x, Off=1, F=7)
 
@@ -1411,6 +1451,12 @@ def ch3o3s7QT(x):
 def ch3o4s7QT(x):
     return ch3_Offset_sF_QT(x, Off=4, F=7)
 
+def ch3o5s7QT(x):
+    return ch3_Offset_sF_QT(x, Off=5, F=7)
+
+def ch3o6s7QT(x):
+    return ch3_Offset_sF_QT(x, Off=6, F=7)
+
 def ch3o2s8QT(x):
     return ch3_Offset_sF_QT(x, Off=2, F=8)
 
@@ -1419,6 +1465,184 @@ def ch3o3s8QT(x):
 
 def ch3o4s8QT(x):
     return ch3_Offset_sF_QT(x, Off=4, F=8)
+
+def ch3o5s8QT(x):
+    return ch3_Offset_sF_QT(x, Off=5, F=8)
+
+def ch3o6s8QT(x):
+    return ch3_Offset_sF_QT(x, Off=6, F=8)
+
+def ch3o7s8QT(x):
+    return ch3_Offset_sF_QT(x, Off=7, F=8)
+
+def ch3o8s8QT(x):
+    return ch3_Offset_sF_QT(x, Off=8, F=8)
+
+def ch3o9s8QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=8)
+
+def ch3o4s9QT(x):
+    return ch3_Offset_sF_QT(x, Off=4, F=9)
+
+def ch3o6s9QT(x):
+    return ch3_Offset_sF_QT(x, Off=6, F=9)
+
+def ch3o7s9QT(x):
+    return ch3_Offset_sF_QT(x, Off=7, F=9)
+
+def ch3o8s9QT(x):
+    return ch3_Offset_sF_QT(x, Off=8, F=9)
+
+def ch3o9s9QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=9)
+
+def ch3o4s10QT(x):
+    return ch3_Offset_sF_QT(x, Off=4, F=10)
+
+def ch3o6s10QT(x):
+    return ch3_Offset_sF_QT(x, Off=6, F=10)
+
+def ch3o9s10QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=10)
+
+def ch3o6s11QT(x):
+    return ch3_Offset_sF_QT(x, Off=6, F=11)
+
+def ch3o9s11QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=11)
+
+def ch3o4s12QT(x):
+    return ch3_Offset_sF_QT(x, Off=4, F=12)
+
+def ch3o6s12QT(x):
+    return ch3_Offset_sF_QT(x, Off=6, F=12)
+
+def ch3o9s12QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=12)
+
+def ch3o6s13QT(x):
+    return ch3_Offset_sF_QT(x, Off=6, F=13)
+
+def ch3o9s13QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=13)
+
+def ch3o4s14QT(x):
+    return ch3_Offset_sF_QT(x, Off=4, F=14)
+
+def ch3o6s14QT(x):
+    return ch3_Offset_sF_QT(x, Off=6, F=14)
+
+def ch3o9s14QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=14)
+
+def ch3o6s15QT(x):
+    return ch3_Offset_sF_QT(x, Off=6, F=15)
+
+def ch3o9s15QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=15)
+
+def ch3o4s16QT(x):
+    return ch3_Offset_sF_QT(x, Off=4, F=16)
+
+def ch3o6s16QT(x):
+    return ch3_Offset_sF_QT(x, Off=6, F=16)
+
+def ch3o9s16QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=16)
+
+def ch3o9s17QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=17)
+
+def ch3o6s18QT(x):
+    return ch3_Offset_sF_QT(x, Off=6, F=18)
+
+def ch3o9s18QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=18)
+
+def ch3o9s19QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=19)
+
+def ch3o6s20QT(x):
+    return ch3_Offset_sF_QT(x, Off=6, F=20)
+
+def ch3o9s20QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=20)
+
+def ch3o9s21QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=21)
+
+def ch3o6s22QT(x):
+    return ch3_Offset_sF_QT(x, Off=6, F=22)
+
+def ch3o9s22QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=22)
+
+def ch3o9s23QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=23)
+
+def ch3o6s24QT(x):
+    return ch3_Offset_sF_QT(x, Off=6, F=24)
+
+def ch3o9s24QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=24)
+
+def ch3o9s25QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=25)
+
+def ch3o6s26QT(x):
+    return ch3_Offset_sF_QT(x, Off=6, F=26)
+
+def ch3o9s26QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=26)
+
+def ch3o9s27QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=27)
+
+def ch3o6s28QT(x):
+    return ch3_Offset_sF_QT(x, Off=6, F=28)
+
+def ch3o9s28QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=28)
+
+def ch3o9s29QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=29)
+
+def ch3o6s30QT(x):
+    return ch3_Offset_sF_QT(x, Off=6, F=30)
+
+def ch3o9s30QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=30)
+
+def ch3o9s31QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=31)
+
+def ch3o9s32QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=32)
+
+def ch3o9s33QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=33)
+
+def ch3o9s34QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=34)
+
+def ch3o9s35QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=35)
+
+def ch3o9s36QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=36)
+
+def ch3o9s37QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=37)
+
+def ch3o9s38QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=38)
+
+def ch3o9s39QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=39)
+
+def ch3o9s40QT(x):
+    return ch3_Offset_sF_QT(x, Off=9, F=40)
+
 
 
 ################################### Functions that compute quadratic terms with selection ######################
@@ -2600,6 +2824,36 @@ def QT60_CT35_control4_QT40_CT5(x):
     return QTA_CTB_controlC_QTF_CTG(x, 60, 35, 4, 40, 5)
 
 
+################################### Functions that compute cubic terms with offset, selection, and 3 channels ######################
+def ch3_Offset_sF_CT(x, Off, F):
+    ch = 3
+    s = F
+    ns, dim = x.shape
+    if (Off+F)*ch > dim:
+        er = "Incorrect parameters for ch3_Offset_sF_CT: Off=%d, F=%d, ch=%d, but data dim=%d"%(Off, F, ch, dim)
+        raise Exception(er)
+    else:
+        xs = numpy.zeros((ns, ch * s))
+        xs[:,0:s] = x[:,Off:Off+s]
+        xs[:,s:2*s] = x[:, dim/3+Off:dim/3+Off+s]
+        xs[:,2*s:] = x[:, 2*dim/3+Off:2*dim/3+Off+s]
+        return CT(xs)
+
+################################### Functions that compute forth-degree terms with offset, selection, and 3 channels ######################
+def ch3_Offset_sF_P4(x, Off, F):
+    ch = 3
+    s = F
+    ns, dim = x.shape
+    if (Off+F)*ch > dim:
+        er = "Incorrect parameters for ch3_Offset_sF_P4: Off=%d, F=%d, ch=%d, but data dim=%d"%(Off, F, ch, dim)
+        raise Exception(er)
+    else:
+        xs = numpy.zeros((ns, ch * s))
+        xs[:,0:s] = x[:,Off:Off+s]
+        xs[:,s:2*s] = x[:, dim/3+Off:dim/3+Off+s]
+        xs[:,2*s:] = x[:, 2*dim/3+Off:2*dim/3+Off+s]
+        return P4(xs)
+
 ####################### FUNCTIONS THAT INVOLVE SIGMOIDS ###############
 def extract_sigmoid_features(x, c1, l1):
     if x.shape[1] != c1.shape[0] or c1.shape[1] != len(l1):
@@ -2610,3 +2864,63 @@ def extract_sigmoid_features(x, c1, l1):
     f = numpy.tanh(s)
     return f
 
+####################### Specific function definitions for ch3_Offset_sF_CT ################
+def ch3o0s2CT(x):
+    return ch3_Offset_sF_CT(x, Off=0, F=2)
+
+def ch3o0s3CT(x):
+    return ch3_Offset_sF_CT(x, Off=0, F=3)
+
+def ch3o0s4CT(x):
+    return ch3_Offset_sF_CT(x, Off=0, F=4)
+
+def ch3o0s5CT(x):
+    return ch3_Offset_sF_CT(x, Off=0, F=5)
+
+def ch3o9s2CT(x):
+    return ch3_Offset_sF_CT(x, Off=9, F=2)
+
+def ch3o9s3CT(x):
+    return ch3_Offset_sF_CT(x, Off=9, F=3)
+
+def ch3o9s4CT(x):
+    return ch3_Offset_sF_CT(x, Off=9, F=4)
+
+def ch3o9s5CT(x):
+    return ch3_Offset_sF_CT(x, Off=9, F=5)
+
+def ch3o9s6CT(x):
+    return ch3_Offset_sF_CT(x, Off=9, F=6)
+
+def ch3o9s7CT(x):
+    return ch3_Offset_sF_CT(x, Off=9, F=7)
+
+def ch3o9s8CT(x):
+    return ch3_Offset_sF_CT(x, Off=9, F=8)
+
+def ch3o9s9CT(x):
+    return ch3_Offset_sF_CT(x, Off=9, F=9)
+
+def ch3o9s10CT(x):
+    return ch3_Offset_sF_CT(x, Off=9, F=10)
+
+def ch3o9s11CT(x):
+    return ch3_Offset_sF_CT(x, Off=9, F=11)
+
+def ch3o9s12CT(x):
+    return ch3_Offset_sF_CT(x, Off=9, F=12)
+
+def ch3o9s13CT(x):
+    return ch3_Offset_sF_CT(x, Off=9, F=13)
+
+def ch3o9s14CT(x):
+    return ch3_Offset_sF_CT(x, Off=9, F=14)
+
+def ch3o9s15CT(x):
+    return ch3_Offset_sF_CT(x, Off=9, F=15)
+
+def ch3o9s16CT(x):
+    return ch3_Offset_sF_CT(x, Off=9, F=16)
+
+def ch3o9s17CT(x):
+    return ch3_Offset_sF_CT(x, Off=9, F=17)
