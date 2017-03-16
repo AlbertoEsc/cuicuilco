@@ -774,9 +774,7 @@ def GaussianSoftCR(self, data, true_classes):
     #print "softCR=", tot_prob
     return tot_prob
     
-#TODO: Consider adding node GaussianClassifierWithRegressions
-#TODO: Consider making the next two functions node independent
-def GaussianRegression(self, data, avg_labels):
+def GaussianRegression(self, data, avg_labels, estimate_std=False):
     """  Use the class probabilities to generate a better label
     If the computation of the class probabilities were perfect,
     and if the Gaussians were just a delta, then the output value
@@ -786,10 +784,18 @@ def GaussianRegression(self, data, avg_labels):
     avg_labels (1D numpy array): average label for class 0, class 1, ...
     """
     probabilities = self.class_probabilities(data)
-    value = numpy.dot(probabilities, avg_labels)
-    value[numpy.isnan(value)] = avg_labels.mean() #TODO:compute real mean of all labels
+    hat_mean = numpy.dot(probabilities, avg_labels)
+    hat_mean[numpy.isnan(hat_mean)] = avg_labels.mean() #TODO:compute real mean of all labels
+    
+    if estimate_std:
+        hat_std = (numpy.dot(probabilities, avg_labels**2)-hat_mean**2)**0.5
+
     #print "value.shape=", value.shape
-    return value
+    if not estimate_std:
+        return hat_mean
+    else:
+        return hat_mean, hat_std
+
 
 
 def GaussianRegressionMAE(self, data, avg_labels):
