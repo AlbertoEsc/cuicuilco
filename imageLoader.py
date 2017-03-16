@@ -411,7 +411,7 @@ def load_image_data_monoprocessor(image_files, image_array, image_width, image_h
                 y0 = subimage_first_row[act_im_num] + translations_y[act_im_num]
                 x1 = subimage_first_column[act_im_num] + translations_x[act_im_num] + subimage_width * pixelsampling_x[act_im_num]
                 y1 = subimage_first_row[act_im_num] + translations_y[act_im_num] + subimage_height * pixelsampling_y[act_im_num]
-                if rotation != None:
+                if not (rotation is None):
                     delta_ang = rotation[act_im_num]
                 else:
                     delta_ang = None

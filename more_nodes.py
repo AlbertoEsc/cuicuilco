@@ -97,6 +97,7 @@ class GeneralExpansionNode(mdp.Node):
                  delta_factor=0.6, min_delta=0.00001):
         self.funcs = funcs
         self.exp_output_dim = output_dim
+        self.expanded_dims = None
         self.starting_point = starting_point
         if self.funcs == "RandomSigmoids" and self.exp_output_dim <= 0:
             er = "output_dim in GeneralExpansion node with RandomSigmoids should be at least 1, but is", self.exp_output_dim
@@ -120,7 +121,7 @@ class GeneralExpansionNode(mdp.Node):
             exp_dim += outx.shape[1]
         return exp_dim
     def output_sizes(self, n):
-        sizes = numpy.zeros(len(self.funcs))
+        sizes = numpy.zeros(len(self.funcs),dtype=int)
         x = numpy.zeros((1,n))
         for i, func in enumerate(self.funcs):
             outx = func(x)
@@ -198,16 +199,19 @@ class GeneralExpansionNode(mdp.Node):
         if self.input_dim is None:
             self.set_input_dim(x.shape[1]) 
 
+        #if self.expanded_dims is None:
+        #    self.expanded_dims = self.output_sizes(self.input_dim)
+
         if self.funcs != "RandomSigmoids":
             num_samples = x.shape[0]
     #        output_dim = expanded_dim(self.input_dim)
-            sizes = self.output_sizes(self.input_dim)
+            self.expanded_dims = self.output_sizes(self.input_dim) 
             out = numpy.zeros((num_samples, self.output_dim))
 
             current_pos = 0
             for i, func in enumerate(self.funcs):
-                out[:,current_pos:current_pos+sizes[i]] = func(x)
-                current_pos += sizes[i]
+                out[:,current_pos:current_pos+self.expanded_dims[i]] = func(x)
+                current_pos += self.expanded_dims[i]
         else:
             data_norm = (x-self.rs_data_training_mean)/self.rs_data_training_std
             out = extract_sigmoid_features(data_norm, self.rs_coefficients, self.rs_offsets, scale=1.0, offset=0.0, use_special_features=True)
