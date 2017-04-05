@@ -22,6 +22,8 @@ import scipy.misc
 import matplotlib as mpl
 mpl.use('Qt4Agg')
 import matplotlib.pyplot as plt
+#mpl.style.use('classic')
+
 import PIL
 import mdp
 import more_nodes
@@ -596,9 +598,6 @@ if __name__ == "__main__":  ############### Parse command line arguments #######
                 print "Error: ", err
                 #print "option:", getopt.GetoptError.opt, "message:", getopt.GetoptError.msg
                 sys.exit(2)
-
-if __name__ == "__main__":
-    main()
     
 def main():
     global benchmark, num_features_to_append_to_input, reg_num_signals
@@ -1372,7 +1371,7 @@ def main():
             training_data_hash = cache.hash_object((iTrain,sTrain)).hexdigest()
             cache.pickle_array(sl_seq_training, base_dir=save_output_features_dir, base_filename="output_features_training_TrainingD"+training_data_hash, overwrite=True, verbose=True)
     
-    num_pixels_per_image = numpy.ones(subimage_shape).sum()
+    num_pixels_per_image = numpy.ones(subimage_shape, dtype=int).sum()
     print "taking into account objective_label=%d"%objective_label
     if len(iTrain.correct_labels.shape)==2:
         print "correction..."
@@ -2866,7 +2865,7 @@ def main():
         
         #Retrieve Image in Sequence
         def on_press_inv(event):
-            global plt, f1, f1a12, f1a13, f1a21, f1a22, fla23, subimages, L2, sTrain, sl_seq, pinv_zero, flow, error_scale_disp
+            #### global plt, f1, f1a12, f1a13, f1a21, f1a22, fla23, L2, sTrain, sl_seq, pinv_zero, flow, error_scale_disp #subimages
             print 'you pressed', event.button, event.xdata, event.ydata
             y = int(event.ydata)
             if y < 0:
@@ -2874,7 +2873,7 @@ def main():
             if y >= num_images:
                 y = num_images -1
             print "y=" + str(y)
-        
+            print "num_pixels_per_image=", num_pixels_per_image
         #Display Original Image
         #WARNING L and RGB
         #    subimage_im = subimages[y].reshape((sTrain.subimage_height, sTrain.subimage_width)) + 0.0
@@ -3001,7 +3000,7 @@ def main():
         #Retrieve Image in Sequence
         def on_press_kNN(event):
             #Why is this declared global??? 
-            global plt, f_kNNinv_a12, f_kNNinv_a13, f_kNNinv_a14, f_kNNinv_a21, f_kNNinv_a22, f_kNNinv_a23, f_kNNinv_a24, subimages_seenid, subimages_newid, sl_seq_seenid, sl_seq_newid, subimages_newid_app, error_scale_disp
+            #global plt, f_kNNinv_a12, f_kNNinv_a13, f_kNNinv_a14, f_kNNinv_a21, f_kNNinv_a22, f_kNNinv_a23, f_kNNinv_a24, subimages_seenid, subimages_newid, sl_seq_seenid, sl_seq_newid, subimages_newid_app, error_scale_disp
             print 'you pressed', event.button, event.xdata, event.ydata
             y = int(event.ydata)
             if y < 0:
@@ -3416,6 +3415,8 @@ def main():
         #ax_6.subplots_adjust(hspace=0.5)
         plt.suptitle("Linear (or Non-Linear) Masks Learned by SFA [0 - 4]")
         
+        global mask_normalize 
+        
         mask_normalize = False
         lim_delta_sfa = 0.01
         num_masks = 4
@@ -3464,133 +3465,22 @@ def main():
                 else:
                     tmp_ax.axis('off')
                 axes2[ma][sl] = tmp_ax
-        
-        
-        print "************ Displaying Localized Morphs and Masks **********"
-        #Create Figure
-        ax9 = plt.figure()
-        ax9.subplots_adjust(hspace=0.3, wspace=0.03, top=0.93, right=0.96, bottom=0.05, left=0.05)
-        
-        #ax_6.subplots_adjust(hspace=0.5)
-        plt.suptitle("Localized Linear (or Non-Linear) Morphs")
-        
-        ax9_11 = plt.subplot(4,5,1)
-        plt.title("Train-Signals in Slow Domain")
-        sl_seqdisp = sl_seq[:, range(0,hierarchy_out_dim)]
-        sl_seqdisp = scale_to(sl_seqdisp, sl_seq.mean(), sl_seq.max()-sl_seq.min(), 127.5, 255.0, scale_disp, 'tanh')
-        ax9_11.imshow(sl_seqdisp.clip(0,255), aspect='auto', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)
-        plt.ylabel("Image number")
-        
-        ax9_12 = plt.subplot(4,5,2)
-        plt.title("Selected Original Image")
-        ax9_11.axis('off')
-        
-        ax9_13 = plt.subplot(4,5,3)
-        plt.title("Loc. Approx. Image x'")
-        ax9_12.axis('off')
-        
-        ax9_14 = plt.subplot(4,5,4)
-        plt.title("Loc. Re-Approx Image x''")
-        ax9_13.axis('off')
-        
-        ax9_21 = plt.subplot(4,5,6)
-        plt.title("-8*Mask(cl -> cl_prev)")
-        plt.yticks([])
-        plt.xticks([])
-        plt.ylabel("Modified Loc. Inv")
-        
-        ax9_22 = plt.subplot(4,5,7)
-        plt.title("-4*Mask(cl -> cl_prev)")
-        ax9_22.axis('off')
-        
-        ax9_23 = plt.subplot(4,5,8)
-        plt.title("2*Mask(cl -> cl_prev)")
-        ax9_23.axis('off')
-        
-        ax9_24 = plt.subplot(4,5,9)
-        plt.title("4*Mask(cl -> cl_prev)")
-        ax9_24.axis('off')
-        
-        ax9_25 = plt.subplot(4,5,10)
-        plt.title("8*Mask(cl -> cl_prev)")
-        ax9_25.axis('off')
-        
-        print "************ Displaying Localized Morphs Learned by SFA **********"
-        #Create Figure
-        ax10 = plt.figure()
-        ax10.subplots_adjust(hspace=0.3, wspace=0.03, top=0.93, right=0.96, bottom=0.05, left=0.05)
-        
-        num_morphs = 20
-        morph_step = 0.5
-        all_axes_morph_inc = []
-        all_classes_morph_inc = numpy.arange(num_morphs)*morph_step
-        for i in range(len(all_classes_morph_inc)):
-            tmp_ax = plt.subplot(4,5,i+1)
-            plt.title("Morph(cl* -> cl*)")
-            tmp_ax.axis('off')
-            all_axes_morph_inc.append(tmp_ax)
-        
-        
-        ax11 = plt.figure()
-        ax11.subplots_adjust(hspace=0.3, wspace=0.03, top=0.93, right=0.96, bottom=0.05, left=0.05)
-        
-        all_axes_morph_dec = []
-        all_classes_morph_dec = numpy.arange(0, -1 * num_morphs, -1) * morph_step
-        for i in range(len(all_classes_morph_dec)):
-            tmp_ax = plt.subplot(4, 5,20-i)
-            plt.title("Morph (cl*-> cl*)")
-            tmp_ax.axis('off')
-            all_axes_morph_dec.append(tmp_ax)
-        
-        #morphed sequence in SFA domain
-        ax12 = plt.figure()
-        ax12_1 = plt.subplot(2, 2, 1)
-        plt.title("SFA of Morphed Images")
-        ax12_2 = plt.subplot(2, 2, 2)
-        plt.title("Average SFA for each Class")
-        sl_seq_meandisp = scale_to(sl_seq_training_mean, sl_seq_training_mean.mean(), sl_seq_training_mean.max()-sl_seq_training_mean.min(), 127.5, 255.0, scale_disp, 'tanh')
-        ax12_2.imshow(sl_seq_meandisp.clip(0, 255), aspect='auto', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)
-        ax12_3 = plt.subplot(2, 2, 3)
-        plt.title("SFA of Selected Image")
-        
-        print "************ Displaying Localized) Morphs Learned by SFA **********"
-        #Create Figure
-        ax13 = plt.figure()
-        ax13.subplots_adjust(hspace=0.3, wspace=0.03, top=0.93, right=0.96, bottom=0.05, left=0.05)
-        
-        all_axes_mask_inc = []
-        for i in range(len(all_classes_morph_inc)):
-            tmp_ax = plt.subplot(4,5,i+1)
-            plt.title("Mask(cl* -> cl*)")
-            tmp_ax.axis('off')
-            all_axes_mask_inc.append(tmp_ax)
-        
-        ax14 = plt.figure()
-        ax14.subplots_adjust(hspace=0.3, wspace=0.03, top=0.93, right=0.96, bottom=0.05, left=0.05)
-        
-        all_axes_mask_dec = []
-        for i in range(len(all_classes_morph_dec)):
-            tmp_ax = plt.subplot(4, 5,20-i)
-            plt.title("Mask (cl*-> cl*)")
-            tmp_ax.axis('off')
-            all_axes_mask_dec.append(tmp_ax)
-        
-        #Retrieve Image in Sequence
+
         def mask_on_press(event):
-            global plt, ax6, ax6_11, ax6_12, ax6_13, ax6_14, ax6_21, ax6_22, ax6_23, ax6_24, ax6_25, ax6_31, ax6_32, ax6_33, ax6_34, ax6_35, ax6_41, ax6_42, ax6_43, ax6_44, ax6_45
-            global ax7, axes, num_masks, slow_values, mask_normalize, lim_delta_sfa
-            global ax8, axes2, masks2, slow_values2
-            global ax9, ax9_11, ax9_12, ax9_13, ax9_14, ax9_21, ax9_22, ax9_23, ax9_24, ax9_25
-        
-            global subimages, sTrain, sl_seq, pinv_zero, flow, error_scale_disp
-            
+            ##global plt, ax6, ax6_11, ax6_12, ax6_13, ax6_14, ax6_21, ax6_22, ax6_23, ax6_24, ax6_25, ax6_31, ax6_32, ax6_33, ax6_34, ax6_35, ax6_41, ax6_42, ax6_43, ax6_44, ax6_45
+            ##global ax7, axes, num_masks, slow_values, mask_normalize, lim_delta_sfa
+            global mask_normalize
+            ##global ax8, axes2, masks2, slow_values2
+            ####global ax9, ax9_11, ax9_12, ax9_13, ax9_14, ax9_21, ax9_22, ax9_23, ax9_24, ax9_25
+            ###global subimages, sTrain, sl_seq, pinv_zero, flow, error_scale_disp
+             
             print 'you pressed', event.button, event.xdata, event.ydata
-        
+         
             if event.xdata == None or event.ydata==None:
                 mask_normalize = not mask_normalize
                 print "mask_normalize is: ", mask_normalize
                 return
-            
+             
             y = int(event.ydata)
             if y < 0:
                 y = 0
@@ -3602,12 +3492,12 @@ def main():
             if x >= hierarchy_out_dim:
                 x = hierarchy_out_dim -1
             print "Image Selected=" + str(y) + " , Slow Component Selected=" + str(x)
-        
+         
             print "Displaying Original and Reconstructions"
         #Display Original Image
             subimage_im = subimages[y][0:num_pixels_per_image].reshape(subimage_shape)
             ax6_12.imshow(subimage_im.clip(0,max_clip), vmin=0, vmax=max_clip, aspect='equal', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)
-        
+         
             if show_linear_inv == True:
                 #Display Reconstructed Image
                 data_out = sl_seq[y].reshape((1, hierarchy_out_dim))
@@ -3616,13 +3506,13 @@ def main():
                 x_p = inverted_im
                 inverted_im_ori = inverted_im.copy()
                 ax6_13.imshow(inverted_im.clip(0,max_clip), vmin=0, vmax=max_clip, aspect='equal', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)        
-            
+             
                 #Display Re-Reconstructed Image
                 re_data_out = flow.execute(inverted_im_ori.reshape((1, signals_per_image)))
                 re_inverted_im = flow.inverse(re_data_out)
                 re_inverted_im = re_inverted_im[0, 0:num_pixels_per_image].reshape(subimage_shape)
                 ax6_14.imshow(re_inverted_im.clip(0,max_clip), vmin=0, vmax=max_clip, aspect='equal', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)
-            
+             
             if show_linear_morphs == True:   
                 print "Displaying Morphs, Original Version, no localized inverses"
                 #Display: Altered Reconstructions
@@ -3632,9 +3522,9 @@ def main():
                 disp_data = [(-2, "inv", ax6_21), (-1, "inv", ax6_22), (0, "inv", ax6_23), (1, "inv", ax6_24), (2, "inv", ax6_25), \
                              (-2, "mor", ax6_31), (-1, "mor", ax6_32), (0, "mor", ax6_33), (1, "mor", ax6_34), (2, "mor", ax6_35), 
                              (-2, "mo2", ax6_41), (-1, "mo2", ax6_42), (0, "mo2", ax6_43), (1, "mo2", ax6_44), (2, "mo2", ax6_45)]
-              
+               
                 work_sfa = data_out.copy()
-                   
+                    
                 for slow_value, display_type, fig_axes in disp_data:
                     work_sfa[0][x] = slow_value
                     inverted_im = flow.inverse(work_sfa)
@@ -3665,13 +3555,13 @@ def main():
                         morphed_im_disp = morphed_im
                         fig_axes.imshow(morphed_im_disp.clip(0,max_clip), vmin=0, vmax=max_clip, aspect='equal', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)                 
             ax6.canvas.draw()
-        
+         
             if show_linear_masks == True:  
                 print "Displaying Masks [0-3]"
                 for ma in range(num_masks):
                     for sl, slow_value in enumerate(slow_values):
                         tmp_ax = axes[ma][sl]
-        
+         
                         print "Computing mask %d, slow_value %d"%(ma, slow_value)
                         work_sfa = data_out.copy()
                         work_sfa[0][ma] = work_sfa[0][ma] + slow_value * lim_delta_sfa
@@ -3683,7 +3573,7 @@ def main():
                             mask_im_disp = mask_im + max_clip/2.0
                         axes[ma][sl].imshow(mask_im_disp.clip(0,max_clip), vmin=0, vmax=max_clip, aspect='equal', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)          
                 ax7.canvas.draw()
-                
+                 
             if show_linear_masks_ext == True:  
                 print "Displaying Masks [4-15]"
                 for ma, mask in enumerate(masks2):
@@ -3699,228 +3589,341 @@ def main():
                             mask_im_disp = mask_im + max_clip/2.0
                         axes2[ma][sl].imshow(mask_im_disp.clip(0,max_clip), vmin=0, vmax=max_clip, aspect='equal', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)          
                 ax8.canvas.draw()
-        
-        ax6.canvas.mpl_connect('button_press_event', mask_on_press)
-        
-        def localized_on_press(event):
-            global plt, ax9, ax9_11, ax9_12, ax9_13, ax9_14, ax9_21, ax9_22, ax9_23, ax9_24, ax9_25
-            global ax9_31, ax9_32, ax9_33, ax9_34, ax9_35
-            global ax9_41, ax9_42, ax9_43, ax9_44, ax9_45
-            global subimages, sTrain, sl_seq, flow, error_scale_disp, hierarchy_out_dim
-            global mask_normalize, lim_delta_sfa, correct_classes_training, S2SC, block_size
-            global ax10, ax11, all_axes_morph
-            global ax13, ax14
-            
-            print 'you pressed', event.button, event.xdata, event.ydata
-        
-            if event.xdata == None or event.ydata==None:
-                mask_normalize = not mask_normalize
-                print "mask_normalize was successfully changed to: ", mask_normalize
-                return
-            
-            y = int(event.ydata)
-            if y < 0:
-                y = 0
-            if y >= num_images:
-                y = num_images - 1
-            x = int(event.xdata)
-            if x < 0:
-                x = 0
-            if x >= hierarchy_out_dim:
-                x = hierarchy_out_dim -1
-            print "Image Selected=" + str(y) + " , Slow Component Selected=" + str(x)
-        
-            print "Displaying Original and Reconstructions"
-        #Display Original Image
-            subimage_im = subimages[y][0:num_pixels_per_image].reshape(subimage_shape)
-            ax9_12.imshow(subimage_im.clip(0,max_clip), vmin=0, vmax=max_clip, aspect='equal', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)
-        
-            if show_localized_morphs == True: 
-                #Display Localized Reconstructed Image
-                data_in = subimages[y][0:num_pixels_per_image].reshape((1, signals_per_image))
-                data_out = sl_seq[y].reshape((1, hierarchy_out_dim))
-                loc_inverted_im = flow.localized_inverse(data_in, data_out)
-                loc_inverted_im = loc_inverted_im[0, 0:num_pixels_per_image].reshape(subimage_shape)
-                loc_inverted_im_ori = loc_inverted_im.copy()
-                ax9_13.imshow(loc_inverted_im.clip(0,max_clip), vmin=0, vmax=max_clip, aspect='equal', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)        
-            
-                #Display Re-Reconstructed Image
-                loc_re_data_in = loc_inverted_im_ori.reshape((1, signals_per_image))
-                loc_re_data_out = flow.execute(loc_re_data_in)
-                loc_re_inverted_im = flow.localized_inverse(loc_re_data_in, loc_re_data_out)
-                loc_re_inverted_im = loc_re_inverted_im[0, 0:num_pixels_per_image].reshape(subimage_shape)
-                ax9_14.imshow(loc_re_inverted_im.clip(0,max_clip), vmin=0, vmax=max_clip, aspect='equal', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)
-                
-                print "Displaying Masks Using Localized Inverses"
-                error_scale_disp=1.0
-                disp_data = [(-8, "lmsk", ax9_21), (-4.0, "lmsk", ax9_22), (2.0, "lmsk", ax9_23), (4.0, "lmsk", ax9_24), (8.0, "lmsk", ax9_25)]
-            
-                data_in = subimages[y][0:num_pixels_per_image].reshape((1, signals_per_image))
-                data_out = sl_seq[y].reshape((1, hierarchy_out_dim))  
-                work_sfa = data_out.copy()
-                   
-                for scale_factor, display_type, fig_axes in disp_data:
-                    #WARNING, this should not be computed this way!!!!
-                    current_class = y/block_size
-                    print "Current classs is:", current_class
-                    if scale_factor < 0:
-                        next_class = current_class-1
-                        if next_class < 0:
-                            next_class = 0
-                    else:
-                        next_class = current_class+1
-                        if next_class >= hierarchy_out_dim:
-                            next_class = hierarchy_out_dim-1
-                        
-                    current_avg_sfa = sl_seq[current_class * block_size:(current_class+1)*block_size,:].mean(axis=0)
-                    next_avg_sfa = sl_seq[next_class*block_size:(next_class+1)*block_size,:].mean(axis=0)
-                            
-                    print "Current class is ", current_class
-                    #print "Current class_avg is ", current_avg_sfa
-                    #print "Next class_avg is ", next_avg_sfa
-                    
-                    data_out_next = next_avg_sfa
-                    print "Computing from class %d to class %d, slow_value %d"%(current_class, next_class, scale_factor)
-                    work_sfa = data_out * (1-lim_delta_sfa) + data_out_next * lim_delta_sfa
-                    t_loc_inv0 = time.time()
-                    mask_im = flow.localized_inverse(data_in, work_sfa, verbose=False)[:, 0:num_pixels_per_image]
-                    t_loc_inv1 = time.time()
-                    print "Localized inverse computed in %0.3f s"% ((t_loc_inv1-t_loc_inv0)) 
-                    mask_im = (mask_im - data_in)[0, 0:num_pixels_per_image].reshape(subimage_shape) / lim_delta_sfa
-                    if mask_normalize == True:
-                        mask_im_disp = abs(scale_factor) * scale_to(mask_im, 0.0, mask_im.max()-mask_im.min(), max_clip/2.0, max_clip/2.0, error_scale_disp, 'tanh')
-                    else:
-                        mask_im_disp = abs(scale_factor) * mask_im + max_clip/2.0
-                    fig_axes.imshow(mask_im_disp.clip(0,max_clip), vmin=0, vmax=max_clip, aspect='equal', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)           
-                    fig_axes.set_title('%0.2f x Mask: cl %d => %d'%(abs(scale_factor), current_class, next_class))
-                ax9.canvas.draw()
-                
-                error_scale_disp=1.0
-                print "Displaying Morphs Using Localized Inverses Incrementing Class"
-        
-                num_morphs_inc = len(all_classes_morph_inc)
-                num_morphs_dec = len(all_classes_morph_dec)
-                #make a function specialized in morphs, use this variable,
-                morph_outputs =  range(num_morphs_inc + num_morphs_dec - 1)
-                morph_sfa_outputs = range(num_morphs_inc + num_morphs_dec - 1)
-                original_class = y/block_size
-        
-        
-                #WARNING!!! THERE IS A BUG, IN WHICH THE LAST INC MORPHS ARE INCORRECTLY COMBINED USING ZERO??? 
-                for ii, action in enumerate(["inc", "dec"]):
-                    current_class = original_class
-                    if ii==0:
-                        all_axes_morph = all_axes_morph_inc
-                        all_axes_mask = all_axes_mask_inc
-                        num_morphs = len(all_classes_morph_inc)
-                        desired_next_classes = all_classes_morph_inc + current_class
-                        max_class = num_images/block_size
-                        for i in range(len(desired_next_classes)):
-                            if desired_next_classes[i] >= max_class:
-                                desired_next_classes[i] = -1
-                    else:                
-                        all_axes_morph = all_axes_morph_dec
-                        all_axes_mask = all_axes_mask_dec
-                        num_morphs = len(all_classes_morph_dec)
-                        desired_next_classes = all_classes_morph_dec + current_class
-                        for i in range(len(desired_next_classes)):
-                            if desired_next_classes[i] < 0:
-                                desired_next_classes[i] = -1
-        
-                    desired_next_sfa=[]
-                    for next_class in desired_next_classes:
-                        if next_class >= 0 and next_class < max_class:
-                            c1 = numpy.floor(next_class)
-                            c2 = c1  + 1               
-                            if c2 >= max_class:
-                                c2 = max_class-1 
-                            desired_next_sfa.append(sl_seq_training_mean[c1] * (1+c1-next_class) + sl_seq_training_mean[c2]*(next_class-c1))
-                        else: #just in case something goes wrong
-                            desired_next_sfa.append(sl_seq_training_mean[0])
-                        #sl_seq[next_class*block_size:(next_class+1)*block_size,:].mean(axis=0))
-            
-                    data_in = subimages[y][0:num_pixels_per_image].reshape((1, signals_per_image))
-                    data_out = sl_seq[y].reshape((1, hierarchy_out_dim))
-                    for i, next_class in enumerate(desired_next_classes):
-                        if next_class == -1:
-                            if ii==0:
-                                morph_sfa_outputs[i+num_morphs_dec-1] = numpy.zeros(len(data_out[0])) 
-                            else:
-                                morph_sfa_outputs[num_morphs_dec-i-1] = numpy.zeros(len(data_out[0]))
-                            break          
-                        data_out_next = desired_next_sfa[i]           
-                        print "Morphing to desired class %.2f..."%next_class
-                        
-                        work_sfa = data_out * (1-lim_delta_sfa) + data_out_next * lim_delta_sfa
-            
-                        t_loc_inv0 = time.time()
-                        morphed_data = flow.localized_inverse(data_in, work_sfa, verbose=False)[0, 0:num_pixels_per_image] #TODO: last part might be unnecessary
-                        t_loc_inv1 = time.time()
-                        print "Localized inverse computed in %0.3f s"% ((t_loc_inv1-t_loc_inv0)) 
-                        
-                        morphed_data = data_in + (morphed_data - data_in)/lim_delta_sfa
-                        morphed_im_disp = morphed_data[0:num_pixels_per_image].reshape(subimage_shape) 
-            
-                        if all_axes_morph[i] != None:
-                            all_axes_morph[i].imshow(morphed_im_disp.clip(0,max_clip), vmin=0, vmax=max_clip, aspect='equal', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)           
-                            all_axes_morph[i].set_title("Morph(cl %.1f -> %.1f)"%(current_class,next_class))
-                        else:
-                            print "No plotting Morph. (Reason: axes = None)"
-        
-                        if all_axes_mask[i] != None:
-                            loc_mask_data = morphed_data[0] - data_in[0]
-                            loc_mask_disp = loc_mask_data[0:num_pixels_per_image].reshape(subimage_shape) + max_clip/2.0
-                            loc_mask_disp = scale_to(loc_mask_disp, loc_mask_disp.mean(), loc_mask_disp.max() - loc_mask_disp.min(), 127.5, 255.0, scale_disp, 'tanh')
-                            all_axes_mask[i].imshow(loc_mask_disp.clip(0,max_clip), vmin=0, vmax=max_clip, aspect='equal', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)           
-                            all_axes_mask[i].set_title("Mask(cl %.1f -> %.1f)"%(current_class,next_class))
-                        else:
-                            print "No plotting Mask. (Reason: axes = None)"
-                        
-                        current_class = next_class
-                        data_in = morphed_data
-                        data_out = flow.execute(data_in)
-                        if ii==0: #20-29
-                            morph_sfa_outputs[i+num_morphs_dec-1] = data_out[0]
-                        else: #0-19
-                            morph_sfa_outputs[num_morphs_dec-i-1] = data_out[0]
-                           
-                ax10.canvas.draw()
-                ax11.canvas.draw()
-                ax13.canvas.draw()
-                ax14.canvas.draw()
-        
-        #        for i, sfa_out in enumerate(morph_sfa_outputs):
-        #            print "elem %d: "%i, "has shape", sfa_out.shape, "and is= ", sfa_out
-        
-        #        morph_sfa_outputs[num_morphs_dec] = sl_seq[y]
-                sl_morph = numpy.array(morph_sfa_outputs)
-                sl_morphdisp = scale_to(sl_morph, sl_morph.mean(), sl_morph.max()-sl_morph.min(), 127.5, 255.0, scale_disp, 'tanh')
-        #        extent = (L, R, B, U)
-                extent = (0, hierarchy_out_dim-1, all_classes_morph_inc[-1]+original_class, all_classes_morph_dec[-1]+original_class-0.25)
-                ax12_1.imshow(sl_morphdisp.clip(0,255), aspect='auto', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray, extent=extent)
-        #        majorLocator_y   = MultipleLocator(0.5)
-        #        ax12_1.yaxis.set_major_locator(majorLocator_y)
-                plt.ylabel("Morphs")
-                
          
-                sl_selected = sl_seq[y][:].reshape((1, hierarchy_out_dim))
-                sl_selected = scale_to(sl_selected, sl_selected.mean(), sl_selected.max()-sl_selected.min(), 127.5, 255.0, scale_disp, 'tanh')
-        #        extent = (0, hierarchy_out_dim-1, all_classes_morph_inc[-1]+original_class+0.5, all_classes_morph_dec[-1]+original_class-0.5)
-                ax12_3.imshow(sl_selected.clip(0,255), aspect=8.0, interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)
-        #        majorLocator_y   = MultipleLocator(0.5)
-        #        ax12_1.yaxis.set_major_locator(majorLocator_y)
-        #        plt.ylabel("Morphs")
+        ax6.canvas.mpl_connect('button_press_event', mask_on_press)
+
+     
+# # #         print "************ Displaying Localized Morphs and Masks **********"
+# # #         #Create Figure
+# # #         ax9 = plt.figure()
+# # #         ax9.subplots_adjust(hspace=0.3, wspace=0.03, top=0.93, right=0.96, bottom=0.05, left=0.05)
+# # #         
+# # #         #ax_6.subplots_adjust(hspace=0.5)
+# # #         plt.suptitle("Localized Linear (or Non-Linear) Morphs")
+# # #         
+# # #         ax9_11 = plt.subplot(4,5,1)
+# # #         plt.title("Train-Signals in Slow Domain")
+# # #         sl_seqdisp = sl_seq[:, range(0,hierarchy_out_dim)]
+# # #         sl_seqdisp = scale_to(sl_seqdisp, sl_seq.mean(), sl_seq.max()-sl_seq.min(), 127.5, 255.0, scale_disp, 'tanh')
+# # #         ax9_11.imshow(sl_seqdisp.clip(0,255), aspect='auto', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)
+# # #         plt.ylabel("Image number")
+# # #         
+# # #         ax9_12 = plt.subplot(4,5,2)
+# # #         plt.title("Selected Original Image")
+# # #         ax9_11.axis('off')
+# # #         
+# # #         ax9_13 = plt.subplot(4,5,3)
+# # #         plt.title("Loc. Approx. Image x'")
+# # #         ax9_12.axis('off')
+# # #         
+# # #         ax9_14 = plt.subplot(4,5,4)
+# # #         plt.title("Loc. Re-Approx Image x''")
+# # #         ax9_13.axis('off')
+# # #         
+# # #         ax9_21 = plt.subplot(4,5,6)
+# # #         plt.title("-8*Mask(cl -> cl_prev)")
+# # #         plt.yticks([])
+# # #         plt.xticks([])
+# # #         plt.ylabel("Modified Loc. Inv")
+# # #         
+# # #         ax9_22 = plt.subplot(4,5,7)
+# # #         plt.title("-4*Mask(cl -> cl_prev)")
+# # #         ax9_22.axis('off')
+# # #         
+# # #         ax9_23 = plt.subplot(4,5,8)
+# # #         plt.title("2*Mask(cl -> cl_prev)")
+# # #         ax9_23.axis('off')
+# # #         
+# # #         ax9_24 = plt.subplot(4,5,9)
+# # #         plt.title("4*Mask(cl -> cl_prev)")
+# # #         ax9_24.axis('off')
+# # #         
+# # #         ax9_25 = plt.subplot(4,5,10)
+# # #         plt.title("8*Mask(cl -> cl_prev)")
+# # #         ax9_25.axis('off')
+# # #         
+# # #         print "************ Displaying Localized Morphs Learned by SFA **********"
+# # #         #Create Figure
+# # #         ax10 = plt.figure()
+# # #         ax10.subplots_adjust(hspace=0.3, wspace=0.03, top=0.93, right=0.96, bottom=0.05, left=0.05)
+# # #         
+# # #         num_morphs = 20
+# # #         morph_step = 0.5
+# # #         all_axes_morph_inc = []
+# # #         all_classes_morph_inc = numpy.arange(num_morphs)*morph_step
+# # #         for i in range(len(all_classes_morph_inc)):
+# # #             tmp_ax = plt.subplot(4,5,i+1)
+# # #             plt.title("Morph(cl* -> cl*)")
+# # #             tmp_ax.axis('off')
+# # #             all_axes_morph_inc.append(tmp_ax)
+# # #         
+# # #         
+# # #         ax11 = plt.figure()
+# # #         ax11.subplots_adjust(hspace=0.3, wspace=0.03, top=0.93, right=0.96, bottom=0.05, left=0.05)
+# # #         
+# # #         all_axes_morph_dec = []
+# # #         all_classes_morph_dec = numpy.arange(0, -1 * num_morphs, -1) * morph_step
+# # #         for i in range(len(all_classes_morph_dec)):
+# # #             tmp_ax = plt.subplot(4, 5,20-i)
+# # #             plt.title("Morph (cl*-> cl*)")
+# # #             tmp_ax.axis('off')
+# # #             all_axes_morph_dec.append(tmp_ax)
         
-                      
-        #        morphed_classes = numpy.concatenate((all_classes_morph_dec[::-1], [0], all_classes_morph_inc))
-        #        print "morphed_classes=", morphed_classes
-        #        morphed_classes = morphed_classes + original_class
-        #        majorLocator_y   = MultipleLocator(1)
-        #        #ax12_1.yticks(morphed_classes) 
-        #        ax12_1.yaxis.set_major_locator(majorLocator_y)
-                ax12.canvas.draw()
-                
-        ax9.canvas.mpl_connect('button_press_event', localized_on_press)
+        #morphed sequence in SFA domain
+        ax12 = plt.figure()
+###        ax12_1 = plt.subplot(2, 2, 1)
+###        plt.title("SFA of Morphed Images")
+        ax12_2 = plt.subplot(1, 1, 1)
+        plt.title("Average SFA for each Class")
+        sl_seq_meandisp = scale_to(sl_seq_training_mean, sl_seq_training_mean.mean(), sl_seq_training_mean.max()-sl_seq_training_mean.min(), 127.5, 255.0, scale_disp, 'tanh')
+        ax12_2.imshow(sl_seq_meandisp.clip(0, 255), aspect='auto', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)
+###        ax12_3 = plt.subplot(2, 2, 3)
+###        plt.title("SFA of Selected Image")
+        
+# # #         print "************ Displaying Localized) Morphs Learned by SFA **********"
+# # #         #Create Figure
+# # #         ax13 = plt.figure()
+# # #         ax13.subplots_adjust(hspace=0.3, wspace=0.03, top=0.93, right=0.96, bottom=0.05, left=0.05)
+# # #         
+# # #         all_axes_mask_inc = []
+# # #         for i in range(len(all_classes_morph_inc)):
+# # #             tmp_ax = plt.subplot(4,5,i+1)
+# # #             plt.title("Mask(cl* -> cl*)")
+# # #             tmp_ax.axis('off')
+# # #             all_axes_mask_inc.append(tmp_ax)
+# # #         
+# # #         ax14 = plt.figure()
+# # #         ax14.subplots_adjust(hspace=0.3, wspace=0.03, top=0.93, right=0.96, bottom=0.05, left=0.05)
+# # #         
+# # #         all_axes_mask_dec = []
+# # #         for i in range(len(all_classes_morph_dec)):
+# # #             tmp_ax = plt.subplot(4, 5,20-i)
+# # #             plt.title("Mask (cl*-> cl*)")
+# # #             tmp_ax.axis('off')
+# # #             all_axes_mask_dec.append(tmp_ax)
+# # #         
+        #Retrieve Image in Sequence
+
+# # #         
+# # #         def localized_on_press(event):
+# # #             global plt, ax9, ax9_11, ax9_12, ax9_13, ax9_14, ax9_21, ax9_22, ax9_23, ax9_24, ax9_25
+# # #             global ax9_31, ax9_32, ax9_33, ax9_34, ax9_35
+# # #             global ax9_41, ax9_42, ax9_43, ax9_44, ax9_45
+# # #             global subimages, sTrain, sl_seq, flow, error_scale_disp, hierarchy_out_dim
+# # #             global mask_normalize, lim_delta_sfa, correct_classes_training, S2SC, block_size
+# # #             global ax10, ax11, all_axes_morph
+# # #             global ax13, ax14
+# # #             
+# # #             print 'you pressed', event.button, event.xdata, event.ydata
+# # #         
+# # #             if event.xdata == None or event.ydata==None:
+# # #                 mask_normalize = not mask_normalize
+# # #                 print "mask_normalize was successfully changed to: ", mask_normalize
+# # #                 return
+# # #             
+# # #             y = int(event.ydata)
+# # #             if y < 0:
+# # #                 y = 0
+# # #             if y >= num_images:
+# # #                 y = num_images - 1
+# # #             x = int(event.xdata)
+# # #             if x < 0:
+# # #                 x = 0
+# # #             if x >= hierarchy_out_dim:
+# # #                 x = hierarchy_out_dim -1
+# # #             print "Image Selected=" + str(y) + " , Slow Component Selected=" + str(x)
+# # #         
+# # #             print "Displaying Original and Reconstructions"
+# # #         #Display Original Image
+# # #             subimage_im = subimages[y][0:num_pixels_per_image].reshape(subimage_shape)
+# # #             ax9_12.imshow(subimage_im.clip(0,max_clip), vmin=0, vmax=max_clip, aspect='equal', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)
+# # #         
+# # #             if show_localized_morphs == True: 
+# # #                 #Display Localized Reconstructed Image
+# # #                 data_in = subimages[y][0:num_pixels_per_image].reshape((1, signals_per_image))
+# # #                 data_out = sl_seq[y].reshape((1, hierarchy_out_dim))
+# # #                 loc_inverted_im = flow.localized_inverse(data_in, data_out)
+# # #                 loc_inverted_im = loc_inverted_im[0, 0:num_pixels_per_image].reshape(subimage_shape)
+# # #                 loc_inverted_im_ori = loc_inverted_im.copy()
+# # #                 ax9_13.imshow(loc_inverted_im.clip(0,max_clip), vmin=0, vmax=max_clip, aspect='equal', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)        
+# # #             
+# # #                 #Display Re-Reconstructed Image
+# # #                 loc_re_data_in = loc_inverted_im_ori.reshape((1, signals_per_image))
+# # #                 loc_re_data_out = flow.execute(loc_re_data_in)
+# # #                 loc_re_inverted_im = flow.localized_inverse(loc_re_data_in, loc_re_data_out)
+# # #                 loc_re_inverted_im = loc_re_inverted_im[0, 0:num_pixels_per_image].reshape(subimage_shape)
+# # #                 ax9_14.imshow(loc_re_inverted_im.clip(0,max_clip), vmin=0, vmax=max_clip, aspect='equal', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)
+# # #                 
+# # #                 print "Displaying Masks Using Localized Inverses"
+# # #                 error_scale_disp=1.0
+# # #                 disp_data = [(-8, "lmsk", ax9_21), (-4.0, "lmsk", ax9_22), (2.0, "lmsk", ax9_23), (4.0, "lmsk", ax9_24), (8.0, "lmsk", ax9_25)]
+# # #             
+# # #                 data_in = subimages[y][0:num_pixels_per_image].reshape((1, signals_per_image))
+# # #                 data_out = sl_seq[y].reshape((1, hierarchy_out_dim))  
+# # #                 work_sfa = data_out.copy()
+# # #                    
+# # #                 for scale_factor, display_type, fig_axes in disp_data:
+# # #                     #WARNING, this should not be computed this way!!!!
+# # #                     current_class = y/block_size
+# # #                     print "Current classs is:", current_class
+# # #                     if scale_factor < 0:
+# # #                         next_class = current_class-1
+# # #                         if next_class < 0:
+# # #                             next_class = 0
+# # #                     else:
+# # #                         next_class = current_class+1
+# # #                         if next_class >= hierarchy_out_dim:
+# # #                             next_class = hierarchy_out_dim-1
+# # #                         
+# # #                     current_avg_sfa = sl_seq[current_class * block_size:(current_class+1)*block_size,:].mean(axis=0)
+# # #                     next_avg_sfa = sl_seq[next_class*block_size:(next_class+1)*block_size,:].mean(axis=0)
+# # #                             
+# # #                     print "Current class is ", current_class
+# # #                     #print "Current class_avg is ", current_avg_sfa
+# # #                     #print "Next class_avg is ", next_avg_sfa
+# # #                     
+# # #                     data_out_next = next_avg_sfa
+# # #                     print "Computing from class %d to class %d, slow_value %d"%(current_class, next_class, scale_factor)
+# # #                     work_sfa = data_out * (1-lim_delta_sfa) + data_out_next * lim_delta_sfa
+# # #                     t_loc_inv0 = time.time()
+# # #                     mask_im = flow.localized_inverse(data_in, work_sfa, verbose=False)[:, 0:num_pixels_per_image]
+# # #                     t_loc_inv1 = time.time()
+# # #                     print "Localized inverse computed in %0.3f s"% ((t_loc_inv1-t_loc_inv0)) 
+# # #                     mask_im = (mask_im - data_in)[0, 0:num_pixels_per_image].reshape(subimage_shape) / lim_delta_sfa
+# # #                     if mask_normalize == True:
+# # #                         mask_im_disp = abs(scale_factor) * scale_to(mask_im, 0.0, mask_im.max()-mask_im.min(), max_clip/2.0, max_clip/2.0, error_scale_disp, 'tanh')
+# # #                     else:
+# # #                         mask_im_disp = abs(scale_factor) * mask_im + max_clip/2.0
+# # #                     fig_axes.imshow(mask_im_disp.clip(0,max_clip), vmin=0, vmax=max_clip, aspect='equal', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)           
+# # #                     fig_axes.set_title('%0.2f x Mask: cl %d => %d'%(abs(scale_factor), current_class, next_class))
+# # #                 ax9.canvas.draw()
+# # #                 
+# # #                 error_scale_disp=1.0
+# # #                 print "Displaying Morphs Using Localized Inverses Incrementing Class"
+# # #         
+# # #                 num_morphs_inc = len(all_classes_morph_inc)
+# # #                 num_morphs_dec = len(all_classes_morph_dec)
+# # #                 #make a function specialized in morphs, use this variable,
+# # #                 morph_outputs =  range(num_morphs_inc + num_morphs_dec - 1)
+# # #                 morph_sfa_outputs = range(num_morphs_inc + num_morphs_dec - 1)
+# # #                 original_class = y/block_size
+# # #         
+# # #         
+# # #                 #WARNING!!! THERE IS A BUG, IN WHICH THE LAST INC MORPHS ARE INCORRECTLY COMBINED USING ZERO??? 
+# # #                 for ii, action in enumerate(["inc", "dec"]):
+# # #                     current_class = original_class
+# # #                     if ii==0:
+# # #                         all_axes_morph = all_axes_morph_inc
+# # #                         all_axes_mask = all_axes_mask_inc
+# # #                         num_morphs = len(all_classes_morph_inc)
+# # #                         desired_next_classes = all_classes_morph_inc + current_class
+# # #                         max_class = num_images/block_size
+# # #                         for i in range(len(desired_next_classes)):
+# # #                             if desired_next_classes[i] >= max_class:
+# # #                                 desired_next_classes[i] = -1
+# # #                     else:                
+# # #                         all_axes_morph = all_axes_morph_dec
+# # #                         all_axes_mask = all_axes_mask_dec
+# # #                         num_morphs = len(all_classes_morph_dec)
+# # #                         desired_next_classes = all_classes_morph_dec + current_class
+# # #                         for i in range(len(desired_next_classes)):
+# # #                             if desired_next_classes[i] < 0:
+# # #                                 desired_next_classes[i] = -1
+# # #         
+# # #                     desired_next_sfa=[]
+# # #                     for next_class in desired_next_classes:
+# # #                         if next_class >= 0 and next_class < max_class:
+# # #                             c1 = numpy.floor(next_class)
+# # #                             c2 = c1  + 1               
+# # #                             if c2 >= max_class:
+# # #                                 c2 = max_class-1 
+# # #                             desired_next_sfa.append(sl_seq_training_mean[c1] * (1+c1-next_class) + sl_seq_training_mean[c2]*(next_class-c1))
+# # #                         else: #just in case something goes wrong
+# # #                             desired_next_sfa.append(sl_seq_training_mean[0])
+# # #                         #sl_seq[next_class*block_size:(next_class+1)*block_size,:].mean(axis=0))
+# # #             
+# # #                     data_in = subimages[y][0:num_pixels_per_image].reshape((1, signals_per_image))
+# # #                     data_out = sl_seq[y].reshape((1, hierarchy_out_dim))
+# # #                     for i, next_class in enumerate(desired_next_classes):
+# # #                         if next_class == -1:
+# # #                             if ii==0:
+# # #                                 morph_sfa_outputs[i+num_morphs_dec-1] = numpy.zeros(len(data_out[0])) 
+# # #                             else:
+# # #                                 morph_sfa_outputs[num_morphs_dec-i-1] = numpy.zeros(len(data_out[0]))
+# # #                             break          
+# # #                         data_out_next = desired_next_sfa[i]           
+# # #                         print "Morphing to desired class %.2f..."%next_class
+# # #                         
+# # #                         work_sfa = data_out * (1-lim_delta_sfa) + data_out_next * lim_delta_sfa
+# # #             
+# # #                         t_loc_inv0 = time.time()
+# # #                         morphed_data = flow.localized_inverse(data_in, work_sfa, verbose=False)[0, 0:num_pixels_per_image] #TODO: last part might be unnecessary
+# # #                         t_loc_inv1 = time.time()
+# # #                         print "Localized inverse computed in %0.3f s"% ((t_loc_inv1-t_loc_inv0)) 
+# # #                         
+# # #                         morphed_data = data_in + (morphed_data - data_in)/lim_delta_sfa
+# # #                         morphed_im_disp = morphed_data[0:num_pixels_per_image].reshape(subimage_shape) 
+# # #             
+# # #                         if all_axes_morph[i] != None:
+# # #                             all_axes_morph[i].imshow(morphed_im_disp.clip(0,max_clip), vmin=0, vmax=max_clip, aspect='equal', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)           
+# # #                             all_axes_morph[i].set_title("Morph(cl %.1f -> %.1f)"%(current_class,next_class))
+# # #                         else:
+# # #                             print "No plotting Morph. (Reason: axes = None)"
+# # #         
+# # #                         if all_axes_mask[i] != None:
+# # #                             loc_mask_data = morphed_data[0] - data_in[0]
+# # #                             loc_mask_disp = loc_mask_data[0:num_pixels_per_image].reshape(subimage_shape) + max_clip/2.0
+# # #                             loc_mask_disp = scale_to(loc_mask_disp, loc_mask_disp.mean(), loc_mask_disp.max() - loc_mask_disp.min(), 127.5, 255.0, scale_disp, 'tanh')
+# # #                             all_axes_mask[i].imshow(loc_mask_disp.clip(0,max_clip), vmin=0, vmax=max_clip, aspect='equal', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)           
+# # #                             all_axes_mask[i].set_title("Mask(cl %.1f -> %.1f)"%(current_class,next_class))
+# # #                         else:
+# # #                             print "No plotting Mask. (Reason: axes = None)"
+# # #                         
+# # #                         current_class = next_class
+# # #                         data_in = morphed_data
+# # #                         data_out = flow.execute(data_in)
+# # #                         if ii==0: #20-29
+# # #                             morph_sfa_outputs[i+num_morphs_dec-1] = data_out[0]
+# # #                         else: #0-19
+# # #                             morph_sfa_outputs[num_morphs_dec-i-1] = data_out[0]
+# # #                            
+# # #                 ax10.canvas.draw()
+# # #                 ax11.canvas.draw()
+# # #                 ax13.canvas.draw()
+# # #                 ax14.canvas.draw()
+# # #         
+# # #         #        for i, sfa_out in enumerate(morph_sfa_outputs):
+# # #         #            print "elem %d: "%i, "has shape", sfa_out.shape, "and is= ", sfa_out
+# # #         
+# # #         #        morph_sfa_outputs[num_morphs_dec] = sl_seq[y]
+# # #                 sl_morph = numpy.array(morph_sfa_outputs)
+# # #                 sl_morphdisp = scale_to(sl_morph, sl_morph.mean(), sl_morph.max()-sl_morph.min(), 127.5, 255.0, scale_disp, 'tanh')
+# # #         #        extent = (L, R, B, U)
+# # #                 extent = (0, hierarchy_out_dim-1, all_classes_morph_inc[-1]+original_class, all_classes_morph_dec[-1]+original_class-0.25)
+# # #                 ax12_1.imshow(sl_morphdisp.clip(0,255), aspect='auto', interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray, extent=extent)
+# # #         #        majorLocator_y   = MultipleLocator(0.5)
+# # #         #        ax12_1.yaxis.set_major_locator(majorLocator_y)
+# # #                 plt.ylabel("Morphs")
+# # #                 
+# # #          
+# # #                 sl_selected = sl_seq[y][:].reshape((1, hierarchy_out_dim))
+# # #                 sl_selected = scale_to(sl_selected, sl_selected.mean(), sl_selected.max()-sl_selected.min(), 127.5, 255.0, scale_disp, 'tanh')
+# # #         #        extent = (0, hierarchy_out_dim-1, all_classes_morph_inc[-1]+original_class+0.5, all_classes_morph_dec[-1]+original_class-0.5)
+# # #                 ax12_3.imshow(sl_selected.clip(0,255), aspect=8.0, interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)
+# # #         #        majorLocator_y   = MultipleLocator(0.5)
+# # #         #        ax12_1.yaxis.set_major_locator(majorLocator_y)
+# # #         #        plt.ylabel("Morphs")
+# # #         
+# # #                       
+# # #         #        morphed_classes = numpy.concatenate((all_classes_morph_dec[::-1], [0], all_classes_morph_inc))
+# # #         #        print "morphed_classes=", morphed_classes
+# # #         #        morphed_classes = morphed_classes + original_class
+# # #         #        majorLocator_y   = MultipleLocator(1)
+# # #         #        #ax12_1.yticks(morphed_classes) 
+# # #         #        ax12_1.yaxis.set_major_locator(majorLocator_y)
+# # #                 ax12.canvas.draw()
+# # #                 
+# # #         ax9.canvas.mpl_connect('button_press_event', localized_on_press)
     
         ######################################################################################################################
         ###### Plot that displays the slow features of some central node of each layer of the network ########################
@@ -4038,3 +4041,7 @@ def main():
         print "GUI Finished!"
       
     print "Program successfully finished"
+
+
+if __name__ == "__main__":
+    main()

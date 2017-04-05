@@ -6609,15 +6609,15 @@ def sSeqCreateRTransXYPAngScale(iSeq, seed=-1):
         iSeq.correct_labels = numpy.stack((sSeq.translations_x, sSeq.translations_y, sSeq.rotation, sSeq.pixelsampling_x)).T
         
         translations_y_ordering = numpy.argsort(sSeq.translations_y)
-        translations_y_classes = numpy.zeros(sSeq.num_images)
+        translations_y_classes = numpy.zeros(sSeq.num_images, dtype=int)
         translations_y_classes[translations_y_ordering] = all_classes
         
         rotation_ordering = numpy.argsort(sSeq.rotation)
-        rotation_classes = numpy.zeros(sSeq.num_images)
+        rotation_classes = numpy.zeros(sSeq.num_images, dtype=int)
         rotation_classes[rotation_ordering] = all_classes
         
         pixel_sampling_ordering = numpy.argsort(sSeq.pixelsampling_x)
-        pixel_sampling_classes = numpy.zeros(sSeq.num_images)
+        pixel_sampling_classes = numpy.zeros(sSeq.num_images, dtype=int)
         pixel_sampling_classes[pixel_sampling_ordering] = all_classes
         
         iSeq.correct_classes = numpy.stack((iSeq.correct_classes, translations_y_classes, rotation_classes, pixel_sampling_classes)).T
@@ -8699,6 +8699,7 @@ def iSeqCreateMNIST(dx=0, dy=0, smin=1.0, smax=1.00, delta_rotation=0.0, pre_mir
 
     unique_labels, iSeq.correct_classes = numpy.unique(iSeq.orig_labels, return_inverse=True)
     print "unique labels = ", unique_labels
+    #print "(unique) correct_classes = ", iSeq.correct_classes
     #quit()
     iSeq.correct_labels = numpy.array(iSeq.orig_labels)
     

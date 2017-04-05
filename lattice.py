@@ -191,7 +191,7 @@ def compute_lsrf_preserve_masks(x_field_channels, y_field_channels, nx_value, ny
 def compute_lsrf_matrix_connections_with_input_dim(v1, v2, preserve_mask_local, preserve_mask_sparse, x_in_channels, y_in_channels, in_channel_dim=1, allow_nonrectangular_lattice=False, verbose=False):
     if verbose:
         print "shape of preserve_mask_local is: ", preserve_mask_local.shape
-        if preserve_mask_sparse != None:
+        if preserve_mask_sparse is not None:
             print "shape of preserve_mask_sparse is: ", preserve_mask_sparse.shape
         print "x_in_channels = ", x_in_channels
         print "y_in_channels = ", y_in_channels
@@ -205,7 +205,7 @@ def compute_lsrf_matrix_connections_with_input_dim(v1, v2, preserve_mask_local, 
             raise Exception(err)
 #        
         preserve_mask_local = preserve_mask_local.flatten().reshape(preserve_mask_local.shape[0],  in_channel_dim *  preserve_mask_local.shape[1])
-        if preserve_mask_sparse != None:
+        if preserve_mask_sparse is not None:
             preserve_mask_sparse = preserve_mask_sparse.flatten().reshape(preserve_mask_sparse.shape[0],  in_channel_dim *  preserve_mask_sparse.shape[1])
         v1 = list(v1)
         v2 = list(v2)
@@ -218,7 +218,7 @@ def compute_lsrf_matrix_connections_with_input_dim(v1, v2, preserve_mask_local, 
         in_channel_dim = 1
     
 #    lat_mat = compute_lattice_matrix(v1, v2, preserve_mask, x_in_channels, y_in_channels, in_channel_dim, allow_nonrectangular_lattice=allow_nonrectangular_lattice)             
-    if preserve_mask_sparse != None:
+    if preserve_mask_sparse is not None:
         return compute_lsrf_matrix_connections(v1, v2, preserve_mask_local, preserve_mask_sparse, x_in_channels, y_in_channels, in_channel_dim=1, allow_nonrectangular_lattice=allow_nonrectangular_lattice)
     else:
         return compute_lattice_matrix_connections(v1, v2, preserve_mask_local, x_in_channels, y_in_channels, in_channel_dim=1, allow_nonrectangular_lattice=allow_nonrectangular_lattice)
@@ -228,7 +228,7 @@ def compute_lsrf_matrix_connections_with_input_dim(v1, v2, preserve_mask_local, 
 # For the lsrf, typically: v1=(2,0), v2=(0,1), preserve_mask = [1M 1M 0M 0M 1M] for suitable square matrices 1M and 0M. 
 # Add checking for too small matrix compared to masks
 def compute_lsrf_matrix_connections(v1, v2, preserve_mask_local, preserve_mask_sparse, x_in_channels, y_in_channels, in_channel_dim=1, allow_nonrectangular_lattice=False, verbose=False):
-        if preserve_mask_sparse == None:
+        if preserve_mask_sparse is None:
             print "Defaulting to compute_lattice_matrix_connections"
             return compute_lattice_matrix_connections(v1, v2, preserve_mask_local, x_in_channels, y_in_channels, in_channel_dim=1, allow_nonrectangular_lattice=False, verbose=False)
         
