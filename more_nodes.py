@@ -194,6 +194,7 @@ class GeneralExpansionNode(mdp.Node):
             self._output_dim = self.exp_output_dim
         else:
             self._output_dim = self.expanded_dim(n)
+        self.expanded_dims = self.output_sizes(n)
 
     def _execute(self, x):
         if self.input_dim is None:
@@ -205,7 +206,7 @@ class GeneralExpansionNode(mdp.Node):
         if self.funcs != "RandomSigmoids":
             num_samples = x.shape[0]
     #        output_dim = expanded_dim(self.input_dim)
-            self.expanded_dims = self.output_sizes(self.input_dim) 
+            #self.expanded_dims = self.output_sizes(self.input_dim) 
             out = numpy.zeros((num_samples, self.output_dim))
 
             current_pos = 0
@@ -277,7 +278,7 @@ class PairwiseAbsoluteExpansionNode(mdp.Node):
 
 #TODO:ADD inverse type sum, suitable for when output_scaling is True
 class PInvSwitchboard(mdp.hinet.Switchboard):
-    def __init__(self, input_dim, connections, slow_inv=False, type_inverse="average", output_scaling=True, additive_noise_std=0.000004):
+    def __init__(self, input_dim, connections, slow_inv=False, type_inverse="average", output_scaling=True, additive_noise_std=0.00004):
         super(PInvSwitchboard, self).__init__(input_dim=input_dim, connections=connections)
         self.pinv = None
         self.mat2 = None

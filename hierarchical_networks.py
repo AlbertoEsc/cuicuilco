@@ -991,6 +991,14 @@ network.L6 = copy.deepcopy(pSFALayerL3V)
 network.layers = [network.L0, network.L1, network.L2, network.L3, network.L4, network.L5, network.L6]
 
 
+#Experimental MNIST network with no overlap, and weight sharing in the first layer
+network = HiGSFA_MNISTNetwork_24x24_WeightSharing_7L = copy.deepcopy(HiGSFA_MNISTNetwork_24x24_7L)
+L0 = network.layers[0]
+L0.cloneLayer = True
+L0.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo], "max_lenght_slow_part":9, "reconstruct_with_sfa":False, "offsetting_mode":None, "max_preserved_sfa":9} 
+L0.sfa_out_dim=17
+L1 = network.layers[1]
+L1.sfa_out_dim=40
 
 print "*******************************************************************"
 print "*****   Creating 7L MMNIST Network  MNISTNetwork_24x24_7L_B *********"
@@ -1381,12 +1389,57 @@ network.L4.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[ident
 
 network.layers = [network.L0,network.L1,network.L2,network.L3,network.L4 ] #,network.L5,network.L6]
 network.L0.pca_out_dim = 30
-HiGSFANet_out_dims = [30, 45, 60, 75, 75]
+HiGSFANet_out_dims = [39, 50, 60, 75, 75] #= [30, 45, 60, 75, 75]
 
 max_preserved_sfas = [3, 4, 6, 9, 9]
 for i in range(len(network.layers)):
     network.layers[i].sfa_out_dim = HiGSFANet_out_dims[i]
     network.layers[i].sfa_args["max_preserved_sfa"] = max_preserved_sfas[i]
+
+#Experimental MNIST network with overlap, and weight sharing in the first layer
+network = MNISTNetwork_24x24_5L_WeightSharing_OverlapNew = copy.deepcopy(MNISTNetwork_24x24_5L_OverlapNew)
+L0 = network.layers[0]
+L0.cloneLayer = True
+L0.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo, s7QT], "max_lenght_slow_part":9, "reconstruct_with_sfa":False, "offsetting_mode":None, "max_preserved_sfa":4} 
+
+#Experimental MNIST network with overlap, and weight sharing in the first layer
+network = MNISTNetwork_24x24_5L_WeightSharing_Basic_OverlapNew = copy.deepcopy(MNISTNetwork_24x24_5L_OverlapNew)
+for layer in network.layers:
+    layer.sfa_args["expansion_funcs"] = [identity, unsigned_08expo]
+
+L0 = network.layers[0]
+L0.cloneLayer = True
+L0.sfa_args["reconstruct_with_sfa"] = False
+L0.sfa_args["offsetting_mode"] = None
+L0.sfa_args["max_preserved_sfa"]=9
+
+L1 = network.layers[1]
+L1.cloneLayer = True
+L1.sfa_args["reconstruct_with_sfa"] = False
+L1.sfa_args["offsetting_mode"] = None
+L1.sfa_args["max_preserved_sfa"]=9
+L1.sfa_args["expansion_funcs"] = [identity, unsigned_08expo, ]
+
+L2 = network.layers[2]
+#L2.cloneLayer = True
+L2.sfa_args["reconstruct_with_sfa"] = False
+L2.sfa_args["offsetting_mode"] = None #"data_dependent"
+L2.sfa_args["max_preserved_sfa"]=9
+L2.sfa_args["expansion_funcs"] = [identity, unsigned_08expo] #DEBUG, ch3o0s9QT, ch3o9s10QT]
+
+L3 = network.layers[3]
+#L3.sfa_args["reconstruct_with_sfa"] = False
+#L3.sfa_args["offsetting_mode"] = None #"data_dependent"
+L3.sfa_args["expansion_funcs"] = [identity, unsigned_08expo] #DEBUG, ch3o9s10QT] #ch3o0s20QT, unsigned_08expo,
+
+L4 = network.layers[4]
+#L4.sfa_args["reconstruct_with_sfa"] = False
+#L4.sfa_args["offsetting_mode"] = "data_dependent" # None, "data_dependent", "sensitivity_based_pure"
+L4.sfa_args["expansion_funcs"] = [identity, unsigned_08expo] #DEBUG ch3o9s32QT] #, ch3o9s13CT], unsigned_08expo,
+#ch3o4s9QT, ch3o0s4QT
+#ch3o6s16QT, ch3o0s4QT]
+#ch3o9s24QT, ch3o9s13CT
+
 
 print "*******************************************************************"
 print "******** Creating Linear 4L SFA Network          ******************"
@@ -3233,9 +3286,9 @@ u08expoNetworkU11L.L9.sfa_out_dim = 60
 
 u08expoNetworkU11L_128x128 = copy.deepcopy(u08expoNetworkU11L)
 u08expoNetworkU11L_64x64 = copy.deepcopy(u08expoNetworkU11L)
-u08expoNetworkU11L_64x64.layers = u08expoNetworkU11L_128x128.layers[:-2]
+u08expoNetworkU11L_64x64.layers = u08expoNetworkU11L_64x64.layers[:-2]
 u08expoNetworkU11L_32x32 = copy.deepcopy(u08expoNetworkU11L)
-u08expoNetworkU11L_32x32.layers = u08expoNetworkU11L_128x128.layers[:-4]
+u08expoNetworkU11L_32x32.layers = u08expoNetworkU11L_32x32.layers[:-4]
 
 #******************** GENDER NETWORK FOR ARTICLE ****************
 layer = Gender_top_layer = system_parameters.ParamsSFASuperNode()
@@ -3598,6 +3651,22 @@ network = HiGSFANetworkU11L_NoOverlap_4x4L0_mod4 = copy.deepcopy(HiGSFANetworkU1
 for i, layer in enumerate(network.layers):
     layer.sfa_args["max_preserved_sfa"] = delta_thresholds[i]
     layer.sfa_out_dim = output_dims[i]
+
+####################### Networks FOR POS X, POS Y, SCALE, ANGLE WITHOUT OVERLAP #######################
+delta_thresholds = [4, 6, 10, 14, 20, 20, 20, 20, 20, 20, 20, 20] * 12
+output_dims =      [   16,    28,    50,    75,    75,    75,   75,   75,   75,   75,   80,   80]
+network = HiGSFANetworkU11L_NoOverlap_4x4L0_PosXPosYScaleAngle = copy.deepcopy(HiGSFANetworkU11L_NoOverlap_4x4L0)
+for i, layer in enumerate(network.layers):
+    layer.sfa_args["max_preserved_sfa"] = delta_thresholds[i]
+    layer.sfa_out_dim = output_dims[i]
+
+HiGSFANetworkU11L_NoOverlap_4x4L0_PosXPosYScaleAngle_128x128 = copy.deepcopy(HiGSFANetworkU11L_NoOverlap_4x4L0_PosXPosYScaleAngle)
+
+HiGSFANetworkU11L_NoOverlap_4x4L0_PosXPosYScaleAngle_64x64 = copy.deepcopy(HiGSFANetworkU11L_NoOverlap_4x4L0_PosXPosYScaleAngle)
+HiGSFANetworkU11L_NoOverlap_4x4L0_PosXPosYScaleAngle_64x64.layers = HiGSFANetworkU11L_NoOverlap_4x4L0_PosXPosYScaleAngle_64x64.layers[0:-2]
+
+HiGSFANetworkU11L_NoOverlap_4x4L0_PosXPosYScaleAngle_32x32 = copy.deepcopy(HiGSFANetworkU11L_NoOverlap_4x4L0_PosXPosYScaleAngle)
+HiGSFANetworkU11L_NoOverlap_4x4L0_PosXPosYScaleAngle_32x32.layers = HiGSFANetworkU11L_NoOverlap_4x4L0_PosXPosYScaleAngle_32x32.layers[0:-2]
 
 ####################### NETWORKS FOR EYE DETECTION WITHOUT OVERLAP ####################################
 delta_thresholds = [3, 8, 14, 24, 28, 34, 40, 40, 40, 40, 40, 40]

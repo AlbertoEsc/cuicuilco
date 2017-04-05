@@ -49,7 +49,7 @@ from lockfile import LockFile
 from inspect import getmembers
 import subprocess
 import mkl
-mkl.set_num_threads(22) #Number of threads used by mlk to parallelize matrix operations of numpy. 
+mkl.set_num_threads(18) #Number of threads used by mlk to parallelize matrix operations of numpy. 
                         #Adjust according to the number of cores in your system.
 
 #benchmark is a list that contains benchmark information (running times) with entries: ("description", time as float in seconds)
@@ -677,6 +677,7 @@ iTrain_set = Parameters.iTrain
 sTrain_set = Parameters.sTrain
 iTrain = take_0_k_th_from_2D_list(iTrain_set, k=dataset_for_display_train)
 sTrain = take_0_k_th_from_2D_list(sTrain_set, k=dataset_for_display_train)
+
 
 #take k=1? or choose from command line? NOPE. Take always first label (k=0). sSeq must compute proper classes for chosen label anyway.
 #TODO: let the user choose objective_label through a command line argument
@@ -2122,7 +2123,8 @@ correct_labels_newid_sorted.sort()
 median_estimation = numpy.ones(len(correct_labels_newid)) * correct_labels_newid_sorted[len(correct_labels_newid)/2]
 chance_level_MAE_newid = classifiers.mean_average_error(correct_labels_newid, median_estimation) 
 print "chance_level_RMSE_newid=", chance_level_RMSE_newid, "chance_level_MAE_newid=", chance_level_MAE_newid
-print "correct_labels_newid.mean()=", correct_labels_newid.mean(), "correct_labels_newid median() ",  median_estimation
+print "correct_labels_newid.mean()=", correct_labels_newid.mean(), "correct_labels_newid median() ", median_estimation
+print "correct_labels_newid.min()=", correct_labels_newid.min(), "correct_labels_newid.max() ", correct_labels_newid.max()
 print "Computations Finished!"
 
 

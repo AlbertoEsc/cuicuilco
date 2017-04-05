@@ -6383,11 +6383,11 @@ else:
 #    sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.min_sampling*100, sSeq.max_sampling*100)
 #system_parameters.test_object_contents(sSeq)
 
-pipeline_fd_1Label = dict(dx0 = 40, dy0 = 20, da0=22.5, smin0 = 0.55,  smax0 = 1.1,
-                          dx1 = 20, dy1 = 10, da1=11.3, smin1 = 0.775, smax1 = 1.05)                    
+pipeline_fd_1Label = dict(dx0 = 40.0, dy0 = 20.0, da0=22.5, smin0 = 0.55,  smax0 = 1.1,
+                          dx1 = 20.0, dy1 = 10.0, da1=11.3, smin1 = 0.775, smax1 = 1.05)                    
 
-pipeline_fd_4Labels = dict(dx0 = 40,  dy0 = 20,  da0=22.5, smin0 = 0.694,  smax0 = 0.981,
-                           dx1 = 14,  dy1 = 13,  da1=21.3, smin1 = 0.694,  smax1 = 0.981, #why am I not reducing the scale range???!!!!!
+pipeline_fd_4Labels = dict(dx0 = 40.0,  dy0 = 20.0,  da0=22.5, smin0 = 0.694,  smax0 = 0.981,
+                           dx1 = 14.0,  dy1 = 13.0,  da1=21.3, smin1 = 0.694,  smax1 = 0.981, #why am I not reducing the scale range???!!!!!
                            dx2 = 7.5, dy2 = 8.0, da2=16.5, smin2 = 0.694,  smax2 = 0.981) #ERROR, THIS IS A BUG                   
 
 #####For 4 lables, try next options for iter 1
@@ -6476,6 +6476,8 @@ def iSeqCreateRTransXYPAngScale(dx=45, dy=20, da=22.5, smin=0.55, smax=1.1, num_
 
     iSeq.input_files = iSeq.input_files * repetition_factor # warning!!! 4, 8
     iSeq.num_images = len(iSeq.input_files)
+
+    print "iSeq.num_images =", iSeq.num_images
 
     #To avoid grouping similar images next to one other, even though available images already shuffled
     numpy.random.shuffle(iSeq.input_files)  
@@ -6706,9 +6708,11 @@ else:
 #da=10.0
 #smin = 0.55
 #smax = 1.1
+
+print "dx=", dx, "dy=", dy,"da=", da,"smin=", smin,"smax=", smax
 iSeq_set = iTrainRTransXYPAngScale = [[iSeqCreateRTransXYPAngScale(dx=dx, dy=dy, da=da, smin=smin, smax=smax, num_steps=50, slow_var=slow_var, continuous=continuous, num_images_used=30000, #30000 
                                                       images_base_dir=alldbnormalized_base_dir, normalized_images = alldbnormalized_available_images, 
-                                                      first_image_index=0, pre_mirroring="none", repetition_factor=2, seed=-1)]]
+                                                      first_image_index=0, pre_mirroring="none", repetition_factor=2, seed=-1)]] ####repetition factor is 2
 #Experiment below is just for display purposes!!! comment it out!
 #iSeq_set = iTrainRTransXYPAngScale = [[iSeqCreateRTransXYPAngScale(dx=45, dy=2, da=da, smin=0.85, smax=0.95, num_steps=50, slow_var = "X", continuous=continuous, num_images_used=15000, #30000 
 #                                                      images_base_dir=alldbnormalized_base_dir, normalized_images = alldbnormalized_available_images, 
@@ -6719,6 +6723,8 @@ iSeq_set = iTrainRTransXYPAngScale = [[iSeqCreateRTransXYPAngScale(dx=dx, dy=dy,
 #                                                      images_base_dir=normalized_base_dir_INIBilder, normalized_images = numpy.arange(0, 79), 
 #                                                      first_image_index=0, repetition_factor=10, seed=143)]]
 sSeq_set = sTrainRTransXYPAngScale = [[sSeqCreateRTransXYPAngScale(iSeq_set[0][0], seed=-1)]]
+
+
 
 #iSeq_set = iTrainRTransY2 = [[copy.deepcopy(iSeq0), iSeqCreateRTransY(900, av_fim, first_image=4500, repetition_factor=1, seed=-1)], 
 #                             [copy.deepcopy(iSeq0), iSeqCreateRTransY(900, av_fim, first_image=8100, repetition_factor=1, seed=-1)],                             
@@ -6779,7 +6785,6 @@ else:
         iNewidRTransXYPAngScale[0][0].correct_classes[:,j] = more_nodes.map_labels_to_class_number(all_classes, avg_labels, iNewidRTransXYPAngScale[0][0].correct_labels[:,j])
 
 print "iNewidRTransXYPAngScale[0][0].correct_classes=", iNewidRTransXYPAngScale[0][0].correct_classes
-#quit()
 
 if slow_var == "All":
     iSeq = iTrainRTransXYPAngScale[0][0]
@@ -6814,7 +6819,21 @@ ParamsRTransXYPAngScaleFunc.reduction_factor = 1.0 # WARNING 1.0, 2.0, 4.0, 8.0 
 ParamsRTransXYPAngScaleFunc.hack_image_size = 128 # WARNING   128,  64,  32 , 16 / 160  80 ...
 ParamsRTransXYPAngScaleFunc.enable_hack_image_size = True
 
-#quit()
+ParamsRTransXYPAngScaleFunc_128x128 = copy.deepcopy(ParamsRTransXYPAngScaleFunc)
+
+ParamsRTransXYPAngScaleFunc_64x64 = copy.deepcopy(ParamsRTransXYPAngScaleFunc)
+ParamsRTransXYPAngScaleFunc_64x64.reduction_factor = 2.0
+ParamsRTransXYPAngScaleFunc_64x64.hack_image_size = 64
+
+ParamsRTransXYPAngScaleFunc_32x32 = copy.deepcopy(ParamsRTransXYPAngScaleFunc)
+ParamsRTransXYPAngScaleFunc_32x32.reduction_factor = 4.0
+ParamsRTransXYPAngScaleFunc_32x32.hack_image_size = 32
+
+print ParamsRTransXYPAngScaleFunc.sTrain[0][0].num_images
+print ParamsRTransXYPAngScaleFunc.sSeenid.num_images
+print ParamsRTransXYPAngScaleFunc.sNewid[0][0].num_images
+print len(ParamsRTransXYPAngScaleFunc.sTrain[0][0].input_files)
+print len(ParamsRTransXYPAngScaleFunc.sNewid[0][0].input_files)
 
 
 
@@ -8806,8 +8825,8 @@ numpy.random.seed(experiment_seed+987987987)
 
 
 enable_distortions = False
-dx=1.0
-dy=1.0
+dx=1.0 #* 0
+dy=1.0 #* 0
 delta_rotation = None
 
 base_scale = 1.0
@@ -8817,7 +8836,7 @@ scale_offset = 0.00
 
 #5421 images for digit 5 WARNING, here use only 5000!!!!
 iSeq_set1 = iSeqCreateMNIST(dx=dx, dy=dy, smin=1.0, smax=1.0, delta_rotation=delta_rotation, pre_mirroring="none", contrast_enhance=None, obj_avg_std=0.0, obj_std_min=0.20, obj_std_max=0.20,
-                    clusters=clusters_MNIST, first_image_index=421, num_images_per_cluster_used=5000, repetition_factor=4, seed=-1, use_orig_label=True, increasing_orig_label=True) #5000, num_images_per_cluster_used=-1
+                    clusters=clusters_MNIST, first_image_index=421, num_images_per_cluster_used=5000, repetition_factor=1, seed=-1, use_orig_label=True, increasing_orig_label=True) #5000, num_images_per_cluster_used=-1
 sSeq_set1 = sSeqCreateMNIST(iSeq_set1, images_array_MNIST, seed=-1, use_RGB_images=age_use_RGB_images)
 
 semi_supervised_learning = True and False
@@ -8839,7 +8858,7 @@ print "len(sSeq_set.input_files)=",len(sSeq_set[0][0].input_files)
 
 #WARNING HERE USE index 5000 and 421 images per cluster!!!
 iSeq_set = iSeenidMNIST = iSeqCreateMNIST(dx=dx, dy=dy, smin=1.0, smax=1.0, delta_rotation=delta_rotation, pre_mirroring="none", contrast_enhance=None, obj_avg_std=0.0, obj_std_min=0.20, obj_std_max=0.20,
-                    clusters=clusters_MNIST, first_image_index=0, num_images_per_cluster_used=1421, repetition_factor=2, seed=-1, use_orig_label=True, increasing_orig_label=True) #421
+                    clusters=clusters_MNIST, first_image_index=0, num_images_per_cluster_used=1421, repetition_factor=1, seed=-1, use_orig_label=True, increasing_orig_label=True) #421
 #WARNING, should be 421, not 1421. The latter causes overlap between training and seenid
 
 
