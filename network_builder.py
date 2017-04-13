@@ -54,21 +54,22 @@ def CreateNetwork(Network, subimage_width, subimage_height, block_size, train_mo
         
     print "Layers: ", layers
     
-    for layer in layers:
-        print "layer ", layer
-        print "here use pca_class to determine if block_size or train_mode is needed!!!"
-        if layer.pca_node_class == mdp.nodes.SFANode:
-            layer.pca_args["block_size"] = block_size
-            layer.pca_args["train_mode"] = train_mode
-        if layer.ord_node_class == mdp.nodes.SFANode:
-            layer.ord_args["block_size"] = block_size
-            layer.ord_args["train_mode"] = train_mode
-        if layer.red_node_class == mdp.nodes.SFANode:
-            layer.red_args["block_size"] = block_size
-            layer.red_args["train_mode"] = train_mode
-        if layer.sfa_node_class == mdp.nodes.SFANode:
-            layer.sfa_args["block_size"] = block_size
-            layer.sfa_args["train_mode"] = train_mode         
+    #Not altering SFANode any longer
+# #     for layer in layers:
+# #         print "layer ", layer
+# #         print "here use pca_class to determine if block_size or train_mode is needed!!!"
+# #         if layer.pca_node_class == mdp.nodes.SFANode:
+# #             layer.pca_args["block_size"] = block_size
+# #             layer.pca_args["train_mode"] = train_mode
+# #         if layer.ord_node_class == mdp.nodes.SFANode:
+# #             layer.ord_args["block_size"] = block_size
+# #             layer.ord_args["train_mode"] = train_mode
+# #         if layer.red_node_class == mdp.nodes.SFANode:
+# #             layer.red_args["block_size"] = block_size
+# #             layer.red_args["train_mode"] = train_mode
+# #         if layer.sfa_node_class == mdp.nodes.SFANode:
+# #             layer.sfa_args["block_size"] = block_size
+# #             layer.sfa_args["train_mode"] = train_mode         
 
     t1 = time.time()
 

@@ -46,7 +46,7 @@ mdp.nodes.GeneralExpansionNode.localized_inverse = inversion.general_expansion_n
 
 def SFANode_inverse(self, y):
     #pseudo-inverse is stored instead of computed everytime
-    if self.pinv is None:
+    if "pinv" not in self.__dict__ or self.pinv is None:
         self.pinv = pinv(self.sf)
     return mult(y, self.pinv)+self.avg
 
@@ -54,33 +54,34 @@ def SFANode_inverse(self, y):
 mdp.nodes.SFANode._inverse = SFANode_inverse
 
 # TODO: Remove block_size=None, train_mode=None  
-def SFANode__init__(self, input_dim=None, output_dim=None, dtype=None, block_size=None, train_mode=None, sfa_expo=None, pca_expo=None, magnitude_sfa_biasing=None):
-    super(mdp.nodes.SFANode, self).__init__(input_dim, output_dim, dtype)
-    #Warning! bias activated, "courtesy" of Alberto
-    # create two covariance matrices. The first one for the input data
-    self._cov_mtx = CovarianceMatrix(dtype, bias=True)
-    # and the second one for the derivatives
-    self._dcov_mtx = CovarianceMatrix(dtype, bias=True)
+# # def SFANode__init__(self, input_dim=None, output_dim=None, dtype=None, block_size=None, train_mode=None, sfa_expo=None, pca_expo=None, magnitude_sfa_biasing=None):
+# #     super(mdp.nodes.SFANode, self).__init__(input_dim, output_dim, dtype)
+# #     #Warning! bias activated, "courtesy" of Alberto
+# #     # create two covariance matrices. The first one for the input data
+# #     self._cov_mtx = CovarianceMatrix(dtype, bias=True)
+# #     # and the second one for the derivatives
+# #     self._dcov_mtx = CovarianceMatrix(dtype, bias=True)
+# # 
+# #     self.pinv = None
+# #     self._symeig = symeig
+# #     self.block_size= block_size
+# #     self.train_mode = train_mode
+# # 
+# #     self.sum_prod_x = None
+# #     self.sum_x = None
+# #     self.num_samples = 0
+# #     self.sum_diff = None 
+# #     self.sum_prod_diff = None  
+# #     self.num_diffs = 0
+# #     
+# #     self.sfa_expo=sfa_expo # 1.2: 1=Regular SFA directions, >1: schrink derivative in the direction of the principal components
+# #     self.pca_expo=pca_expo # 0.25: 0=No magnitude reduction 1=Whitening
+# #     self.magnitude_sfa_biasing = magnitude_sfa_biasing
+# #     self._myvar = None
+# #     self._covdcovmtx = CovDCovMatrix(block_size)
 
-    self.pinv = None
-    self._symeig = symeig
-    self.block_size= block_size
-    self.train_mode = train_mode
-
-    self.sum_prod_x = None
-    self.sum_x = None
-    self.num_samples = 0
-    self.sum_diff = None 
-    self.sum_prod_diff = None  
-    self.num_diffs = 0
-    
-    self.sfa_expo=sfa_expo # 1.2: 1=Regular SFA directions, >1: schrink derivative in the direction of the principal components
-    self.pca_expo=pca_expo # 0.25: 0=No magnitude reduction 1=Whitening
-    self.magnitude_sfa_biasing = magnitude_sfa_biasing
-    self._myvar = None
-    self._covdcovmtx = CovDCovMatrix(block_size)
-    
-mdp.nodes.SFANode.__init__ = SFANode__init__
+#I am not modifying SFANode any longer    
+#mdp.nodes.SFANode.__init__ = SFANode__init__
                
 def SFANode_train_scheduler(self, x, block_size=None, train_mode = None, node_weights=None, edge_weights=None, scheduler = None, n_parallel=None):      
     self._train_phase_started = True
@@ -420,7 +421,8 @@ def SFANode_train(self, x, block_size=None, train_mode = None, node_weights=None
 
 #mdp.nodes.SFANode._train = SFANode_train
 #UPDATE WARNING, this should be mdp.nodes.SFANode._train not mdp.nodes.SFANode.train
-mdp.nodes.SFANode._train = SFANode_train_scheduler
+#I do not modify SFANode anylonger
+#mdp.nodes.SFANode._train = SFANode_train_scheduler
 
 
 
@@ -486,14 +488,15 @@ def SFANode_stop_training(self, debug=False, verbose=False, pca_term = 0.995, pc
     # store bias
     self._bias = mult(self.avg, self.sf)
     print "shape of SFANode.sf is=", self.sf.shape
-    
-mdp.nodes.SFANode._stop_training = SFANode_stop_training
+ 
+#I am not modifying SFANode any longer   
+#mdp.nodes.SFANode._stop_training = SFANode_stop_training
 
 #sfa_train_params = ["block_size", "training_mode", "include_last"]
 #mdp.nodes.SFANode.train_params = sfa_train_params
 
 #mdp.nodes.SFANode.list_train_params = ["scheduler", "n_parallel", "train_mode", "include_latest", "block_size"]
-mdp.nodes.SFANode.list_train_params = ["scheduler", "n_parallel", "train_mode", "block_size", "node_weights", "edge_weights"] # "sfa_expo", "pca_expo", "magnitude_sfa_biasing"
+mdp.nodes.SFANode.list_train_params = [] #"scheduler", "n_parallel", "train_mode", "block_size", "node_weights", "edge_weights"] # "sfa_expo", "pca_expo", "magnitude_sfa_biasing"
 mdp.nodes.SFAPCANode.list_train_params = ["scheduler", "n_parallel", "train_mode", "block_size"] # "sfa_expo", "pca_expo", "magnitude_sfa_biasing"
 mdp.nodes.PCANode.list_train_params = ["scheduler", "n_parallel"]
 mdp.nodes.IEVMNode.list_train_params = ["scheduler", "n_parallel", "train_mode", "block_size"]
@@ -1113,7 +1116,8 @@ if patch_layer:
 
     mdp.hinet.Layer.__init__ = Layer_new__init__
     mdp.hinet.Layer._check_props = Layer_new_check_props
-
+    
+    #ATTENTION, modification for backwards compatibility!!!!!!!
     mdp.hinet.Layer._train = Layer_new_train_params
     #ATTENTION, modification for backwards compatibility!!!!!!!
     #mdp.hinet.Layer._train = Layer_new_train

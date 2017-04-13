@@ -7503,7 +7503,7 @@ def iSeqCreateRAge(dx=2, dy=2, smin=0.95, smax=1.05, delta_rotation=0.0, pre_mir
 
     iSeq.block_size = num_images_per_cluster_used * repetition_factor
 
-    iSeq.train_mode = "serial" #"regular" #"serial" # = "serial" "mixed", None
+    iSeq.train_mode = "regular" # "serial" #"regular" #"serial" # = "serial" "mixed", None
 # None, "regular", "fwindow16", "fwindow32", "fwindow64", "fwindow128"
 #        quit()
 #        iSeq.train_mode = None 
@@ -7850,7 +7850,7 @@ else:
 #age_files_dict_set1 = find_available_images(age_eyes_normalized_base_dir_set1, from_subdirs=None) #change from_subdirs to select a subset of all ages!
 age_files_list_set1 = list_available_images(age_eyes_normalized_base_dir_set1, from_subdirs=None, verbose=False)
 age_labeled_files_list_set1 = append_GT_labels_to_files(age_files_list_set1, age_all_labels_map_MORPH)
-age_clusters_set1 = age_cluster_labeled_files(age_labeled_files_list_set1, repetition=22, num_clusters=32, trim_number=None, shuffle_each_cluster=False) #r=22
+age_clusters_set1 = age_cluster_labeled_files(age_labeled_files_list_set1, repetition=6, num_clusters=32, trim_number=None, shuffle_each_cluster=False) #r=22
 #WARNING, should be: repetition=22
 #age_clusters_set1 = age_cluster_labeled_files(age_labeled_files_list_set1, repetition=16, num_clusters=33, trim_number=None, shuffle_each_cluster=False)
   

@@ -480,9 +480,9 @@ layer = pSFADirectLayer = system_parameters.ParamsSFASuperNode()
 layer.name = "Direct SFA Layer"
 #layer.pca_node_class = None # mdp.nodes.GSFANode
 #W
-layer.pca_node_class = None #mdp.nodes.PCANode #None  #None
+layer.pca_node_class = mdp.nodes.PCANode #None  #None
 #layer.pca_args = {}
-#layer.pca_out_dim = 35 #WARNING: 100 or None
+layer.pca_out_dim = 100 #35 #WARNING: 100 or None
 #layer.pca_out_dim = 100#3000 # 35 #WARNING: 100 or None
 #layer.exp_funcs = [identity, QT]
 layer.exp_funcs = [identity,] #unsigned_08expo, signed_08expo
@@ -490,9 +490,11 @@ layer.exp_funcs = [identity,] #unsigned_08expo, signed_08expo
 #layer.exp_funcs = [encode_signal_p9,] #For next experiment: [encode_signal_p9,]
 #layer.red_node_class = mdp.nodes.HeadNode
 #layer.red_out_dim = int(tuning_parameter)
-layer.sfa_node_class =  mdp.nodes.GSFANode #mdp.nodes.GSFANode #mdp.nodes.GSFANode
+layer.sfa_node_class =  mdp.nodes.SFANode #mdp.nodes.GSFANode #mdp.nodes.GSFANode
 layer.sfa_out_dim = 100 #3 #49*2 # *3 # None
 
+#print layer.sfa_args
+#quit()
 
 layer = pSFADirectLayer2 = system_parameters.ParamsSFASuperNode()
 layer.name = "Direct SFA Layer2"
@@ -522,7 +524,7 @@ network.L1 = None #pSFADirectLayer2
 network.L2 = None
 network.L3 = None
 network.L4 = None
-network.layers = [network.L0, network.L1]
+network.layers = [network.L0]
 
 print "*******************************************************************"
 print "********    Creating One-Layer Linear SFA Network            ******************"
@@ -2671,6 +2673,27 @@ network.layers[8].pca_args["max_preserved_sfa"] = my_DT
 
 HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96 = copy.deepcopy(HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels)
 HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96.layers = HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96.layers[0:9]
+
+network = HSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96 = copy.deepcopy(HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96)
+HSFANet_out_dims = [ 20, 30, 45, 60, 60, 60, 60, 65, 70, 70,70 ]  #[ 39, 51, 65,70,70,70,70,70,70,70,70 ] 
+for i, layer in enumerate(network.layers):
+    #layer.sfa_node_class = mdp.nodes.SFANode
+    layer.sfa_args["max_preserved_sfa"]= 4.0
+    layer.sfa_args["offsetting_mode"]=None
+    layer.sfa_args["reconstruct_with_sfa"]=False    
+    #layer.sfa_args["expansion__funcs" = [identity, unsigned_08expo]
+    #layer.sfa_out_dim = HSFANet_out_dims[i]
+#network.layers[8].pca_node_class = None
+network.layers[8].pca_args["max_preserved_sfa"]= 4.0
+network.layers[8].sfa_args["offsetting_mode"]=None
+network.layers[8].sfa_args["reconstruct_with_sfa"]=False
+
+#network.layers.append(copy.deepcopy(network.layers[8]))
+#network.layers[9].x_field_channels = 1
+#network.layers[9].y_field_channels = 1
+#network.layers[9].x_field_spacing = 1
+#network.layers[9].y_field_spacing = 1
+
 
 ################## NETWORK FOR TESTING ACCORDING TO GUO ET AL, USES 1 LABEL ######################################
 network = HiGSFANetworkU11L_Overlap6x6L0_GUO_1Label = copy.deepcopy(HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels)

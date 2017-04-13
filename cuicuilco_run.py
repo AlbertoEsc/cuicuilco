@@ -1320,7 +1320,7 @@ def main():
             last_sfa_node = last_sfa_node.nodes[0]
     
         if isinstance(last_sfa_node, mdp.nodes.SFANode):
-            if iTrain.correct_labels[0:10].sum() <= 0:
+            if iTrain.correct_labels[0:10].mean() <= iTrain.correct_labels[-10:].mean():
                 start_negative = True
             else:
                 start_negative = False

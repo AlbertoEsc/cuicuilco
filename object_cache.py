@@ -264,7 +264,7 @@ def hash_array(x, m=None, turbo_fast=True):
     if turbo_fast:
         if x.ndim == 1:
             m.update(str(x)+str(x.sum())) #+str(x.shape())
-        else:
+        elif min(x.shape) > 0:
 #Warning. Condensed form should be faster, per component form uses less memory?
 #            m.update(str(x[0])+str(x[-1])+str(x.sum())+str(x.diagonal())) #+str(x.shape())
             m.digest()
@@ -275,6 +275,9 @@ def hash_array(x, m=None, turbo_fast=True):
             m.update(str(x.sum()))
             m.digest()            
             m.update(str(x.diagonal())) #+str(x.shape())
+	else:
+            m.digest()
+            m.update("[]"+str(x.shape))
         return m
     else:
         y = x.flatten()
