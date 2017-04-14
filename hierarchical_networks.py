@@ -2675,18 +2675,20 @@ HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96 = copy.deepcopy(HiGSFANetworkU1
 HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96.layers = HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96.layers[0:9]
 
 network = HSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96 = copy.deepcopy(HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96)
-HSFANet_out_dims = [ 20, 30, 45, 60, 60, 60, 60, 65, 70, 70,70 ]  #[ 39, 51, 65,70,70,70,70,70,70,70,70 ] 
+HSFANet_out_dims = [ 14, 20, 27, 49, 60, 61, 65, 65, 75, 75, 70 ]  #[ 39, 51, 65,70,70,70,70,70,70,70,70 ] 
 for i, layer in enumerate(network.layers):
     #layer.sfa_node_class = mdp.nodes.SFANode
-    layer.sfa_args["max_preserved_sfa"]= 4.0
+    layer.sfa_args["max_preserved_sfa"]= HSFANet_out_dims[i]
     layer.sfa_args["offsetting_mode"]=None
     layer.sfa_args["reconstruct_with_sfa"]=False    
-    #layer.sfa_args["expansion__funcs" = [identity, unsigned_08expo]
-    #layer.sfa_out_dim = HSFANet_out_dims[i]
+    layer.sfa_args["expansion_funcs"] = [identity, unsigned_08expo]
+    layer.sfa_out_dim = HSFANet_out_dims[i]
 #network.layers[8].pca_node_class = None
-network.layers[8].pca_args["max_preserved_sfa"]= 4.0
-network.layers[8].sfa_args["offsetting_mode"]=None
-network.layers[8].sfa_args["reconstruct_with_sfa"]=False
+network.layers[8].pca_args["max_preserved_sfa"]= 66
+network.layers[8].pca_args["offsetting_mode"]=None
+network.layers[8].pca_args["reconstruct_with_sfa"]=False
+network.layers[8].pca_args["expansion_funcs"] = [identity, unsigned_08expo]
+network.layers[8].pca_out_dim = 66
 
 #network.layers.append(copy.deepcopy(network.layers[8]))
 #network.layers[9].x_field_channels = 1

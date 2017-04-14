@@ -376,7 +376,11 @@ class iGSFANode(mdp.Node):
             raise Exception(er)
         
         #Apply PCA to sfa removed data             
-        pca_x = self.pca_node.execute(sfa_removed_x)
+        if self.pca_node.output_dim > 0:
+           pca_x = self.pca_node.execute(sfa_removed_x)
+        else:
+           #print "no reconstructive components present"
+           pca_x = numpy.zeros((x.shape[0],0))
         
         #Finally output is the concatenation of scaled slow features and remaining pca components
         sfa_pca_x = numpy.concatenate((s_n_sfa_x, pca_x), axis=1)
@@ -507,7 +511,7 @@ def SFANode_reduce_output_dim(sfa_node, new_output_dim, verbose=False):
     if verbose:
         print "Updating the output dimensionality of SFA node"
     if new_output_dim > sfa_node.output_dim:
-        er = "Can only reduce output dimensionality of SFA node, not increase it"
+        er = "Can only reduce output dimensionality of SFA node, not increase it (%d > %d)"%(new_output_dim, sfa_node.output_dim) 
         raise Exception(er)
     if verbose:
         print "Before: sfa_node.d.shape=", sfa_node.d.shape, " sfa_node.sf.shape=",sfa_node.sf.shape, " sfa_node._bias.shape=",sfa_node._bias.shape
@@ -531,9 +535,9 @@ def PCANode_reduce_output_dim(pca_node, new_output_dim, verbose=False):
         raise Exception(er)
     if verbose:
         print "Before: pca_node.d.shape=", pca_node.d.shape, " pca_node.sf.shape=", pca_node.sf.shape, " pca_node._bias.shape=", pca_node._bias.shape
-    pca_node.d = pca_node.d[:new_output_dim]
-    pca_node.v = pca_node.v[:,:new_output_dim]
-    pca_node.avg = pca_node.avg[:new_output_dim]
+    pca_node.d = pca_node.d[0:new_output_dim]
+    pca_node.v = pca_node.v[:,0:new_output_dim]
+    pca_node.avg = pca_node.avg[0:new_output_dim]
     pca_node._output_dim = new_output_dim
         
     if verbose:

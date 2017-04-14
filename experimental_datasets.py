@@ -7850,7 +7850,7 @@ else:
 #age_files_dict_set1 = find_available_images(age_eyes_normalized_base_dir_set1, from_subdirs=None) #change from_subdirs to select a subset of all ages!
 age_files_list_set1 = list_available_images(age_eyes_normalized_base_dir_set1, from_subdirs=None, verbose=False)
 age_labeled_files_list_set1 = append_GT_labels_to_files(age_files_list_set1, age_all_labels_map_MORPH)
-age_clusters_set1 = age_cluster_labeled_files(age_labeled_files_list_set1, repetition=6, num_clusters=32, trim_number=None, shuffle_each_cluster=False) #r=22
+age_clusters_set1 = age_cluster_labeled_files(age_labeled_files_list_set1, repetition=22, num_clusters=32, trim_number=None, shuffle_each_cluster=False) #r=22
 #WARNING, should be: repetition=22
 #age_clusters_set1 = age_cluster_labeled_files(age_labeled_files_list_set1, repetition=16, num_clusters=33, trim_number=None, shuffle_each_cluster=False)
   
@@ -8228,8 +8228,8 @@ age_multiple_labels = age_add_other_label_classes #and False
 age_label_ordering ="AgeRaceGenderIAge"
 age_ordered_by_increasing_label = 0 #0=Age,1=Race, 2=Gender
 age_subordered_by_increasing_color = True and False 
-append_gender_classification = True #and False
-append_race_classification = True #and False
+append_gender_classification = True and False #Add training graph for gender
+append_race_classification = True and False #Add training graph for race
 
 #False, *, *, * => learn only age
 #True, True, True, False, True  => learn both age and skin color, age is first label and determines ordering, color determines subordering inside the clusters
@@ -8390,9 +8390,9 @@ if age_add_other_label_classes:
     num_AHW_TrainRAge = (race_classes_TrainRAge == 1).sum()
 
 
-age_labels_TrainRAge = rAge_labels_TrainRAge
-age_labels_SeenidRAge = rAge_labels_SeenidRAge
-#age_labels_NewidRAge_test = iAge_labels_NewidRAge
+    age_labels_TrainRAge = rAge_labels_TrainRAge
+    age_labels_SeenidRAge = rAge_labels_SeenidRAge
+    #age_labels_NewidRAge_test = iAge_labels_NewidRAge
 
 #print "num unique age_classes_NewidRAge_test =", len(numpy.unique(age_classes_NewidRAge_test))
 
@@ -8406,7 +8406,7 @@ else:
     print "newid/test age labels are real valued (in exact number of days)"
     age_labels_NewidRAge_test = rAge_labels_NewidRAge
 
-print "age_labels_SeenidRAge =", age_labels_SeenidRAge
+#print "age_labels_SeenidRAge =", age_labels_SeenidRAge
 print "age_labels_NewidRAge_test =", age_labels_NewidRAge_test
 
 if age_multiple_labels==True:
@@ -8446,7 +8446,7 @@ if age_multiple_labels==True:
 
 else:
     print "Learning only a single label"
-    single_label = "Gender"
+    single_label = "Age" #"Gender"
     if single_label == "Age":
         print "Learning age only"
     elif single_label == "Race":
@@ -8501,8 +8501,12 @@ if age_ordered_by_increasing_label > 0 and age_add_other_label_classes:
         print "iSeq.input_files[-1] =", iSeq.input_files[-1]
     #quit()
 
-print "Unique classes for Training2:", len(numpy.unique(iTrainRAge[0][0].correct_classes[:,0]))
-print "Unique classes for Newid2:", len(numpy.unique(iNewidRAge[0][0].correct_classes[:,0]))
+if age_add_other_label_classes:
+    print "Unique classes for Training2:", len(numpy.unique(iTrainRAge[0][0].correct_classes[:,0]))
+    print "Unique classes for Newid2:", len(numpy.unique(iNewidRAge[0][0].correct_classes[:,0]))
+else:
+    print "Unique classes for Training2:", len(numpy.unique(iTrainRAge[0][0].correct_classes))
+    print "Unique classes for Newid2:", len(numpy.unique(iNewidRAge[0][0].correct_classes))
 #quit()
 
 # if age_subordered_by_increasing_color == True and age_add_other_label_classes and age_label_ordering=="AgeRaceGender":
