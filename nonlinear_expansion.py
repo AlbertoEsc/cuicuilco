@@ -748,8 +748,8 @@ def unsigned_2_08expo(x, expo1=2, expo2=0.8):
 def unsigned_08expo(x):
     return numexpr.evaluate("abs(x)**0.8")
 
-def unsigned_08expo_slow(x):
-    return numpy.abs(x) ** 0.8
+#def unsigned_08expo_slow(x):
+#    return numpy.abs(x) ** 0.8
 
 def unsigned_08expo_m1(x):
     return numpy.abs(x-1) ** 0.8
@@ -1705,7 +1705,7 @@ def s4QT(x):
 def s5QT(x):
     return QT(x[:,0:5])
 
-def s06QT(x):
+def s6QT(x):
     return QT(x[:,0:6])
 
 def s7QT(x):
@@ -2040,6 +2040,9 @@ def ch3s24u08(x):
 def ch3s25u08(x):
     return ch3_sF_u08(x, 25)
 
+def ch3o5s25u08(x):
+    return ch3_oO_sF_u08(x, 5, 25)
+
 def ch3s26u08(x):
     return ch3_sF_u08(x, 26)
 
@@ -2094,6 +2097,9 @@ def ch3s39u08(x):
 def ch3s40u08(x):
     return ch3_sF_u08(x, 40)
 
+def ch3o4s40u08(x):
+    return ch3_oO_sF_u08(x, 4, 40)
+
 def ch3s43u08(x):
     return ch3_sF_u08(x, 43)
 
@@ -2111,6 +2117,9 @@ def ch3s48u08(x):
 
 def ch3s49u08(x):
     return ch3_sF_u08(x, 49)
+
+def ch3o4s49u08(x):
+    return ch3_oO_sF_u08(x, 4, 49)
 
 def ch3s50u08(x):
     return ch3_sF_u08(x, 50)
@@ -2216,6 +2225,9 @@ def ch3o3s10max(x):
 def ch3s11max(x):
     return ch3_sF_max(x, 11)
 
+def ch3o4s11max(x):
+    return ch3_oO_sF_max(x, 4, 11)
+
 def ch3s12max(x):
     return ch3_sF_max(x, 12)
 
@@ -2230,6 +2242,9 @@ def ch3s14max(x):
 
 def ch3s15max(x):
     return ch3_sF_max(x, 15)
+
+def ch3o5s15max(x):
+    return ch3_oO_sF_max(x, 5, 15)
 
 def ch3s16max(x):
     return ch3_sF_max(x, 16)

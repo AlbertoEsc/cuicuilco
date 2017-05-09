@@ -600,7 +600,7 @@ if __name__ == "__main__":  ############### Parse command line arguments #######
                 sys.exit(2)
     
 def main():
-    global benchmark, num_features_to_append_to_input, reg_num_signals
+    global benchmark, num_features_to_append_to_input, reg_num_signals, use_full_sl_output
     
     if enable_svm:
         import svm as libsvm
@@ -690,7 +690,7 @@ def main():
     
     #take k=1? or choose from command line? NOPE. Take always first label (k=0). sSeq must compute proper classes for chosen label anyway.
     #TODO: let the user choose objective_label through a command line argument
-    objective_label = 0
+    objective_label = 2
     if graph_exact_label_learning:
         if isinstance(iTrain_set, list):
             iTrain0 = iTrain_set[len(iTrain_set)-1][0]
@@ -2553,10 +2553,11 @@ def main():
         for i, i_x in enumerate(sorting_error_Gauss_newid):
             x = subimages_newid[i_x]
             if i%decimate == 0:
-                im_raw = numpy.reshape(x, (sNewid.subimage_width, sNewid.subimage_height)) #Remove ,3 for L
-                if seq.convert_format in ["L", "RGB"]:
+                if seq.convert_format == "RGB":
+                    im_raw = numpy.reshape(x, (sNewid.subimage_width, sNewid.subimage_height, 3)) #Remove ,3 for L
                     im = scipy.misc.toimage(im_raw, mode=seq.convert_format)
                 else:
+                    im_raw = numpy.reshape(x, (sNewid.subimage_width, sNewid.subimage_height)) #Remove ,3 for L
                     im = scipy.misc.toimage(im_raw, mode="L")
     
                 fullname = os.path.join(save_images_sorted_error_Gauss_newid_base_dir, "image%05d_gt%+05f_e%+05f.png"%(i/decimate, correct_labels_newid[i_x], regression_Gauss_newid[i_x]))

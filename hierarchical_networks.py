@@ -1455,21 +1455,21 @@ pSFALayerL0.x_field_spacing=5
 pSFALayerL0.y_field_spacing=5
 #pSFALayerL0.in_channel_dim=1
 
-pSFALayerL0.pca_node_class = mdp.nodes.GSFANode
+pSFALayerL0.pca_node_class = None #mdp.nodes.GSFANode
 pSFALayerL0.pca_out_dim = 16
 #pSFALayerL0.pca_args = {"block_size": block_size}
 pSFALayerL0.pca_args = {"block_size": -1, "train_mode": -1}
 
-pSFALayerL0.ord_node_class = system_parameters.ParamsSFALayer.ord_node_class
+pSFALayerL0.ord_node_class = None #system_parameters.ParamsSFALayer.ord_node_class
 
 pSFALayerL0.exp_funcs = [identity,]
 
-pSFALayerL0.red_node_class = mdp.nodes.WhiteningNode
+pSFALayerL0.red_node_class = None #mdp.nodes.WhiteningNode
 pSFALayerL0.red_out_dim = 0.9999999
 pSFALayerL0.red_args = {}
 
 
-pSFALayerL0.sfa_node_class = mdp.nodes.GSFANode
+pSFALayerL0.sfa_node_class = mdp.nodes.SFANode
 pSFALayerL0.sfa_out_dim = 16
 #pSFALayerL0.sfa_args = {"block_size": -1, "train_mode": -1}
 
@@ -2674,6 +2674,35 @@ network.layers[8].pca_args["max_preserved_sfa"] = my_DT
 HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96 = copy.deepcopy(HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels)
 HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96.layers = HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96.layers[0:9]
 
+################### HiGSFA Network for FGNet generalization ##############
+network = HiGSFANetworkU11L_Overlap6x6L0_Generalization_3Labels_96x96 = copy.deepcopy(HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96)
+network.layers[0].sfa_args["expansion_funcs"]= [s18, s15u08ex, s17Max, s9QT] #s9QT #[s18, s15u08ex, s17Max, s10QT] 
+network.layers[0].sfa_args["max_preserved_sfa"]= 3 
+network.layers[1].sfa_args["expansion_funcs"]= [ch3s20, ch3s20u08, ch3s20max, ch3o3s3QT, ch3o0s3QT] #ch3o3s3QT #[ch3s20, ch3s20u08, ch3s20max, ch3o3s4QT, ch3o0s3QT] 
+network.layers[1].sfa_args["max_preserved_sfa"]= 3 
+network.layers[2].sfa_args["expansion_funcs"]= [ch3s28, ch3s28u08, ch3s16max, ch3o3s5QT, ] #ch3o3s5QT #ch3o0s3QT #[ch3s28, ch3s28u08, ch3s16max, ch3o4s6QT, ch3o0s3QT] 
+network.layers[2].sfa_args["max_preserved_sfa"]= 3  
+network.layers[3].sfa_args["expansion_funcs"]= [ch3s37, ch3s37u08, ch3s19max, ch3o3s4QT] #ch3o3s5QT, ch3o0s3QT #[ch3s37,ch3s37u08, ch3s19max, ch3o4s6QT, ch3o0s3QT]   
+network.layers[3].sfa_args["max_preserved_sfa"]= 4
+network.layers[4].sfa_args["expansion_funcs"]= [ch3s60, ch3s49u08, ch3s19max, ch3o4s4QT] #ch3o4s5QT #ch3s19max, ch3o4s5QT #[ch3s60, ch3s49u08, ch3s19max, ch3o4s6QT] 
+network.layers[4].sfa_args["max_preserved_sfa"]= 4
+network.layers[5].sfa_args["expansion_funcs"]= [ch3s72, ch3o4s40u08, ch3o4s11max, ch3o4s4QT, ] #ch3s40u08, ch3s11max, ch3o4s5QT #[ch3s72, ch3s40u08, ch3s11max, ch3o5s6QT, ch3o0s3QT] 
+network.layers[5].sfa_args["max_preserved_sfa"]= 5
+network.layers[6].sfa_args["expansion_funcs"]= [ch3s80, ch3o5s25u08, ch3o5s15max,] #ch3s25u08, ch3o5s4QT, ch3s15max, #[ch3s80, ch3s25u08, ch3s15max, ch3o6s4QT] 
+network.layers[6].sfa_args["max_preserved_sfa"]= 5
+network.layers[7].sfa_args["expansion_funcs"]= [ch3s80, ch3o5s20u08,] #[ch3s80, ch3o6s20u08,]
+network.layers[7].sfa_args["max_preserved_sfa"]= 6
+network.layers[8].sfa_args["expansion_funcs"]= [ch3s85, ch3o6s20u08, ] # ch3s20u08 #[ch3s85, ch3o6s20u08, ch3o0s3QT] 
+network.layers[8].sfa_args["max_preserved_sfa"]= 8
+network.layers[8].pca_node_class = None
+
+print "############################ Genrealization network #######################"
+for i, layer in enumerate(network.layers):
+    print "GENERALIZATION:Layer %i has expansion"%i, layer.sfa_args["expansion_funcs"]
+#    layer.sfa_args["offsetting_mode"]=None
+#    layer.sfa_args["reconstruct_with_sfa"]=False
+
+################### HSFA Network for age estimation ######################
 network = HSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96 = copy.deepcopy(HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96)
 HSFANet_out_dims = [ 14, 20, 27, 49, 60, 61, 65, 65, 75, 75, 70 ]  #[ 39, 51, 65,70,70,70,70,70,70,70,70 ] 
 for i, layer in enumerate(network.layers):
@@ -3791,3 +3820,77 @@ HiGSFANetworkU11L_Overlap_4x4L0_EyeL_32x32.layers = HiGSFANetworkU11L_Overlap_4x
 #Network4L.L1 = pSFALayerL1
 #Network4L.L2 = pSFALayerL2
 #Network4L.L3 = pSFAL3_L3KadjProd
+
+################# Reproduction of a network developed by Fabian Schoenfeld for his Ratlab experiment ############
+layer = pSFARatlab_L0 = system_parameters.ParamsSFALayer()
+layer.name = "Layer 0 for the Ratlab experiment"
+layer.x_field_channels=10
+layer.y_field_channels=8
+layer.x_field_spacing=5
+layer.y_field_spacing=4
+layer.pca_node_class = mdp.nodes.iGSFANode
+layer.pca_out_dim = 32
+layer.pca_args = {}
+layer.ord_node_class = None
+layer.exp_funcs = [identity, ]
+layer.red_node_class = None
+layer.sfa_node_class = mdp.nodes.iGSFANode
+layer.sfa_out_dim = 32
+layer.sfa_args = {}
+layer.cloneLayer = True
+layer.name = comp_layer_name(layer.cloneLayer, layer.exp_funcs, layer.x_field_channels, layer.y_field_channels, layer.pca_out_dim, layer.sfa_out_dim)
+
+layer = pSFARatlab_L1 = system_parameters.ParamsSFALayer()
+layer.name = "Layer 1 for the Ratlab experiment"
+layer.x_field_channels=14
+layer.y_field_channels=6
+layer.x_field_spacing=7
+layer.y_field_spacing=3
+layer.pca_node_class = mdp.nodes.iGSFANode
+layer.pca_out_dim = 32
+layer.pca_args = {}
+layer.ord_node_class = None
+layer.exp_funcs = [identity, ]
+layer.red_node_class = None
+layer.sfa_node_class = mdp.nodes.iGSFANode
+layer.sfa_out_dim = 32
+layer.sfa_args = {}
+layer.cloneLayer = True
+layer.name = comp_layer_name(layer.cloneLayer, layer.exp_funcs, layer.x_field_channels, layer.y_field_channels, layer.pca_out_dim, layer.sfa_out_dim)
+
+layer = pSFARatlab_L2 = system_parameters.ParamsSFALayer()
+layer.name = "Layer 2 for the Ratlab experiment"
+layer.x_field_channels=8
+layer.y_field_channels=2
+layer.x_field_spacing=8
+layer.y_field_spacing=2
+layer.pca_node_class = mdp.nodes.iGSFANode
+layer.pca_out_dim = 32
+layer.pca_args = {}
+layer.ord_node_class = None
+layer.exp_funcs = [identity,]
+layer.red_node_class = None
+layer.sfa_node_class = mdp.nodes.iGSFANode
+layer.sfa_out_dim = 32
+layer.sfa_args = {}
+layer.cloneLayer = False
+layer.name = comp_layer_name(layer.cloneLayer, layer.exp_funcs, layer.x_field_channels, layer.y_field_channels, layer.pca_out_dim, layer.sfa_out_dim)
+
+network = RatlabNetwork3L = system_parameters.ParamsNetwork()
+network.name = "Ratlab Network, 3 Layers of SFA & QSFA"
+network.L0 = pSFARatlab_L0
+network.L1 = pSFARatlab_L1
+network.L2 = pSFARatlab_L2
+network.layers = [network.L0, network.L1, network.L2]
+
+for i, layer in enumerate(network.layers):
+    #layer.sfa_node_class = mdp.nodes.SFANode
+    layer.pca_args["offsetting_mode"]=None
+    layer.pca_args["reconstruct_with_sfa"]=False    
+    layer.pca_args["expansion_funcs"] = None
+    layer.pca_args["max_preserved_sfa"]= 12 # 4.0 #4.0 => preserves only SFA components; 16 => half the computed features are slow, and the remaining reconstructive
+
+    layer.sfa_args["offsetting_mode"]=None
+    layer.sfa_args["reconstruct_with_sfa"]=False    
+    layer.sfa_args["expansion_funcs"] = [identity, QT]
+    layer.sfa_args["max_preserved_sfa"]= 12 # 4.0 #4.0 => preserves only SFA components; 16 => half the computed features are slow, and the remaining reconstructive

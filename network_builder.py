@@ -27,25 +27,8 @@ def CreateNetwork(Network, subimage_width, subimage_height, block_size, train_mo
             if layer != None:
                 layers.append(layer)   
     else:
-        er = "Obsolete code? Network.layers should have at least one layer!"
+        er = "Obsolete network description? Network.layers should have at least one layer!"
         raise Exception(er)
-
-        L0 = copy.deepcopy(Network.L0)
-        L1 = copy.deepcopy(Network.L1)
-        L2 = copy.deepcopy(Network.L2)
-        L3 = copy.deepcopy(Network.L3)
-        L4 = copy.deepcopy(Network.L4)
-        L5 = copy.deepcopy(Network.L5)
-        L6 = copy.deepcopy(Network.L6)
-        L7 = copy.deepcopy(Network.L7)
-        L8 = copy.deepcopy(Network.L8)
-        L9 = copy.deepcopy(Network.L9)
-        L10 = copy.deepcopy(Network.L10)
-        
-        layers = []
-        for layer in [L0, L1, L2, L3, L4, L5, L6, L7, L8, L9, L10]:
-            if layer != None:
-                layers.append(layer)
 
     layers[0].in_channel_dim = in_channel_dim  #3, warning 1 for L, 3 for RGB
     for i in range(len(layers)):
@@ -54,23 +37,6 @@ def CreateNetwork(Network, subimage_width, subimage_height, block_size, train_mo
         
     print "Layers: ", layers
     
-    #Not altering SFANode any longer
-# #     for layer in layers:
-# #         print "layer ", layer
-# #         print "here use pca_class to determine if block_size or train_mode is needed!!!"
-# #         if layer.pca_node_class == mdp.nodes.SFANode:
-# #             layer.pca_args["block_size"] = block_size
-# #             layer.pca_args["train_mode"] = train_mode
-# #         if layer.ord_node_class == mdp.nodes.SFANode:
-# #             layer.ord_args["block_size"] = block_size
-# #             layer.ord_args["train_mode"] = train_mode
-# #         if layer.red_node_class == mdp.nodes.SFANode:
-# #             layer.red_args["block_size"] = block_size
-# #             layer.red_args["train_mode"] = train_mode
-# #         if layer.sfa_node_class == mdp.nodes.SFANode:
-# #             layer.sfa_args["block_size"] = block_size
-# #             layer.sfa_args["train_mode"] = train_mode         
-
     t1 = time.time()
 
     print "layers =", layers

@@ -24,6 +24,8 @@ import multiprocessing
 
 # Image.BILINEAR, Image.NEAREST, BICUBIC,  ANTIALIAS
 interpolation_format = Image.BICUBIC
+interpolation_format_sampling = Image.NEAREST
+
 #format_nearest = Image.NEAREST
 def rgb_to_irb_array(im_rgb_array):
     igb_3d_array = im_rgb_array.copy()
@@ -127,8 +129,8 @@ def create_image_filenames3(im_seq_base_dir, im_base_name, slow_signal=0, ids=[0
 #TODO:Use clip here???? faster???
 def cutoff(x, min_val, max_val):
     y1 = numpy.where(x >= min_val, x, min_val)
-    y1 = numpy.where(y1 <= max_val, y1, max_val)
-    return y1
+    y2 = numpy.where(y1 <= max_val, y1, max_val)
+    return y2
 
 #TODO: Perhaps it is faster to compute the subimage, and then get as array and then compute mean and std()?????
 #TODO:Also consider normalization after croping
@@ -584,18 +586,18 @@ def load_image_data_monoprocessor(image_files, image_array, image_width, image_h
                     #NOTE: subimage_coordinates goes from 0 to width!!! typical of python notation. Thus, the rightmost pixel is ignored, similarly downmost.
                     if contrast_enhance == "PostEqualizeHistogram":
                         #Resize, then equalize
-                        im_out = im_contrasted.transform(out_size, Image.EXTENT, subimage_coordinates, interpolation_format)    #W interpolation_format       format_nearest
+                        im_out = im_contrasted.transform(out_size, Image.EXTENT, subimage_coordinates, interpolation_format_sampling)    #W interpolation_format       format_nearest
                         im_out = ImageOps.equalize(im_out)
                     elif contrast_enhance == "SmartEqualizeHistogram":
                         #Crop, then equalize, then resize
     #                    print "8]",
                         out_size_crop = (x1-x0+1,y1-y0+1)
-                        im_out = im_contrasted.transform(out_size_crop, Image.EXTENT, subimage_coordinates, interpolation_format)    #W interpolation_format       format_nearest
+                        im_out = im_contrasted.transform(out_size_crop, Image.EXTENT, subimage_coordinates, interpolation_format_sampling)    #W interpolation_format       format_nearest
                         im_out = ImageOps.equalize(im_out)
                         crop_coordinates = (0,0,x1-x0+1,y1-y0+1)
                         im_out = im_out.transform(out_size, Image.EXTENT, crop_coordinates, interpolation_format)    #W interpolation_format       format_nearest
                     else:
-                        im_out = im_contrasted.transform(out_size, Image.EXTENT, subimage_coordinates, interpolation_format)
+                        im_out = im_contrasted.transform(out_size, Image.EXTENT, subimage_coordinates, interpolation_format_sampling)
                     
                     if image_file.endswith("EyeNZ2Dummy.jpg"):
                         print "SAVING image 4"
@@ -646,7 +648,7 @@ def load_image_data_monoprocessor(image_files, image_array, image_width, image_h
                     else:
                         print "Unknown contrast_enhance method!!!, ", contrast_enhance
                         quit()
-                    im_out = im_contrasted.transform(out_size, Image.EXTENT, subimage_coordinates, interpolation_format )          #W interpolation_format format_nearest
+                    im_out = im_contrasted.transform(out_size, Image.EXTENT, subimage_coordinates, interpolation_format_sampling )          #W interpolation_format format_nearest
                     if contrast_enhance == "PostEqualizeHistogram":
                         im_out = ImageOps.equalize(im_out)
                         
@@ -700,7 +702,7 @@ def load_image_data_monoprocessor(image_files, image_array, image_width, image_h
                 err = "Image Loading Failed: Subimage out of Image"
                 raise Exception(err)
  
-            im_out_rgb = im_rgb.transform(out_size, Image.EXTENT, subimage_coordinates, interpolation_format)
+            im_out_rgb = im_rgb.transform(out_size, Image.EXTENT, subimage_coordinates, interpolation_format_sampling)
             im_small_rgb = numpy.asarray(im_out_rgb)+0.0
 
             if background_type == "black":
@@ -720,7 +722,7 @@ def load_image_data_monoprocessor(image_files, image_array, image_width, image_h
                 im = im_rgb
                 im_small = im_small_rgb              
                         
-            background = random_filtered_noise2D(im_small.shape, color_background_filter, min=0, max=255)           
+            background = random_filtered_noise2D(im_small.shape, color_background_filter, min_val=0, max_val=255)           
             if verbose:
                 print "background.shape = ", background.shape
                 print "background_mask.shape = ", background_mask.shape
@@ -1056,7 +1058,7 @@ def load_single_image_data(im_orig, im_params):
             #print crop_size
             #print crop_coordinates
     
-            im_crop_first = im.transform(crop_size, Image.EXTENT, crop_coordinates) #, Image.BICUBIC)
+            im_crop_first = im.transform(crop_size, Image.EXTENT, crop_coordinates, interpolation_format_sampling) #, Image.BICUBIC)
                     
             if save_intermediate:
                 print "SAVING image 1"
@@ -1145,17 +1147,17 @@ def final_sampling_and_contrast_enhance(im_contrasted, out_size, x0, x1, y0, y1,
     subimage_coordinates = (x0,y0,x1,y1)    
     if contrast_enhance == "PostEqualizeHistogram":
         #Resize, then equalize
-        im_out = im_contrasted.transform(out_size, Image.EXTENT, subimage_coordinates, interpolation_format)    #W interpolation_format       format_nearest
+        im_out = im_contrasted.transform(out_size, Image.EXTENT, subimage_coordinates, interpolation_format_sampling)    #W interpolation_format       format_nearest
         im_out = ImageOps.equalize(im_out)
     elif contrast_enhance == "SmartEqualizeHistogram":
         #Crop, then equalize, then resize
         out_size_crop = (x1-x0,y1-y0)
-        im_out = im_contrasted.transform(out_size_crop, Image.EXTENT, subimage_coordinates, interpolation_format)    #W interpolation_format       format_nearest
+        im_out = im_contrasted.transform(out_size_crop, Image.EXTENT, subimage_coordinates, interpolation_format_sampling)    #W interpolation_format       format_nearest
         im_out = ImageOps.equalize(im_out)
         crop_coordinates = (0,0,x1-x0,y1-y0)
-        im_out = im_out.transform(out_size, Image.EXTENT, crop_coordinates, interpolation_format)    #W interpolation_format       format_nearest
+        im_out = im_out.transform(out_size, Image.EXTENT, crop_coordinates, interpolation_format_sampling)    #W interpolation_format       format_nearest
     else:
-        im_out = im_contrasted.transform(out_size, Image.EXTENT, subimage_coordinates, interpolation_format)
+        im_out = im_contrasted.transform(out_size, Image.EXTENT, subimage_coordinates, interpolation_format_sampling)
     return im_out
         
 def contrast_enhance_image(im_rotated, x0, x1, y0, y1, obj_avg, obj_std, contrast_enhance):
@@ -1242,7 +1244,7 @@ def extract_subimages_basic(images, image_indices, coordinates, out_size=(64,64)
                 print "Image size: im.size[0], im.size[1] = ", images[im_index].size[0],  images[im_index].size[1]
                 raise Exception(err)
  
-        im_out = images[im_index].transform(out_size, Image.EXTENT, subimage_coordinates, interpolation_format)
+        im_out = images[im_index].transform(out_size, Image.EXTENT, subimage_coordinates, interpolation_format_sampling)
         subimages.append(im_out)
     return subimages
 
@@ -1341,7 +1343,7 @@ def extract_subimage_rotate(image, subimage_coordinates, delta_ang, out_size=(64
                         
         #print "transform_coords = x0, x1, y0, y1=", x0, x1, y0, y1
         subimage_coordinates = (x0,y0,x1,y1)
-        im_out = im_contrasted.transform(out_size, Image.EXTENT, subimage_coordinates, interpolation_format)
+        im_out = im_contrasted.transform(out_size, Image.EXTENT, subimage_coordinates, interpolation_format_sampling)
     return im_out
 
 def code_gender(gender):
@@ -1402,11 +1404,10 @@ def frequencies_1D(length):
 
 def filter_colored_noise1D(length, alpha):
     freq = numpy.zeros(length)
-    length2 = length / 2
     freq[0:length/2+1] = numpy.arange(1, length/2+2)
     freq[length/2+1:length] = freq[(length+1)/2-1:0:-1]
-    filter = 1.0/(freq ** (alpha/2.0))
-    return filter
+    my_filter = 1.0/(freq ** (alpha/2.0))
+    return my_filter
 
 def filter_colored_noise2D_trk(size, alpha):
     filter_v = filter_colored_noise1D(size[0], alpha)
@@ -1429,17 +1430,17 @@ def change_mean(im, new_mean, new_std):
     return (im-im.mean())/im.std() * new_std + new_mean
 
 
-def random_filtered_noise2D(shape, filter, min=0, max=255, mean = 127.5, std = 25, clip=True, verbose=False):
-    amplitude = (max-min)
+def random_filtered_noise2D(shape, my_filter, min_val=0, max_val=255, mean = 127.5, std = 25, clip=True, verbose=False):
+    amplitude = (max_val-min_val)
    
     if verbose:
         print "Filter size is: ", shape
-        print "Filter shape is: ", filter.shape
+        print "Filter shape is: ", my_filter.shape
 
-    white_noise = numpy.random.random(shape) * amplitude + min
+    white_noise = numpy.random.random(shape) * amplitude + min_val
     Fwhite_noise = numpy.fft.fft2(white_noise)
     
-    Fcolor_noise = Fwhite_noise * filter
+    Fcolor_noise = Fwhite_noise * my_filter
     color_noise = numpy.fft.ifft2(Fcolor_noise).real
     color_noise = change_mean(color_noise, mean, std)
     if clip == True:

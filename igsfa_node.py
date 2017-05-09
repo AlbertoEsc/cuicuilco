@@ -18,10 +18,11 @@ class iGSFANode(mdp.Node):
     A. N. Escalante-B. and L. Wiskott. Improved graph-based SFA: Information preservation complements the slowness principle.
     e-print arXiv:1601.03945, 1 2016a    
     """    
-    def __init__(self, input_dim = None, output_dim=None, pre_expansion_node_class = None, expansion_funcs=None, expansion_output_dim=None, expansion_starting_point=None, max_lenght_slow_part = None, max_num_samples_for_ev = None, max_test_samples_for_ev=None, offsetting_mode = "all features", max_preserved_sfa=1.9999, reconstruct_with_sfa = True, **argv ):
+    def __init__(self, input_dim = None, output_dim=None, pre_expansion_node_class = None, pre_expansion_out_dim = None, expansion_funcs=None, expansion_output_dim=None, expansion_starting_point=None, max_lenght_slow_part = None, max_num_samples_for_ev = None, max_test_samples_for_ev=None, offsetting_mode = "all features", max_preserved_sfa=1.9999, reconstruct_with_sfa = True, **argv ):
         super(iGSFANode, self).__init__(input_dim =input_dim, output_dim=output_dim, **argv)
         self.pre_expansion_node_class = pre_expansion_node_class #Type of node used to expand the data
         self.pre_expansion_node = None #Node that expands the input data
+        self.pre_expansion_output_dim = pre_expansion_out_dim 
         self.expansion_output_dim = expansion_output_dim #Expanded dimensionality
         self.expansion_starting_point = expansion_starting_point #Initial parameters for the expansion function
 
@@ -76,7 +77,7 @@ class iGSFANode(mdp.Node):
         
         #Reorder or pre-process the data before it is expanded, but only if there is really an expansion
         if self.pre_expansion_node_class != None and self.exp_node != None:
-            self.pre_expansion_node = self.pre_expansion_node_class() #GSFANode() or a WhitheningNode()
+            self.pre_expansion_node = self.pre_expansion_node_class(output_dim = self.pre_expansion_output_dim) #GSFANode() or a WhitheningNode()
             self.pre_expansion_node.train(x_zm, block_size=block_size, train_mode = train_mode) #Some arguments might not be necessary
             self.pre_expansion_node.stop_training()
             x_pre_exp = self.pre_expansion_node.execute(x_zm)

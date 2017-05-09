@@ -650,8 +650,8 @@ ParamsGender.sNewid = [[sNewidGender]] #[]
     
 ParamsGender.analysis = None
 ParamsGender.enable_reduced_image_sizes = True #(False paper)
-ParamsGender.reduction_factor = 2.0 # 8.0 # 2.0 #1.0 #(1.0 paper)
-ParamsGender.hack_image_size  = 64  # 16 # 64 #128 #(128 paper)
+ParamsGender.reduction_factor = 1.0 # 2.0 # 8.0 # 2.0 #1.0 #(1.0 paper)
+ParamsGender.hack_image_size  = 135 # 64  # 16 # 64 #128 #(128 paper)
 ParamsGender.enable_hack_image_size = True
 
 print "******** Setting Train Information Parameters for Identity ***********"
@@ -6915,6 +6915,9 @@ def list_available_images(base_dir, from_subdirs=None, verbose=False):
 
 age_all_labels_map_MORPH = load_GT_labels("/local/escalafl/Alberto/MORPH_setsS1S2S3_seed12345/GT_MORPH_AgeRAgeGenderRace.txt", age_included=True, rAge_included=True, gender_included=True, race_included=True, avgColor_included=False)
 age_all_labels_map_INI = load_GT_labels("/home/escalafl/Databases/faces/INIBilder/GT_INI_AgeRAgeGenderRace.txt", age_included=True, rAge_included=True, gender_included=True, race_included=True, avgColor_included=False)
+#"/local/escalafl/Alberto/GT_ETIT_AgeRAgeGenderRace.txt"
+#"/home/escalafl/workspace4/FaceDetectSFA/FGNet_FD/GT_FGNet_AgeRAgeGenderRace.txt"
+#"/local/escalafl/Alberto/GT_INIProf_AgeRAgeGenderRace.txt"
 age_all_labels_map_FGNet = load_GT_labels("/home/escalafl/workspace4/FaceDetectSFA/FGNet_FD/GT_FGNet_AgeRAgeGenderRace.txt", age_included=True, rAge_included=True, gender_included=True, race_included=True, avgColor_included=False)
 
 #print age_all_labels_map_FGNet
@@ -7503,7 +7506,7 @@ def iSeqCreateRAge(dx=2, dy=2, smin=0.95, smax=1.05, delta_rotation=0.0, pre_mir
 
     iSeq.block_size = num_images_per_cluster_used * repetition_factor
 
-    iSeq.train_mode = "regular" # "serial" #"regular" #"serial" # = "serial" "mixed", None
+    iSeq.train_mode = "serial" #"regular" #"serial" # = "serial" "mixed", None
 # None, "regular", "fwindow16", "fwindow32", "fwindow64", "fwindow128"
 #        quit()
 #        iSeq.train_mode = None 
@@ -7662,7 +7665,7 @@ if leave_k_out_MORPH == 0:
     select_k_images_newid = 8000
 #select_k_images_seenid = 1500 #16000 #4000 #3000 #3750
 
-option_setup_CNN = 1 # 1=CNN setup, 0=my setup
+option_setup_CNN = 0 # 1=CNN setup, 0=my setup
 if option_setup_CNN: 
     leave_k_out_MORPH = 0 #to speed on unnecessary computation 
     select_k_images_newid = 1000
@@ -7729,7 +7732,7 @@ age_trim_number_MORPH = None
 
 #print "age_labeled_files_list_INIBilder", age_labeled_files_list_INIBilder
 #age_trim_number_MORPH = 200
-age_clusters_MORPH = age_cluster_labeled_files(age_labeled_files_list_MORPH, repetition=2, num_clusters=num_clusters_MORPH_serial, trim_number=None, shuffle_each_cluster=False) #r=5, r=6, trim_number=None
+age_clusters_MORPH = age_cluster_labeled_files(age_labeled_files_list_MORPH, repetition=3, num_clusters=num_clusters_MORPH_serial, trim_number=None, shuffle_each_cluster=False) #r=5, r=6, trim_number=None
 #age_clusters_MORPH = age_cluster_list(age_files_dict_MORPH, repetition=pre_repetitions, smallest_number_images=age_trim_number_MORPH, largest_number_images=age_trim_number_MORPH) #Cluster so that all clusters have size at least 1400 or 1270 for L1KPO
 print "len(age_clusters_MORPH)=", len(age_clusters_MORPH)
 num_images_per_cluster_used_MORPH = age_clusters_MORPH[0][0]
@@ -7768,7 +7771,9 @@ numpy.random.seed(experiment_seed+123123)
 if age_use_RGB_images:
     age_eyes_normalized_base_dir_FGNet = "/local/escalafl/Alberto/FGNet/FGNet_normalizedEyesZ4_horiz_RGB_2015_08_25"
 else:
-    age_eyes_normalized_base_dir_FGNet = "/local/escalafl/Alberto/FGNet/FGNet_normalizedEyesZ4_horiz_2015_08_25"
+    age_eyes_normalized_base_dir_FGNet = "/local/escalafl/Alberto/FGNet/FGNet_normalizedEyesZ4_horiz_2015_08_25" 
+    #age_eyes_normalized_base_dir_FGNet = "/local/escalafl/Alberto/ETIT_normalizedEyesZ4_h" #WARNING, TEMPORAL EXPERIMENT ONLY
+    #age_eyes_normalized_base_dir_FGNet = "/local/escalafl/Alberto/INIProf_normalizedEyesZ4_h"
 subdirs_FGNet=None
 subdirs_FGNet=["%d"%i for i in range(16, 77)] #70 77 #OBSOLETE: all images are in a single directory
 
@@ -7846,7 +7851,7 @@ MORPH_base_dir = "/local/escalafl/Alberto/MORPH_splitted_GUO_2015_09_02/"
 if age_use_RGB_images:
     age_eyes_normalized_base_dir_set1 = "/local/escalafl/Alberto/MORPH_splitted_GUO_2015_09_02/nonexistent"
 else:
-    age_eyes_normalized_base_dir_set1 = MORPH_base_dir + "Fs1" #F s 1 ot F s 2 #WARNING!
+    age_eyes_normalized_base_dir_set1 = MORPH_base_dir + "Fs2" #F s 1 ot F s 2 #WARNING!
 #age_files_dict_set1 = find_available_images(age_eyes_normalized_base_dir_set1, from_subdirs=None) #change from_subdirs to select a subset of all ages!
 age_files_list_set1 = list_available_images(age_eyes_normalized_base_dir_set1, from_subdirs=None, verbose=False)
 age_labeled_files_list_set1 = append_GT_labels_to_files(age_files_list_set1, age_all_labels_map_MORPH)
@@ -7867,7 +7872,7 @@ print "num clusters: ", len(age_clusters_set1)
 if age_use_RGB_images:
     age_eyes_normalized_base_dir_set1b = "/local/escalafl/Alberto/MORPH_setsS1S2S3_seed12345/nonexistent/s1_byAge_mcnn"
 else:
-    age_eyes_normalized_base_dir_set1b = MORPH_base_dir + "Fs1"
+    age_eyes_normalized_base_dir_set1b = MORPH_base_dir + "Fs2"
 #age_files_dict_set1b = find_available_images(age_eyes_normalized_base_dir_set1b, from_subdirs=None) #change from_subdirs to select a subset of all ages!
 age_files_list_set1b = list_available_images(age_eyes_normalized_base_dir_set1b, from_subdirs=None, verbose=False)
 age_labeled_files_list_set1b = append_GT_labels_to_files(age_files_list_set1b, age_all_labels_map_MORPH, select_races=[-2,-1,0,1,2], verbose=True)
@@ -7890,7 +7895,7 @@ print "num_images_per_cluster_used_set1b=", num_images_per_cluster_used_set1b
 if age_use_RGB_images:
     age_eyes_normalized_base_dir_set1test = "/local/escalafl/Alberto/MORPH_setsS1S2S3_seed12345/s1-test_byAge_mcnn/nonexistent"
 else:
-    age_eyes_normalized_base_dir_set1test = MORPH_base_dir + "Fs1-test" # s2-test_byAge_mcnn2
+    age_eyes_normalized_base_dir_set1test = MORPH_base_dir + "Fs2-test" # s2-test_byAge_mcnn2
     #age_files_dict_set1test = find_available_images(age_eyes_normalized_base_dir_set1test, from_subdirs=None) #change from_subdirs to select a subset of all ages!
 age_files_list_set1test = list_available_images(age_eyes_normalized_base_dir_set1test, from_subdirs=None, verbose=False)
 age_labeled_files_list_set1test = append_GT_labels_to_files(age_files_list_set1test, age_all_labels_map_MORPH, select_races=[-2,-1,0,1,2], verbose=True)
@@ -7925,9 +7930,9 @@ elif option_setup_CNN==1: #CNN SETUP
     #age_clusters_newid = age_clusters_set1b #WARNING!!!
     #num_images_per_cluster_used_MORPH_out = 15000 #num_images_per_cluster_used_set1b #WARNING!!!
 
-    age_eyes_normalized_base_dir_train = MORPH_base_dir + "Fs1"
-    age_eyes_normalized_base_dir_seenid = MORPH_base_dir + "Fs1"
-    age_eyes_normalized_base_dir_newid = MORPH_base_dir + "Fs1-test" #s2-test_byAge_mcnn
+    age_eyes_normalized_base_dir_train = MORPH_base_dir + "Fs2"
+    age_eyes_normalized_base_dir_seenid = MORPH_base_dir + "Fs2"
+    age_eyes_normalized_base_dir_newid = MORPH_base_dir + "Fs2-test" #s2-test_byAge_mcnn
        
     if num_images_per_cluster_used_set1 == 0:
         ex = "error: num_images_per_cluster_used_set1 = 0"
@@ -7959,43 +7964,60 @@ if leave_k_out_MORPH > 0 and len(age_clusters) != 30 and len(age_clusters)!=0 an
 
 use_seenid_classes_to_generate_knownid_and_newid_classes = True #and False #WARNING
 
-if option_setup_CNN==0: #WARNING!!!!!  ERROR!!! #MY MORPH SETUP, eventually use only one setup? why, nooo! # warning!!!
+extra_distortions_for_out_of_database_test = True #Warning! default is False
+if extra_distortions_for_out_of_database_test:
+    print "using even more extensive distortions"
     base_scale = 1.14 #1.155 # 1.125 # 1.14 * (37.5/37.0) #1.14  #* 1.1 #*0.955 #*1.05 # 1.14 WARNING!!!
-    factor_training = 1.03573 #1.04 #1.03573 (article) # 1.032157 #1.0393 # 1.03573
-    factor_seenid = 1.01989 #1.021879 #1.018943  #1.020885         # 1.01989  
-    scale_offset = 0.00 #0.08 0.04  
+    factor_scale_training = 1.04 # 1.04! #*** 1.03573 #1.04 #1.03573 (article) # 1.032157 #1.0393 # 1.03573
+    factor_scale_seenid = 1.01989 #1.021879 #1.018943  #1.020885         # 1.01989  
+    delta_rotation = 2.5 #** 2.0 #2.0
+    factor_rotation_seenid = 1.65 / 3.0
+    delta_pos = 2.8 #Net60,61,62: 3.3 #2.5! # ** 1.0 #1.2 #0.75 #eedit
+    factor_pos_seenid = 0.5 #0.5
+    obj_avg_std = 0.18 #0.17! # ** 0.0
+    obj_std_base = 0.16 # ** 0.16
+    obj_std_dif = 0.05 # Net60: 0.081 # 0.096! # ** 0.00 #WARNING!!! WHY min can be smaller than zero???!!!
+
+    obj_std_min = obj_std_base - obj_std_dif # ** 0.16
+    obj_std_max = obj_std_base + obj_std_dif # ** 0.16
+elif option_setup_CNN==0: #WARNING!!!!!  ERROR!!! #MY MORPH SETUP, eventually use only one setup? why, nooo! # warning!!!
+    print "using distortions for my experimental setup"
+    base_scale = 1.14 #1.155 # 1.125 # 1.14 * (37.5/37.0) #1.14  #* 1.1 #*0.955 #*1.05 # 1.14 WARNING!!!
+    factor_scale_training = 1.03573 #1.04 #1.03573 (article) # 1.032157 #1.0393 # 1.03573
+    factor_scale_seenid = 1.01989 #1.021879 #1.018943  #1.020885         # 1.01989  
     delta_rotation = 2.0 #** 2.0 #2.0
-    factor_rotation = 1.65 / 3.0
+    factor_rotation_seenid = 1.65 / 3.0
     delta_pos = 1.0 # ** 1.0 #1.2 #0.75 #eedit
-    factor_pos = 0.5
+    factor_pos_seenid = 0.5
     obj_avg_std = 0.0 # ** 0.0
     obj_std_base = 0.16 # ** 0.16
     obj_std_dif = 0.01 #WARNING! # ** 0.00
     
-    obj_std_min=obj_std_base-obj_std_dif # ** 0.16
-    obj_std_max=obj_std_base+obj_std_dif # ** 0.16    
+    obj_std_min = obj_std_base-obj_std_dif # ** 0.16
+    obj_std_max = obj_std_base+obj_std_dif # ** 0.16    
 else: #GUO MORPH SETUP
+    print "using distortions for GUO setup"
     #0.825 #0.55 # 1.1
     #smin=0.575, smax=0.625 (orig images) 
     # (zoomed images)     
     # smin=1.25, smax=1.40, 1.325
     base_scale = 1.14 #1.155 # 1.125 # 1.14 * (37.5/37.0) #1.14  #* 1.1 #*0.955 #*1.05 # 1.14 WARNING!!!
-    factor_training = 1.04 # 1.04! #*** 1.03573 #1.04 #1.03573 (article) # 1.032157 #1.0393 # 1.03573
-    factor_seenid = 1.01989 #1.021879 #1.018943  #1.020885         # 1.01989  
-    scale_offset = 0.00 #0.08 0.04  
+    factor_scale_training = 1.04 # 1.04! #*** 1.03573 #1.04 #1.03573 (article) # 1.032157 #1.0393 # 1.03573
+    factor_scale_seenid = 1.01989 #1.021879 #1.018943  #1.020885         # 1.01989  
+      
     delta_rotation = 2.0 #** 2.0 #2.0
-    factor_rotation = 1.65 / 3.0
+    factor_rotation_seenid = 1.65 / 3.0
     delta_pos = 2.3 #2.5! # ** 1.0 #1.2 #0.75 #eedit
-    factor_pos = 0.5
+    factor_pos_seenid = 0.5
     obj_avg_std = 0.165 #0.17! # ** 0.0
     obj_std_base = 0.16 # ** 0.16
     obj_std_dif = 0.081 #0.096! # ** 0.00 #WARNING!!! WHY min can be smaller than zero???!!!
     
-    obj_std_min=obj_std_base - obj_std_dif # ** 0.16
-    obj_std_max=obj_std_base + obj_std_dif # ** 0.16
+    obj_std_min = obj_std_base - obj_std_dif # ** 0.16
+    obj_std_max = obj_std_base + obj_std_dif # ** 0.16
 
-obj_avg_std_seenid = obj_avg_std * 0.0
-obj_std_dif_seenid = obj_std_dif * 0.0
+obj_avg_std_seenid = 0.0 #Image mean is thus constant and equal to 0.5
+obj_std_dif_seenid = 0.0 #std of image pixels is constant and equal to obj_std_base
 obj_std_min_seenid = obj_std_base - obj_std_dif_seenid # ** 0.16
 obj_std_max_seenid = obj_std_base + obj_std_dif_seenid # ** 0.16
 
@@ -8004,16 +8026,15 @@ obj_std_max_seenid = obj_std_base + obj_std_dif_seenid # ** 0.16
 # (zoomed images)   
 # smin=1.25, smax=1.40, 1.325
 ###base_scale = 1.14 #1.155 # 1.125 # 1.14 * (37.5/37.0) #1.14  #* 1.1 #*0.955 #*1.05 # 1.14 WARNING!!!
-###factor_training = 1.03573 #1.04 #1.03573 (article) # 1.032157 #1.0393 # 1.03573
-###factor_seenid = 1.01989 #1.021879 #1.018943  #1.020885         # 1.01989  
-###scale_offset = 0.00 #0.08 0.04  
+###factor_scale_training = 1.03573 #1.04 #1.03573 (article) # 1.032157 #1.0393 # 1.03573
+###factor_scale_seenid = 1.01989 #1.021879 #1.018943  #1.020885         # 1.01989  
 ###delta_rotation = 2.0 #2.0
-###factor_rotation = 1.65 / 3.0
+###factor_rotation_seenid = 1.65 / 3.0
 ###delta_pos = 1.0 #1.0 #1.2 #0.75 #eedit
-###factor_pos = 0.5
+###factor_pos_seenid = 0.5
 
-print "Randomization parameters base_scale=%f, factor_training=%f, factor_seenid=%f, scale_offset=%f"%(base_scale, factor_training, factor_seenid, scale_offset)
-print "Randomization parameters delta_rotation=%f, factor_rotation=%f, delta_pos=%f, factor_pos=%f"%(delta_rotation, factor_rotation, delta_pos, factor_pos)  
+print "Randomization parameters base_scale=%f, factor_scale_training=%f, factor_scale_seenid=%f"%(base_scale, factor_scale_training, factor_scale_seenid)
+print "Randomization parameters delta_rotation=%f, factor_rotation_seenid=%f, delta_pos=%f, factor_pos_seenid=%f"%(delta_rotation, factor_rotation_seenid, delta_pos, factor_pos_seenid)  
 
 # if leave_k_out_MORPH == 1000:
 #     extra_images_LKO_train = (age_trim_number_MORPH - 1200)*2/3 # (1270-1200)=70, 70/3 = 23
@@ -8037,9 +8058,9 @@ print "Randomization parameters delta_rotation=%f, factor_rotation=%f, delta_pos
 #DEFINITIVE:
 #128x128: iSeq_set = iTrainRAge = [[iSeqCreateRAge(dx=0.0, dy=0.0, smin=1.275, smax=1.375, delta_rotation=3.0, pre_mirroring="none" "duplicate", contrast_enhance=True, 
 #160x160:
-iSeq_set = iTrainRAge = [[iSeqCreateRAge(dx=delta_pos, dy=delta_pos, smin=(base_scale+scale_offset) / factor_training, smax=(base_scale+scale_offset) * factor_training, delta_rotation=delta_rotation, pre_mirroring="none", contrast_enhance=True, #WARNING!!! pre_mirroring="none"
+iSeq_set = iTrainRAge = [[iSeqCreateRAge(dx=delta_pos, dy=delta_pos, smin=base_scale / factor_scale_training, smax=base_scale * factor_scale_training, delta_rotation=delta_rotation, pre_mirroring="none", contrast_enhance=True, #WARNING!!! pre_mirroring="none"
 #-0.05
-#192x192: iSeq_set = iTrainRAge = [[iSeqCreateRAge(dx=0.0, dy=0.0, smin=0.85+scale_offset, smax=0.91666+scale_offset, delta_rotation=3.0, pre_mirroring="none", contrast_enhance=True, 
+#192x192: iSeq_set = iTrainRAge = [[iSeqCreateRAge(dx=0.0, dy=0.0, smin=0.85, smax=0.91666, delta_rotation=3.0, pre_mirroring="none", contrast_enhance=True, 
                                          obj_avg_std=obj_avg_std, obj_std_min=obj_std_min, obj_std_max=obj_std_max, new_clusters=age_clusters, num_images_per_cluster_used=num_images_per_cluster_used_MORPH,  #=>=>=>1075 #1000 #1000, 900=>27000
                                          images_base_dir=age_eyes_normalized_base_dir_train, first_image_index=0, repetition_factor=1, seed=-1, use_orig_label_as_class=False, use_orig_label=True)]] #repetition_factor=8 (article 8), 6 or at least 4 #T: dx=2, dy=2, smin=1.25, smax=1.40, repetition_factor=5
 #Experimental: 
@@ -8057,8 +8078,8 @@ sSeq_set = sTrainRAge = [[sSeqCreateRAge(iSeq_set[0][0], seed=-1, use_RGB_images
 #smin=0.595, smax=0.605 (orig images)
 #128x128: iSeq_set = iSeenidRAge = iSeqCreateRAge(dx=0.0, dy=0.0, smin=1.3, smax=1.35, delta_rotation=1.5, pre_mirroring="none", contrast_enhance=True, 160x160: WARNING!!! WHY OBJ_STD_MIN/MAX is fixed???
 #WARNING! USED age_clusters instead of age_clusters_seenid
-iSeq_set = iSeenidRAge = iSeqCreateRAge(dx=delta_pos * factor_pos, dy=delta_pos * factor_pos, smin=(base_scale+scale_offset) / factor_seenid, smax=(base_scale+scale_offset) * factor_seenid, delta_rotation=delta_rotation*factor_rotation, pre_mirroring="none", contrast_enhance=True, 
-#192x192:iSeq_set = iSeenidRAge = iSeqCreateRAge(dx=0.0, dy=0.0, smin=0.86667+scale_offset, smax=0.9+scale_offset, delta_rotation=1.5, pre_mirroring="none", contrast_enhance=True, 
+iSeq_set = iSeenidRAge = iSeqCreateRAge(dx=delta_pos * factor_pos_seenid, dy=delta_pos * factor_pos_seenid, smin=base_scale / factor_scale_seenid, smax=base_scale * factor_scale_seenid, delta_rotation=delta_rotation*factor_rotation_seenid, pre_mirroring="none", contrast_enhance=True, 
+#192x192:iSeq_set = iSeenidRAge = iSeqCreateRAge(dx=0.0, dy=0.0, smin=0.86667, smax=0.9, delta_rotation=1.5, pre_mirroring="none", contrast_enhance=True, 
                                         obj_avg_std=obj_avg_std_seenid, obj_std_min=obj_std_min_seenid, obj_std_max=obj_std_max_seenid,new_clusters=age_clusters_seenid, num_images_per_cluster_used=num_images_per_cluster_used_MORPH_seenid, #125+extra_images_LKO_third  #200 #300=>9000
                                         images_base_dir=age_eyes_normalized_base_dir_seenid, first_image_index=0, repetition_factor=1, seed=-1,  #repetition_factor= 6 (article 6), 12,8,4
                                         use_orig_label_as_class=use_seenid_classes_to_generate_knownid_and_newid_classes and False, use_orig_label=True) #repetition_factor=8, 4 #T=repetition_factor=3
@@ -8066,20 +8087,20 @@ sSeq_set = sSeenidRAge = sSeqCreateRAge(iSeq_set, seed=-1, use_RGB_images=age_us
 ###Testing Original MORPH:
 #128x128: iSeq_set = iNewidRAge = [[iSeqCreateRAge(dx=0, dy=0, smin=1.325, smax=1.326, delta_rotation=0.0, pre_mirroring="none", contrast_enhance=True, 
 #192x192: 
-#iSeq_set = iNewidRAge = [[iSeqCreateRAge(dx=0, dy=0, smin=0.8833+scale_offset, smax=0.8833+scale_offset, delta_rotation=0.0, pre_mirroring="none", contrast_enhance=True, 
+#iSeq_set = iNewidRAge = [[iSeqCreateRAge(dx=0, dy=0, smin=0.8833, smax=0.8833, delta_rotation=0.0, pre_mirroring="none", contrast_enhance=True, 
 #160x160: use_orig_label_as_class 
 #TODO:get rid of this conditional. Add Leave-k-out for MORPH+FGNet
 testing_INIBilder = (num_images_per_cluster_used_INIBilder > 0) and False
-testing_FGNet = True and False
+testing_FGNet = True #and False #Warning, should be False normally
 if (not testing_INIBilder) and (not testing_FGNet): 
     if leave_k_out_MORPH==0 and option_setup_CNN==0:
         print "Selecting NewId without using leave_k_out_strategy" ###WARNING!!!! HERE 0.16 instead of 0.2 should be used???
-        iSeq_set = iNewidRAge = [[iSeqCreateRAge(dx=0, dy=0, smin=(base_scale+scale_offset), smax=(base_scale+scale_offset), delta_rotation=0.0, pre_mirroring="none", contrast_enhance=True, 
+        iSeq_set = iNewidRAge = [[iSeqCreateRAge(dx=0, dy=0, smin=base_scale, smax=base_scale, delta_rotation=0.0, pre_mirroring="none", contrast_enhance=True, 
                                                  obj_avg_std=0.0, obj_std_min=obj_std_base, obj_std_max=obj_std_base, new_clusters=age_clusters, num_images_per_cluster_used=200,   #200=>6000 pre_mirroring="none"
                                                  images_base_dir=age_eyes_normalized_base_dir_newid, first_image_index=1200, repetition_factor=1, seed=-1, use_orig_label_as_class=False, use_orig_label=True,increasing_orig_label=True)]]
     else:
         print "Selecting NewId data using leave_k_out_strategy, with k=", leave_k_out_MORPH
-        iSeq_set = iNewidRAge = [[iSeqCreateRAge(dx=0, dy=0, smin=(base_scale+scale_offset), smax=(base_scale+scale_offset), delta_rotation=0.0, pre_mirroring="none", contrast_enhance=True, 
+        iSeq_set = iNewidRAge = [[iSeqCreateRAge(dx=0, dy=0, smin=base_scale, smax=base_scale, delta_rotation=0.0, pre_mirroring="none", contrast_enhance=True, 
                                                  obj_avg_std=0.0, obj_std_min=obj_std_base, obj_std_max=obj_std_base, new_clusters=age_clusters_newid, num_images_per_cluster_used=num_images_per_cluster_used_MORPH_out,   #200=>6000
                                                  images_base_dir=age_eyes_normalized_base_dir_newid, first_image_index=0, repetition_factor=1, seed=-1, use_orig_label_as_class=False, use_orig_label=True, increasing_orig_label=True)]]
     sSeq_set = sNewidRAge = [[sSeqCreateRAge(iSeq_set[0][0], seed=-1, use_RGB_images=age_use_RGB_images)]]
@@ -8092,7 +8113,7 @@ if (not testing_INIBilder) and (not testing_FGNet):
 #Testing with INI Bilder:
 if testing_INIBilder:
     print "Using INI Bilder for testing"
-    iSeq_set = iNewidRAge = [[iSeqCreateRAge(dx=0, dy=0, smin=(base_scale+scale_offset), smax=(base_scale+scale_offset), delta_rotation=0.0, pre_mirroring="none", contrast_enhance=True, #pre_mirroring="none",
+    iSeq_set = iNewidRAge = [[iSeqCreateRAge(dx=0, dy=0, smin=base_scale, smax=base_scale, delta_rotation=0.0, pre_mirroring="none", contrast_enhance=True, #pre_mirroring="none",
                                              obj_avg_std=0.0, obj_std_min=obj_std_base, obj_std_max=obj_std_base, new_clusters=age_clusters_INIBilder, num_images_per_cluster_used=num_images_per_cluster_used_INIBilder,   
                                              images_base_dir=age_eyes_normalized_base_dir_INIBilder, first_image_index=0, repetition_factor=1, seed=-1, use_orig_label_as_class=False, use_orig_label=True)]]
     sSeq_set = sNewidRAge = [[sSeqCreateRAge(iSeq_set[0][0], seed=-1, use_RGB_images=age_use_RGB_images)]]
@@ -8100,7 +8121,7 @@ if testing_INIBilder:
 #Testing with FGNet:
 if testing_FGNet:
     print "Using FGNet for testing"
-    iSeq_set = iNewidRAge = [[iSeqCreateRAge(dx=0, dy=0, smin=(base_scale+scale_offset), smax=(base_scale+scale_offset), delta_rotation=0.0, pre_mirroring="none", contrast_enhance=True,
+    iSeq_set = iNewidRAge = [[iSeqCreateRAge(dx=0, dy=0, smin=base_scale, smax=base_scale, delta_rotation=0.0, pre_mirroring="none", contrast_enhance=True,
                                              obj_avg_std=0.0, obj_std_min=obj_std_base, obj_std_max=obj_std_base, new_clusters=age_clusters_FGNet, num_images_per_cluster_used=num_images_per_cluster_used_FGNet,  
                                              images_base_dir=age_eyes_normalized_base_dir_FGNet, first_image_index=0, repetition_factor=1, seed=-1, use_orig_label_as_class=False, use_orig_label=True, increasing_orig_label=True)]]
     sSeq_set = sNewidRAge = [[sSeqCreateRAge(iSeq_set[0][0], seed=-1, use_RGB_images=age_use_RGB_images)]]
@@ -8228,8 +8249,8 @@ age_multiple_labels = age_add_other_label_classes #and False
 age_label_ordering ="AgeRaceGenderIAge"
 age_ordered_by_increasing_label = 0 #0=Age,1=Race, 2=Gender
 age_subordered_by_increasing_color = True and False 
-append_gender_classification = True and False #Add training graph for gender
-append_race_classification = True and False #Add training graph for race
+append_gender_classification = True #and False #Add training graph for gender
+append_race_classification = True #and False #Add training graph for race
 
 #False, *, *, * => learn only age
 #True, True, True, False, True  => learn both age and skin color, age is first label and determines ordering, color determines subordering inside the clusters
@@ -8943,4 +8964,178 @@ ParamsMNISTFunc.patch_network_for_RGB = False #
 # print "class_list=", class_list
 # for i, classnr in enumerate(all_classes):
 #     iSeenidRAge.correct_classes[iSeenidRAge.correct_classes==classnr] = class_list[i]
+
+#RATLAB experiment!!!!
+def iSeqCreateRatlab(ratlab_images, first_image_index=0, num_images_used=0, data_base_dir=""):
+    if first_image_index + num_images_used > len(ratlab_images):
+        err = "first_image_index + num_images_per_digit_used > len(ratlab_images." + "%d + %d > %d"%(first_image_index, num_images_used, len(ratlab_images))
+        raise Exception(err)
+        
+    print "***** Setting Information Parameters for Ratlab ******"
+    iSeq = system_parameters.ParamsInput()
+    iSeq.data_base_dir = data_base_dir
+
+    iSeq.ids = [data_base_dir + "/" + image_filename for image_filename in ratlab_images[first_image_index: first_image_index + num_images_used ]]
+    iSeq.orig_labels = []
+    iSeq.block_sizes = []
+        
+    iSeq.input_files = iSeq.ids
+    iSeq.orig_labels = numpy.arange(first_image_index, first_image_index + num_images_used)
+    iSeq.num_images = num_images_used
+
+    iSeq.dx = 0.0
+    iSeq.dy = 0.0
+    iSeq.smin = 1.0
+    iSeq.smax = 1.0
+    iSeq.delta_rotation = None
+    iSeq.contrast_enhance = None        
+    iSeq.pre_mirror_flags = False
+    iSeq.obj_avg_std = 0.0
+    iSeq.obj_std_min = 0.0
+    iSeq.obj_std_max = 0.0
+        
+    iSeq.ages = [None]
+    iSeq.genders = [None]
+    iSeq.racetweens = [None]
+    iSeq.expressions = [None]
+    iSeq.morphs = [None]
+    iSeq.poses = [None]
+    iSeq.lightings = [None]
+    iSeq.slow_signal = 0 #real slow signal is the translation in the x axis (correlated to identity), added during image loading
+    iSeq.step = 1
+    iSeq.offset = 0
+
+    iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
+                      iSeq.morphs, iSeq.poses, iSeq.lightings]
+
+    iSeq.block_size = 1
+    print "iSeq.block_size =", iSeq.block_size
+    iSeq.train_mode = "regular" 
+    iSeq.correct_labels = 1.0 * numpy.random.randint(0, 2, num_images_used) 
+    iSeq.correct_classes = iSeq.correct_labels.astype(int)
+    system_parameters.test_object_contents(iSeq)
+    return iSeq
+
+def sSeqCreateRatlab(iSeq, seed=-1, use_RGB_images=True):
+    if seed >= 0 or seed is None: #also works for 
+        numpy.random.seed(seed)
+    #else seed <0 then, do not change seed
+    
+    if iSeq==None:
+        print "Ratlab experiment: iSeq was None, this might be an indication that the data is not available"
+        sSeq = system_parameters.ParamsDataLoading()
+        return sSeq
+    
+    print "******** Setting Training Data Parameters for Ratlab data  ****************"
+    sSeq = system_parameters.ParamsDataLoading()
+    sSeq.input_files = iSeq.input_files
+    #sSeq.images_array = None
+    sSeq.num_images = iSeq.num_images
+    sSeq.block_size = iSeq.block_size
+    sSeq.train_mode = iSeq.train_mode
+    sSeq.include_latest = iSeq.include_latest
+    sSeq.image_width = 320
+    sSeq.image_height = 40 
+    sSeq.subimage_width = 320  
+    sSeq.subimage_height = 40  
+    sSeq.pre_mirror_flags = iSeq.pre_mirror_flags
+    
+    sSeq.trans_x_max = iSeq.dx
+    sSeq.trans_x_min = -1 * iSeq.dx
+    sSeq.trans_y_max = iSeq.dy
+    sSeq.trans_y_min = -1 * iSeq.dy
+    sSeq.min_sampling = iSeq.smin
+    sSeq.max_sampling = iSeq.smax
+    sSeq.delta_rotation = iSeq.delta_rotation
+    sSeq.contrast_enhance = iSeq.contrast_enhance
+    sSeq.obj_avg_std = iSeq.obj_avg_std
+    sSeq.obj_std_min = iSeq.obj_std_min
+    sSeq.obj_std_max = iSeq.obj_std_max
+            
+    sSeq.add_noise_L0 = False
+    if use_RGB_images:
+        sSeq.convert_format = "RGB" # "RGB", "L"
+    else:
+        sSeq.convert_format = "L"
+    sSeq.background_type = None
+
+    sSeq.offset_translation_x = 0.0 
+    sSeq.offset_translation_y = 0.0 
+      
+    sSeq.translations_x = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, sSeq.num_images) + sSeq.offset_translation_x
+    sSeq.translations_y = numpy.random.random_integers(sSeq.trans_y_min, sSeq.trans_y_max, sSeq.num_images) + sSeq.offset_translation_y
+    
+    sSeq.pixelsampling_x = numpy.random.uniform(low=sSeq.min_sampling, high=sSeq.max_sampling, size=sSeq.num_images)
+    sSeq.pixelsampling_y = sSeq.pixelsampling_x + 0.0
+    if sSeq.delta_rotation != None:
+        sSeq.rotation = numpy.random.uniform(-sSeq.delta_rotation, sSeq.delta_rotation, sSeq.num_images)
+    else:
+        sSeq.rotation = None
+    if iSeq.obj_avg_std > 0:
+        sSeq.obj_avgs = numpy.random.normal(0.0, iSeq.obj_avg_std, size=sSeq.num_images)
+    else:
+        sSeq.obj_avgs = numpy.zeros(sSeq.num_images)
+    sSeq.obj_stds = numpy.random.uniform(sSeq.obj_std_min, sSeq.obj_std_max, sSeq.num_images)
+
+    #BUG1: image center is not computed that way!!! also half(width-1) computation is wrong!!!
+    sSeq.subimage_first_row =  sSeq.image_height/2.0-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
+    sSeq.subimage_first_column = sSeq.image_width/2.0-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
+
+    sSeq.trans_sampled = True #TODO:check semantics, when is sampling/translation done? why does this value matter?
+    sSeq.name = "Ratlab_data"
+
+    sSeq.load_data = load_data_from_sSeq
+    system_parameters.test_object_contents(sSeq)
+    return sSeq
+
+print "Ratlab: starting with experiment_seed=", experiment_seed
+numpy.random.seed(experiment_seed+123451313)
+
+ratlab_enabled = False or True
+if ratlab_enabled:
+    num_available_images = 9600
+    num_images_training = 6800
+    num_images_test = num_available_images - num_images_training
+    ratlab_data_base_dir = experiment_basedir + "/ratlab_sequence"
+    ratlab_images = ["frame_%05d.png"%d for d in range(num_available_images)] # frame_00000.png ... frame_09599.png
+else:
+    num_available_images = 0
+    num_images_training = 0
+    num_images_test = 0
+    ratlab_images = []
+    ratlab_data_base_dir = ""
+
+
+iSeq_set = iTrainRatlab = [[iSeqCreateRatlab(ratlab_images, first_image_index=0, num_images_used=num_images_training, data_base_dir=ratlab_data_base_dir)]]
+sSeq_set = sTrainRatlab = [[sSeqCreateRatlab(iSeq_set[0][0], seed=-1, use_RGB_images=True)]]
+
+iSeq_set = iSeenidRatlab = iSeqCreateRatlab(ratlab_images, first_image_index=0, num_images_used=num_images_training, data_base_dir=ratlab_data_base_dir)
+sSeq_set = sSeenidRatlab = sSeqCreateRatlab(iSeq_set, seed=-1, use_RGB_images=True)
+
+iSeq_set = iNewidRatlab = [[iSeqCreateRatlab(ratlab_images, first_image_index=num_images_training, num_images_used=num_images_test, data_base_dir=ratlab_data_base_dir)]]
+sSeq_set = sNewidRatlab = [[sSeqCreateRatlab(iSeq_set[0][0], seed=-1, use_RGB_images=True)]]
+
+print "len(iSeq_set.input_files)=",len(iSeq_set[0][0].input_files)
+print "len(sSeq_set.input_files)=",len(sSeq_set[0][0].input_files)
+
+ParamsRatlabFunc = system_parameters.ParamsSystem()
+ParamsRatlabFunc.name = "Function Based Data Creation for MNIST"
+ParamsRatlabFunc.network = "linearNetwork4L" #Default Network, but ignored
+ParamsRatlabFunc.iTrain =iTrainRatlab
+ParamsRatlabFunc.sTrain = sTrainRatlab
+ParamsRatlabFunc.iSeenid = iSeenidRatlab
+ParamsRatlabFunc.sSeenid = sSeenidRatlab
+ParamsRatlabFunc.iNewid = iNewidRatlab
+ParamsRatlabFunc.sNewid = sNewidRatlab
+
+ParamsRatlabFunc.train_mode = "Weird Mode" #Ignored for the moment 
+ParamsRatlabFunc.analysis = None
+ParamsRatlabFunc.enable_reduced_image_sizes = False # True
+ParamsRatlabFunc.reduction_factor = 1.0 # T=1.0 WARNING 1.0, 2.0, 3, 4
+ParamsRatlabFunc.hack_image_size = 24 # 28, T=24 WARNING      24, 12, 8, 6 #IS IT 24 or 28!!!!! 28=2*2*7, 24=2*2*2*3
+ParamsRatlabFunc.enable_hack_image_size = False #True
+ParamsRatlabFunc.patch_network_for_RGB = False # 
+
+
+
 

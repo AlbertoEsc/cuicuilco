@@ -29,6 +29,72 @@ class ParamsNetwork (object):
     def __values__(self):
         return (self.L0, self.L1, self.L2, self.L3, self.L4, self.L5, self.L6, self.L7, self.L8, self.L9, self.L10)
         
+#SFALayer: PInvSwitchboard, pca_node, ord_node, gen_exp, red_node, clip_node, sfa_node
+class ParamsSFALayer(object):
+    def __init__(self):
+        self.name = "SFA Layer"
+        self.x_field_channels=3
+        self.y_field_channels=3
+        self.x_field_spacing=3
+        self.y_field_spacing=3
+        self.nx_value = None
+        self.ny_value = None
+        
+        self.in_channel_dim = 1
+        self.pca_node_class = None
+        self.pca_out_dim = 0.99999
+        self.pca_args = {"block_size": 1}
+
+        self.ord_node_class = None
+        self.ord_args = {}
+
+        self.exp_funcs = None
+        self.inv_use_hint = True
+        self.inv_max_steady_factor=0.35
+        self.inv_delta_factor=0.6
+        self.inv_min_delta=0.0001
+
+        self.red_node_class = None
+        self.red_out_dim = 0.99999
+        self.red_args = {"block_size": 1, "cutoff": 4}
+
+        self.clip_func = None
+        self.clip_inv_func = None
+
+        self.sfa_node_class = None
+        self.sfa_out_dim = 15
+        self.sfa_args = {}
+        self.cloneLayer = True
+        self.node_list = None
+        self.layer_number = None
+        
+        
+#SFASuperNode: pca_node, ord_node, gen_exp, red_node, clip_node, sfa_node       
+class ParamsSFASuperNode(object):
+    def __init__(self):
+        self.name = "SFA Supernode"
+        self.in_channel_dim=1
+        self.pca_node_class = None
+        self.pca_out_dim = None
+        self.pca_args = {}
+        self.ord_node_class = None
+        self.ord_args = {}
+        self.exp_funcs = None
+        self.inv_use_hint = True
+        self.inv_max_steady_factor=0.35
+        self.inv_delta_factor=0.6
+        self.inv_min_delta=0.0001
+        self.red_node_class = None
+        self.red_out_dim = None #0.99999
+        self.red_args = {}
+        self.clip_func = None
+        self.clip_inv_func = None
+        self.sfa_node_class = mdp.nodes.SFANode
+        self.sfa_out_dim = 15
+        self.sfa_args = {}
+        self.node_list = None
+
+
 class ParamsSystem (object):
     def __init__(self):
         self.name = "test system"
@@ -114,99 +180,6 @@ class ParamsDataLoading(object):
         self.obj_avgs = None
         self.obj_stds = None
         
-#SFALayer: PInvSwitchboard, pca_node, ord_node, gen_exp, red_node, clip_node, sfa_node
-class ParamsSFALayer(object):
-    def __init__(self):
-        self.name = "SFA Layer"
-        self.x_field_channels=3
-        self.y_field_channels=3
-        self.x_field_spacing=3
-        self.y_field_spacing=3
-        self.nx_value = None
-        self.ny_value = None
-        
-        self.in_channel_dim = 1
-        self.pca_node_class = None
-        self.pca_out_dim = 0.99999
-        self.pca_args = {"block_size": 1}
-
-        self.ord_node_class = None
-        self.ord_args = {}
-
-        self.exp_funcs = None
-        self.inv_use_hint = True
-        self.inv_max_steady_factor=0.35
-        self.inv_delta_factor=0.6
-        self.inv_min_delta=0.0001
-
-        self.red_node_class = None
-        self.red_out_dim = 0.99999
-        self.red_args = {"block_size": 1, "cutoff": 4}
-
-        self.clip_func = None
-        self.clip_inv_func = None
-#        self.clip_func = lambda x: clipping_sigma(x, 4)
-#        self.clip_inv_func = lambda x: inv_clipping_sigma(x, 4)
-
-        self.sfa_node_class = None
-        self.sfa_out_dim = 15
-        #self.sfa_args = {"block_size": 1, "cutoff": 4}
-        self.sfa_args = {}
-        self.cloneLayer = True
-        self.node_list = None
-        self.layer_number = None
-        
-#SFASuperNode: pca_node, ord_node, gen_exp, red_node, clip_node, sfa_node       
-class ParamsSFASuperNode(object):
-    def __init__(self):
-        self.name = "SFA Supernode"
-        self.in_channel_dim=1
-        self.pca_node_class = None
-        self.pca_out_dim = None
-        self.pca_args = {}
-        self.ord_node_class = None
-        self.ord_args = {}
-        self.exp_funcs = None
-        self.inv_use_hint = True
-        self.inv_max_steady_factor=0.35
-        self.inv_delta_factor=0.6
-        self.inv_min_delta=0.0001
-        self.red_node_class = None
-        self.red_out_dim = None #0.99999
-        self.red_args = {}
-        self.clip_func = None
-        self.clip_inv_func = None
-#        self.clip_func = lambda x: clipping_sigma(x, 100.5)
-#        self.clip_inv_func = lambda x: inv_clipping_sigma(x, 100.5)
-        self.sfa_node_class = mdp.nodes.SFANode
-        self.sfa_out_dim = 15
-        #self.sfa_args = {"block_size": 1, "cutoff": 4}
-        self.sfa_args = {}
-
-#        self.block_size = block_size
-#class ParamsSFALayer(object):
-#    def __init__(self):
-#        self.name = "SFA Layer"
-#        self.x_field_channels=3
-#        self.y_field_channels=3
-#        self.x_field_spacing=3
-#        self.y_field_spacing=3
-#        self.in_channel_dim=1
-#        self.pca_node = mdp.nodes.WhiteningNode
-#        self.pca_out_dim = 0.99999
-#        self.pca_args = {"block_size": 1}
-#        self.exp_funcs = None
-#        self.red_node = mdp.nodes.WhiteningNode
-#        self.red_out_dim = 0.99999
-#        self.red_args = {"block_size": 1, "cutoff": 4}
-#        self.sfa_node = mdp.nodes.SFANode
-#        self.sfa_out_dim = 15
-        self.node_list = None
-
-# class ExecSFASuperNode(object):
-#     def __init__(self):
-#         self.name = "SFA Layer"
-#         self.params = None
         
 #CODE PENDING!!!!!!!!!!
 class ExperimentResult(object):
@@ -247,20 +220,6 @@ class ExperimentResult(object):
         self.class_rate_newid = None
         self.mse_newid = None
         self.msegauss_newid= None
-
-#class_rate_train = correct_classif_rate(correct_classes_training, classes_training)
-#mse_train = distance_squared_Euclidean(correct_labels_training, labels_training)/len(labels_training)
-#msegauss_train = distance_squared_Euclidean(correct_labels_training, regression_training)/len(labels_training)
-#
-#class_rate_seenid = correct_classif_rate(correct_classes_seenid, classes_seenid)
-#mse_seenid = distance_squared_Euclidean(correct_labels_seenid, labels_seenid)/len(labels_seenid)
-#msegauss_seenid = distance_squared_Euclidean(correct_labels_seenid, regression_seenid)/len(labels_seenid)
-#
-#class_rate_newid = correct_classif_rate(correct_classes_newid, classes_newid)
-#mse_newid = distance_squared_Euclidean(correct_labels_newid, labels_newid)/len(labels_newid)
-#msegauss_newid = distance_squared_Euclidean(correct_labels_newid, regression_newid)/len(labels_newid)
-
-
 
 class NetworkOutputs(object):       
     def __init__(self):
@@ -334,7 +293,6 @@ def sSeq_force_image_size(sSeq, forced_subimage_width, forced_subimage_height):
             sSeq.subimage_height = forced_subimage_height
             
             
-#TODO:Move to SystemParameters
 #TODO:Verify that all elements in sSeq have the same format
 def sSeq_getinfo_format(sSeq):
     if isinstance(sSeq, list):
