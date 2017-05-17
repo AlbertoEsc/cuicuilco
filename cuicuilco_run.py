@@ -621,7 +621,9 @@ def main():
         print "ignoring flag compute_input_information=%d because  features_residual_information=%d <= 0"%(compute_input_information,features_residual_information)
         compute_input_information = False
         
+        
     Parameters = DefaultExperimentalDataset
+    Parameters.create()
     Network = DefaultNetwork
     
     #Specific code for setting up the ParamsNatural experiment (requires run-time computations)
@@ -690,7 +692,7 @@ def main():
     
     #take k=1? or choose from command line? NOPE. Take always first label (k=0). sSeq must compute proper classes for chosen label anyway.
     #TODO: let the user choose objective_label through a command line argument
-    objective_label = 2
+    objective_label = 0
     if graph_exact_label_learning:
         if isinstance(iTrain_set, list):
             iTrain0 = iTrain_set[len(iTrain_set)-1][0]

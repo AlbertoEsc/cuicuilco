@@ -3830,13 +3830,13 @@ layer.x_field_spacing=5
 layer.y_field_spacing=4
 layer.pca_node_class = mdp.nodes.iGSFANode
 layer.pca_out_dim = 32
-layer.pca_args = {}
+layer.pca_args = {} # Specific parameters are defined later
 layer.ord_node_class = None
 layer.exp_funcs = [identity, ]
 layer.red_node_class = None
 layer.sfa_node_class = mdp.nodes.iGSFANode
 layer.sfa_out_dim = 32
-layer.sfa_args = {}
+layer.sfa_args = {} # Specific parameters are defined later
 layer.cloneLayer = True
 layer.name = comp_layer_name(layer.cloneLayer, layer.exp_funcs, layer.x_field_channels, layer.y_field_channels, layer.pca_out_dim, layer.sfa_out_dim)
 
@@ -3848,13 +3848,13 @@ layer.x_field_spacing=7
 layer.y_field_spacing=3
 layer.pca_node_class = mdp.nodes.iGSFANode
 layer.pca_out_dim = 32
-layer.pca_args = {}
+layer.pca_args = {} # Specific parameters are defined later
 layer.ord_node_class = None
 layer.exp_funcs = [identity, ]
 layer.red_node_class = None
 layer.sfa_node_class = mdp.nodes.iGSFANode
 layer.sfa_out_dim = 32
-layer.sfa_args = {}
+layer.sfa_args = {} # Specific parameters are defined later
 layer.cloneLayer = True
 layer.name = comp_layer_name(layer.cloneLayer, layer.exp_funcs, layer.x_field_channels, layer.y_field_channels, layer.pca_out_dim, layer.sfa_out_dim)
 
@@ -3866,13 +3866,13 @@ layer.x_field_spacing=8
 layer.y_field_spacing=2
 layer.pca_node_class = mdp.nodes.iGSFANode
 layer.pca_out_dim = 32
-layer.pca_args = {}
+layer.pca_args = {} # Specific parameters are defined later
 layer.ord_node_class = None
 layer.exp_funcs = [identity,]
 layer.red_node_class = None
 layer.sfa_node_class = mdp.nodes.iGSFANode
 layer.sfa_out_dim = 32
-layer.sfa_args = {}
+layer.sfa_args = {} # Specific parameters are defined later
 layer.cloneLayer = False
 layer.name = comp_layer_name(layer.cloneLayer, layer.exp_funcs, layer.x_field_channels, layer.y_field_channels, layer.pca_out_dim, layer.sfa_out_dim)
 
@@ -3888,9 +3888,9 @@ for i, layer in enumerate(network.layers):
     layer.pca_args["offsetting_mode"]=None
     layer.pca_args["reconstruct_with_sfa"]=False    
     layer.pca_args["expansion_funcs"] = None
-    layer.pca_args["max_preserved_sfa"]= 12 # 4.0 #4.0 => preserves only SFA components; 16 => half the computed features are slow, and the remaining reconstructive
+    layer.pca_args["max_preserved_sfa"]= 12 # 4.0 #4.0 => preserves only SFA components; 16 => half of the computed features are slow, and the remaining reconstructive
 
     layer.sfa_args["offsetting_mode"]=None
     layer.sfa_args["reconstruct_with_sfa"]=False    
     layer.sfa_args["expansion_funcs"] = [identity, QT]
-    layer.sfa_args["max_preserved_sfa"]= 12 # 4.0 #4.0 => preserves only SFA components; 16 => half the computed features are slow, and the remaining reconstructive
+    layer.sfa_args["max_preserved_sfa"]= 12 # 4.0 #4.0 => preserves only SFA components; 16 => half of the computed features are slow, and the remaining reconstructive

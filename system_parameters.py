@@ -116,7 +116,9 @@ class ParamsSystem (object):
         self.patch_network_for_RGB = False
     def __values__(self):
         return (self.network, self.iTraining, self.sTraining, self.iSeenid, self.sSeenid, self.iNewid, self.sNewid)
-        
+    def create(self):
+        return
+    
 class ParamsInput(object):
     def __init__(self):
         self.name = "test input"
