@@ -1545,16 +1545,18 @@ if patch_flow:
             node_nr = len(flow)-1
         
         if benchmark != None:
-            t0 = time.time()
+            benchmark.update_start_time()
+
         for i in range(node_nr+1):  
             try:
                 x = flow[i].execute(x)
             except Exception, e:
                 self._propagate_exception(e, i)
             if benchmark != None:
-                t1 = time.time()
-                benchmark.append(("Node %d (%s)Excecution"%(i,str(flow[i])), t1-t0))
-                t0 = t1
+                benchmark.add_task_from_previous_time("Execution of node %d"%i)
+                #t1 = time.time()
+                #benchmark.append(("Node %d (%s)Excecution"%(i,str(flow[i])), t1-t0))
+                #t0 = t1
         return x
 
     #Supports single array data but also iterator

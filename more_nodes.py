@@ -40,9 +40,9 @@ class RandomizedMaskNode(mdp.Node):
         self.x_std = None
         self.type=dtype
 
-        if remove_mask != None and input_dim is None:
+        if remove_mask is not None and input_dim is None:
             input_dim = remove_mask.size
-        elif remove_mask is None and input_dim != None: 
+        elif remove_mask is None and input_dim is not None: 
             remove_mask = numpy.zeros(input_dim) > 0.5
         elif remove_mask != None and input_dim != None:
             if remove_mask.size != input_dim:
@@ -126,6 +126,7 @@ class GeneralExpansionNode(mdp.Node):
         for i, func in enumerate(self.funcs):
             outx = func(x)
             sizes[i] = outx.shape[1]
+            print "SS",
         return sizes
     def is_trainable(self):
         if self.funcs == "RandomSigmoids":
@@ -200,8 +201,8 @@ class GeneralExpansionNode(mdp.Node):
         if self.input_dim is None:
             self.set_input_dim(x.shape[1]) 
 
-        #if self.expanded_dims is None:
-        #    self.expanded_dims = self.output_sizes(self.input_dim)
+        if "expanded_dims" not in self.__dict__:
+            self.expanded_dims = self.output_sizes(self.input_dim)
 
         if self.funcs != "RandomSigmoids":
             num_samples = x.shape[0]
@@ -386,11 +387,11 @@ class PInvSwitchboard(mdp.hinet.Switchboard):
             x = numpy.array(x,order="FORTRAN")
         #print "super()=", super()
         y = super(PInvSwitchboard, self)._execute(x) 
-        print "y computed"
-        print "y.shape", y.shape
-        print "output_scales ", self.output_scales       
+        #print "y computed"
+        #print "y.shape", y.shape
+        #print "output_scales ", self.output_scales       
         y *= self.output_scales # y * elf.output_scales
-        print "output scales adjusted"
+        #print "output scales adjusted"
  
         #quit()
         if self.additive_noise_std>0.0:            
