@@ -1390,8 +1390,8 @@ if patch_flow:
                     new_node_params["n_parallel"] = n_parallel
                     
             
-            if benchmark != None:
-                ttrain0 = time.time()
+            #if benchmark != None:
+            ttrain0 = time.time()
             if self.verbose:
                 print "*****************************************************************"
                 print "Training node #%d (%s)..." % (i, str(self.flow[i])),
