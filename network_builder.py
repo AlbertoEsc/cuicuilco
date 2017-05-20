@@ -59,7 +59,8 @@ def CreateNetwork(Network, subimage_width, subimage_height, block_size, train_mo
     t2 = time.time()
     
     print "Finished hierarchy construction, with total time %0.3f ms"% ((t2-t1)*1000.0) 
-    benchmark.append(("Hierarchy construction", t2-t1))
+    if benchmark:
+        benchmark.append(("Hierarchy construction", t2-t1))
 
     return flow, layers, benchmark
 
