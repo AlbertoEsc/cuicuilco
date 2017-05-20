@@ -8437,7 +8437,7 @@ class ParamsMNISTExperiment(system_parameters.ParamsSystem):
         #5421 images for digit 5 WARNING, here use only 5000!!!!
         iSeq_set1 = self.iSeqCreateMNIST(dx=dx, dy=dy, smin=1.0, smax=1.0, delta_rotation=delta_rotation, pre_mirroring="none", contrast_enhance=None, obj_avg_std=0.0, obj_std_min=0.20, obj_std_max=0.20,
                             clusters=clusters_MNIST, first_image_index=421, num_images_per_cluster_used=5000, repetition_factor=1, seed=-1, use_orig_label=True, increasing_orig_label=True) #5000, num_images_per_cluster_used=-1
-        sSeq_set1 = self.sSeqCreateMNIST(iSeq_set1, images_array_MNIST, seed=-1, use_RGB_images=self.age_use_RGB_images)
+        sSeq_set1 = self.sSeqCreateMNIST(iSeq_set1, images_array_MNIST, seed=-1, use_RGB_images=False)
         
         semi_supervised_learning = True and False
         if semi_supervised_learning == False:
@@ -8447,7 +8447,7 @@ class ParamsMNISTExperiment(system_parameters.ParamsSystem):
             iSeq_set2 = self.iSeqCreateMNIST(dx=0.0, dy=0.0, smin=1.0, smax=1.0, delta_rotation=None, pre_mirroring="none", contrast_enhance=None, obj_avg_std=0.0, obj_std_min=0.20, obj_std_max=0.20,
                             clusters=clusters_MNIST, first_image_index=921, num_images_per_cluster_used=4500, repetition_factor=1, seed=-1, use_orig_label=True, increasing_orig_label=True) #5000, num_images_per_cluster_used=-1
             iSeq_set2.train_mode = "smart_unlabeled2" #smart_unlabeled2" #"ignore_data" #"smart_unlabeled3"
-            sSeq_set2 = self.sSeqCreateMNIST(iSeq_set2, images_array_MNIST, seed=-1, use_RGB_images=self.age_use_RGB_images)
+            sSeq_set2 = self.sSeqCreateMNIST(iSeq_set2, images_array_MNIST, seed=-1, use_RGB_images=False)
             iSeq_set = iTrainMNIST = [[iSeq_set1,iSeq_set2]]
             sSeq_set = sTrainMNIST = [[sSeq_set1,sSeq_set2]]    
             
@@ -8462,13 +8462,13 @@ class ParamsMNISTExperiment(system_parameters.ParamsSystem):
         #WARNING, should be 421, not 1421. The latter causes overlap between training and seenid
         
         
-        sSeq_set = sSeenidMNIST = self.sSeqCreateMNIST(iSeq_set, images_array_MNIST, seed=-1, use_RGB_images=self.age_use_RGB_images)
+        sSeq_set = sSeenidMNIST = self.sSeqCreateMNIST(iSeq_set, images_array_MNIST, seed=-1, use_RGB_images=False)
         
         
         iSeq_set = iNewidMNIST = [[self.iSeqCreateMNIST(dx=0.0, dy=0.0, smin=1.0, smax=1.0, delta_rotation=None, pre_mirroring="none", contrast_enhance=None, obj_avg_std=0.0, obj_std_min=0.20, obj_std_max=0.20,
                             clusters=clusters_MNIST_test, first_image_index=0, num_images_per_cluster_used=-1, repetition_factor=1, seed=-1, use_orig_label=True, increasing_orig_label=True) ]]
                                    
-        sSeq_set = sNewidMNIST = [[self.sSeqCreateMNIST(iSeq_set[0][0], images_array_MNIST_test, seed=-1, use_RGB_images=self.age_use_RGB_images)]]
+        sSeq_set = sNewidMNIST = [[self.sSeqCreateMNIST(iSeq_set[0][0], images_array_MNIST_test, seed=-1, use_RGB_images=False)]]
         
         
         self.name = "Function Based Data Creation for MNIST"
