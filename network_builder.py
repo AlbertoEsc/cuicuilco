@@ -14,7 +14,7 @@ import numpy
 
 
 # def CreateNetwork(Network, subimage_width, subimage_height, block_size, train_mode, benchmark, in_channel_dim=1,
-def createN_network(network, subimage_width, subimage_height, benchmark, in_channel_dim=1,
+def create_network(network, subimage_width, subimage_height, benchmark, in_channel_dim=1,
                   num_features_appended_to_input=0):
     """ This function creates a hierarchical network according to the description
     stored in the object 'network'.
