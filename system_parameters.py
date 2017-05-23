@@ -1,7 +1,7 @@
 import mdp
 import more_nodes
 import patch_mdp
-import imageLoader
+import image_loader
 import numpy
 import inspect
 
@@ -429,12 +429,12 @@ def load_data_from_sSeq(self):
     """This is a default function that extracts the ndarray data described by a ParamsDataLoading object."""
     seq = self
     if seq.input_files == "LoadBinaryData00":
-        data = imageLoader.load_natural_data(seq.data_base_dir, seq.base_filename, seq.samples, verbose=False)
+        data = image_loader.load_natural_data(seq.data_base_dir, seq.base_filename, seq.samples, verbose=False)
     elif seq.input_files == "LoadRawData":
-        data = imageLoader.load_raw_data(seq.data_base_dir, seq.base_filename, input_dim=seq.input_dim, dtype=seq.dtype,
+        data = image_loader.load_raw_data(seq.data_base_dir, seq.base_filename, input_dim=seq.input_dim, dtype=seq.dtype,
                                          select_samples=seq.samples, verbose=False)
     else:
-        data = imageLoader.load_image_data(seq.input_files, seq.images_array, seq.image_width, seq.image_height,
+        data = image_loader.load_image_data(seq.input_files, seq.images_array, seq.image_width, seq.image_height,
                                            seq.subimage_width,
                                            seq.subimage_height, seq.pre_mirror_flags, seq.pixelsampling_x,
                                            seq.pixelsampling_y,

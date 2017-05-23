@@ -38,7 +38,7 @@ from exact_label_learning import (ConstructGammaFromLabels, RemoveNegativeEdgeWe
 import system_parameters
 from system_parameters import (scale_sSeq, take_first_02D, take_0_k_th_from_2D_list, sSeq_force_image_size,
                                sSeq_getinfo_format, convert_sSeq_to_funcs_params_sets)
-from imageLoader import *
+from image_loader import *
 import classifiers_regressions as classifiers
 import network_builder
 import time

@@ -7,7 +7,7 @@ import sfa_libs
 import more_nodes
 #import more_nodes as he
 #import patch_mdp
-import imageLoader
+import image_loader
 from nonlinear_expansion import sgn_expo
 #import lattice
 import PIL
@@ -99,7 +99,7 @@ def iSeqCreateGender(first_id = 0, num_ids = 25, user_base_dir=user_base_dir, da
     iSeq.GENDER_STEP = 0.10000 #01. 0.20025 default. 0.4 fails, use 0.4005, 0.80075, 0.9005
     #iSeq.GENDER_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
     iSeq.real_genders = numpy.arange(iSeq.MIN_GENDER, iSeq.MAX_GENDER, iSeq.GENDER_STEP)
-    iSeq.genders = map(imageLoader.code_gender, iSeq.real_genders)
+    iSeq.genders = map(image_loader.code_gender, iSeq.real_genders)
     iSeq.racetweens = [999]
     iSeq.expressions = [0]
     iSeq.morphs = [0]
@@ -108,7 +108,7 @@ def iSeqCreateGender(first_id = 0, num_ids = 25, user_base_dir=user_base_dir, da
     iSeq.slow_signal = 2
     iSeq.step = 1
     iSeq.offset = 0
-    iSeq.input_files = imageLoader.create_image_filenames2(iSeq.data_base_dir, iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+    iSeq.input_files = image_loader.create_image_filenames2(iSeq.data_base_dir, iSeq.slow_signal, iSeq.ids, iSeq.ages, \
                                                     iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
                                                     iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset)
     iSeq.num_images = len(iSeq.input_files)
@@ -184,7 +184,7 @@ def sSeqCreateGender(iSeq, contrast_enhance, seed=-1):
 # # iTrainGender.GENDER_STEP = 0.10000 #01. 0.20025 default. 0.4 fails, use 0.4005, 0.80075, 0.9005
 # # #iTrainGender.GENDER_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
 # # iTrainGender.real_genders = numpy.arange(iTrainGender.MIN_GENDER, iTrainGender.MAX_GENDER, iTrainGender.GENDER_STEP)
-# # iTrainGender.genders = map(imageLoader.code_gender, iTrainGender.real_genders)
+# # iTrainGender.genders = map(image_loader.code_gender, iTrainGender.real_genders)
 # # iTrainGender.racetweens = [999]
 # # iTrainGender.expressions = [0]
 # # iTrainGender.morphs = [0]
@@ -193,7 +193,7 @@ def sSeqCreateGender(iSeq, contrast_enhance, seed=-1):
 # # iTrainGender.slow_signal = 2
 # # iTrainGender.step = 1
 # # iTrainGender.offset = 0
-# # iTrainGender.input_files = imageLoader.create_image_filenames2(iTrainGender.data_base_dir, iTrainGender.slow_signal, iTrainGender.ids, iTrainGender.ages, \
+# # iTrainGender.input_files = image_loader.create_image_filenames2(iTrainGender.data_base_dir, iTrainGender.slow_signal, iTrainGender.ids, iTrainGender.ages, \
 # #                                             iTrainGender.genders, iTrainGender.racetweens, iTrainGender.expressions, iTrainGender.morphs, \
 # #                                             iTrainGender.poses, iTrainGender.lightings, iTrainGender.step, iTrainGender.offset)
 # # #MEGAWARNING!!!!
@@ -261,7 +261,7 @@ def sSeqCreateGender(iSeq, contrast_enhance, seed=-1):
 # # iSeenidGender.GENDER_STEP = 0.10000 #01. defaultes ist nicht zu kompliziert. 0.4 fails, use 0.4005, 0.80075, 0.9005
 # # #iSeenidGender.GENDER_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
 # # iSeenidGender.real_genders = numpy.arange(iSeenidGender.MIN_GENDER, iSeenidGender.MAX_GENDER, iSeenidGender.GENDER_STEP)
-# # iSeenidGender.genders = map(imageLoader.code_gender, iSeenidGender.real_genders)
+# # iSeenidGender.genders = map(image_loader.code_gender, iSeenidGender.real_genders)
 # # iSeenidGender.racetweens = [999]
 # # iSeenidGender.expressions = [0]
 # # iSeenidGender.morphs = [0]
@@ -270,7 +270,7 @@ def sSeqCreateGender(iSeq, contrast_enhance, seed=-1):
 # # iSeenidGender.slow_signal = 2
 # # iSeenidGender.step = 1
 # # iSeenidGender.offset = 0                             
-# # iSeenidGender.input_files = imageLoader.create_image_filenames2(iSeenidGender.data_base_dir, iSeenidGender.slow_signal, iSeenidGender.ids, iSeenidGender.ages, \
+# # iSeenidGender.input_files = image_loader.create_image_filenames2(iSeenidGender.data_base_dir, iSeenidGender.slow_signal, iSeenidGender.ids, iSeenidGender.ages, \
 # #                                             iSeenidGender.genders, iSeenidGender.racetweens, iSeenidGender.expressions, iSeenidGender.morphs, \
 # #                                             iSeenidGender.poses, iSeenidGender.lightings, iSeenidGender.step, iSeenidGender.offset)  
 # # iSeenidGender.num_images = len(iSeenidGender.input_files)
@@ -327,7 +327,7 @@ def sSeqCreateGender(iSeq, contrast_enhance, seed=-1):
 # # iNewidGender.GENDER_STEP = 0.10000 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
 # # #iSeenidGender.GENDER_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
 # # iNewidGender.real_genders = numpy.arange(iNewidGender.MIN_GENDER, iNewidGender.MAX_GENDER, iNewidGender.GENDER_STEP)
-# # iNewidGender.genders = map(imageLoader.code_gender, iNewidGender.real_genders)
+# # iNewidGender.genders = map(image_loader.code_gender, iNewidGender.real_genders)
 # # iNewidGender.racetweens = [999]
 # # iNewidGender.expressions = [0]
 # # iNewidGender.morphs = [0]
@@ -336,7 +336,7 @@ def sSeqCreateGender(iSeq, contrast_enhance, seed=-1):
 # # iNewidGender.slow_signal = 2
 # # iNewidGender.step = 1
 # # iNewidGender.offset = 0                             
-# # iNewidGender.input_files = imageLoader.create_image_filenames2(iNewidGender.data_base_dir, iNewidGender.slow_signal, iNewidGender.ids, iNewidGender.ages, \
+# # iNewidGender.input_files = image_loader.create_image_filenames2(iNewidGender.data_base_dir, iNewidGender.slow_signal, iNewidGender.ids, iNewidGender.ages, \
 # #                                             iNewidGender.genders, iNewidGender.racetweens, iNewidGender.expressions, iNewidGender.morphs, \
 # #                                             iNewidGender.poses, iNewidGender.lightings, iNewidGender.step, iNewidGender.offset)  
 # # iNewidGender.num_images = len(iNewidGender.inputes ist nicht zu kompliziert_files)
@@ -661,7 +661,7 @@ iTrainIdentity.ages = [999]
 #iTrainIdentity.MAX_GENDER = 3
 #iTrainIdentity.GENDER_STEP = 0.10000 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
 #iTrainIdentity.GENDER_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-#iTrainIdentity.genders = map(imageLoader.code_gender, numpy.arange(iTrainIdentity.MIN_GENDER, iTrainIdentity.MAX_GENDER, iTrainIdentity.GENDER_STEP))
+#iTrainIdentity.genders = map(image_loader.code_gender, numpy.arange(iTrainIdentity.MIN_GENDER, iTrainIdentity.MAX_GENDER, iTrainIdentity.GENDER_STEP))
 iTrainIdentity.genders = [999]
 iTrainIdentity.racetweens = [999]
 iTrainIdentity.expressions = [0]
@@ -672,7 +672,7 @@ iTrainIdentity.slow_signal = 0
 iTrainIdentity.step = 2
 iTrainIdentity.offset = 0     
 
-iTrainIdentity.input_files = imageLoader.create_image_filenames(iTrainIdentity.data_base_dir, iTrainIdentity.slow_signal, iTrainIdentity.ids, iTrainIdentity.expressions, iTrainIdentity.morphs, iTrainIdentity.poses, iTrainIdentity.lightings, iTrainIdentity.step, iTrainIdentity.offset)
+iTrainIdentity.input_files = image_loader.create_image_filenames(iTrainIdentity.data_base_dir, iTrainIdentity.slow_signal, iTrainIdentity.ids, iTrainIdentity.expressions, iTrainIdentity.morphs, iTrainIdentity.poses, iTrainIdentity.lightings, iTrainIdentity.step, iTrainIdentity.offset)
 iTrainIdentity.num_images = len(iTrainIdentity.input_files)
 iTrainIdentity.params = [iTrainIdentity.ids, iTrainIdentity.expressions, iTrainIdentity.morphs, iTrainIdentity.poses, iTrainIdentity.lightings]
 iTrainIdentity.block_size= iTrainIdentity.num_images / len(iTrainIdentity.params[iTrainIdentity.slow_signal])
@@ -715,7 +715,7 @@ iSeenidIdentity.MIN_GENDER = -3
 iSeenidIdentity.MAX_GENDER = 3
 iSeenidIdentity.GENDER_STEP = 0.10000 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
 #iSeenidIdentity.GENDER_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-iSeenidIdentity.genders = map(imageLoader.code_gender, numpy.arange(iSeenidIdentity.MIN_GENDER, iSeenidIdentity.MAX_GENDER, iSeenidIdentity.GENDER_STEP))
+iSeenidIdentity.genders = map(image_loader.code_gender, numpy.arange(iSeenidIdentity.MIN_GENDER, iSeenidIdentity.MAX_GENDER, iSeenidIdentity.GENDER_STEP))
 iSeenidIdentity.racetweens = [999]
 iSeenidIdentity.expressions = [0]
 iSeenidIdentity.morphs = [0]
@@ -725,7 +725,7 @@ iSeenidIdentity.slow_signal = 0
 iSeenidIdentity.step = 2
 iSeenidIdentity.offset = 1    
 
-iSeenidIdentity.input_files = imageLoader.create_image_filenames(iSeenidIdentity.data_base_dir, iSeenidIdentity.slow_signal, iSeenidIdentity.ids, iSeenidIdentity.expressions, iSeenidIdentity.morphs, iSeenidIdentity.poses, iSeenidIdentity.lightings, iSeenidIdentity.step, iSeenidIdentity.offset)
+iSeenidIdentity.input_files = image_loader.create_image_filenames(iSeenidIdentity.data_base_dir, iSeenidIdentity.slow_signal, iSeenidIdentity.ids, iSeenidIdentity.expressions, iSeenidIdentity.morphs, iSeenidIdentity.poses, iSeenidIdentity.lightings, iSeenidIdentity.step, iSeenidIdentity.offset)
 iSeenidIdentity.num_images = len(iSeenidIdentity.input_files)
 iSeenidIdentity.params = [iSeenidIdentity.ids, iSeenidIdentity.expressions, iSeenidIdentity.morphs, iSeenidIdentity.poses, iSeenidIdentity.lightings]
 iSeenidIdentity.block_size= iSeenidIdentity.num_images / len(iSeenidIdentity.params[iSeenidIdentity.slow_signal])
@@ -768,7 +768,7 @@ iNewidIdentity.MIN_GENDER = -3
 iNewidIdentity.MAX_GENDER = 3
 iNewidIdentity.GENDER_STEP = 0.10000 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
 #iNewidIdentity.GENDER_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-iNewidIdentity.genders = map(imageLoader.code_gender, numpy.arange(iNewidIdentity.MIN_GENDER, iNewidIdentity.MAX_GENDER, iNewidIdentity.GENDER_STEP))
+iNewidIdentity.genders = map(image_loader.code_gender, numpy.arange(iNewidIdentity.MIN_GENDER, iNewidIdentity.MAX_GENDER, iNewidIdentity.GENDER_STEP))
 iNewidIdentity.racetweens = [999]
 iNewidIdentity.expressions = [0]
 iNewidIdentity.morphs = [0]
@@ -778,7 +778,7 @@ iNewidIdentity.slow_signal = 0
 iNewidIdentity.step = 1
 iNewidIdentity.offset = 0     
 
-iNewidIdentity.input_files = imageLoader.create_image_filenames(iNewidIdentity.data_base_dir, iNewidIdentity.slow_signal, iNewidIdentity.ids, iNewidIdentity.expressions, iNewidIdentity.morphs, iNewidIdentity.poses, iNewidIdentity.lightings, iNewidIdentity.step, iNewidIdentity.offset)
+iNewidIdentity.input_files = image_loader.create_image_filenames(iNewidIdentity.data_base_dir, iNewidIdentity.slow_signal, iNewidIdentity.ids, iNewidIdentity.expressions, iNewidIdentity.morphs, iNewidIdentity.poses, iNewidIdentity.lightings, iNewidIdentity.step, iNewidIdentity.offset)
 iNewidIdentity.num_images = len(iNewidIdentity.input_files)
 iNewidIdentity.params = [iNewidIdentity.ids, iNewidIdentity.expressions, iNewidIdentity.morphs, iNewidIdentity.poses, iNewidIdentity.lightings]
 iNewidIdentity.block_size= iNewidIdentity.num_images / len(iNewidIdentity.params[iNewidIdentity.slow_signal])
@@ -839,7 +839,7 @@ iTrainAngle.ages = [999]
 #iTrainAngle.MAX_GENDER = 3
 #iTrainAngle.GENDER_STEP = 0.10000 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
 #iTrainAngle.GENDER_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-#iTrainAngle.genders = map(imageLoader.code_gender, numpy.arange(iTrainAngle.MIN_GENDER, iTrainAngle.MAX_GENDER, iTrainAngle.GENDER_STEP))
+#iTrainAngle.genders = map(image_loader.code_gender, numpy.arange(iTrainAngle.MIN_GENDER, iTrainAngle.MAX_GENDER, iTrainAngle.GENDER_STEP))
 iTrainAngle.genders = [999]
 iTrainAngle.racetweens = [999]
 iTrainAngle.expressions = [0]
@@ -851,7 +851,7 @@ iTrainAngle.slow_signal = 3
 iTrainAngle.step = 1 # 1
 iTrainAngle.offset = 0     
 
-iTrainAngle.input_files = imageLoader.create_image_filenames(iTrainAngle.data_base_dir, iTrainAngle.slow_signal, iTrainAngle.ids, iTrainAngle.expressions, iTrainAngle.morphs, iTrainAngle.poses, iTrainAngle.lightings, iTrainAngle.step, iTrainAngle.offset)
+iTrainAngle.input_files = image_loader.create_image_filenames(iTrainAngle.data_base_dir, iTrainAngle.slow_signal, iTrainAngle.ids, iTrainAngle.expressions, iTrainAngle.morphs, iTrainAngle.poses, iTrainAngle.lightings, iTrainAngle.step, iTrainAngle.offset)
 iTrainAngle.num_images = len(iTrainAngle.input_files)
 iTrainAngle.params = [iTrainAngle.ids, iTrainAngle.expressions, iTrainAngle.morphs, iTrainAngle.poses, iTrainAngle.lightings]
 iTrainAngle.block_size= iTrainAngle.num_images / len(iTrainAngle.params[iTrainAngle.slow_signal])
@@ -894,7 +894,7 @@ iSeenidAngle.MIN_GENDER = -3
 iSeenidAngle.MAX_GENDER = 3
 iSeenidAngle.GENDER_STEP = 0.10000 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
 #iSeenidAngle.GENDER_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-iSeenidAngle.genders = map(imageLoader.code_gender, numpy.arange(iSeenidAngle.MIN_GENDER, iSeenidAngle.MAX_GENDER, iSeenidAngle.GENDER_STEP))
+iSeenidAngle.genders = map(image_loader.code_gender, numpy.arange(iSeenidAngle.MIN_GENDER, iSeenidAngle.MAX_GENDER, iSeenidAngle.GENDER_STEP))
 iSeenidAngle.racetweens = [999]
 iSeenidAngle.expressions = [0]
 iSeenidAngle.morphs = [0]
@@ -905,7 +905,7 @@ iSeenidAngle.slow_signal = 3
 iSeenidAngle.step = 1 # 1
 iSeenidAngle.offset = 0
 
-iSeenidAngle.input_files = imageLoader.create_image_filenames(iSeenidAngle.data_base_dir, iSeenidAngle.slow_signal, iSeenidAngle.ids, iSeenidAngle.expressions, iSeenidAngle.morphs, iSeenidAngle.poses, iSeenidAngle.lightings, iSeenidAngle.step, iSeenidAngle.offset)
+iSeenidAngle.input_files = image_loader.create_image_filenames(iSeenidAngle.data_base_dir, iSeenidAngle.slow_signal, iSeenidAngle.ids, iSeenidAngle.expressions, iSeenidAngle.morphs, iSeenidAngle.poses, iSeenidAngle.lightings, iSeenidAngle.step, iSeenidAngle.offset)
 iSeenidAngle.num_images = len(iSeenidAngle.input_files)
 iSeenidAngle.params = [iSeenidAngle.ids, iSeenidAngle.expressions, iSeenidAngle.morphs, iSeenidAngle.poses, iSeenidAngle.lightings]
 iSeenidAngle.block_size= iSeenidAngle.num_images / len(iSeenidAngle.params[iSeenidAngle.slow_signal])
@@ -948,7 +948,7 @@ iNewidAngle.MIN_GENDER = -3
 iNewidAngle.MAX_GENDER = 3
 iNewidAngle.GENDER_STEP = 0.10000 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
 #iNewidAngle.GENDER_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-iNewidAngle.genders = map(imageLoader.code_gender, numpy.arange(iNewidAngle.MIN_GENDER, iNewidAngle.MAX_GENDER, iNewidAngle.GENDER_STEP))
+iNewidAngle.genders = map(image_loader.code_gender, numpy.arange(iNewidAngle.MIN_GENDER, iNewidAngle.MAX_GENDER, iNewidAngle.GENDER_STEP))
 iNewidAngle.racetweens = [999]
 iNewidAngle.expressions = [0]
 iNewidAngle.morphs = [0]
@@ -959,7 +959,7 @@ iNewidAngle.slow_signal = 3
 iNewidAngle.step = 1
 iNewidAngle.offset = 0     
 
-iNewidAngle.input_files = imageLoader.create_image_filenames(iNewidAngle.data_base_dir, iNewidAngle.slow_signal, iNewidAngle.ids, iNewidAngle.expressions, iNewidAngle.morphs, iNewidAngle.poses, iNewidAngle.lightings, iNewidAngle.step, iNewidAngle.offset)
+iNewidAngle.input_files = image_loader.create_image_filenames(iNewidAngle.data_base_dir, iNewidAngle.slow_signal, iNewidAngle.ids, iNewidAngle.expressions, iNewidAngle.morphs, iNewidAngle.poses, iNewidAngle.lightings, iNewidAngle.step, iNewidAngle.offset)
 iNewidAngle.num_images = len(iNewidAngle.input_files)
 iNewidAngle.params = [iNewidAngle.ids, iNewidAngle.expressions, iNewidAngle.morphs, iNewidAngle.poses, iNewidAngle.lightings]
 iNewidAngle.block_size= iNewidAngle.num_images / len(iNewidAngle.params[iNewidAngle.slow_signal])
@@ -1028,7 +1028,7 @@ iTrainTransX.MAX_GENDER = 3
 iTrainTransX.GENDER_STEP = 0.10000 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
 #iTrainTransX.TransX_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
 iTrainTransX.real_genders = numpy.arange(iTrainTransX.MIN_GENDER, iTrainTransX.MAX_GENDER, iTrainTransX.GENDER_STEP)
-iTrainTransX.genders = map(imageLoader.code_gender, iTrainTransX.real_genders)
+iTrainTransX.genders = map(image_loader.code_gender, iTrainTransX.real_genders)
 iTrainTransX.racetweens = [999]
 iTrainTransX.expressions = [0]
 iTrainTransX.morphs = [0]
@@ -1037,7 +1037,7 @@ iTrainTransX.lightings = [0]
 iTrainTransX.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
 iTrainTransX.step = 1
 iTrainTransX.offset = 0
-iTrainTransX.input_files = imageLoader.create_image_filenames2(iTrainTransX.data_base_dir, iTrainTransX.slow_signal, iTrainTransX.ids, iTrainTransX.ages, \
+iTrainTransX.input_files = image_loader.create_image_filenames2(iTrainTransX.data_base_dir, iTrainTransX.slow_signal, iTrainTransX.ids, iTrainTransX.ages, \
                                             iTrainTransX.genders, iTrainTransX.racetweens, iTrainTransX.expressions, iTrainTransX.morphs, \
                                             iTrainTransX.poses, iTrainTransX.lightings, iTrainTransX.step, iTrainTransX.offset)
 #MEGAWARNING!!!!
@@ -1098,7 +1098,7 @@ iSeenidTransX.MAX_GENDER = 3
 iSeenidTransX.GENDER_STEP = 0.10000 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
 #iSeenidTransX.TransX_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
 iSeenidTransX.real_genders = numpy.arange(iSeenidTransX.MIN_GENDER, iSeenidTransX.MAX_GENDER, iSeenidTransX.GENDER_STEP)
-iSeenidTransX.genders = map(imageLoader.code_gender, iSeenidTransX.real_genders)
+iSeenidTransX.genders = map(image_loader.code_gender, iSeenidTransX.real_genders)
 iSeenidTransX.racetweens = [999]
 iSeenidTransX.expressions = [0]
 iSeenidTransX.morphs = [0]
@@ -1107,7 +1107,7 @@ iSeenidTransX.lightings = [0]
 iSeenidTransX.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
 iSeenidTransX.step = 1
 iSeenidTransX.offset = 0
-iSeenidTransX.input_files = imageLoader.create_image_filenames2(iSeenidTransX.data_base_dir, iSeenidTransX.slow_signal, iSeenidTransX.ids, iSeenidTransX.ages, \
+iSeenidTransX.input_files = image_loader.create_image_filenames2(iSeenidTransX.data_base_dir, iSeenidTransX.slow_signal, iSeenidTransX.ids, iSeenidTransX.ages, \
                                             iSeenidTransX.genders, iSeenidTransX.racetweens, iSeenidTransX.expressions, iSeenidTransX.morphs, \
                                             iSeenidTransX.poses, iSeenidTransX.lightings, iSeenidTransX.step, iSeenidTransX.offset)
 #MEGAWARNING!!!!
@@ -1166,7 +1166,7 @@ iNewidTransX.MAX_GENDER = 3
 iNewidTransX.GENDER_STEP = 0.10000 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
 #iNewidTransX.TransX_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
 iNewidTransX.real_genders = numpy.arange(iNewidTransX.MIN_GENDER, iNewidTransX.MAX_GENDER, iNewidTransX.GENDER_STEP)
-iNewidTransX.genders = map(imageLoader.code_gender, iNewidTransX.real_genders)
+iNewidTransX.genders = map(image_loader.code_gender, iNewidTransX.real_genders)
 iNewidTransX.racetweens = [999]
 iNewidTransX.expressions = [0]
 iNewidTransX.morphs = [0]
@@ -1175,7 +1175,7 @@ iNewidTransX.lightings = [0]
 iNewidTransX.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
 iNewidTransX.step = 1
 iNewidTransX.offset = 0
-iNewidTransX.input_files = imageLoader.create_image_filenames2(iNewidTransX.data_base_dir, iNewidTransX.slow_signal, iNewidTransX.ids, iNewidTransX.ages, \
+iNewidTransX.input_files = image_loader.create_image_filenames2(iNewidTransX.data_base_dir, iNewidTransX.slow_signal, iNewidTransX.ids, iNewidTransX.ages, \
                                             iNewidTransX.genders, iNewidTransX.racetweens, iNewidTransX.expressions, iNewidTransX.morphs, \
                                             iNewidTransX.poses, iNewidTransX.lightings, iNewidTransX.step, iNewidTransX.offset)
 #MEGAWARNING!!!!
@@ -1257,7 +1257,7 @@ iTrainAge.lightings = [0]
 iTrainAge.slow_signal = 1 
 iTrainAge.step = 1 
 iTrainAge.offset = 0
-iTrainAge.input_files = imageLoader.create_image_filenames3(iTrainAge.data_base_dir, iTrainAge.im_base_name, iTrainAge.slow_signal, iTrainAge.ids, iTrainAge.ages, \
+iTrainAge.input_files = image_loader.create_image_filenames3(iTrainAge.data_base_dir, iTrainAge.im_base_name, iTrainAge.slow_signal, iTrainAge.ids, iTrainAge.ages, \
                                             iTrainAge.genders, iTrainAge.racetweens, iTrainAge.expressions, iTrainAge.morphs, \
                                             iTrainAge.poses, iTrainAge.lightings, iTrainAge.step, iTrainAge.offset, verbose=False)
 
@@ -1321,7 +1321,7 @@ iSeenidAge.lightings = [0]
 iSeenidAge.slow_signal = 1 
 iSeenidAge.step = 1
 iSeenidAge.offset = 0
-iSeenidAge.input_files = imageLoader.create_image_filenames3(iSeenidAge.data_base_dir, iSeenidAge.im_base_name, iSeenidAge.slow_signal, iSeenidAge.ids, iSeenidAge.ages, \
+iSeenidAge.input_files = image_loader.create_image_filenames3(iSeenidAge.data_base_dir, iSeenidAge.im_base_name, iSeenidAge.slow_signal, iSeenidAge.ids, iSeenidAge.ages, \
                                             iSeenidAge.genders, iSeenidAge.racetweens, iSeenidAge.expressions, iSeenidAge.morphs, \
                                             iSeenidAge.poses, iSeenidAge.lightings, iSeenidAge.step, iSeenidAge.offset)
 
@@ -1382,7 +1382,7 @@ iNewidAge.lightings = [0]
 iNewidAge.slow_signal = 1 
 iNewidAge.step = 1
 iNewidAge.offset = 0
-iNewidAge.input_files = imageLoader.create_image_filenames3(iNewidAge.data_base_dir, iNewidAge.im_base_name, iNewidAge.slow_signal, iNewidAge.ids, iNewidAge.ages, \
+iNewidAge.input_files = image_loader.create_image_filenames3(iNewidAge.data_base_dir, iNewidAge.im_base_name, iNewidAge.slow_signal, iNewidAge.ids, iNewidAge.ages, \
                                             iNewidAge.genders, iNewidAge.racetweens, iNewidAge.expressions, iNewidAge.morphs, \
                                             iNewidAge.poses, iNewidAge.lightings, iNewidAge.step, iNewidAge.offset)
 
@@ -1483,7 +1483,7 @@ iSeq.lightings = [None]
 iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
 iSeq.step = 1
 iSeq.offset = 0
-iSeq.input_files = imageLoader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
                                             iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
                                             iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=4, image_postfix=".jpg")
 iSeq.input_files = iSeq.input_files * 4 # warning!!! 4, 8
@@ -1561,7 +1561,7 @@ iSeq.lightings = [None]
 iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
 iSeq.step = 1
 iSeq.offset = 0
-iSeq.input_files = imageLoader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
                                             iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
                                             iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=4, image_postfix=".jpg")
 
@@ -1633,7 +1633,7 @@ iSeq.lightings = [None]
 iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
 iSeq.step = 1
 iSeq.offset = 0
-iSeq.input_files = imageLoader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
                                             iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
                                             iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=4, image_postfix=".jpg")
  
@@ -1739,7 +1739,7 @@ iSeq.lightings = [None]
 iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
 iSeq.step = 1
 iSeq.offset = 0
-iSeq.input_files = imageLoader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
                                             iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
                                             iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=4, image_postfix=".jpg")
 iSeq.input_files = iSeq.input_files * 4 # warning!!! 4, 8
@@ -1818,7 +1818,7 @@ iSeq.lightings = [None]
 iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
 iSeq.step = 1
 iSeq.offset = 0
-iSeq.input_files = imageLoader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
                                             iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
                                             iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=4, image_postfix=".jpg")
 
@@ -1891,7 +1891,7 @@ iSeq.lightings = [None]
 iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
 iSeq.step = 1
 iSeq.offset = 0
-iSeq.input_files = imageLoader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
                                             iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
                                             iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=4, image_postfix=".jpg")
  
@@ -2001,7 +2001,7 @@ iSeq.lightings = [None]
 iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
 iSeq.step = 1
 iSeq.offset = 0
-iSeq.input_files = imageLoader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
                                             iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
                                             iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
 iSeq.input_files = iSeq.input_files * 2 # 2, 10
@@ -2078,7 +2078,7 @@ iSeq.lightings = [None]
 iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
 iSeq.step = 1
 iSeq.offset = 0
-iSeq.input_files = imageLoader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
                                             iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
                                             iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
 iSeq.input_files = iSeq.input_files * 2 # 3 Warning, 20, 32
@@ -2152,7 +2152,7 @@ iSeq.lightings = [None]
 iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
 iSeq.step = 1
 iSeq.offset = 0
-iSeq.input_files = imageLoader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
                                             iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
                                             iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
 iSeq.input_files = iSeq.input_files * 1 #8
@@ -2272,7 +2272,7 @@ iSeq.lightings = iSeq.illumination
 iSeq.slow_signal = 7 #real slow signal is the translation in the x axis, added during image loading
 iSeq.step = 1
 iSeq.offset = 0
-iSeq.input_files = imageLoader.create_image_filenames3(iSeq.data_base_dir, "car", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "car", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
                                             iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
                                             iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=3, image_postfix=".bmp")
 iSeq.input_files = iSeq.input_files * 1
@@ -2337,7 +2337,7 @@ iSeq.lightings = iSeq.illumination
 iSeq.slow_signal = 7 #real slow signal is the translation in the x axis, added during image loading
 iSeq.step = 1
 iSeq.offset = 0
-iSeq.input_files = imageLoader.create_image_filenames3(iSeq.data_base_dir, "car", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "car", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
                                             iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
                                             iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=3, image_postfix=".bmp")
 iSeq.input_files = iSeq.input_files * 1
@@ -2398,7 +2398,7 @@ iSeq.lightings = iSeq.illumination
 iSeq.slow_signal = 7 #real slow signal is the translation in the x axis, added during image loading
 iSeq.step = 1
 iSeq.offset = 0
-iSeq.input_files = imageLoader.create_image_filenames3(iSeq.data_base_dir, "car", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "car", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
                                             iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
                                             iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=3, image_postfix=".bmp")
 iSeq.input_files = iSeq.input_files * 1
@@ -2496,7 +2496,7 @@ iSeq.lightings = iSeq.illumination
 iSeq.slow_signal = 7 #real slow signal is the translation in the x axis, added during image loading
 iSeq.step = 1
 iSeq.offset = 0
-iSeq.input_files = imageLoader.create_image_filenames3(iSeq.data_base_dir, "car", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "car", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
                                             iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
                                             iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=3, image_postfix=".bmp")
 iSeq.input_files = iSeq.input_files * 1 
@@ -2558,7 +2558,7 @@ iSeq.lightings = iSeq.illumination
 iSeq.slow_signal = 7 #real slow signal is the translation in the x axis, added during image loading
 iSeq.step = 1
 iSeq.offset = 0
-iSeq.input_files = imageLoader.create_image_filenames3(iSeq.data_base_dir, "car", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "car", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
                                             iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
                                             iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=3, image_postfix=".bmp")
 iSeq.input_files = iSeq.input_files * 1
@@ -2619,7 +2619,7 @@ iSeq.lightings = iSeq.illumination
 iSeq.slow_signal = 7 #real slow signal is the translation in the x axis, added during image loading
 iSeq.step = 1
 iSeq.offset = 0
-iSeq.input_files = imageLoader.create_image_filenames3(iSeq.data_base_dir, "car", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "car", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
                                             iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
                                             iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=3, image_postfix=".bmp")
 iSeq.input_files = iSeq.input_files * 1
@@ -2748,7 +2748,7 @@ iSeq.lightings = [None]
 iSeq.slow_signal = 0 #real slow signal is whether there is a centered or descentered face
 iSeq.step = 1
 iSeq.offset = 0
-iSeq.input_files = imageLoader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
                                             iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
                                             iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=4, image_postfix=".jpg")
 iSeq.input_files = iSeq.input_files * 4 #4 was overfitting non linear sfa slightly
@@ -2861,7 +2861,7 @@ iSeq.lightings = [None]
 iSeq.slow_signal = 0 #real slow signal is whether there is a centered or descentered face
 iSeq.step = 1
 iSeq.offset = 0
-iSeq.input_files = imageLoader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
                                             iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
                                             iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=4, image_postfix=".jpg")
 iSeq.input_files = iSeq.input_files * 8
@@ -2966,7 +2966,7 @@ iSeq.lightings = [None]
 iSeq.slow_signal = 0 #real slow signal is whether there is a centered or descentered face
 iSeq.step = 1
 iSeq.offset = 0
-iSeq.input_files = imageLoader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
                                             iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
                                             iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=4, image_postfix=".jpg")
 iSeq.input_files = iSeq.input_files * 2
@@ -3124,7 +3124,7 @@ for single_file_list in iSeq.all_input_files:
 iSeq.block_sizes = numpy.array(iSeq.poses)
 print "totaling %d images"%len(iSeq.input_files)
 
-#imageLoader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+#image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
 #                                            iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
 #                                            iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=4, image_postfix=".jpg")
 #iSeq.input_files = iSeq.input_files * 8 #4 was overfitting non linear sfa slightly
@@ -3260,7 +3260,7 @@ for single_file_list in iSeq.all_input_files:
 iSeq.block_sizes = numpy.array(iSeq.poses)
 print "totaling %d images"%len(iSeq.input_files)
 
-#imageLoader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+#image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
 #                                            iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
 #                                            iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=4, image_postfix=".jpg")
 #iSeq.input_files = iSeq.input_files * 8 #4 was overfitting non linear sfa slightly
@@ -3395,7 +3395,7 @@ for single_file_list in iSeq.all_input_files:
 iSeq.block_sizes = numpy.array(iSeq.poses)
 print "totaling %d images"%len(iSeq.input_files)
 
-#imageLoader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+#image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
 #                                            iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
 #                                            iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=4, image_postfix=".jpg")
 #iSeq.input_files = iSeq.input_files * 8 #4 was overfitting non linear sfa slightly
@@ -3679,7 +3679,7 @@ iSeq.data_base_dir = rbm_sfa_data_base_dir
 iSeq.iteration = rbm_sfa_iteration
 iSeq.base_filename = "data_bin_%d.bin"%(iSeq.iteration+1)
 
-(iSeq.magic_num, iteration, iSeq.numSamples, iSeq.numHid, iSeq.sampleSpan) = imageLoader.read_binary_header(iSeq.data_base_dir, iSeq.base_filename)
+(iSeq.magic_num, iteration, iSeq.numSamples, iSeq.numHid, iSeq.sampleSpan) = image_loader.read_binary_header(iSeq.data_base_dir, iSeq.base_filename)
 if iteration != iSeq.iteration:
     er = "wrong iteration number in file, was %d, should be %d"%(iteration, iSeq.iteration)
     raise Exception(er)
@@ -3752,7 +3752,7 @@ iSeq.data_base_dir = rbm_sfa_data_base_dir
 iSeq.iteration = rbm_sfa_iteration #0
 iSeq.base_filename = "data_bin_%d.bin"%(iSeq.iteration+1)
 
-(iSeq.magic_num, iteration, iSeq.numSamples, iSeq.numHid, iSeq.sampleSpan) = imageLoader.read_binary_header(iSeq.data_base_dir, iSeq.base_filename)
+(iSeq.magic_num, iteration, iSeq.numSamples, iSeq.numHid, iSeq.sampleSpan) = image_loader.read_binary_header(iSeq.data_base_dir, iSeq.base_filename)
 if iteration != iSeq.iteration:
     er = "wrong iteration number in file, was %d, should be %d"%(iteration, iSeq.iteration)
     raise Exception(er)
@@ -3881,7 +3881,7 @@ iSeq.slow_signal = 0 #real slow signal is whether there is the amount of face ce
 iSeq.step = 1
 iSeq.offset = 0
 repetition_factorT = 2 # WARNING 2, 8
-iSeq.input_files = imageLoader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
                                             iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
                                             iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
 iSeq.input_files = iSeq.input_files * repetition_factorT  #  4 was overfitting non linear sfa slightly
@@ -3890,7 +3890,7 @@ numpy.random.shuffle(iSeq.input_files)
 
 iSeq.data2_base_dir = alldb_noface_base_dir
 iSeq.ids2 = alldb_noface_available_images[0: block_sizeT * repetition_factorT]
-iSeq.input_files2 = imageLoader.create_image_filenames3(iSeq.data2_base_dir, "image", iSeq.slow_signal, iSeq.ids2, iSeq.ages, \
+iSeq.input_files2 = image_loader.create_image_filenames3(iSeq.data2_base_dir, "image", iSeq.slow_signal, iSeq.ids2, iSeq.ages, \
                                             iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
                                             iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
 iSeq.input_files2 = iSeq.input_files2 
@@ -4008,7 +4008,7 @@ iSeq.slow_signal = 0 #real slow signal is whether there is the amount of face ce
 iSeq.step = 1
 iSeq.offset = 0
 repetition_factorS = 1 # 2 was 4
-iSeq.input_files = imageLoader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
                                             iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
                                             iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
 iSeq.input_files = iSeq.input_files * repetition_factorS #  4 was overfitting non linear sfa slightly
@@ -4019,7 +4019,7 @@ numpy.random.shuffle(iSeq.input_files)
 iSeq.data2_base_dir = alldb_noface_base_dir
 iSeq.ids2 = alldb_noface_available_images[block_sizeT* repetition_factorT: block_sizeT*repetition_factorT+block_sizeS*repetition_factorS]
 
-iSeq.input_files2 = imageLoader.create_image_filenames3(iSeq.data2_base_dir, "image", iSeq.slow_signal, iSeq.ids2, iSeq.ages, \
+iSeq.input_files2 = image_loader.create_image_filenames3(iSeq.data2_base_dir, "image", iSeq.slow_signal, iSeq.ids2, iSeq.ages, \
                                             iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
                                             iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
 iSeq.input_files2 = iSeq.input_files2 
@@ -4136,7 +4136,7 @@ iSeq.slow_signal = 0 #real slow signal is whether there is the amount of face ce
 iSeq.step = 1
 iSeq.offset = 0
 repetition_factorN = 2 # was 4
-iSeq.input_files = imageLoader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
                                             iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
                                             iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
 iSeq.input_files = iSeq.input_files * repetition_factorN#  4 was overfitting non linear sfa slightly
@@ -4146,7 +4146,7 @@ numpy.random.shuffle(iSeq.input_files)
 iSeq.data2_base_dir = alldb_noface_base_dir
 iSeq.ids2 = alldb_noface_available_images[block_sizeT*repetition_factorT+block_sizeS*repetition_factorS: block_sizeT*repetition_factorT+block_sizeS*repetition_factorS+block_sizeN*repetition_factorN]
 
-iSeq.input_files2 = imageLoader.create_image_filenames3(iSeq.data2_base_dir, "image", iSeq.slow_signal, iSeq.ids2, iSeq.ages, \
+iSeq.input_files2 = image_loader.create_image_filenames3(iSeq.data2_base_dir, "image", iSeq.slow_signal, iSeq.ids2, iSeq.ages, \
                                             iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
                                             iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
 iSeq.input_files2 = iSeq.input_files2
@@ -4303,7 +4303,7 @@ iSeq.lightings = [None]
 iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
 iSeq.step = 1
 iSeq.offset = 0
-iSeq.input_files = imageLoader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
                                             iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
                                             iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
 iSeq.input_files = iSeq.input_files * 8 # warning!!! 8
@@ -4372,7 +4372,7 @@ iSeq.lightings = [None]
 iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
 iSeq.step = 1
 iSeq.offset = 0
-iSeq.input_files = imageLoader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
                                             iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
                                             iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
 iSeq.input_files = iSeq.input_files * 4 # warning!!! 4
@@ -4441,7 +4441,7 @@ iSeq.lightings = [None]
 iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
 iSeq.step = 1
 iSeq.offset = 0
-iSeq.input_files = imageLoader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
                                             iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
                                             iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
 iSeq.input_files = iSeq.input_files * 4 # warning!!! 4
@@ -4591,7 +4591,7 @@ def iSeqCreateREyePosXY(num_images, eyeLR_normalized_base_dir, all_eyeLR_availab
     iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
     iSeq.step = 1
     iSeq.offset = 0
-    iSeq.input_files = imageLoader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+    iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
                                                 iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
                                                 iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
     iSeq.input_files = iSeq.input_files * repetition_factor # warning!!! 8
@@ -4767,7 +4767,7 @@ def iSeqCreateRFaceCentering(num_images, alldbnormalized_available_images, alldb
     iSeq.slow_signal = 0 #real slow signal is whether there is the amount of face centering
     iSeq.step = 1
     iSeq.offset = 0
-    iSeq.input_files = imageLoader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+    iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
                                                 iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
                                                 iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
     iSeq.input_files = iSeq.input_files * repetition_factor  #  4 was overfitting non linear sfa slightly
@@ -4777,7 +4777,7 @@ def iSeqCreateRFaceCentering(num_images, alldbnormalized_available_images, alldb
     #Background images are not duplicated, instead more are taken
     iSeq.data2_base_dir = alldb_noface_base_dir
     iSeq.ids2 = alldb_noface_available_images[first_image_no_face: first_image_no_face + block_size * repetition_factor]
-    iSeq.input_files2 = imageLoader.create_image_filenames3(iSeq.data2_base_dir, "image", iSeq.slow_signal, iSeq.ids2, iSeq.ages, \
+    iSeq.input_files2 = image_loader.create_image_filenames3(iSeq.data2_base_dir, "image", iSeq.slow_signal, iSeq.ids2, iSeq.ages, \
                                                 iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
                                                 iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
     iSeq.input_files2 = iSeq.input_files2 
@@ -5069,7 +5069,7 @@ ParamsRFaceCenteringFunc.enable_hack_image_size = True
 #     iSeq.slow_signal = 0 #real slow signal is the translation in the x axis (correlated to identity), added during image loading
 #     iSeq.step = 1
 #     iSeq.offset = 0
-#     iSeq.input_files = imageLoader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+#     iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
 #                                                 iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
 #                                                 iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
 #     iSeq.input_files = iSeq.input_files * repetition_factor # warning!!! 4, 8
@@ -5263,7 +5263,7 @@ ParamsRFaceCenteringFunc.enable_hack_image_size = True
 #     iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
 #     iSeq.step = 1
 #     iSeq.offset = 0
-#     iSeq.input_files = imageLoader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+#     iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
 #                                                 iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
 #                                                 iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
 #     iSeq.input_files = iSeq.input_files * repetition_factor # warning!!! 4, 8
@@ -6331,7 +6331,7 @@ ParamsRGTSRBFunc = ParamsRGTSRBExperiment(experiment_seed, experiment_basedir)
 #iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
 #iSeq.step = 1
 #iSeq.offset = 0
-#iSeq.input_files = imageLoader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+#iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
 #                                            iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
 #                                            iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=4, image_postfix=".jpg")
 #iSeq.input_files = iSeq.input_files * 4 # warning!!! 4, 8
@@ -6637,7 +6637,7 @@ class ParamsRTransXYPAngScaleExperiment(system_parameters.ParamsSystem):
         iSeq.slow_signal = 0 #real slow signal is the translation in the x axis (correlated to identity), added during image loading
         iSeq.step = 1
         iSeq.offset = 0
-        iSeq.input_files = imageLoader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+        iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
                                                     iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
                                                     iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
         ##WARNING! (comment this!)
