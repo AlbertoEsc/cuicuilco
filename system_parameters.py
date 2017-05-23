@@ -12,6 +12,12 @@ TOP_LEFT_CORNER = 0
 
 
 class ParamsNetwork(object):
+    """This class contains a high-level representation of a hierarchical network (to be constructed).
+
+    The attributes L0 to L10 represent the first 10 layers, and are provided for convenience only. These attributes
+    are ignored, and only the abstract layers contained in 'layers' are used. 'node_list' contains a list of mdp nodes
+    after the network has been constructed using network_builder.construct_network().
+    """
     def __init__(self):
         self.name = "test hierarchical network"
         self.L0 = None
@@ -36,12 +42,15 @@ class ParamsNetwork(object):
 class ParamsSFALayer(object):
     def __init__(self):
         self.name = "SFA Layer"
+
         self.x_field_channels = 3
         self.y_field_channels = 3
         self.x_field_spacing = 3
         self.y_field_spacing = 3
         self.nx_value = None
         self.ny_value = None
+        self.cloneLayer = True
+        self.layer_number = None
 
         self.in_channel_dim = 1
         self.pca_node_class = None
@@ -67,34 +76,40 @@ class ParamsSFALayer(object):
         self.sfa_node_class = None
         self.sfa_out_dim = 15
         self.sfa_args = {}
-        self.cloneLayer = True
+
         self.node_list = None
-        self.layer_number = None
 
 
 # SFASuperNode: pca_node, ord_node, gen_exp, red_node, clip_node, sfa_node
 class ParamsSFASuperNode(object):
     def __init__(self):
         self.name = "SFA Supernode"
+
         self.in_channel_dim = 1
         self.pca_node_class = None
         self.pca_out_dim = None
         self.pca_args = {}
+
         self.ord_node_class = None
         self.ord_args = {}
+
         self.exp_funcs = None
         self.inv_use_hint = True
         self.inv_max_steady_factor = 0.35
         self.inv_delta_factor = 0.6
         self.inv_min_delta = 0.0001
+
         self.red_node_class = None
         self.red_out_dim = None  # 0.99999
         self.red_args = {}
+
         self.clip_func = None
         self.clip_inv_func = None
         self.sfa_node_class = mdp.nodes.SFANode
+
         self.sfa_out_dim = 15
         self.sfa_args = {}
+
         self.node_list = None
 
 

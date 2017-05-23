@@ -1331,8 +1331,8 @@ def main():
         print "Creating hierarchy through network_builder"
         print "******************************************"
         # TODO: more primitive but potentially powerful flow specification here should be possible
-        flow, layers, benchmark = network_builder.CreateNetwork(Network, sTrain.subimage_width, sTrain.subimage_height,
-                                                                block_size=None, train_mode=None, benchmark=benchmark,
+        flow, layers, benchmark = network_builder.create_network(Network, sTrain.subimage_width, sTrain.subimage_height,
+                                                                benchmark=benchmark,
                                                                 in_channel_dim=in_channel_dim,
                                                                 num_features_appended_to_input = \
                                                                     num_features_to_append_to_input)
