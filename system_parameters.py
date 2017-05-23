@@ -38,50 +38,14 @@ class ParamsNetwork(object):
         return self.L0, self.L1, self.L2, self.L3, self.L4, self.L5, self.L6, self.L7, self.L8, self.L9, self.L10
 
 
-# SFALayer: PInvSwitchboard, pca_node, ord_node, gen_exp, red_node, clip_node, sfa_node
-class ParamsSFALayer(object):
-    def __init__(self):
-        self.name = "SFA Layer"
-
-        self.x_field_channels = 3
-        self.y_field_channels = 3
-        self.x_field_spacing = 3
-        self.y_field_spacing = 3
-        self.nx_value = None
-        self.ny_value = None
-        self.cloneLayer = True
-        self.layer_number = None
-
-        self.in_channel_dim = 1
-        self.pca_node_class = None
-        self.pca_out_dim = 0.99999
-        self.pca_args = {"block_size": 1}
-
-        self.ord_node_class = None
-        self.ord_args = {}
-
-        self.exp_funcs = None
-        self.inv_use_hint = True
-        self.inv_max_steady_factor = 0.35
-        self.inv_delta_factor = 0.6
-        self.inv_min_delta = 0.0001
-
-        self.red_node_class = None
-        self.red_out_dim = 0.99999
-        self.red_args = {"block_size": 1, "cutoff": 4}
-
-        self.clip_func = None
-        self.clip_inv_func = None
-
-        self.sfa_node_class = None
-        self.sfa_out_dim = 15
-        self.sfa_args = {}
-
-        self.node_list = None
-
-
-# SFASuperNode: pca_node, ord_node, gen_exp, red_node, clip_node, sfa_node
 class ParamsSFASuperNode(object):
+    """High-level description of a non-hierarchical node.
+     
+    A non-hierarchical node is composed of at most six mdp-nodes, referred to as pca_node, ord_node, gen_exp, 
+    red_node, clip_node, and sfa_node. One can specify the class type and parameters of most of these nodes, except
+    for the gen_exp node, which is always of class GeneralExpansionNode, and clip_node, which is always of
+    class PointwiseFunctionNode.
+    """
     def __init__(self):
         self.name = "SFA Supernode"
 
@@ -105,15 +69,51 @@ class ParamsSFASuperNode(object):
 
         self.clip_func = None
         self.clip_inv_func = None
-        self.sfa_node_class = mdp.nodes.SFANode
 
+        self.sfa_node_class = mdp.nodes.SFANode
         self.sfa_out_dim = 15
         self.sfa_args = {}
 
         self.node_list = None
 
 
+# SFALayer: PInvSwitchboard, pca_node, ord_node, gen_exp, red_node, clip_node, sfa_node
+class ParamsSFALayer(ParamsSFASuperNode):
+    """High-level description of a hierarchical node.
+     
+     
+    A hierarchical node is composed of the same elements that compose a non-hierarchcal node, with the addition of
+    a switchboard (of class PInvSwitchboard).
+    """
+    def __init__(self):
+        super(ParamsSFALayer, self).__init__()
+        self.name = "SFA Layer"
+
+        self.x_field_channels = 3
+        self.y_field_channels = 3
+        self.x_field_spacing = 3
+        self.y_field_spacing = 3
+        self.nx_value = None
+        self.ny_value = None
+        self.cloneLayer = True
+        self.layer_number = None
+
+        # self.pca_out_dim = 0.99999
+        # self.pca_args = {"block_size": 1}
+        # self.red_out_dim = 0.99999
+        # self.red_args = {"block_size": 1, "cutoff": 4}
+
+
 class ParamsSystem(object):
+    """Describes all the parameters of particular experiment.
+    
+    Three datasets are considered in this description. A training dataset, used to train a (supervised) dimensionality
+    reduction algorithm, a seenid dataset, used to train a supervised step on top of the extracted features, and
+    a test dataset (Newid). Each of these datasets is described abstractly (by an object of type ParamsInput, e.g., 
+    iTraining) and concretely (by an object of type ParamsDataLoading, e.g., sTraining). The most relevant part 
+    is the function 'load_data' of the ParamsDataLoading objects, which loads or creates the actual data, represented 
+    as an ndarray.
+    """
     def __init__(self):
         self.name = "test system"
         self.network = None
@@ -141,6 +141,7 @@ class ParamsSystem(object):
 
 
 class ParamsInput(object):
+    """Describes the (abstract) parameters of a particular dataset, includying the ground truth information."""
     def __init__(self):
         self.name = "test input"
         self.data_base_dir = None
@@ -164,12 +165,8 @@ class ParamsInput(object):
         self.block_size = 1
         self.train_mode = None
 
-
-# def __values__(self):
-#        return (self.network, self.iTraining, self.sTraining, self.iSeenid, self.sSeenid, self.iNewid, self.sNewid)
-
-
 class ParamsDataLoading(object):
+    """Describes the concrete parameters of a particular dataset, e.g., filenames, image sizes, distortions."""
     def __init__(self):
         self.name = "test input data"
         self.input_files = []
@@ -206,8 +203,13 @@ class ParamsDataLoading(object):
         self.obj_stds = None
 
 
-# CODE PENDING!
+# This code is way preliminary
 class ExperimentResult(object):
+    """Stores all relevant variables and results generated by an excecution of Cuicuilco.
+    
+    These variables include how many features are used in the supervised step, the parameters used to create the
+    datasets, the classification rates, regression accuracy, and feature slowness. 
+    """
     def __init__(self):
         self.name = "Simulation Results"
         self.network_name = None
@@ -246,24 +248,25 @@ class ExperimentResult(object):
         self.msegauss_newid = None
 
 
-class NetworkOutputs(object):
-    def __init__(self):
-        self.num_samples = 0
-        self.sl = []
-        self.correct_classes = []
-        self.correct_labels = []
-        self.classes = []
-        self.labels = []
-        self.block_size = []
-        self.eta_values = []
-        self.delta_values = []
-        self.class_rate = 0
-        self.gauss_class_rate = 0
-        self.reg_mse = 0
-        self.gauss_reg_mse = 0
+# class NetworkOutputs(object):
+#     def __init__(self):
+#         self.num_samples = 0
+#         self.sl = []
+#         self.correct_classes = []
+#         self.correct_labels = []
+#         self.classes = []
+#         self.labels = []
+#         self.block_size = []
+#         self.eta_values = []
+#         self.delta_values = []
+#         self.class_rate = 0
+#         self.gauss_class_rate = 0
+#         self.reg_mse = 0
+#         self.gauss_reg_mse = 0
 
 
 def test_object_contents(an_object):
+    """Displays the None elements of an object."""
     a_dict = an_object.__dict__
     list_none_elements = []
     for w in a_dict.keys():
@@ -275,6 +278,11 @@ def test_object_contents(an_object):
 
 # apply element-wise in case of lists
 def scale_sSeq(sSeq, reduction_factor):
+    """Scales a concrete data description.
+    
+    The reductio_factor argument indicates the reduction in the size of the images. If reduction factor is two, the
+    resulting images are 50% smaller. The pixel_sampling are adjusted accordingly so that the same input area is
+    considered. The translations are also adjusted (if necessary)."""
     sSeq.subimage_width = sSeq.subimage_width / reduction_factor
     sSeq.subimage_height = sSeq.subimage_height / reduction_factor
     sSeq.pixelsampling_x = sSeq.pixelsampling_x * reduction_factor
@@ -288,6 +296,7 @@ def scale_sSeq(sSeq, reduction_factor):
 
 
 def take_first_02D(obj_list):
+    """returns the element obj_list[0][0] if obj_list is a nested list of depth 2, or obj_list otherwise."""
     if isinstance(obj_list, list):
         if isinstance(obj_list[0], list):
             return obj_list[0][0]
@@ -299,6 +308,7 @@ def take_first_02D(obj_list):
 
 
 def take_0_k_th_from_2D_list(obj_list, k=0):
+    """returns the element obj_list[0][k] if obj_list is a nested list of depth 2, or obj_list otherwise."""
     if isinstance(obj_list, list):
         print "obj_list is:", obj_list
         if isinstance(obj_list[0], list):
@@ -311,6 +321,10 @@ def take_0_k_th_from_2D_list(obj_list, k=0):
 
 
 def sSeq_force_image_size(sSeq, forced_subimage_width, forced_subimage_height):
+    """Modifies a given object of type ParamsDataLoading (or a nested list of depth 2 of such objects). The
+    resulting object(s) will then be able to load images of width given by forced_subimage_width, and height given by 
+    forced_subimage_height.
+    """
     if isinstance(sSeq, list):
         for sSeq_vect in sSeq:
             if sSeq_vect is not None:
@@ -324,6 +338,10 @@ def sSeq_force_image_size(sSeq, forced_subimage_width, forced_subimage_height):
 
 # TODO:Verify that all elements in sSeq have the same format
 def sSeq_getinfo_format(sSeq):
+    """Guesses the values of max_clip, signals_per_image, and in_channel dim according to the convert_format value
+     
+    Understood values for convert_format are "RGB", "L", "HOG2".
+    """
     if isinstance(sSeq, list):
         sSeq = sSeq[0][0]
 
@@ -355,6 +373,10 @@ def sSeq_getinfo_format(sSeq):
 # Notice the recursive nature of this function, only for
 # Takes an sSeq structure: either [[sSeq1, ...], ... [sSeqN,...]] or
 def convert_sSeq_to_funcs_params_sets(sSeq, verbose=True):
+    """From an object of type ParamsDataLoading (or a nested list of depth 2 of such objects) this function returns
+    an argument-less function that extracts the final ndarray, as well as a list of parameters that are typically
+    needed during training.
+    """
     print "conversion of sSeq:", sSeq
     if isinstance(sSeq, list):
         funcs_sets = []
@@ -404,6 +426,7 @@ def convert_sSeq_to_funcs_params_sets(sSeq, verbose=True):
 # Here is the actual data loading from hard drive performed
 # TODO: Remove this. This function should be particularly specified by each experiment
 def load_data_from_sSeq(self):
+    """This is a default function that extracts the ndarray data described by a ParamsDataLoading object."""
     seq = self
     if seq.input_files == "LoadBinaryData00":
         data = imageLoader.load_natural_data(seq.data_base_dir, seq.base_filename, seq.samples, verbose=False)
@@ -424,6 +447,7 @@ def load_data_from_sSeq(self):
 
 
 def append_dataset_arrays_or_functions(dataset1, dataset2):
+    """Concatenates the features of two ndarrays (or functions returning ndarrays)."""
     if inspect.isfunction(dataset1):
         print "d1 executed"
         d1 = dataset1()
@@ -445,6 +469,9 @@ def append_dataset_arrays_or_functions(dataset1, dataset2):
 
 
 def expand_dataset_with_additional_features(train_data_sets, additional_features_training):
+    """Extends the data in a dataset (ndarray or function returning ndarray) (or nested list of depth 2 of such
+    objects) with additional features. Useful to extend the training data with another feature representation. 
+    """
     if isinstance(train_data_sets, list):
         if isinstance(train_data_sets[0], list):
             if len(train_data_sets[0]) == 1:
