@@ -6,7 +6,7 @@ import sfa_libs
 import more_nodes
 import more_nodes as he
 import patch_mdp
-import imageLoader
+import image_loader
 from nonlinear_expansion import *
 import lattice
 import PIL
