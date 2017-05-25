@@ -7,10 +7,10 @@ def learn_histogram_equalizer(x, num_pivots, linear_histogram=False, ignore_two_
     num_samples = x.shape[0]
     y = x.copy()
     y.sort()
-    if ignore_two_pivots == False:
-        indices_pivots = numpy.linspace(0, num_samples - 1, num_pivots).round().astype(int)
-    else:
+    if ignore_two_pivots:
         indices_pivots = numpy.linspace(0, num_samples - 1, num_pivots + 2).round().astype(int)[1:-1]
+    else:
+        indices_pivots = numpy.linspace(0, num_samples - 1, num_pivots).round().astype(int)
     pivots = y[indices_pivots]
     print "pivots computed=", pivots
     print "indices_pivots=", indices_pivots
@@ -244,7 +244,7 @@ class NLIPCANode(mdp.Node):
             new_feature = pca_node.execute(residual_data)
             y[:, feat_nr:feat_nr + self.feats_at_once] = new_feature
 
-            if self.norm_class != None:
+            if self.norm_class:
                 norm_node = self.norm_class()
                 norm_node.train(new_feature)
                 norm_node.stop_training()
@@ -254,12 +254,12 @@ class NLIPCANode(mdp.Node):
                 normalized_y[:, feat_nr:feat_nr + self.feats_at_once] = y[:, feat_nr:feat_nr + self.feats_at_once]
 
             if self.expand_chunkwise:
-                if self.exp_func != None:
+                if self.exp_func:
                     expanded_data = self.exp_func(normalized_y[:, feat_nr:feat_nr + self.feats_at_once])
                 else:
                     expanded_data = normalized_y[:, feat_nr:feat_nr + self.feats_at_once]
             else:
-                if self.exp_func != None:
+                if self.exp_func:
                     expanded_data = self.exp_func(normalized_y[:, 0:feat_nr + self.feats_at_once])
                 else:
                     expanded_data = normalized_y[:, 0:feat_nr + self.feats_at_once]
@@ -297,19 +297,19 @@ class NLIPCANode(mdp.Node):
             new_feature = pca_node.execute(residual_data)
             y[:, feat_nr:feat_nr + self.feats_at_once] = new_feature
 
-            if self.norm_class != None:
+            if self.norm_class:
                 norm_node = self.norm_nodes[feat_nr / self.feats_at_once]
                 normalized_y[:, feat_nr:feat_nr + self.feats_at_once] = norm_node.execute(new_feature)
             else:
                 normalized_y[:, feat_nr:feat_nr + self.feats_at_once] = y[:, feat_nr:feat_nr + self.feats_at_once]
 
             if self.expand_chunkwise:
-                if self.exp_func != None:
+                if self.exp_func:
                     expanded_data = self.exp_func(normalized_y[:, feat_nr:feat_nr + self.feats_at_once])
                 else:
                     expanded_data = normalized_y[:, feat_nr:feat_nr + self.feats_at_once]
             else:
-                if self.exp_func != None:
+                if self.exp_func:
                     expanded_data = self.exp_func(normalized_y[:, 0:feat_nr + self.feats_at_once])
                 else:
                     expanded_data = normalized_y[:, 0:feat_nr + self.feats_at_once]
@@ -336,7 +336,7 @@ class NLIPCANode(mdp.Node):
         num_samples = y.shape[0]
         residual_data = numpy.zeros((num_samples, self.input_dim))
         normalized_y = numpy.zeros((num_samples, self.output_dim))
-        if self.norm_class != None:
+        if self.norm_class:
             for feat_nr in range(0, self.output_dim, self.feats_at_once):
                 normalized_y[:, feat_nr:feat_nr + self.feats_at_once] = self.norm_nodes[
                     feat_nr / self.feats_at_once].execute(y[:, feat_nr:feat_nr + self.feats_at_once])
@@ -345,12 +345,12 @@ class NLIPCANode(mdp.Node):
 
         for output_nr in range(self.output_dim - self.feats_at_once, -1, -1 * self.feats_at_once):
             if self.expand_chunkwise:
-                if self.exp_func != None:
+                if self.exp_func:
                     expanded_data = self.exp_func(normalized_y[:, output_nr:output_nr + self.feats_at_once])
                 else:
                     expanded_data = normalized_y[:, output_nr:output_nr + self.feats_at_once]
             else:
-                if self.exp_func != None:
+                if self.exp_func:
                     expanded_data = self.exp_func(normalized_y[:, 0:output_nr + self.feats_at_once])
                 else:
                     expanded_data = normalized_y[:, 0:output_nr + self.feats_at_once]
@@ -405,7 +405,7 @@ class NLIPCANode(mdp.Node):
 #             new_feature = pca_node.execute(residual_data)
 #             y[:,feat_nr] = new_feature.flatten()
 # 
-#             if self.norm_class != None:
+#             if self.norm_class:
 #                 norm_node = self.norm_class()
 #                 norm_node.train(new_feature)
 #                 norm_node.stop_training()
@@ -414,7 +414,7 @@ class NLIPCANode(mdp.Node):
 #             else:
 #                 normalized_y[:,feat_nr] = y[:,feat_nr]          
 # 
-#             if self.exp_func != None:
+#             if self.exp_func:
 #                 expanded_data = self.exp_func(normalized_y[:,0:feat_nr+1])
 #             else:
 #                 expanded_data = normalized_y[:,0:feat_nr+1]
@@ -440,13 +440,13 @@ class NLIPCANode(mdp.Node):
 #             new_feature = pca_node.execute(residual_data)
 #             y[:,feat_nr] = new_feature.flatten()
 # 
-#             if self.norm_class != None:
+#             if self.norm_class:
 #                 norm_node = self.norm_nodes[feat_nr]
 #                 normalized_y[:,feat_nr] = norm_node.execute(new_feature).flatten()
 #             else:
 #                 normalized_y[:,feat_nr] = y[:,feat_nr]          
 #             
-#             if self.exp_func != None:
+#             if self.exp_func:
 #                 expanded_data = self.exp_func(normalized_y[:,0:feat_nr+1])
 #             else:
 #                 expanded_data = normalized_y[:,0:feat_nr+1]
@@ -459,14 +459,14 @@ class NLIPCANode(mdp.Node):
 #         num_samples = y.shape[0]
 #         residual_data = numpy.zeros((num_samples, self.input_dim))
 #         normalized_y = numpy.zeros((num_samples, self.output_dim))
-#         if self.norm_class != None:
+#         if self.norm_class:
 #             for feat_nr in range(self.output_dim):
 #                 normalized_y[:,feat_nr] = self.norm_nodes[feat_nr].execute(y[:,feat_nr:feat_nr+1]).flatten()           
 #         else:
 #             normalized_y = y 
 # 
 #         for output_nr in range(self.output_dim-1,-1,-1):
-#             if self.exp_func != None:
+#             if self.exp_func:
 #                 expanded_data = self.exp_func(normalized_y[:,0:output_nr+1])
 #             else:
 #                 expanded_data = normalized_y[:,0:output_nr+1]
@@ -538,7 +538,7 @@ def cos_exp_eE_mM_F(x, exact_degree, max_sel_vars, keep_identity=False):
     feature_vector = numpy.zeros(exact_degree, dtype="int")
     all_feature_vectors = []
     all_feature_vectors.append(list(feature_vector))
-    while (increment(feature_vector, exact_degree, num_vars, max_sel_vars)):
+    while increment(feature_vector, exact_degree, num_vars, max_sel_vars):
         # print "feature_vector=", feature_vector
         all_feature_vectors.append(list(feature_vector))
     # print "all_feature_vectors=", all_feature_vectors
@@ -883,8 +883,8 @@ def test3():
     indices_sorting -= 1
     pivot_factor = diff_pivot_outputs / diff_pivots
 
-    hxx = pivot_outputs[indices_sorting] + (xx - pivots[indices_sorting]) * diff_pivot_outputs[indices_sorting] / \
-                                           diff_pivots[indices_sorting]
+    # hxx = pivot_outputs[indices_sorting] + (xx - pivots[indices_sorting]) * diff_pivot_outputs[indices_sorting] / \
+    #                                       diff_pivots[indices_sorting]
 
     hxx = pivot_outputs[indices_sorting] + (xx - pivots[indices_sorting]) * pivot_factor[indices_sorting]
 
@@ -963,7 +963,7 @@ def test4():  # or True:
 def test5():
     cen = CosineExpansionNode(5)  # Max factor
     x = numpy.linspace(0, 1, 150).reshape(-1, 1)
-    y2 = cen(x)  # Assumes elements of x in [0,1]
+    y2 = cen.execute(x)  # Assumes elements of x in [0,1]
     print "y2=", y2
 
 
