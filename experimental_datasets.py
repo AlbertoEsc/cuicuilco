@@ -459,7 +459,7 @@ class ParamsAgeExperiment(system_parameters.ParamsSystem):
         iSeenidAge = self.iSeqCreateAge(first_id=0, num_ids=180, user_base_dir=user_base_dir, data_dir="RendersAge200x23", seed=None)
         sSeenidAge = self.sSeqCreateAge(iSeenidAge, seed=-1) 
         iNewidAge = self.iSeqCreateAge(first_id=180, num_ids=20, user_base_dir=user_base_dir, data_dir="RendersAge200x23", seed=None)
-        sNewidAge = self.sSeqCreateAge(iSeenidAge, seed=-1) 
+        sNewidAge = self.sSeqCreateAge(iNewidAge, seed=-1) 
 
         self.name = "Network that extracts Age information"
         self.network = "linearNetwork4L"
@@ -476,42 +476,43 @@ class ParamsAgeExperiment(system_parameters.ParamsSystem):
         self.reduction_factor = 1.0
         self.hack_image_size = 128
         self.enable_hack_image_size = True
-
+    
     def iSeqCreateAge(self, first_id, num_ids, user_base_dir=user_base_dir, data_dir="RendersAge200x23", seed=None):
         print "***** Setting Information Parameters for Age (simulated faces) ******"
-        iSeq = system_parameters.ParamsInput()
-        iSeq.name = "Age: 23 Ages x 200 identities"
-        iSeq.data_base_dir = user_base_dir + "/" + data_dir
-        iSeq.im_base_name = "age"
-        iSeq.ids = numpy.arange(first_id, first_id + num_ids) # 180, warning speeding up
-        #Available ages: iSeq.ages = [15, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 35, 36, 40, 42, 44, 45, 46, 48, 50, 55, 60, 65]
-        iSeq.ages = numpy.array([15, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 35, 36, 40, 42, 44, 45, 46, 48, 50, 55, 60, 65])
-        #iSeq.ages = numpy.array([15, 20, 24, 30, 35, 40, 45, 50, 55, 60, 65])
-        iSeq.genders = [None]
-        iSeq.racetweens = [None]
-        iSeq.expressions = [0]
-        iSeq.morphs = [0]
-        iSeq.poses = [0]
-        iSeq.lightings = [0]
-        iSeq.slow_signal = 1 
-        iSeq.step = 1 
-        iSeq.offset = 0
-        iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, iSeq.im_base_name, iSeq.slow_signal, iSeq.ids, iSeq.ages, \
-                                                    iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
-                                                    iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, verbose=False)
+        iSeqAge = system_parameters.ParamsInput()
+        iSeqAge.name = "Age: 23 Ages x 200 identities"
+        iSeqAge.data_base_dir = user_base_dir + "/" + data_dir
+        iSeqAge.im_base_name = "age"
+        iSeqAge.ids = numpy.arange(first_id, first_id + num_ids) # 180, warning speeding up
+        #Available ages: iSeqAge.ages = [15, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 35, 36, 40, 42, 44, 45, 46, 48, 50, 55, 60, 65]
+        iSeqAge.ages = numpy.array([15, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 35, 36, 40, 42, 44, 45, 46, 48, 50, 55, 60, 65])
+        #iSeqAge.ages = numpy.array([15, 20, 24, 30, 35, 40, 45, 50, 55, 60, 65])
+        iSeqAge.genders = [None]
+        iSeqAge.racetweens = [None]
+        iSeqAge.expressions = [0]
+        iSeqAge.morphs = [0]
+        iSeqAge.poses = [0]
+        iSeqAge.lightings = [0]
+        iSeqAge.slow_signal = 1 
+        iSeqAge.step = 1 
+        iSeqAge.offset = 0
+        iSeqAge.input_files = image_loader.create_image_filenames3(iSeqAge.data_base_dir, iSeqAge.im_base_name, iSeqAge.slow_signal, iSeqAge.ids, iSeqAge.ages, \
+                                                    iSeqAge.genders, iSeqAge.racetweens, iSeqAge.expressions, iSeqAge.morphs, \
+                                                    iSeqAge.poses, iSeqAge.lightings, iSeqAge.step, iSeqAge.offset, verbose=False)
         
-        #print "Filenames = ", iSeq.input_files
-        iSeq.num_images = len(iSeq.input_files)
-        #print "Num Images = ", iSeq.num_images
-        #iSeq.params = [ids, expressions, morphs, poses, lightings]
-        iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
-                          iSeq.morphs, iSeq.poses, iSeq.lightings]
-        iSeq.block_size = iSeq.num_images / len (iSeq.ages)
+        #print "Filenames = ", iSeqAge.input_files
+        iSeqAge.num_images = len(iSeqAge.input_files)
+        #print "Num Images = ", iSeqAge.num_images
+        #iSeqAge.params = [ids, expressions, morphs, poses, lightings]
+        iSeqAge.params = [iSeqAge.ids, iSeqAge.ages, iSeqAge.genders, iSeqAge.racetweens, iSeqAge.expressions, \
+                          iSeqAge.morphs, iSeqAge.poses, iSeqAge.lightings]
+        iSeqAge.block_size = iSeqAge.num_images / len (iSeqAge.ages)
         
-        iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.ages)), iSeq.block_size)
-        iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.ages, iSeq.block_size)
+        iSeqAge.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeqAge.ages)), iSeqAge.block_size)
+        iSeqAge.correct_labels = sfa_libs.wider_1Darray(iSeqAge.ages, iSeqAge.block_size)
         
-        system_parameters.test_object_contents(iSeq)    
+        system_parameters.test_object_contents(iSeqAge)    
+        return iSeqAge
     
     def sSeqCreateAge(self, iSeqAge, seed=-1):  
         print "******** Setting Data Parameters for Age  ****************"
@@ -541,6 +542,7 @@ class ParamsAgeExperiment(system_parameters.ParamsSystem):
         sSeqAge.name = iSeqAge.name
         sSeqAge.load_data = load_data_from_sSeq
         system_parameters.test_object_contents(sSeqAge)
+        return sSeqAge
     
 ParamsAgeFunc = ParamsAgeExperiment(experiment_seed, experiment_basedir)
 
