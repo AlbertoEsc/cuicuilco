@@ -2687,7 +2687,7 @@ def main():
         arr2[arr2 >= -0.05] = 1
         return arr2
 
-    if Parameters == experimental_datasets.ParamsGender or experimental_datasets.ParamsRAgeFunc:
+    if Parameters == experimental_datasets.ParamsGenderFunc or experimental_datasets.ParamsRAgeFunc:
         print "Computing effective gender recognition:"
         binary_gender_estimation_training = binarize_array(regression_Gauss_training)
         binary_correct_labels_training = binarize_array(correct_labels_training)
@@ -2861,7 +2861,7 @@ def main():
 
     compute_background_detection = True  # and False
     cutoff_backgrounds = [0.975, 0.98, 0.985, 0.99, 0.995, 0.998, 0.999, 0.9995, 0.99995]
-    if compute_background_detection and Parameters == experimental_datasets.ParamsRFaceCentering:
+    if compute_background_detection and Parameters == experimental_datasets.ParamsRFaceCentering2Func:
         print "false_background should be as small as possible <= 0.01, correct_background should be large >= 0.8"
         for cutoff_background in cutoff_backgrounds:
             print "for cutoff_background = %f" % cutoff_background

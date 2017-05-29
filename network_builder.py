@@ -78,53 +78,7 @@ def create_layer(prev_layer, layer, num_layer, prev_layer_height=None, prev_laye
     """
     if layer is None:
         return None
-    if isinstance(layer, system_parameters.ParamsSFASuperNode):
-        # Note, there was a bug in MDP SFA Node, in which the output dimension is ignored if the input dimension
-        # is unknown. See function "_set_range()".
-        print "************ Creating Layer *******"
-        print "Creating ParamsSFASuperNode L%d" % num_layer
-        if layer.pca_node_class:
-            print "PCA_node will be created"
-            layer.pca_node = layer.pca_node_class(output_dim=layer.pca_out_dim, **layer.pca_args)
-        else:
-            layer.pca_node = None
-            # (input_dim=layer.preserve_mask_sparse.sum(), output_dim=layer.pca_out_dim, **layer.pca_args)
-
-        if layer.ord_node_class:
-            print "Ord_node will be created"
-            layer.ord_node = layer.ord_node_class(**layer.ord_args)
-        else:
-            layer.ord_node = None
-
-        # TODO:USE ARGUMENTS EXP_ARGS HERE?
-        if layer.exp_funcs != [identity] and layer.exp_funcs:
-            layer.exp_node = more_nodes.GeneralExpansionNode(layer.exp_funcs, use_hint=layer.inv_use_hint,
-                                                             max_steady_factor=layer.inv_max_steady_factor,
-                                                             delta_factor=layer.inv_delta_factor,
-                                                             min_delta=layer.inv_min_delta)
-        else:
-            layer.exp_node = None
-
-        if layer.red_node_class:
-            layer.red_node = layer.red_node_class(output_dim=layer.red_out_dim, **layer.red_args)
-        else:
-            layer.red_node = None
-
-        if layer.clip_func or layer.clip_inv_func:
-            layer.clip_node = more_nodes.PointwiseFunctionNode(layer.clip_func, layer.clip_inv_func)
-        else:
-            layer.clip_node = None
-
-        if layer.sfa_node_class:
-            print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-            print "layer.sfa_out_dim= ", layer.sfa_out_dim
-
-            layer.sfa_node = layer.sfa_node_class(output_dim=layer.sfa_out_dim, **layer.sfa_args)
-
-        layer.node_list = ([layer.pca_node, layer.ord_node, layer.exp_node, layer.red_node, layer.clip_node,
-                            layer.sfa_node])
-
-    elif isinstance(layer, system_parameters.ParamsSFALayer):
+    if isinstance(layer, system_parameters.ParamsSFALayer):
         if prev_layer:
             previous_layer_height, previous_layer_width, _ = prev_layer.lat_mat.shape
         elif prev_layer_height and prev_layer_width:
@@ -259,6 +213,53 @@ def create_layer(prev_layer, layer, num_layer, prev_layer_height=None, prev_laye
 
         layer.node_list = ([layer.switchboard, layer.pca_layer, layer.ord_layer, layer.exp_layer, layer.red_layer,
                             layer.clip_node, layer.sfa_layer])
+        
+    elif isinstance(layer, system_parameters.ParamsSFASuperNode):
+        # Note, there was a bug in MDP SFA Node, in which the output dimension is ignored if the input dimension
+        # is unknown. See function "_set_range()".
+        print "************ Creating Layer *******"
+        print "Creating ParamsSFASuperNode L%d" % num_layer
+        if layer.pca_node_class:
+            print "PCA_node will be created"
+            layer.pca_node = layer.pca_node_class(output_dim=layer.pca_out_dim, **layer.pca_args)
+        else:
+            layer.pca_node = None
+            # (input_dim=layer.preserve_mask_sparse.sum(), output_dim=layer.pca_out_dim, **layer.pca_args)
+
+        if layer.ord_node_class:
+            print "Ord_node will be created"
+            layer.ord_node = layer.ord_node_class(**layer.ord_args)
+        else:
+            layer.ord_node = None
+
+        # TODO:USE ARGUMENTS EXP_ARGS HERE?
+        if layer.exp_funcs != [identity] and layer.exp_funcs:
+            layer.exp_node = more_nodes.GeneralExpansionNode(layer.exp_funcs, use_hint=layer.inv_use_hint,
+                                                             max_steady_factor=layer.inv_max_steady_factor,
+                                                             delta_factor=layer.inv_delta_factor,
+                                                             min_delta=layer.inv_min_delta)
+        else:
+            layer.exp_node = None
+
+        if layer.red_node_class:
+            layer.red_node = layer.red_node_class(output_dim=layer.red_out_dim, **layer.red_args)
+        else:
+            layer.red_node = None
+
+        if layer.clip_func or layer.clip_inv_func:
+            layer.clip_node = more_nodes.PointwiseFunctionNode(layer.clip_func, layer.clip_inv_func)
+        else:
+            layer.clip_node = None
+
+        if layer.sfa_node_class:
+            print "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+            print "layer.sfa_out_dim= ", layer.sfa_out_dim
+
+            layer.sfa_node = layer.sfa_node_class(output_dim=layer.sfa_out_dim, **layer.sfa_args)
+
+        layer.node_list = ([layer.pca_node, layer.ord_node, layer.exp_node, layer.red_node, layer.clip_node,
+                            layer.sfa_node])
+
     else:
         er = "Unknown Layer type, cannot be created."
         raise Exception(er)

@@ -76,383 +76,10 @@ alldb_eyeLR_normalized_base_dir = experiment_basedir + "/AllDB_EyeLR"
 print "Running on unknown host"
     
 
-def repeat_list_elements(lista, rep):
-    return [element for _ in range(rep) for element in lista]
+def repeat_list_elements(a_list, rep):
+    return [element for _ in range(rep) for element in a_list]
 
-print "******** Setting Training Information Parameters for Gender (simulated faces) **********"
-def iSeqCreateGender(first_id = 0, num_ids = 25, user_base_dir=user_base_dir, data_dir="RenderingsGender60x200", gender_continuous=True, seed=None):
-    if seed >= 0 or seed is None:
-        numpy.random.seed(seed)
-        print "Gender. Using seed", seed
-
-    print "******** Setting Training Information Parameters for Gender **********"
-    iSeq = system_parameters.ParamsInput()
-        
-    iSeq.name = "Gender60x200"
-
-    iSeq.gender_continuous = gender_continuous     
-    iSeq.data_base_dir = user_base_dir + "/" + data_dir
-    iSeq.ids = numpy.arange(first_id,first_id+num_ids) #160, but 180 for paper!
-    iSeq.ages = [999]
-    iSeq.MIN_GENDER = -3
-    iSeq.MAX_GENDER = 3
-    iSeq.GENDER_STEP = 0.10000 #01. 0.20025 default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-    #iSeq.GENDER_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-    iSeq.real_genders = numpy.arange(iSeq.MIN_GENDER, iSeq.MAX_GENDER, iSeq.GENDER_STEP)
-    iSeq.genders = map(image_loader.code_gender, iSeq.real_genders)
-    iSeq.racetweens = [999]
-    iSeq.expressions = [0]
-    iSeq.morphs = [0]
-    iSeq.poses = [0]
-    iSeq.lightings = [0]
-    iSeq.slow_signal = 2
-    iSeq.step = 1
-    iSeq.offset = 0
-    iSeq.input_files = image_loader.create_image_filenames2(iSeq.data_base_dir, iSeq.slow_signal, iSeq.ids, iSeq.ages, \
-                                                    iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
-                                                    iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset)
-    iSeq.num_images = len(iSeq.input_files)
-    iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
-                          iSeq.morphs, iSeq.poses, iSeq.lightings]
-        
-    if iSeq.gender_continuous:
-        iSeq.block_size = iSeq.num_images / len(iSeq.params[iSeq.slow_signal])  
-        iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.real_genders, iSeq.block_size)
-        iSeq.correct_classes = sfa_libs.wider_1Darray(iSeq.real_genders, iSeq.block_size)
-    else:
-        bs = iSeq.num_images / len(iSeq.params[iSeq.slow_signal])
-        bs1 = len(iSeq.real_genders[iSeq.real_genders<0]) * bs
-        bs2 = len(iSeq.real_genders[iSeq.real_genders>=0]) * bs
-            
-        iSeq.block_size = numpy.array([bs1, bs2])
-        iSeq.correct_labels = numpy.array([-1]*bs1 + [1]*bs2)
-        #iSeq.correct_classes = sfa_libs.wider_1Darray(iSeq.real_genders, iSeq.block_size)
-        iSeq.correct_classes = numpy.array([-1]*bs1 + [1]*bs2)
-            
-    system_parameters.test_object_contents(iSeq)
-    return iSeq
-
-def sSeqCreateGender(iSeq, contrast_enhance, seed=-1):
-    if seed >= 0 or seed is None: 
-        numpy.random.seed(seed)
-    
-    if iSeq==None:
-        print "Gender: iSeq was None, this might be an indication that the data is not available"
-        sSeq = system_parameters.ParamsDataLoading()
-        return sSeq
-    
-    print "******** Setting Training Data Parameters for Gender  ****************"
-    sSeq = system_parameters.ParamsDataLoading()
-    sSeq.input_files = iSeq.input_files
-    sSeq.num_images = iSeq.num_images
-    sSeq.block_size = iSeq.block_size
-    sSeq.image_width = 256
-    sSeq.image_height = 192
-    sSeq.subimage_width = 135
-    sSeq.subimage_height = 135 
-    sSeq.pixelsampling_x = 1
-    sSeq.pixelsampling_y =  1
-    sSeq.subimage_pixelsampling = 2
-    sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2
-    sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
-    sSeq.add_noise_L0 = True
-    sSeq.convert_format = "L"
-    sSeq.background_type = "black"
-    sSeq.contrast_enhance = contrast_enhance
-    sSeq.translation = 2
-    sSeq.translations_x = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)
-    sSeq.translations_y = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)
-    sSeq.trans_sampled = False
-    if iSeq.gender_continuous:
-        sSeq.train_mode = 'serial' # ('mixed' for paper) regular, 'serial'
-    else:
-        sSeq.train_mode = 'clustered'
-    sSeq.load_data = load_data_from_sSeq
-    system_parameters.test_object_contents(sSeq)
-    return sSeq
-
-# # print "******** Setting Training Information Parameters for Gender **********"
-# # gender_continuous = True #and False 
-# # 
-# # iTrainGender = system_parameters.ParamsInput()
-# # iTrainGender.name = "Gender60x200"
-# # iTrainGender.data_base_dir = user_base_dir  + "/" +  "RenderingsGender60x200"
-# # iTrainGender.ids = numpy.arange(0,25) #160, but 180 for paper!
-# # iTrainGender.ages = [999]
-# # iTrainGender.MIN_GENDER = -3
-# # iTrainGender.MAX_GENDER = 3
-# # iTrainGender.GENDER_STEP = 0.10000 #01. 0.20025 default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-# # #iTrainGender.GENDER_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-# # iTrainGender.real_genders = numpy.arange(iTrainGender.MIN_GENDER, iTrainGender.MAX_GENDER, iTrainGender.GENDER_STEP)
-# # iTrainGender.genders = map(image_loader.code_gender, iTrainGender.real_genders)
-# # iTrainGender.racetweens = [999]
-# # iTrainGender.expressions = [0]
-# # iTrainGender.morphs = [0]
-# # iTrainGender.poses = [0]
-# # iTrainGender.lightings = [0]
-# # iTrainGender.slow_signal = 2
-# # iTrainGender.step = 1
-# # iTrainGender.offset = 0
-# # iTrainGender.input_files = image_loader.create_image_filenames2(iTrainGender.data_base_dir, iTrainGender.slow_signal, iTrainGender.ids, iTrainGender.ages, \
-# #                                             iTrainGender.genders, iTrainGender.racetweens, iTrainGender.expressions, iTrainGender.morphs, \
-# #                                             iTrainGender.poses, iTrainGender.lightings, iTrainGender.step, iTrainGender.offset)
-# # #MEGAWARNING!!!!
-# # #numpy.random.shuffle(iTrainGender.input_files)  
-# # #numpy.random.shuffle(iTrainGender.input_files)  
-# # 
-# # iTrainGender.num_images = len(iTrainGender.input_files)
-# # #iTrainGender.params = [ids, expressions, morphs, poses, lightings]
-# # iTrainGender.params = [iTrainGender.ids, iTrainGender.ages, iTrainGender.genders, iTrainGender.racetweens, iTrainGender.expressions, \
-# #                   iTrainGender.morphs, iTrainGender.poses, iTrainGender.lightings]
-# # 
-# # if gender_continuous:
-# #     iTrainGender.block_size = iTrainGender.num_images / len(iTrainGender.params[iTrainGender.slow_signal])  
-# #     iTrainGender.correct_labels = sfa_libs.wider_1Darray(iTrainGender.real_genders, iTrainGender.block_size)
-# #     iTrainGender.correct_classes = sfa_libs.widees ist nicht zu kompliziertr_1Darray(iTrainGender.real_genders, iTrainGender.block_size)
-# # else:
-# #     bs = iTrainGender.num_images / len(iTrainGender.params[iTrainGender.slow_signal])
-# #     bs1 = len(iTrainGender.real_genders[iTrainGender.real_genders<0]) * bs
-# #     bs2 = len(iTrainGender.real_genders[iTrainGender.real_genders>=0]) * bs
-# #     
-# #     iTrainGender.block_size = numpy.array([bs1, bs2])
-# #     iTrainGender.correct_labels = numpy.array([-1]*bs1 + [1]*bs2)
-# #     #iTrainGender.correct_classes = sfa_libs.wider_1Darray(iTrainGender.real_genders, iTrainGender.block_size)
-# #     iTrainGender.correct_classes = numpy.array([-1]*bs1 + [1]*bs2)
-# #     
-# # system_parameters.test_object_contents(iTrainGender)
-# # 
-# # #iTrainGender.correct_classes = sfa_libs.wider_1Darray(numpy.arange(iTrainGender.num_images / iTrainGender.block_size), iTrainGender.block_size)
-# # 
-# # print "******** Setting Training Data Parameters for Gender  ****************"
-# # sTrainGender = system_parameters.ParamsDataLoading()
-# # sTrainGender.input_files = iTrainGender.input_files
-# # sTrainGender.num_images = iTrainGender.num_images
-# # sTrainGender.block_size = iTrainGender.block_size
-# # sTrainGender.image_width = 256
-# # sTrainGender.image_height = 192
-# # sTrainGender.subimage_width = 135
-# # sTrainGender.subimage_height = 135 
-# # sTrainGender.pixelsampling_x = 1
-# # sTrainGender.pixelsampling_y =  1
-# # sTrainGender.subimage_pixelsampling = 2
-# # sTrainGender.subimage_first_row =  sTrainGender.image_height/2-sTrainGender.subimage_height*sTrainGender.pixelsampling_y/2
-# # sTrainGender.subimage_first_column = sTrainGender.image_width/2-sTrainGender.subimage_width*sTrainGender.pixelsampling_x/2+ 5*sTrainGender.pixelsampling_x
-# # sTrainGender.add_noise_L0 = True
-# # sTrainGender.convert_format = "L"
-# # sTrainGender.background_type = "black"
-# # sTrainGender.translation = 2
-# # sTrainGender.translations_x = numpy.random.random_integers(-sTrainGender.translation, sTrainGender.translation, sTrainGender.num_images)
-# # sTrainGender.translations_y = numpy.random.random_integers(-sTrainGender.translation, sTrainGender.translation, sTrainGender.num_images)
-# # sTrainGender.trans_sampled = False
-# # if gender_continuous:
-# #     sTrainGender.train_mode = 'serial' # ('mixed' for paper)
-# # else:
-# #     sTrainGender.train_mode = 'clustered'
-# # system_parameters.test_object_contents(sTrainGender)
-# # 
-# # print "****** Setting Seen Id Test Information Parameters for Gender ********"
-# # iSeenidGender = system_parameters.ParamsInput()
-# # iSeenidGender.name = "Gender60x200Seenid"
-# # iSeenidGender.data_base_dir =user_base_dir  + "/" + "RenderingsGender60x200"
-# # iSeenidGender.ids = numpy.arange(0,180) # #160, (0,180) for paper!
-# # iSeenidGender.ages = [999]
-# # iSeenidGender.MIN_GENDER = -3
-# # iSeenidGender.MAX_GENDER = 3
-# # iSeenidGender.GENDER_STEP = 0.10000 #01. defaultes ist nicht zu kompliziert. 0.4 fails, use 0.4005, 0.80075, 0.9005
-# # #iSeenidGender.GENDER_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-# # iSeenidGender.real_genders = numpy.arange(iSeenidGender.MIN_GENDER, iSeenidGender.MAX_GENDER, iSeenidGender.GENDER_STEP)
-# # iSeenidGender.genders = map(image_loader.code_gender, iSeenidGender.real_genders)
-# # iSeenidGender.racetweens = [999]
-# # iSeenidGender.expressions = [0]
-# # iSeenidGender.morphs = [0]
-# # iSeenidGender.poses = [0]
-# # iSeenidGender.lightings = [0]
-# # iSeenidGender.slow_signal = 2
-# # iSeenidGender.step = 1
-# # iSeenidGender.offset = 0                             
-# # iSeenidGender.input_files = image_loader.create_image_filenames2(iSeenidGender.data_base_dir, iSeenidGender.slow_signal, iSeenidGender.ids, iSeenidGender.ages, \
-# #                                             iSeenidGender.genders, iSeenidGender.racetweens, iSeenidGender.expressions, iSeenidGender.morphs, \
-# #                                             iSeenidGender.poses, iSeenidGender.lightings, iSeenidGender.step, iSeenidGender.offset)  
-# # iSeenidGender.num_images = len(iSeenidGender.input_files)
-# # #iSeenidGender.params = [ids, expressions, morphs, poses, lightings]
-# # iSeenidGender.params = [iSeenidGender.ids, iSeenidGender.ages, iSeenidGender.genders, iSeenidGender.racetweens, iSeenidGender.expressions, \
-# #                   iSeenidGender.morphs, iSeenidGender.poses, iSeenidGender.lightings]
-# # if gender_continuous:
-# #     iSeenidGender.block_size = iSeenidGender.num_images / len(iSeenidGender.params[iSeenidGender.slow_signal])
-# #     iSeenidGender.correct_labels = sfa_libs.wider_1Darray(iSeenidGender.real_genders, iSeenidGender.block_size)
-# #     iSeenidGender.correct_classes = sfa_libs.wider_1Darray(iSeenidGender.real_genders, iSeenidGender.block_size)
-# # else:
-# #     bs = iSeenidGender.num_images / len(iSeenidGender.params[iSeenidGender.slow_signal])
-# #     bs1 = len(iSeenidGender.real_genders[iSeenidGender.real_genders<0]) * bs
-# #     bs2 = len(iSeenidGender.real_genders[iSeenidGender.real_genders>=0]) * bs
-# #     iSeenidGender.block_size = numpy.array([bs1, bs2])
-# #     iSeenidGender.correct_labels = numpy.array([-1]*bs1 + [1]*bs2)
-# #     iSeenidGender.correct_classes = numpy.array([-1]*bs1 + [1]*bs2)
-# # 
-# # system_parameters.test_object_contents(iSeenidGender)
-# # 
-# # 
-# # print "***** Setting Seen Id Sequence Parameters for Gender ****************"
-# # sSeenidGender = system_parameters.ParamsDataLoading()
-# # sSeenidGender.input_files = iSeenidGender.input_files
-# # sSeenidGender.num_images = iSeenidGender.num_images
-# # sSeenidGender.image_width = 256
-# # sSeenidGender.image_height = 192
-# # sSeenidGender.subimage_width = 135
-# # sSeenidGender.subimage_height = 135 
-# # sSeenidGender.pixelsampling_x = 1
-# # sSeenidGender.pixelsampling_y =  1
-# # sSeenidGender.subimage_pixelsampling = 2
-# # sSeenidGender.subimage_first_row =  sSeenidGender.image_height/2-sSeenidGender.subimage_height*sSeenidGender.pixelsampling_y/2
-# # sSeenidGender.subimage_first_column = sSeenidGender.image_width/2-sSeenidGender.subimage_width*sSeenidGender.pixelsampling_x/2+ 5*sSeenidGender.pixelsampling_x
-# # sSeenidGender.add_noise_L0 = True
-# # sSeenidGender.convert_format = "L"
-# # sSeenidGender.background_type = "black"
-# # sSeenidGender.translation = 2
-# # sSeenidGender.translations_x = numpy.random.random_integers(-sSeenidGender.translation, sSeenidGender.translation, sSeenidGender.num_images)
-# # sSeenidGender.translations_y = numpy.random.random_integers(-sSeenidGender.translation, sSeenidGender.translation, sSeenidGender.num_images)
-# # sSeenidGender.trans_sampled = False
-# # sSeenidGender.load_data = load_data_from_sSeqes ist nicht zu kompliziert
-# # system_parameters.test_object_contents(sSeenidGender)
-# # 
-# # 0
-# # print "** Setting New Id Test Information Parameters for Gender **********"
-# # iNewidGender = system_parameters.ParamsInput()
-# # iNewidGender.name = "Gender60x200Newid"
-# # iNewidGender.data_base_dir =user_base_dir  + "/" + "RenderingsGender60x200"
-# # iNewidGender.ids = range(180,200)#160,200, 180-200 for paper!
-# # iNewidGender.ages = [999]
-# # iNewidGender.MIN_GENDER = -3
-# # iNewidGender.MAX_GENDER = 3
-# # iNewidGender.GENDER_STEP = 0.10000 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-# # #iSeenidGender.GENDER_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-# # iNewidGender.real_genders = numpy.arange(iNewidGender.MIN_GENDER, iNewidGender.MAX_GENDER, iNewidGender.GENDER_STEP)
-# # iNewidGender.genders = map(image_loader.code_gender, iNewidGender.real_genders)
-# # iNewidGender.racetweens = [999]
-# # iNewidGender.expressions = [0]
-# # iNewidGender.morphs = [0]
-# # iNewidGender.poses = [0]
-# # iNewidGender.lightings = [0]
-# # iNewidGender.slow_signal = 2
-# # iNewidGender.step = 1
-# # iNewidGender.offset = 0                             
-# # iNewidGender.input_files = image_loader.create_image_filenames2(iNewidGender.data_base_dir, iNewidGender.slow_signal, iNewidGender.ids, iNewidGender.ages, \
-# #                                             iNewidGender.genders, iNewidGender.racetweens, iNewidGender.expressions, iNewidGender.morphs, \
-# #                                             iNewidGender.poses, iNewidGender.lightings, iNewidGender.step, iNewidGender.offset)  
-# # iNewidGender.num_images = len(iNewidGender.inputes ist nicht zu kompliziert_files)
-# # #iNewidGender.params = [ids, expressions, morphs, poses, lightings]
-# # iNewidGender.params = [iNewidGender.ids, iNewidGender.ages, iNewidGender.genders, iNewidGender.racetweens, iNewidGender.expressions, \
-# #                   iNewidGender.morphs, iNewidGender.poses, iNewidGender.lightings]
-# # iNewidGender.block_size = iNewidGender.num_images / len(iNewidGender.params[iNewidGender.slow_signal])
-# # 
-# # iNewidGender.correct_labels = sfa_libs.wider_1Darray(iNewidGender.real_genders, iNewidGender.block_size)
-# # iNewidGender.correct_classes = sfa_libs.wider_1Darray(iNewidGender.real_genders, iNewidGender.block_size)
-# # #iNewidGender.correct_classes = sfa_libs.wider_1Darray(numpy.arange(iNewidGender.num_images / iNewidGender.block_size), iNewidGender.block_size)
-# # 
-# # if gender_continuous:
-# #     iNewidGender.block_size = iNewidGender.num_images / len(iNewidGender.params[iNewidGender.slow_signal])
-# #     iNewidGender.correct_labels = sfa_libs.wider_1Darray(iNewidGender.real_genders, iNewidGender.block_size)
-# #     iNewidGender.correct_classes = sfa_libs.wider_1Darray(iNewidGender.real_genders, iNewidGender.block_size)
-# # else:
-# #     bs = iNewidGender.num_images / len(iNewidGender.params[iNewidGender.slow_signal])
-# #     bs1 = len(iNewidGender.real_genders[iNewidGender.real_genders<0]) * bs
-# #     bs2 = len(iNewidGender.real_genders[iNewidGender.real_genders>=0]) * bs
-# #     iNewidGender.block_size = numpy.array([bs1, bs2])
-# #     iNewidGender.correct_labels = numpy.array([-1]*bs1 + [1]*bs2)
-# #     iNewidGender.correct_classes = numpy.array( [-1]*bs1 + [1]*bs2)
-# # 
-# # system_parameters.test_object_contents(iNewidGendes ist nicht zu komplizierter)
-# # 
-# # 
-# # print "******** Setting New Id Data Parameters ******************************"
-# # sNewidGender = system_parameters.ParamsDataLoading()
-# # sNewidGender.input_files = iNewidGender.input_files
-# # sNewidGender.num_images = iNewidGender.num_images
-# # sNewidGender.image_width = 256
-# # sNewidGender.image_height = 192
-# # sNewidGender.subimage_width = 135
-# # sNewidGender.subimage_height = 135 
-# # sNewidGender.pixelsampling_x = 1
-# # sNewidGender.pixelsampling_y =  1
-# # sNewidGender.subimage_pixelsampling = 2
-# # sNewidGender.subimage_first_row =  sNewidGender.image_height/2-sNewidGender.subimage_height*sNewidGender.pixelsampling_y/2
-# # sNewidGender.subimage_first_column = sNewidGender.image_width/2-sNewidGender.subimage_width*sNewidGender.pixelsampling_x/2+ 5*sNewidGender.pixelsampling_x
-# # sNewidGender.add_noise_L0 = True
-# # sNewidGender.convert_format = "L"
-# # sNewidGender.background_type = "black"
-# # sNewidGender.translation = 2
-# # sNewidGender.translations_x = numpy.random.random_integers(-sNewidGender.translation, sNewidGender.translation, sNewidGender.num_images)
-# # sNewidGender.translations_y = numpy.random.random_integers(-sNewidGender.translation, sNewidGender.translation, sNewidGender.num_images)
-# # sNewidGender.trans_sampled = False
-# # sNewidGender.load_data = load_data_from_sSeq
-# # system_parameters.test_object_contents(sNewidGender)
-
-numpy.random.seed(experiment_seed+987987987)
-contrast_enhance = "ContrastGenderMultiply"
-#WARNING!!!
-#iTrainGender0 = iSeqCreateGender(first_id = 0, num_ids = 180, user_base_dir=user_base_dir, data_dir="RenderingsGender60x200", gender_continuous=True, seed=-1)
-iTrainGender0 = iSeqCreateGender(first_id = 0, num_ids = 180, user_base_dir=user_base_dir, data_dir="RenderingsGender60x200", gender_continuous=True, seed=-1)
-sTrainGender0 = sSeqCreateGender(iTrainGender0, contrast_enhance, seed=-1)
-
-iTrainGender1 = iSeqCreateGender(first_id = 0, num_ids = 10, user_base_dir=user_base_dir, data_dir="RenderingsGender60x200", gender_continuous=True, seed=-1)
-sTrainGender1 = sSeqCreateGender(iTrainGender1, contrast_enhance, seed=-1)
-
-#iTrainGender2 = iSeqCreateGender(first_id = 40, num_ids = 150, user_base_dir=user_base_dir, data_dir="RenderingsGender60x200", gender_continuous=True, seed=-1)
-#sTrainGender2 = sSeqCreateGender(iTrainGender2, seed=-1)
-#sTrainGender2.train_mode = "ignore_data"
-
-#iSeenidGender = iSeqCreateGender(first_id = 0, num_ids = 180, user_base_dir=user_base_dir, data_dir="RenderingsGender60x200", gender_continuous=True, seed=-1)
-iSeenidGender = iSeqCreateGender(first_id = 0, num_ids = 180, user_base_dir=user_base_dir, data_dir="RenderingsGender60x200", gender_continuous=True, seed=-1)
-sSeenidGender = sSeqCreateGender(iSeenidGender, contrast_enhance, seed=-1)
-
-iNewidGender = iSeqCreateGender(first_id = 180, num_ids = 20, user_base_dir=user_base_dir, data_dir="RenderingsGender60x200", gender_continuous=True, seed=-1)
-sNewidGender = sSeqCreateGender(iNewidGender, contrast_enhance, seed=-1)
-
-#LABEL TRANSFORMATIONS FOR EXACT LABEL LEARNING
-random_labels = True and False
-discontinuous_labels = True and False
-if random_labels or discontinuous_labels:
-    labels = numpy.sort(list(set(iTrainGender0.correct_labels)))
-
-    if discontinuous_labels:
-        random_labels = (numpy.arange(-3,3,0.1)+3)%3 - 6
-    else:
-        random_labels = numpy.random.normal(size = len(labels))
-        random_labels = numpy.abs(numpy.random.normal(size = len(labels))).cumsum()
-    
-    print "labels =", labels
-    print "random_labels = ", random_labels
-    for i, label_val in enumerate(labels):
-        for correct_labels in (iTrainGender0.correct_labels, iTrainGender1.correct_labels, iSeenidGender.correct_labels, iNewidGender.correct_labels): #
-            correct_labels[correct_labels == label_val] = random_labels[i]
-else: #regular labels    
-    power = 1.0 #2.0 # 3.0 1.0
-    offset = 0.0 #3.0 # 0.0, 3.0
-    if power==2:
-        iTrainGender0.correct_labels = iTrainGender0.correct_labels ** power
-        iSeenidGender.correct_labels = iSeenidGender.correct_labels ** power
-        iNewidGender.correct_labels =  iNewidGender.correct_labels ** power
-    elif power==3 or power==1:
-        iTrainGender0.correct_labels = sgn_expo(iTrainGender0.correct_labels+offset, power) 
-        iTrainGender1.correct_labels = sgn_expo(iTrainGender1.correct_labels+offset, power) 
-        #iTrainGender2.correct_labels = sgn_expo(iTrainGender2.correct_labels, 1.0) 
-        iSeenidGender.correct_labels =  sgn_expo(iSeenidGender.correct_labels+offset, power)
-        iNewidGender.correct_labels = sgn_expo(iNewidGender.correct_labels+offset, power)
-    else:
-        er = "Dont know how to handle power properly, power=", power
-        raise Exception(er)
-
-def extract_gender_from_filename(filename):
-    if "M" in filename:
-        return -1
-    elif "F" in filename:
-        return 1
-    else:
-        print "gender from filename %s not recognized"%filename
-    quit()
-
-
-def load_GT_labels(labels_filename, age_included=True, rAge_included=False, gender_included=True, race_included=False, avgColor_included=False):
+def load_GT_labels(self, labels_filename, age_included=True, rAge_included=False, gender_included=True, race_included=False, avgColor_included=False):
     fd = open(labels_filename, 'r')
 
     c_age = 1
@@ -516,4071 +143,1544 @@ def load_GT_labels(labels_filename, age_included=True, rAge_included=False, gend
         labels[filename] = this_labels
     fd.close()
     return labels
-    
-add_skin_color_label_classes = True and False
-multiple_labels = add_skin_color_label_classes and False 
-first_gender_label = True #and False
-sampled_by_gender = True #and False
-
-#True, False, False, False => learn only skin color
-#True, True, True, True  => learn both gender and skin color, gender is first label and determines ordering
-#True, True, True, False => learn both gender and skin color, gender is first label but skin color determines ordering
-#False, False, True, True => learn only gender 
-
-if add_skin_color_label_classes:
-    skin_color_labels_map = load_GT_labels(user_base_dir+"/RenderingsGender60x200"+"/GT_average_color_labels.txt", age_included=False, rAge_included=False, gender_included=False, race_included=False, avgColor_included=True)
-    
-    example_filename = "output133_a999_g362_rt999_e0_c0_p0_i0.tif"
-    filename_len = len(example_filename)
-    
-    skin_color_labels_TrainGender0 =[]   
-    for input_file in iTrainGender0.input_files:
-        input_file_short =  input_file[-filename_len:]
-        skin_color_labels_TrainGender0.append(skin_color_labels_map[input_file_short])  
-    skin_color_labels_TrainGender0 = numpy.array(skin_color_labels_TrainGender0).reshape((-1,1))
-    
-    skin_color_labels_SeenidGender =[]   
-    for input_file in iSeenidGender.input_files:
-        input_file_short =  input_file[-filename_len:]
-        skin_color_labels_SeenidGender.append(skin_color_labels_map[input_file_short])
-    skin_color_labels_SeenidGender = numpy.array(skin_color_labels_SeenidGender).reshape((-1,1))
-
-    skin_color_labels_NewidGender =[]   
-    for input_file in iNewidGender.input_files:
-        input_file_short =  input_file[-filename_len:]
-        skin_color_labels_NewidGender.append(skin_color_labels_map[input_file_short])
-    skin_color_labels_NewidGender = numpy.array(skin_color_labels_NewidGender).reshape((-1,1))
-
-    skin_color_labels = skin_color_labels_SeenidGender.flatten()
-    sorting = numpy.argsort(skin_color_labels)
-    num_classes = 60
-    skin_color_classes_SeenidGender = numpy.zeros(iSeenidGender.num_images)
-    skin_color_classes_SeenidGender[sorting] = numpy.arange(iSeenidGender.num_images)*num_classes/iSeenidGender.num_images
-    avg_labels = more_nodes.compute_average_labels_for_each_class(skin_color_classes_SeenidGender, skin_color_labels)
-    all_classes = numpy.unique(skin_color_classes_SeenidGender)
-    print "skin color avg_labels=", avg_labels 
-    skin_color_classes_TrainGender0 = more_nodes.map_labels_to_class_number(all_classes, avg_labels, skin_color_labels_TrainGender0.flatten())
-    skin_color_classes_NewidGender = more_nodes.map_labels_to_class_number(all_classes, avg_labels, skin_color_labels_NewidGender.flatten())
-
-    skin_color_classes_TrainGender0 = skin_color_classes_TrainGender0.reshape((-1,1))
-    skin_color_classes_SeenidGender = skin_color_classes_SeenidGender.reshape((-1,1))
-    skin_color_classes_NewidGender = skin_color_classes_NewidGender.reshape((-1,1))
-
-if multiple_labels==True:
-    if first_gender_label == True:
-        print "Learning both skin color and gender, gender is first label"
-        iTrainGender0.correct_labels = numpy.concatenate((iTrainGender0.correct_labels.reshape(-1,1), skin_color_labels_TrainGender0), axis=1)
-        iSeenidGender.correct_labels = numpy.concatenate((iSeenidGender.correct_labels.reshape(-1,1), skin_color_labels_SeenidGender), axis=1)
-        iNewidGender.correct_labels = numpy.concatenate((iNewidGender.correct_labels.reshape(-1,1), skin_color_labels_NewidGender), axis=1)
-    
-        iTrainGender0.correct_classes = numpy.concatenate((iTrainGender0.correct_classes.reshape(-1,1), skin_color_classes_TrainGender0), axis=1)
-        iSeenidGender.correct_classes = numpy.concatenate((iSeenidGender.correct_classes.reshape(-1,1), skin_color_classes_SeenidGender), axis=1)
-        iNewidGender.correct_classes = numpy.concatenate((iNewidGender.correct_classes.reshape(-1,1), skin_color_classes_NewidGender), axis=1)
-    else:
-        print "Learning both skin color and gender, color is first label"
-        iTrainGender0.correct_labels = numpy.concatenate((skin_color_labels_TrainGender0, iTrainGender0.correct_labels.reshape(-1,1)), axis=1)
-        iSeenidGender.correct_labels = numpy.concatenate((skin_color_labels_SeenidGender, iSeenidGender.correct_labels.reshape(-1,1)), axis=1)
-        iNewidGender.correct_labels = numpy.concatenate((skin_color_labels_NewidGender, iNewidGender.correct_labels.reshape(-1,1)), axis=1)
-    
-        iTrainGender0.correct_classes = numpy.concatenate((skin_color_classes_TrainGender0, iTrainGender0.correct_classes.reshape(-1,1)), axis=1)
-        iSeenidGender.correct_classes = numpy.concatenate((skin_color_classes_SeenidGender, iSeenidGender.correct_classes.reshape(-1,1)), axis=1)
-        iNewidGender.correct_classes = numpy.concatenate((skin_color_classes_NewidGender, iNewidGender.correct_classes.reshape(-1,1)), axis=1)
-else:
-    if add_skin_color_label_classes:
-        print "Learning skin color instead of gender"
-        iTrainGender0.correct_labels = skin_color_labels_TrainGender0.flatten()
-        iSeenidGender.correct_labels = skin_color_labels_SeenidGender.flatten()
-        iNewidGender.correct_labels = skin_color_labels_NewidGender.flatten()
-        iTrainGender0.correct_classes = skin_color_classes_TrainGender0.flatten()
-        iSeenidGender.correct_classes = skin_color_classes_SeenidGender.flatten()
-        iNewidGender.correct_classes = skin_color_classes_NewidGender.flatten()
-    else:
-        print "Learning gender only"
-
-if sampled_by_gender == False:
-    print "reordering by increasing skin color label"
-    for (iSeq, labels) in ((iTrainGender0, skin_color_labels_TrainGender0), 
-                           (iSeenidGender, skin_color_labels_SeenidGender), 
-                            (iNewidGender, skin_color_labels_NewidGender)):    
-        all_labels = labels.flatten()
-        reordering = numpy.argsort(all_labels)
-        if multiple_labels:
-            iSeq.correct_labels = iSeq.correct_labels[reordering,:]
-            iSeq.correct_classes = iSeq.correct_classes[reordering,:]
-        else:
-            iSeq.correct_labels = iSeq.correct_labels[reordering]
-            iSeq.correct_classes = iSeq.correct_classes[reordering]            
-        reordered_files = []
-        for i in range(len(iSeq.input_files)):
-            reordered_files.append(iSeq.input_files[reordering[i]])
-        iSeq.input_files = reordered_files
-        #print "reordered_files=", reordered_files
-    print "labels/classes reordered, skin color is the first one"
-
-
-
 
 
 ####################################################################
 ###########        SYSTEM FOR GENDER ESTIMATION         ############
 ####################################################################  
-ParamsGender = system_parameters.ParamsSystem()
-ParamsGender.name = "Network that extracts gender information"
-ParamsGender.network = None
-semi_supervised_learning = False
-if semi_supervised_learning:
-    ParamsGender.iTrain = [[iTrainGender0], [iTrainGender1,]] #[]
-    ParamsGender.sTrain = [[sTrainGender0], [sTrainGender1,]] #[]
-else:
-    ParamsGender.iTrain = [[iTrainGender0]] #[]
-    ParamsGender.sTrain = [[sTrainGender0]] #[]    
-ParamsGender.iSeenid = iSeenidGender
-ParamsGender.sSeenid = sSeenidGender
-ParamsGender.iNewid = [[iNewidGender]] #[]
-ParamsGender.sNewid = [[sNewidGender]] #[]
 
-# ParamsGender.block_size = iTrainGender1.block_size
-# if gender_continuous:
-#     ParamsGender.train_mode = 'mixed'
-# else:
-#     ParamsGender.train_mode = 'clustered'
-    
-ParamsGender.analysis = None
-ParamsGender.enable_reduced_image_sizes = True #(False paper)
-ParamsGender.reduction_factor = 1.0 # 2.0 # 8.0 # 2.0 #1.0 #(1.0 paper)
-ParamsGender.hack_image_size  = 135 # 64  # 16 # 64 #128 #(128 paper)
-ParamsGender.enable_hack_image_size = True
+class ParamsGenderExperiment(system_parameters.ParamsSystem):
+    def __init__(self, experiment_seed, experiment_basedir, learn_all_variables=True):
+        super(ParamsGenderExperiment, self).__init__()
 
-print "******** Setting Train Information Parameters for Identity ***********"
-iTrainIdentity = system_parameters.ParamsInput()
-iTrainIdentity.name = "Identities20x500"
-iTrainIdentity.data_base_dir =user_base_dir + "/Renderings20x500"
-iTrainIdentity.ids = numpy.arange(0,18)
-iTrainIdentity.ages = [999]
-#iTrainIdentity.MIN_GENDER = -3
-#iTrainIdentity.MAX_GENDER = 3
-#iTrainIdentity.GENDER_STEP = 0.10000 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-#iTrainIdentity.GENDER_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-#iTrainIdentity.genders = map(image_loader.code_gender, numpy.arange(iTrainIdentity.MIN_GENDER, iTrainIdentity.MAX_GENDER, iTrainIdentity.GENDER_STEP))
-iTrainIdentity.genders = [999]
-iTrainIdentity.racetweens = [999]
-iTrainIdentity.expressions = [0]
-iTrainIdentity.morphs = [0]
-iTrainIdentity.poses = range(0,500)
-iTrainIdentity.lightings = [0]
-iTrainIdentity.slow_signal = 0
-iTrainIdentity.step = 2
-iTrainIdentity.offset = 0     
-
-iTrainIdentity.input_files = image_loader.create_image_filenames(iTrainIdentity.data_base_dir, iTrainIdentity.slow_signal, iTrainIdentity.ids, iTrainIdentity.expressions, iTrainIdentity.morphs, iTrainIdentity.poses, iTrainIdentity.lightings, iTrainIdentity.step, iTrainIdentity.offset)
-iTrainIdentity.num_images = len(iTrainIdentity.input_files)
-iTrainIdentity.params = [iTrainIdentity.ids, iTrainIdentity.expressions, iTrainIdentity.morphs, iTrainIdentity.poses, iTrainIdentity.lightings]
-iTrainIdentity.block_size= iTrainIdentity.num_images / len(iTrainIdentity.params[iTrainIdentity.slow_signal])
-
-iTrainIdentity.correct_classes = sfa_libs.wider_1Darray(iTrainIdentity.ids, iTrainIdentity.block_size)
-iTrainIdentity.correct_labels = sfa_libs.wider_1Darray(iTrainIdentity.ids, iTrainIdentity.block_size)
-
-system_parameters.test_object_contents(iTrainIdentity)
-
-print "***** Setting Train Sequence Parameters for Identity *****************"
-sTrainIdentity = system_parameters.ParamsDataLoading()
-sTrainIdentity.input_files = iTrainIdentity.input_files
-sTrainIdentity.num_images = iTrainIdentity.num_images
-sTrainIdentity.image_width = 640
-sTrainIdentity.image_height = 480
-sTrainIdentity.subimage_width = 135
-sTrainIdentity.subimage_height = 135 
-sTrainIdentity.pixelsampling_x = 2
-sTrainIdentity.pixelsampling_y =  2
-sTrainIdentity.subimage_pixelsampling = 2
-sTrainIdentity.subimage_first_row =  sTrainIdentity.image_height/2-sTrainIdentity.subimage_height*sTrainIdentity.pixelsampling_y/2
-sTrainIdentity.subimage_first_column = sTrainIdentity.image_width/2-sTrainIdentity.subimage_width*sTrainIdentity.pixelsampling_x/2+ 5*sTrainIdentity.pixelsampling_x
-sTrainIdentity.add_noise_L0 = False
-sTrainIdentity.convert_format = "L"
-sTrainIdentity.background_type = "black"
-sTrainIdentity.translation = 0
-sTrainIdentity.translations_x = numpy.random.random_integers(-sTrainIdentity.translation, sTrainIdentity.translation, sTrainIdentity.num_images)
-sTrainIdentity.translations_y = numpy.random.random_integers(-sTrainIdentity.translation, sTrainIdentity.translation, sTrainIdentity.num_images)
-sTrainIdentity.trans_sampled = False
-system_parameters.test_object_contents(sTrainIdentity)
-
-
-print "******** Setting Seen Id Information Parameters for Identity *********"
-iSeenidIdentity = system_parameters.ParamsInput()
-iSeenidIdentity.name = "Identities20x500"
-iSeenidIdentity.data_base_dir =user_base_dir + "/Renderings20x500"
-iSeenidIdentity.ids = numpy.arange(0,18)
-iSeenidIdentity.ages = [999]
-iSeenidIdentity.MIN_GENDER = -3
-iSeenidIdentity.MAX_GENDER = 3
-iSeenidIdentity.GENDER_STEP = 0.10000 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-#iSeenidIdentity.GENDER_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-iSeenidIdentity.genders = map(image_loader.code_gender, numpy.arange(iSeenidIdentity.MIN_GENDER, iSeenidIdentity.MAX_GENDER, iSeenidIdentity.GENDER_STEP))
-iSeenidIdentity.racetweens = [999]
-iSeenidIdentity.expressions = [0]
-iSeenidIdentity.morphs = [0]
-iSeenidIdentity.poses = range(0,500)
-iSeenidIdentity.lightings = [0]
-iSeenidIdentity.slow_signal = 0
-iSeenidIdentity.step = 2
-iSeenidIdentity.offset = 1    
-
-iSeenidIdentity.input_files = image_loader.create_image_filenames(iSeenidIdentity.data_base_dir, iSeenidIdentity.slow_signal, iSeenidIdentity.ids, iSeenidIdentity.expressions, iSeenidIdentity.morphs, iSeenidIdentity.poses, iSeenidIdentity.lightings, iSeenidIdentity.step, iSeenidIdentity.offset)
-iSeenidIdentity.num_images = len(iSeenidIdentity.input_files)
-iSeenidIdentity.params = [iSeenidIdentity.ids, iSeenidIdentity.expressions, iSeenidIdentity.morphs, iSeenidIdentity.poses, iSeenidIdentity.lightings]
-iSeenidIdentity.block_size= iSeenidIdentity.num_images / len(iSeenidIdentity.params[iSeenidIdentity.slow_signal])
-
-iSeenidIdentity.correct_classes = sfa_libs.wider_1Darray(iSeenidIdentity.ids, iSeenidIdentity.block_size)
-iSeenidIdentity.correct_labels = sfa_libs.wider_1Darray(iSeenidIdentity.ids, iSeenidIdentity.block_size)
-
-system_parameters.test_object_contents(iSeenidIdentity)
-
-print "******** Setting Seen Id Sequence Parameters for Identity ************"
-sSeenidIdentity = system_parameters.ParamsDataLoading()
-sSeenidIdentity.input_files = iSeenidIdentity.input_files
-sSeenidIdentity.num_images = iSeenidIdentity.num_images
-sSeenidIdentity.image_width = 640
-sSeenidIdentity.image_height = 480
-sSeenidIdentity.subimage_width = 135
-sSeenidIdentity.subimage_height = 135 
-sSeenidIdentity.pixelsampling_x = 2
-sSeenidIdentity.pixelsampling_y =  2
-sSeenidIdentity.subimage_pixelsampling = 2
-sSeenidIdentity.subimage_first_row =  sSeenidIdentity.image_height/2-sSeenidIdentity.subimage_height*sSeenidIdentity.pixelsampling_y/2
-sSeenidIdentity.subimage_first_column = sSeenidIdentity.image_width/2-sSeenidIdentity.subimage_width*sSeenidIdentity.pixelsampling_x/2+ 5*sSeenidIdentity.pixelsampling_x
-sSeenidIdentity.add_noise_L0 = False
-sSeenidIdentity.convert_format = "L"
-sSeenidIdentity.background_type = "black"
-sSeenidIdentity.translation = 0
-sSeenidIdentity.translations_x = numpy.random.random_integers(-sSeenidIdentity.translation, sSeenidIdentity.translation, sSeenidIdentity.num_images)
-sSeenidIdentity.translations_y = numpy.random.random_integers(-sSeenidIdentity.translation, sSeenidIdentity.translation, sSeenidIdentity.num_images)
-sSeenidIdentity.trans_sampled = False
-system_parameters.test_object_contents(sSeenidIdentity)
-
-
-print "******** Setting New Id Information Parameters for Identity **********"
-iNewidIdentity = system_parameters.ParamsInput()
-iNewidIdentity.name = "Identities20x500"
-iNewidIdentity.data_base_dir =user_base_dir + "/Renderings20x500"
-iNewidIdentity.ids = numpy.arange(18,20, dtype="int")
-iNewidIdentity.ages = [999]
-iNewidIdentity.MIN_GENDER = -3
-iNewidIdentity.MAX_GENDER = 3
-iNewidIdentity.GENDER_STEP = 0.10000 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-#iNewidIdentity.GENDER_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-iNewidIdentity.genders = map(image_loader.code_gender, numpy.arange(iNewidIdentity.MIN_GENDER, iNewidIdentity.MAX_GENDER, iNewidIdentity.GENDER_STEP))
-iNewidIdentity.racetweens = [999]
-iNewidIdentity.expressions = [0]
-iNewidIdentity.morphs = [0]
-iNewidIdentity.poses = range(0,500)
-iNewidIdentity.lightings = [0]
-iNewidIdentity.slow_signal = 0
-iNewidIdentity.step = 1
-iNewidIdentity.offset = 0     
-
-iNewidIdentity.input_files = image_loader.create_image_filenames(iNewidIdentity.data_base_dir, iNewidIdentity.slow_signal, iNewidIdentity.ids, iNewidIdentity.expressions, iNewidIdentity.morphs, iNewidIdentity.poses, iNewidIdentity.lightings, iNewidIdentity.step, iNewidIdentity.offset)
-iNewidIdentity.num_images = len(iNewidIdentity.input_files)
-iNewidIdentity.params = [iNewidIdentity.ids, iNewidIdentity.expressions, iNewidIdentity.morphs, iNewidIdentity.poses, iNewidIdentity.lightings]
-iNewidIdentity.block_size= iNewidIdentity.num_images / len(iNewidIdentity.params[iNewidIdentity.slow_signal])
-
-iNewidIdentity.correct_classes = sfa_libs.wider_1Darray(iNewidIdentity.ids, iNewidIdentity.block_size)
-iNewidIdentity.correct_labels = sfa_libs.wider_1Darray(iNewidIdentity.ids, iNewidIdentity.block_size)
-
-system_parameters.test_object_contents(iNewidIdentity)
-
-print "******** Setting New Id Sequence Parameters for Identity *************"
-sNewidIdentity = system_parameters.ParamsDataLoading()
-sNewidIdentity.input_files = iNewidIdentity.input_files
-sNewidIdentity.num_images = iNewidIdentity.num_images
-sNewidIdentity.image_width = 640
-sNewidIdentity.image_height = 480
-sNewidIdentity.subimage_width = 135
-sNewidIdentity.subimage_height = 135 
-sNewidIdentity.pixelsampling_x = 2
-sNewidIdentity.pixelsampling_y =  2
-sNewidIdentity.subimage_pixelsampling = 2
-sNewidIdentity.subimage_first_row =  sNewidIdentity.image_height/2-sNewidIdentity.subimage_height*sNewidIdentity.pixelsampling_y/2
-sNewidIdentity.subimage_first_column = sNewidIdentity.image_width/2-sNewidIdentity.subimage_width*sNewidIdentity.pixelsampling_x/2+ 5*sNewidIdentity.pixelsampling_x
-sNewidIdentity.add_noise_L0 = False
-sNewidIdentity.convert_format = "L"
-sNewidIdentity.background_type = "black"
-sNewidIdentity.translation = 0
-sNewidIdentity.translations_x = numpy.random.random_integers(-sNewidIdentity.translation, sNewidIdentity.translation, sNewidIdentity.num_images)
-sNewidIdentity.translations_y = numpy.random.random_integers(-sNewidIdentity.translation, sNewidIdentity.translation, sNewidIdentity.num_images)
-sNewidIdentity.trans_sampled = False
-system_parameters.test_object_contents(sNewidIdentity)
-
-
-
-####################################################################
-###########        SYSTEM FOR IDENTITY RECOGNITION      ############
-####################################################################  
-ParamsIdentity = system_parameters.ParamsSystem()
-ParamsIdentity.name = "Network that extracts identity information"
-ParamsIdentity.network = "linearNetwork4L"
-ParamsIdentity.iTrain = iTrainIdentity
-ParamsIdentity.sTrain = sTrainIdentity
-ParamsIdentity.iSeenid = iSeenidIdentity
-ParamsIdentity.sSeenid = sSeenidIdentity
-ParamsIdentity.iNewid = iNewidIdentity
-ParamsIdentity.sNewid = sNewidIdentity
-ParamsIdentity.block_size = iTrainIdentity.block_size
-ParamsIdentity.train_mode = 'clustered'
-ParamsIdentity.analysis = None
+    def create(self):
+        numpy.random.seed(experiment_seed+987987987)
+        contrast_enhance = "ContrastGenderMultiply"
+        #WARNING!!!
+        #iTrainGender0 = iSeqCreateGender(first_id = 0, num_ids = 180, user_base_dir=user_base_dir, data_dir="RenderingsGender60x200", gender_continuous=True, seed=-1)
+        iTrainGender0 = self.iSeqCreateGender(first_id = 0, num_ids = 180, user_base_dir=user_base_dir, data_dir="RenderingsGender60x200", gender_continuous=True, seed=-1)
+        sTrainGender0 = self.sSeqCreateGender(iTrainGender0, contrast_enhance, seed=-1)
         
-
-print "******** Setting Train Information Parameters for Angle **************"
-iTrainAngle = system_parameters.ParamsInput()
-iTrainAngle.name = "Angle20x500"
-iTrainAngle.data_base_dir =user_base_dir + "/Renderings20x500"
-iTrainAngle.ids = numpy.arange(0,18)
-iTrainAngle.ages = [999]
-#iTrainAngle.MIN_GENDER = -3
-#iTrainAngle.MAX_GENDER = 3
-#iTrainAngle.GENDER_STEP = 0.10000 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-#iTrainAngle.GENDER_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-#iTrainAngle.genders = map(image_loader.code_gender, numpy.arange(iTrainAngle.MIN_GENDER, iTrainAngle.MAX_GENDER, iTrainAngle.GENDER_STEP))
-iTrainAngle.genders = [999]
-iTrainAngle.racetweens = [999]
-iTrainAngle.expressions = [0]
-iTrainAngle.morphs = [0]
-iTrainAngle.real_poses = numpy.linspace(0, 90.0, 125) #0,90,500
-iTrainAngle.poses = numpy.arange(0,500,4) #0,500
-iTrainAngle.lightings = [0]
-iTrainAngle.slow_signal = 3
-iTrainAngle.step = 1 # 1
-iTrainAngle.offset = 0     
-
-iTrainAngle.input_files = image_loader.create_image_filenames(iTrainAngle.data_base_dir, iTrainAngle.slow_signal, iTrainAngle.ids, iTrainAngle.expressions, iTrainAngle.morphs, iTrainAngle.poses, iTrainAngle.lightings, iTrainAngle.step, iTrainAngle.offset)
-iTrainAngle.num_images = len(iTrainAngle.input_files)
-iTrainAngle.params = [iTrainAngle.ids, iTrainAngle.expressions, iTrainAngle.morphs, iTrainAngle.poses, iTrainAngle.lightings]
-iTrainAngle.block_size= iTrainAngle.num_images / len(iTrainAngle.params[iTrainAngle.slow_signal])
-
-iTrainAngle.correct_classes = sfa_libs.wider_1Darray(iTrainAngle.poses, iTrainAngle.block_size)
-iTrainAngle.correct_labels = sfa_libs.wider_1Darray(iTrainAngle.real_poses, iTrainAngle.block_size)
-
-system_parameters.test_object_contents(iTrainAngle)
-
-print "***** Setting Train Sequence Parameters for Angle ********************"
-sTrainAngle = system_parameters.ParamsDataLoading()
-sTrainAngle.input_files = iTrainAngle.input_files
-sTrainAngle.num_images = iTrainAngle.num_images
-sTrainAngle.image_width = 640
-sTrainAngle.image_height = 480
-sTrainAngle.subimage_width = 135
-sTrainAngle.subimage_height = 135 
-sTrainAngle.pixelsampling_x = 2
-sTrainAngle.pixelsampling_y =  2
-sTrainAngle.subimage_pixelsampling = 2
-sTrainAngle.subimage_first_row =  sTrainAngle.image_height/2-sTrainAngle.subimage_height*sTrainAngle.pixelsampling_y/2
-sTrainAngle.subimage_first_column = sTrainAngle.image_width/2-sTrainAngle.subimage_width*sTrainAngle.pixelsampling_x/2+ 5*sTrainAngle.pixelsampling_x
-sTrainAngle.add_noise_L0 = False
-sTrainAngle.convert_format = "L"
-sTrainAngle.background_type = "black"
-sTrainAngle.translation = 1
-sTrainAngle.translations_x = numpy.random.random_integers(-sTrainAngle.translation, sTrainAngle.translation, sTrainAngle.num_images)
-sTrainAngle.translations_y = numpy.random.random_integers(-sTrainAngle.translation, sTrainAngle.translation, sTrainAngle.num_images)
-sTrainAngle.trans_sampled = False
-system_parameters.test_object_contents(sTrainAngle)
-
-
-print "******** Setting Seen Id Information Parameters for Angle ************"
-iSeenidAngle = system_parameters.ParamsInput()
-iSeenidAngle.name = "Angle20x500"
-iSeenidAngle.data_base_dir =user_base_dir + "/Renderings20x500"
-iSeenidAngle.ids = numpy.arange(0,18)
-iSeenidAngle.ages = [999]
-iSeenidAngle.MIN_GENDER = -3
-iSeenidAngle.MAX_GENDER = 3
-iSeenidAngle.GENDER_STEP = 0.10000 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-#iSeenidAngle.GENDER_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-iSeenidAngle.genders = map(image_loader.code_gender, numpy.arange(iSeenidAngle.MIN_GENDER, iSeenidAngle.MAX_GENDER, iSeenidAngle.GENDER_STEP))
-iSeenidAngle.racetweens = [999]
-iSeenidAngle.expressions = [0]
-iSeenidAngle.morphs = [0]
-iSeenidAngle.real_poses = numpy.linspace(0,90.0,125) #0,90,500
-iSeenidAngle.poses = numpy.arange(0,500, 4) #0,500
-iSeenidAngle.lightings = [0]
-iSeenidAngle.slow_signal = 3
-iSeenidAngle.step = 1 # 1
-iSeenidAngle.offset = 0
-
-iSeenidAngle.input_files = image_loader.create_image_filenames(iSeenidAngle.data_base_dir, iSeenidAngle.slow_signal, iSeenidAngle.ids, iSeenidAngle.expressions, iSeenidAngle.morphs, iSeenidAngle.poses, iSeenidAngle.lightings, iSeenidAngle.step, iSeenidAngle.offset)
-iSeenidAngle.num_images = len(iSeenidAngle.input_files)
-iSeenidAngle.params = [iSeenidAngle.ids, iSeenidAngle.expressions, iSeenidAngle.morphs, iSeenidAngle.poses, iSeenidAngle.lightings]
-iSeenidAngle.block_size= iSeenidAngle.num_images / len(iSeenidAngle.params[iSeenidAngle.slow_signal])
-
-iSeenidAngle.correct_classes = sfa_libs.wider_1Darray(iSeenidAngle.poses, iSeenidAngle.block_size)
-iSeenidAngle.correct_labels = sfa_libs.wider_1Darray(iSeenidAngle.real_poses, iSeenidAngle.block_size)
-
-system_parameters.test_object_contents(iSeenidAngle)
-
-print "******** Setting Seen Id Sequence Parameters for Angle ***************"
-sSeenidAngle = system_parameters.ParamsDataLoading()
-sSeenidAngle.input_files = iSeenidAngle.input_files
-sSeenidAngle.num_images = iSeenidAngle.num_images
-sSeenidAngle.image_width = 640
-sSeenidAngle.image_height = 480
-sSeenidAngle.subimage_width = 135
-sSeenidAngle.subimage_height = 135 
-sSeenidAngle.pixelsampling_x = 2
-sSeenidAngle.pixelsampling_y =  2
-sSeenidAngle.subimage_pixelsampling = 2
-sSeenidAngle.subimage_first_row =  sSeenidAngle.image_height/2-sSeenidAngle.subimage_height*sSeenidAngle.pixelsampling_y/2
-sSeenidAngle.subimage_first_column = sSeenidAngle.image_width/2-sSeenidAngle.subimage_width*sSeenidAngle.pixelsampling_x/2+ 5*sSeenidAngle.pixelsampling_x
-sSeenidAngle.add_noise_L0 = False
-sSeenidAngle.convert_format = "L"
-sSeenidAngle.background_type = "black"
-sSeenidAngle.translation = 1
-sSeenidAngle.translations_x = numpy.random.random_integers(-sSeenidAngle.translation, sSeenidAngle.translation, sSeenidAngle.num_images)
-sSeenidAngle.translations_y = numpy.random.random_integers(-sSeenidAngle.translation, sSeenidAngle.translation, sSeenidAngle.num_images)
-sSeenidAngle.trans_sampled = False
-system_parameters.test_object_contents(sSeenidAngle)
-
-
-print "******** Setting New Id Information Parameters for Angle *************"
-iNewidAngle = system_parameters.ParamsInput()
-iNewidAngle.name = "Angle20x500"
-iNewidAngle.data_base_dir =user_base_dir + "/Renderings20x500"
-iNewidAngle.ids = numpy.arange(18,20)
-iNewidAngle.ages = [999]
-iNewidAngle.MIN_GENDER = -3
-iNewidAngle.MAX_GENDER = 3
-iNewidAngle.GENDER_STEP = 0.10000 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-#iNewidAngle.GENDER_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-iNewidAngle.genders = map(image_loader.code_gender, numpy.arange(iNewidAngle.MIN_GENDER, iNewidAngle.MAX_GENDER, iNewidAngle.GENDER_STEP))
-iNewidAngle.racetweens = [999]
-iNewidAngle.expressions = [0]
-iNewidAngle.morphs = [0]
-iNewidAngle.real_poses = numpy.linspace(0,90.0,500)
-iNewidAngle.poses = numpy.arange(0,500)
-iNewidAngle.lightings = [0]
-iNewidAngle.slow_signal = 3
-iNewidAngle.step = 1
-iNewidAngle.offset = 0     
-
-iNewidAngle.input_files = image_loader.create_image_filenames(iNewidAngle.data_base_dir, iNewidAngle.slow_signal, iNewidAngle.ids, iNewidAngle.expressions, iNewidAngle.morphs, iNewidAngle.poses, iNewidAngle.lightings, iNewidAngle.step, iNewidAngle.offset)
-iNewidAngle.num_images = len(iNewidAngle.input_files)
-iNewidAngle.params = [iNewidAngle.ids, iNewidAngle.expressions, iNewidAngle.morphs, iNewidAngle.poses, iNewidAngle.lightings]
-iNewidAngle.block_size= iNewidAngle.num_images / len(iNewidAngle.params[iNewidAngle.slow_signal])
-
-iNewidAngle.correct_classes = sfa_libs.wider_1Darray(iNewidAngle.poses, iNewidAngle.block_size)
-iNewidAngle.correct_labels = sfa_libs.wider_1Darray(iNewidAngle.real_poses, iNewidAngle.block_size)
-
-system_parameters.test_object_contents(iNewidAngle)
-
-print "******** Setting New Id Sequence Parameters for Angle ****************"
-sNewidAngle = system_parameters.ParamsDataLoading()
-sNewidAngle.input_files = iNewidAngle.input_files
-sNewidAngle.num_images = iNewidAngle.num_images
-sNewidAngle.image_width = 640
-sNewidAngle.image_height = 480
-sNewidAngle.subimage_width = 135
-sNewidAngle.subimage_height = 135 
-sNewidAngle.pixelsampling_x = 2
-sNewidAngle.pixelsampling_y =  2
-sNewidAngle.subimage_pixelsampling = 2
-sNewidAngle.subimage_first_row =  sNewidAngle.image_height/2-sNewidAngle.subimage_height*sNewidAngle.pixelsampling_y/2
-sNewidAngle.subimage_first_column = sNewidAngle.image_width/2-sNewidAngle.subimage_width*sNewidAngle.pixelsampling_x/2+ 5*sNewidAngle.pixelsampling_x
-sNewidAngle.add_noise_L0 = False
-sNewidAngle.convert_format = "L"
-sNewidAngle.background_type = "black"
-sNewidAngle.translation = 1
-sNewidAngle.translations_x = numpy.random.random_integers(-sNewidAngle.translation, sNewidAngle.translation, sNewidAngle.num_images)
-sNewidAngle.translations_y = numpy.random.random_integers(-sNewidAngle.translation, sNewidAngle.translation, sNewidAngle.num_images)
-sNewidAngle.trans_sampled = False
-system_parameters.test_object_contents(sNewidAngle)
-
-
-
-####################################################################
-###########        SYSTEM FOR ANGLE RECOGNITION      ############
-####################################################################  
-ParamsAngle = system_parameters.ParamsSystem()
-ParamsAngle.name = "Network that extracts Angle information"
-ParamsAngle.network = "linearNetwork4L"
-ParamsAngle.iTrain = iTrainAngle
-ParamsAngle.sTrain = sTrainAngle
-ParamsAngle.iSeenid = iSeenidAngle
-ParamsAngle.sSeenid = sSeenidAngle
-ParamsAngle.iNewid = iNewidAngle
-ParamsAngle.sNewid = sNewidAngle
-ParamsAngle.block_size = iTrainAngle.block_size
-ParamsAngle.train_mode = 'mixed'
-ParamsAngle.analysis = None
-
-
-
-
-
-print "***** Setting Training Information Parameters for Translation X ******"
-iTrainTransX = system_parameters.ParamsInput()
-iTrainTransX.name = "Translation X: 60Genders x 200 identities"
-iTrainTransX.data_base_dir = user_base_dir + "/RenderingsGender60x200"
-iTrainTransX.ids = numpy.arange(0,150) # 160
-iTrainTransX.trans = numpy.arange(-50, 50, 2)
-if len(iTrainTransX.ids) % len(iTrainTransX.trans) != 0:
-    ex="Here the number of translations must be a divisor of the number of identities"
-    raise Exception(ex)
-iTrainTransX.ages = [999]
-iTrainTransX.MIN_GENDER= -3
-iTrainTransX.MAX_GENDER = 3
-iTrainTransX.GENDER_STEP = 0.10000 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-#iTrainTransX.TransX_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-iTrainTransX.real_genders = numpy.arange(iTrainTransX.MIN_GENDER, iTrainTransX.MAX_GENDER, iTrainTransX.GENDER_STEP)
-iTrainTransX.genders = map(image_loader.code_gender, iTrainTransX.real_genders)
-iTrainTransX.racetweens = [999]
-iTrainTransX.expressions = [0]
-iTrainTransX.morphs = [0]
-iTrainTransX.poses = [0]
-iTrainTransX.lightings = [0]
-iTrainTransX.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
-iTrainTransX.step = 1
-iTrainTransX.offset = 0
-iTrainTransX.input_files = image_loader.create_image_filenames2(iTrainTransX.data_base_dir, iTrainTransX.slow_signal, iTrainTransX.ids, iTrainTransX.ages, \
-                                            iTrainTransX.genders, iTrainTransX.racetweens, iTrainTransX.expressions, iTrainTransX.morphs, \
-                                            iTrainTransX.poses, iTrainTransX.lightings, iTrainTransX.step, iTrainTransX.offset)
-#MEGAWARNING!!!!
-#iTrainTransX.input_files = iTrainTransX.input_files
-#numpy.random.shuffle(iTrainTransX.input_files)  
-#numpy.random.shuffle(iTrainTransX.input_files)  
-
-iTrainTransX.num_images = len(iTrainTransX.input_files)
-#iTrainTransX.params = [ids, expressions, morphs, poses, lightings]
-iTrainTransX.params = [iTrainTransX.ids, iTrainTransX.ages, iTrainTransX.genders, iTrainTransX.racetweens, iTrainTransX.expressions, \
-                  iTrainTransX.morphs, iTrainTransX.poses, iTrainTransX.lightings]
-iTrainTransX.block_size = iTrainTransX.num_images / len (iTrainTransX.trans)
-#print "Blocksize = ", iTrainTransX.block_size
-#quit()
-
-iTrainTransX.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iTrainTransX.trans)), iTrainTransX.block_size)
-iTrainTransX.correct_labels = sfa_libs.wider_1Darray(iTrainTransX.trans, iTrainTransX.block_size)
-
-system_parameters.test_object_contents(iTrainTransX)
-
-print "******** Setting Training Data Parameters for TransX  ****************"
-sTrainTransX = system_parameters.ParamsDataLoading()
-sTrainTransX.input_files = iTrainTransX.input_files
-sTrainTransX.num_images = iTrainTransX.num_images
-sTrainTransX.block_size = iTrainTransX.block_size
-sTrainTransX.image_width = 256
-sTrainTransX.image_height = 192
-sTrainTransX.subimage_width = 135
-sTrainTransX.subimage_height = 135 
-sTrainTransX.pixelsampling_x = 1
-sTrainTransX.pixelsampling_y =  1
-sTrainTransX.subimage_pixelsampling = 2
-sTrainTransX.subimage_first_row =  sTrainTransX.image_height/2-sTrainTransX.subimage_height*sTrainTransX.pixelsampling_y/2
-sTrainTransX.subimage_first_column = sTrainTransX.image_width/2-sTrainTransX.subimage_width*sTrainTransX.pixelsampling_x/2
-#sTrainTransX.subimage_first_column = sTrainTransX.image_width/2-sTrainTransX.subimage_width*sTrainTransX.pixelsampling_x/2+ 5*sTrainTransX.pixelsampling_x
-sTrainTransX.add_noise_L0 = True
-sTrainTransX.convert_format = "L"
-sTrainTransX.background_type = "black"
-sTrainTransX.translation = 25
-#sTrainTransX.translations_x = numpy.random.random_integers(-sTrainTransX.translation, sTrainTransX.translation, sTrainTransX.num_images)                                                           
-sTrainTransX.translations_x = sfa_libs.wider_1Darray(iTrainTransX.trans, iTrainTransX.block_size)
-sTrainTransX.translations_y = numpy.random.random_integers(-sTrainTransX.translation, sTrainTransX.translation, sTrainTransX.num_images)
-sTrainTransX.trans_sampled = False
-system_parameters.test_object_contents(sTrainTransX)
-
-print "***** Setting Seen ID Information Parameters for Translation X *******"
-iSeenidTransX = system_parameters.ParamsInput()
-iSeenidTransX.name = "Test Translation X: 60Genders x 200 identities, dx = 1 pixel"
-iSeenidTransX.data_base_dir = user_base_dir + "/RenderingsGender60x200"
-iSeenidTransX.ids = numpy.arange(0,50) # 160
-iSeenidTransX.trans = iTrainTransX.trans + 1
-if len(iSeenidTransX.ids) % len(iSeenidTransX.trans) != 0:
-    ex="Here the number of translations must be a divisor of the number of identities"
-    raise Exception(ex)
-iSeenidTransX.ages = [999]
-iSeenidTransX.MIN_GENDER= -3
-iSeenidTransX.MAX_GENDER = 3
-iSeenidTransX.GENDER_STEP = 0.10000 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-#iSeenidTransX.TransX_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-iSeenidTransX.real_genders = numpy.arange(iSeenidTransX.MIN_GENDER, iSeenidTransX.MAX_GENDER, iSeenidTransX.GENDER_STEP)
-iSeenidTransX.genders = map(image_loader.code_gender, iSeenidTransX.real_genders)
-iSeenidTransX.racetweens = [999]
-iSeenidTransX.expressions = [0]
-iSeenidTransX.morphs = [0]
-iSeenidTransX.poses = [0]
-iSeenidTransX.lightings = [0]
-iSeenidTransX.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
-iSeenidTransX.step = 1
-iSeenidTransX.offset = 0
-iSeenidTransX.input_files = image_loader.create_image_filenames2(iSeenidTransX.data_base_dir, iSeenidTransX.slow_signal, iSeenidTransX.ids, iSeenidTransX.ages, \
-                                            iSeenidTransX.genders, iSeenidTransX.racetweens, iSeenidTransX.expressions, iSeenidTransX.morphs, \
-                                            iSeenidTransX.poses, iSeenidTransX.lightings, iSeenidTransX.step, iSeenidTransX.offset)
-#MEGAWARNING!!!!
-#numpy.random.shuffle(iSeenidTransX.input_files)  
-#numpy.random.shuffle(iSeenidTransX.input_files)  
-
-iSeenidTransX.num_images = len(iSeenidTransX.input_files)
-#iSeenidTransX.params = [ids, expressions, morphs, poses, lightings]
-iSeenidTransX.params = [iSeenidTransX.ids, iSeenidTransX.ages, iSeenidTransX.genders, iSeenidTransX.racetweens, iSeenidTransX.expressions, \
-                  iSeenidTransX.morphs, iSeenidTransX.poses, iSeenidTransX.lightings]
-iSeenidTransX.block_size = iSeenidTransX.num_images / len (iSeenidTransX.trans)
-
-iSeenidTransX.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeenidTransX.trans)), iSeenidTransX.block_size)
-iSeenidTransX.correct_labels = sfa_libs.wider_1Darray(iSeenidTransX.trans, iSeenidTransX.block_size)
-
-system_parameters.test_object_contents(iSeenidTransX)
-
-print "******** Setting Seen Id Data Parameters for TransX  *****************"
-sSeenidTransX = system_parameters.ParamsDataLoading()
-sSeenidTransX.input_files = iSeenidTransX.input_files
-sSeenidTransX.num_images = iSeenidTransX.num_images
-sSeenidTransX.block_size = iSeenidTransX.block_size
-sSeenidTransX.image_width = 256
-sSeenidTransX.image_height = 192
-sSeenidTransX.subimage_width = 135
-sSeenidTransX.subimage_height = 135 
-sSeenidTransX.pixelsampling_x = 1
-sSeenidTransX.pixelsampling_y =  1
-sSeenidTransX.subimage_pixelsampling = 2
-sSeenidTransX.subimage_first_row =  sSeenidTransX.image_height/2-sSeenidTransX.subimage_height*sSeenidTransX.pixelsampling_y/2
-sSeenidTransX.subimage_first_column = sSeenidTransX.image_width/2-sSeenidTransX.subimage_width*sSeenidTransX.pixelsampling_x/2
-#sSeenidTransX.subimage_first_column = sSeenidTransX.image_width/2-sSeenidTransX.subimage_width*sSeenidTransX.pixelsampling_x/2+ 5*sSeenidTransX.pixelsampling_x
-sSeenidTransX.add_noise_L0 = True
-sSeenidTransX.convert_format = "L"
-sSeenidTransX.background_type = "black"
-sSeenidTransX.translation = 20
-#sSeenidTransX.translations_x = numpy.random.random_integers(-sSeenidTransX.translation, sSeenidTransX.translation, sSeenidTransX.num_images)                                                           
-sSeenidTransX.translations_x = sfa_libs.wider_1Darray(iSeenidTransX.trans, iSeenidTransX.block_size)
-sSeenidTransX.translations_y = numpy.random.random_integers(-sSeenidTransX.translation, sSeenidTransX.translation, sSeenidTransX.num_images)
-sSeenidTransX.trans_sampled = False
-system_parameters.test_object_contents(sSeenidTransX)
-
-
-print "******** Setting New Id Information Parameters for Translation X *****"
-iNewidTransX = system_parameters.ParamsInput()
-iNewidTransX.name = "New ID Translation X: 60Genders x 200 identities, dx = 1 pixel"
-iNewidTransX.data_base_dir =user_base_dir + "/RenderingsGender60x200"
-iNewidTransX.ids = numpy.arange(150,200) # 160
-iNewidTransX.trans = numpy.arange(-50,50,2)
-if len(iNewidTransX.ids) % len(iNewidTransX.trans) != 0:
-    ex="Here the number of translations must be a divisor of the number of identities"
-    raise Exception(ex)
-iNewidTransX.ages = [999]
-iNewidTransX.MIN_GENDER= -3
-iNewidTransX.MAX_GENDER = 3
-iNewidTransX.GENDER_STEP = 0.10000 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-#iNewidTransX.TransX_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
-iNewidTransX.real_genders = numpy.arange(iNewidTransX.MIN_GENDER, iNewidTransX.MAX_GENDER, iNewidTransX.GENDER_STEP)
-iNewidTransX.genders = map(image_loader.code_gender, iNewidTransX.real_genders)
-iNewidTransX.racetweens = [999]
-iNewidTransX.expressions = [0]
-iNewidTransX.morphs = [0]
-iNewidTransX.poses = [0]
-iNewidTransX.lightings = [0]
-iNewidTransX.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
-iNewidTransX.step = 1
-iNewidTransX.offset = 0
-iNewidTransX.input_files = image_loader.create_image_filenames2(iNewidTransX.data_base_dir, iNewidTransX.slow_signal, iNewidTransX.ids, iNewidTransX.ages, \
-                                            iNewidTransX.genders, iNewidTransX.racetweens, iNewidTransX.expressions, iNewidTransX.morphs, \
-                                            iNewidTransX.poses, iNewidTransX.lightings, iNewidTransX.step, iNewidTransX.offset)
-#MEGAWARNING!!!!
-#iNewidTransX.input_files = iNewidTransX.input_files
-#numpy.random.shuffle(iNewidTransX.input_files)  
-#numpy.random.shuffle(iNewidTransX.input_files)  
-
-iNewidTransX.num_images = len(iNewidTransX.input_files)
-#iNewidTransX.params = [ids, expressions, morphs, poses, lightings]
-iNewidTransX.params = [iNewidTransX.ids, iNewidTransX.ages, iNewidTransX.genders, iNewidTransX.racetweens, iNewidTransX.expressions, \
-                  iNewidTransX.morphs, iNewidTransX.poses, iNewidTransX.lightings]
-iNewidTransX.block_size = iNewidTransX.num_images / len (iNewidTransX.trans)
-
-iNewidTransX.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iNewidTransX.trans)), iNewidTransX.block_size)
-iNewidTransX.correct_labels = sfa_libs.wider_1Darray(iNewidTransX.trans, iNewidTransX.block_size)
-
-system_parameters.test_object_contents(iNewidTransX)
-
-print "******** Setting Seen Id Data Parameters for TransX  *****************"
-sNewidTransX = system_parameters.ParamsDataLoading()
-sNewidTransX.input_files = iNewidTransX.input_files
-sNewidTransX.num_images = iNewidTransX.num_images
-sNewidTransX.block_size = iNewidTransX.block_size
-sNewidTransX.image_width = 256
-sNewidTransX.image_height = 192
-sNewidTransX.subimage_width = 135
-sNewidTransX.subimage_height = 135 
-sNewidTransX.pixelsampling_x = 1
-sNewidTransX.pixelsampling_y =  1
-sNewidTransX.subimage_pixelsampling = 2
-sNewidTransX.subimage_first_row =  sNewidTransX.image_height/2-sNewidTransX.subimage_height*sNewidTransX.pixelsampling_y/2
-sNewidTransX.subimage_first_column = sNewidTransX.image_width/2-sNewidTransX.subimage_width*sNewidTransX.pixelsampling_x/2
-#sNewidTransX.subimage_first_column = sNewidTransX.image_width/2-sNewidTransX.subimage_width*sNewidTransX.pixelsampling_x/2+ 5*sNewidTransX.pixelsampling_x
-sNewidTransX.add_noise_L0 = True
-sNewidTransX.convert_format = "L"
-sNewidTransX.background_type = "black"
-sNewidTransX.translation = 25 #20
-#sNewidTransX.translations_x = numpy.random.random_integers(-sNewidTransX.translation, sNewidTransX.translation, sNewidTransX.num_images)                                                           
-sNewidTransX.translations_x = sfa_libs.wider_1Darray(iNewidTransX.trans, iNewidTransX.block_size)
-sNewidTransX.translations_y = numpy.random.random_integers(-sNewidTransX.translation, sNewidTransX.translation, sNewidTransX.num_images)
-sNewidTransX.trans_sampled = False
-system_parameters.test_object_contents(sNewidTransX)
-
-
-####################################################################
-###########    SYSTEM FOR TRANSLATION_X EXTRACTION      ############
-####################################################################  
-ParamsTransX = system_parameters.ParamsSystem()
-ParamsTransX.name = "Network that extracts TransX information"
-ParamsTransX.network = "linearNetwork4L"
-ParamsTransX.iTrain = iTrainTransX
-ParamsTransX.sTrain = sTrainTransX
-ParamsTransX.iSeenid = iSeenidTransX
-ParamsTransX.sSeenid = sSeenidTransX
-ParamsTransX.iNewid = iNewidTransX
-ParamsTransX.sNewid = sNewidTransX
-ParamsTransX.block_size = iTrainTransX.block_size
-ParamsTransX.train_mode = 'mixed'
-ParamsTransX.analysis = None
-
-
-
-
-print "***** Setting Training Information Parameters for Age (simulated faces) ******"
-iTrainAge = system_parameters.ParamsInput()
-iTrainAge.name = "Age: 23 Ages x 200 identities"
-iTrainAge.data_base_dir =user_base_dir + "/RendersAge200x23"
-iTrainAge.im_base_name = "age"
-iTrainAge.ids = numpy.arange(0,180) # 180, warning speeding up
-#Available ages: iTrainAge.ages = [15, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 35, 36, 40, 42, 44, 45, 46, 48, 50, 55, 60, 65]
-iTrainAge.ages = numpy.array([15, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 35, 36, 40, 42, 44, 45, 46, 48, 50, 55, 60, 65])
-#iTrainAge.ages = numpy.array([15, 20, 24, 30, 35, 40, 45, 50, 55, 60, 65])
-iTrainAge.genders = [None]
-iTrainAge.racetweens = [None]
-iTrainAge.expressions = [0]
-iTrainAge.morphs = [0]
-iTrainAge.poses = [0]
-iTrainAge.lightings = [0]
-iTrainAge.slow_signal = 1 
-iTrainAge.step = 1 
-iTrainAge.offset = 0
-iTrainAge.input_files = image_loader.create_image_filenames3(iTrainAge.data_base_dir, iTrainAge.im_base_name, iTrainAge.slow_signal, iTrainAge.ids, iTrainAge.ages, \
-                                            iTrainAge.genders, iTrainAge.racetweens, iTrainAge.expressions, iTrainAge.morphs, \
-                                            iTrainAge.poses, iTrainAge.lightings, iTrainAge.step, iTrainAge.offset, verbose=False)
-
-#print "Filenames = ", iTrainAge.input_files
-iTrainAge.num_images = len(iTrainAge.input_files)
-#print "Num Images = ", iTrainAge.num_images
-#iTrainAge.params = [ids, expressions, morphs, poses, lightings]
-iTrainAge.params = [iTrainAge.ids, iTrainAge.ages, iTrainAge.genders, iTrainAge.racetweens, iTrainAge.expressions, \
-                  iTrainAge.morphs, iTrainAge.poses, iTrainAge.lightings]
-iTrainAge.block_size = iTrainAge.num_images / len (iTrainAge.ages)
-
-iTrainAge.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iTrainAge.ages)), iTrainAge.block_size)
-iTrainAge.correct_labels = sfa_libs.wider_1Darray(iTrainAge.ages, iTrainAge.block_size)
-
-system_parameters.test_object_contents(iTrainAge)
-
-print "******** Setting Training Data Parameters for Age  ****************"
-sTrainAge = system_parameters.ParamsDataLoading()
-sTrainAge.input_files = iTrainAge.input_files
-sTrainAge.num_images = iTrainAge.num_images
-sTrainAge.block_size = iTrainAge.block_size
-sTrainAge.image_width = 256
-sTrainAge.image_height = 192
-sTrainAge.subimage_width = 135
-sTrainAge.subimage_height = 135 
-sTrainAge.pixelsampling_x = 1
-sTrainAge.pixelsampling_y =  1
-sTrainAge.subimage_pixelsampling = 2
-sTrainAge.subimage_first_row =  sTrainAge.image_height/2-sTrainAge.subimage_height*sTrainAge.pixelsampling_y/2
-sTrainAge.subimage_first_column = sTrainAge.image_width/2-sTrainAge.subimage_width*sTrainAge.pixelsampling_x/2
-#sTrainAge.subimage_first_column = sTrainAge.image_width/2-sTrainAge.subimage_width*sTrainAge.pixelsampling_x/2+ 5*sTrainAge.pixelsampling_x
-sTrainAge.add_noise_L0 = True
-sTrainAge.convert_format = "L"
-sTrainAge.background_type = "blue"
-sTrainAge.translation = 1
-#sTrainAge.translations_x = numpy.random.random_integers(-sTrainAge.translation, sTrainAge.translation, sTrainAge.num_images)                                                           
-sTrainAge.translations_x = numpy.random.random_integers(-sTrainAge.translation, sTrainAge.translation, sTrainAge.num_images)
-sTrainAge.translations_y = numpy.random.random_integers(-sTrainAge.translation, sTrainAge.translation, sTrainAge.num_images)
-sTrainAge.trans_sampled = False
-sTrainAge.train_mode = 'mixed'
-sTrainAge.name = iTrainAge.name
-sTrainAge.load_data = load_data_from_sSeq
-system_parameters.test_object_contents(sTrainAge)
-
-
-print "***** Setting Seen Id Test Information Parameters for Age ******"
-iSeenidAge = system_parameters.ParamsInput()
-iSeenidAge.name = "Age: 23 Ages x 200 identities"
-iSeenidAge.data_base_dir =user_base_dir + "/RendersAge200x23"
-iSeenidAge.im_base_name = "age"
-iSeenidAge.ids = numpy.arange(0,180) # 180
-#Available ages: iSeenidAge.ages = numpy.array([15, 16, 18, 20, 22, 24, 25, 26, 28, 30, 32, 34, 35, 36, 40, 42, 44, 45, 46, 48, 50, 55, 60, 65])
-iSeenidAge.ages = numpy.array([15, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 35, 36, 40, 42, 44, 45, 46, 48, 50, 55, 60, 65])
-#iSeenidAge.ages = numpy.array([15, 20, 24, 30, 35, 40, 45, 50, 55, 60, 65])
-iSeenidAge.genders = [None]
-iSeenidAge.racetweens = [None]
-iSeenidAge.expressions = [0]
-iSeenidAge.morphs = [0]
-iSeenidAge.poses = [0]
-iSeenidAge.lightings = [0]
-iSeenidAge.slow_signal = 1 
-iSeenidAge.step = 1
-iSeenidAge.offset = 0
-iSeenidAge.input_files = image_loader.create_image_filenames3(iSeenidAge.data_base_dir, iSeenidAge.im_base_name, iSeenidAge.slow_signal, iSeenidAge.ids, iSeenidAge.ages, \
-                                            iSeenidAge.genders, iSeenidAge.racetweens, iSeenidAge.expressions, iSeenidAge.morphs, \
-                                            iSeenidAge.poses, iSeenidAge.lightings, iSeenidAge.step, iSeenidAge.offset)
-
-iSeenidAge.num_images = len(iSeenidAge.input_files)
-#iSeenidAge.params = [ids, expressions, morphs, poses, lightings]
-iSeenidAge.params = [iSeenidAge.ids, iSeenidAge.ages, iSeenidAge.genders, iSeenidAge.racetweens, iSeenidAge.expressions, \
-                  iSeenidAge.morphs, iSeenidAge.poses, iSeenidAge.lightings]
-iSeenidAge.block_size = iSeenidAge.num_images / len (iSeenidAge.ages)
-
-iSeenidAge.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeenidAge.ages)), iSeenidAge.block_size)
-iSeenidAge.correct_labels = sfa_libs.wider_1Darray(iSeenidAge.ages, iSeenidAge.block_size)
-
-system_parameters.test_object_contents(iSeenidAge)
-
-print "******** Setting Seen Id Data Parameters for Age  ****************"
-sSeenidAge = system_parameters.ParamsDataLoading()
-sSeenidAge.input_files = iSeenidAge.input_files
-sSeenidAge.num_images = iSeenidAge.num_images
-sSeenidAge.block_size = iSeenidAge.block_size
-sSeenidAge.image_width = 256
-sSeenidAge.image_height = 192
-sSeenidAge.subimage_width = 135
-sSeenidAge.subimage_height = 135 
-sSeenidAge.pixelsampling_x = 1
-sSeenidAge.pixelsampling_y =  1
-sSeenidAge.subimage_pixelsampling = 2
-sSeenidAge.subimage_first_row =  sSeenidAge.image_height/2-sSeenidAge.subimage_height*sSeenidAge.pixelsampling_y/2
-sSeenidAge.subimage_first_column = sSeenidAge.image_width/2-sSeenidAge.subimage_width*sSeenidAge.pixelsampling_x/2
-#sSeenidAge.subimage_first_column = sSeenidAge.image_width/2-sSeenidAge.subimage_width*sSeenidAge.pixelsampling_x/2+ 5*sSeenidAge.pixelsampling_x
-sSeenidAge.add_noise_L0 = True
-sSeenidAge.convert_format = "L"
-sSeenidAge.background_type = "blue"
-sSeenidAge.translation = 1
-#sSeenidAge.translations_x = numpy.random.random_integers(-sSeenidAge.translation, sSeenidAge.translation, sSeenidAge.num_images)                                                           
-sSeenidAge.translations_x = numpy.random.random_integers(-sSeenidAge.translation, sSeenidAge.translation, sSeenidAge.num_images)
-sSeenidAge.translations_y = numpy.random.random_integers(-sSeenidAge.translation, sSeenidAge.translation, sSeenidAge.num_images)
-sSeenidAge.trans_sampled = False
-sSeenidAge.name = iSeenidAge.name
-sSeenidAge.load_data = load_data_from_sSeq
-system_parameters.test_object_contents(sSeenidAge)
-
-
-print "***** Setting New Id Test Information Parameters for Age ******"
-iNewidAge = system_parameters.ParamsInput()
-iNewidAge.name = "Age: 23 Ages x 200 identities"
-iNewidAge.data_base_dir =user_base_dir + "/RendersAge200x23"
-iNewidAge.im_base_name = "age"
-iNewidAge.ids = numpy.arange(180,200) # 180,200
-#Available ages: iNewidAge.ages = numpy.array([15, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 35, 36, 40, 42, 44, 45, 46, 48, 50, 55, 60, 65])
-iNewidAge.ages = numpy.array([15, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 35, 36, 40, 42, 44, 45, 46, 48, 50, 55, 60, 65])
-#iNewidAge.ages = numpy.array([15, 20, 24, 30, 35, 40, 45, 50, 55, 60, 65])
-iNewidAge.genders = [None]
-iNewidAge.racetweens = [None]
-iNewidAge.expressions = [0]
-iNewidAge.morphs = [0]
-iNewidAge.poses = [0]
-iNewidAge.lightings = [0]
-iNewidAge.slow_signal = 1 
-iNewidAge.step = 1
-iNewidAge.offset = 0
-iNewidAge.input_files = image_loader.create_image_filenames3(iNewidAge.data_base_dir, iNewidAge.im_base_name, iNewidAge.slow_signal, iNewidAge.ids, iNewidAge.ages, \
-                                            iNewidAge.genders, iNewidAge.racetweens, iNewidAge.expressions, iNewidAge.morphs, \
-                                            iNewidAge.poses, iNewidAge.lightings, iNewidAge.step, iNewidAge.offset)
-
-iNewidAge.num_images = len(iNewidAge.input_files)
-#iNewidAge.params = [ids, expressions, morphs, poses, lightings]
-iNewidAge.params = [iNewidAge.ids, iNewidAge.ages, iNewidAge.genders, iNewidAge.racetweens, iNewidAge.expressions, \
-                  iNewidAge.morphs, iNewidAge.poses, iNewidAge.lightings]
-iNewidAge.block_size = iNewidAge.num_images / len (iNewidAge.ages)
-
-iNewidAge.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iNewidAge.ages)), iNewidAge.block_size)
-iNewidAge.correct_labels = sfa_libs.wider_1Darray(iNewidAge.ages, iNewidAge.block_size)
-
-system_parameters.test_object_contents(iNewidAge)
-
-print "******** Setting Training Data Parameters for Age  ****************"
-sNewidAge = system_parameters.ParamsDataLoading()
-sNewidAge.input_files = iNewidAge.input_files
-sNewidAge.num_images = iNewidAge.num_images
-sNewidAge.block_size = iNewidAge.block_size
-sNewidAge.image_width = 256
-sNewidAge.image_height = 192
-sNewidAge.subimage_width = 135
-sNewidAge.subimage_height = 135 
-sNewidAge.pixelsampling_x = 1
-sNewidAge.pixelsampling_y =  1
-sNewidAge.subimage_pixelsampling = 2
-sNewidAge.subimage_first_row =  sNewidAge.image_height/2-sNewidAge.subimage_height*sNewidAge.pixelsampling_y/2
-sNewidAge.subimage_first_column = sNewidAge.image_width/2-sNewidAge.subimage_width*sNewidAge.pixelsampling_x/2
-#sNewidAge.subimage_first_column = sNewidAge.image_width/2-sNewidAge.subimage_width*sNewidAge.pixelsampling_x/2+ 5*sNewidAge.pixelsampling_x
-sNewidAge.add_noise_L0 = True
-sNewidAge.convert_format = "L"
-sNewidAge.background_type = "blue"
-sNewidAge.translation = 1
-#sNewidAge.translations_x = numpy.random.random_integers(-sNewidAge.translation, sNewidAge.translation, sNewidAge.num_images)                                                           
-sNewidAge.translations_x = numpy.random.random_integers(-sNewidAge.translation, sNewidAge.translation, sNewidAge.num_images)
-sNewidAge.translations_y = numpy.random.random_integers(-sNewidAge.translation, sNewidAge.translation, sNewidAge.num_images)
-sNewidAge.trans_sampled = False
-sNewidAge.name = iNewidAge.name
-sNewidAge.load_data = load_data_from_sSeq
-system_parameters.test_object_contents(sNewidAge)
-
-
-####################################################################
-###########    SYSTEM FOR AGE EXTRACTION      ############
-####################################################################  
-ParamsAge = system_parameters.ParamsSystem()
-ParamsAge.name = "Network that extracts Age information"
-ParamsAge.network = "linearNetwork4L"
-ParamsAge.iTrain = [[iTrainAge]]
-ParamsAge.sTrain = [[sTrainAge]]
-ParamsAge.iSeenid = iSeenidAge
-ParamsAge.sSeenid = sSeenidAge
-ParamsAge.iNewid = [[iNewidAge]]
-ParamsAge.sNewid = [[sNewidAge]]
-ParamsAge.block_size = iTrainAge.block_size
-ParamsAge.train_mode = 'mixed'
-ParamsAge.analysis = None
-ParamsAge.enable_reduced_image_sizes = False
-ParamsAge.reduction_factor = 1.0
-ParamsAge.hack_image_size = 128
-ParamsAge.enable_hack_image_size = True
-
-
-#PIPELINE FOR FACE DETECTION:
-#Orig=TX: DX0=+/- 45, DY0=+/- 20, DS0= 0.55-1.1
-#TY: DX1=+/- 20, DY0=+/- 20, DS0= 0.55-1.1
-#S: DX1=+/- 20, DY1=+/- 10, DS0= 0.55-1.1
-#TMX: DX1=+/- 20, DY1=+/- 10, DS1= 0.775-1.05
-#TMY: DX2=+/- 10, DY1=+/- 10, DS1= 0.775-1.05
-#MS: DX2=+/- 10, DY2=+/- 5, DS1= 0.775-1.05
-#Out About: DX2=+/- 10, DY2=+/- 5, DS2= 0.8875-1.025
-#notice: for dx* and dy* intervals are open, while for smin and smax intervals are closed
-pipeline_fd = dict(dx0 = 45, dy0 = 20, smin0 = 0.55,  smax0 = 1.1,
-                   dx1 = 20, dy1 = 10, smin1 = 0.775, smax1 = 1.05)
-#Pipeline actually supports inputs in: [-dx0, dx0-2] [-dy0, dy0-2] [smin0, smax0] 
-#Remember these values are before image resizing
-
-#XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-#This network actually supports images in the closed intervals: [smin0, smax0] [-dy0, dy0]
-#but halb-open [-dx0, dx0) 
-print "***** Setting Training Information Parameters for Real Translation X ******"
-iSeq = iTrainRTransX = system_parameters.ParamsInput()
-iSeq.name = "Real Translation X: (-45, 45, 2) translation and y 40"
-iSeq.data_base_dir = frgc_normalized_base_dir
-iSeq.ids = numpy.arange(0,7965) # 8000, 7965
-
-iSeq.trans = numpy.arange(-1 * pipeline_fd['dx0'], pipeline_fd['dx0'], 2) # (-50, 50, 2)
-if len(iSeq.ids) % len(iSeq.trans) != 0:
-    ex="Here the number of translations must be a divisor of the number of identities"
-    raise Exception(ex)
-iSeq.ages = [None]
-iSeq.genders = [None]
-iSeq.racetweens = [None]
-iSeq.expressions = [None]
-iSeq.morphs = [None]
-iSeq.poses = [None]
-iSeq.lightings = [None]
-iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
-iSeq.step = 1
-iSeq.offset = 0
-iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
-                                            iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
-                                            iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=4, image_postfix=".jpg")
-iSeq.input_files = iSeq.input_files * 4 # warning!!! 4, 8
-#To avoid grouping similar images next to one other
-numpy.random.shuffle(iSeq.input_files)  
-
-iSeq.num_images = len(iSeq.input_files)
-#iSeq.params = [ids, expressions, morphs, poses, lightings]
-iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
-                  iSeq.morphs, iSeq.poses, iSeq.lightings]
-iSeq.block_size = iSeq.num_images / len (iSeq.trans)
-print "BLOCK SIZE =", iSeq.block_size 
-iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.trans)), iSeq.block_size)
-iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
-
-system_parameters.test_object_contents(iSeq)
-
-print "******** Setting Training Data Parameters for Real TransX  ****************"
-sSeq = sTrainRTransX = system_parameters.ParamsDataLoading()
-sSeq.input_files = iSeq.input_files
-sSeq.num_images = iSeq.num_images
-sSeq.block_size = iSeq.block_size
-sSeq.image_width = 256
-sSeq.image_height = 192
-sSeq.subimage_width = 128
-sSeq.subimage_height = 128 
-
-
-sSeq.trans_x_max = pipeline_fd['dx0']
-sSeq.trans_x_min = -1 * pipeline_fd['dx0']
-
-#WARNING!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-sSeq.trans_y_max = pipeline_fd['dy0']
-sSeq.trans_y_min = -1 * sSeq.trans_y_max
-
-#iSeq.scales = numpy.linspace(0.5, 1.30, 16) # (-50, 50, 2)
-sSeq.min_sampling = pipeline_fd['smin0']
-sSeq.max_sampling = pipeline_fd['smax0']
-
-sSeq.pixelsampling_x = sSeq.pixelsampling_y = numpy.random.uniform(low=sSeq.min_sampling, high=sSeq.max_sampling, size=sSeq.num_images)
-#sSeq.subimage_pixelsampling = 2
-sSeq.subimage_first_row =  sSeq.image_height/2.0-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
-sSeq.subimage_first_column = sSeq.image_width/2.0-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
-#sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
-sSeq.add_noise_L0 = True
-sSeq.convert_format = "L"
-sSeq.background_type = None
-#random translation for th w coordinate
-#sSeq.translation = 20 # 25, Should be 20!!! Warning: 25
-#sSeq.translations_x = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)                                                           
-sSeq.translations_x = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
-sSeq.translations_y = numpy.random.random_integers(sSeq.trans_y_min, sSeq.trans_y_max, sSeq.num_images)
-sSeq.trans_sampled = True
-sSeq.name = "RTans X Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f)"%(sSeq.trans_x_min, 
-    sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.min_sampling*100, sSeq.max_sampling*100)
-system_parameters.test_object_contents(sSeq)
-
-print "***** Setting Seen ID Information Parameters for Real Translation X *******"
-iSeq = sSeq = None
-iSeq = iSeenidRTransX = system_parameters.ParamsInput()
-iSeq.name = "Test Real Translation X: (-45, 45, 2) translation"
-iSeq.data_base_dir = frgc_normalized_base_dir
-iSeq.ids = numpy.arange(8000,8990) # WARNING 8900
-iSeq.trans = numpy.arange(sTrainRTransX.trans_x_min, sTrainRTransX.trans_x_max, 2) #WARNING!!!! (-50, 50, 2)
-if len(iSeq.ids) % len(iSeq.trans) != 0:
-    ex="Here the number of translations must be a divisor of the number of identities"
-    raise Exception(ex)
-iSeq.ages = [None]
-iSeq.genders = [None]
-iSeq.racetweens = [None]
-iSeq.expressions = [None]
-iSeq.morphs = [None]
-iSeq.poses = [None]
-iSeq.lightings = [None]
-iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
-iSeq.step = 1
-iSeq.offset = 0
-iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
-                                            iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
-                                            iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=4, image_postfix=".jpg")
-
-iSeq.input_files = iSeq.input_files * 16 # Warning!!! 16, 32
-numpy.random.shuffle(iSeq.input_files)  
-
-iSeq.num_images = len(iSeq.input_files)
-iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
-                  iSeq.morphs, iSeq.poses, iSeq.lightings]
-iSeq.block_size = iSeq.num_images / len (iSeq.trans)
-
-iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.trans)), iSeq.block_size)
-iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
-
-system_parameters.test_object_contents(iSeq)
-
-print "******** Setting Seen Id Data Parameters for Real TransX  ****************"
-sSeq = sSeenidRTransX = system_parameters.ParamsDataLoading()
-sSeq.input_files = iSeq.input_files
-sSeq.num_images = iSeq.num_images
-sSeq.block_size = iSeq.block_size
-sSeq.image_width = 256
-sSeq.image_height = 192
-sSeq.subimage_width = 128
-sSeq.subimage_height = 128 
-sSeq.trans_x_max = sTrainRTransX.trans_x_max
-sSeq.trans_x_min = sTrainRTransX.trans_x_min
-sSeq.trans_y_max = sTrainRTransX.trans_y_max
-sSeq.trans_y_min = sTrainRTransX.trans_y_min
-#iSeq.scales = numpy.linspace(0.5, 1.30, 16) # (-50, 50, 2)
-sSeq.min_sampling = sTrainRTransX.min_sampling
-sSeq.max_sampling = sTrainRTransX.max_sampling
-sSeq.pixelsampling_x = sSeq.pixelsampling_y = numpy.random.uniform(low=sSeq.min_sampling, high=sSeq.max_sampling, size=sSeq.num_images)
-#sSeq.subimage_pixelsampling = 2
-sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2
-sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2
-#sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
-sSeq.add_noise_L0 = True
-sSeq.convert_format = "L"
-sSeq.background_type = None
-#random translation for th w coordinate
-#sSeq.translation = 20 #25, 20, WARNING!!!!!!!
-#sSeq.translations_x = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)                                                           
-sSeq.translations_x = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
-sSeq.translations_y = numpy.random.random_integers(sSeq.trans_y_min, sSeq.trans_y_max, sSeq.num_images)
-sSeq.trans_sampled = True
-sSeq.name = "RTans X Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f)"%(sSeq.trans_x_min, 
-    sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.min_sampling*100, sSeq.max_sampling*100)
-system_parameters.test_object_contents(sSeq)
-
-
-print "******** Setting New Id Information Parameters for Real Translation X *****"
-iSeq = sSeq = None
-iSeq = iNewidRTransX = system_parameters.ParamsInput()
-iSeq.name = "New ID Real Translation X: (-45, 45, 2) translation"
-iSeq.data_base_dir = frgc_normalized_base_dir
-iSeq.ids = numpy.arange(9000,9990) # 8000, 10000
-iSeq.trans = numpy.arange(sTrainRTransX.trans_x_min, sTrainRTransX.trans_x_max, 2) # (-45, 45, 2)
-if len(iSeq.ids) % len(iSeq.trans) != 0:
-    ex="Here the number of translations must be a divisor of the number of identities"
-    raise Exception(ex)
-iSeq.ages = [None]
-iSeq.genders = [None]
-iSeq.racetweens = [None]
-iSeq.expressions = [None]
-iSeq.morphs = [None]
-iSeq.poses = [None]
-iSeq.lightings = [None]
-iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
-iSeq.step = 1
-iSeq.offset = 0
-iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
-                                            iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
-                                            iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=4, image_postfix=".jpg")
- 
-#MEGAWARNING!!!!
-iSeq.input_files = iSeq.input_files * 4 #warning * 4
-numpy.random.shuffle(iSeq.input_files)  
-iSeq.num_images = len(iSeq.input_files)
-iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
-                  iSeq.morphs, iSeq.poses, iSeq.lightings]
-iSeq.block_size = iSeq.num_images / len (iSeq.trans)
-
-iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.trans)), iSeq.block_size)
-iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
-
-system_parameters.test_object_contents(iSeq)
-
-print "******** Setting New ID Data Parameters for Real TransX  ****************"
-sSeq = sNewidRTransX = system_parameters.ParamsDataLoading()
-sSeq.input_files = iSeq.input_files
-sSeq.num_images = iSeq.num_images
-sSeq.block_size = iSeq.block_size
-sSeq.image_width = 256
-sSeq.image_height = 192
-sSeq.subimage_width = 128
-sSeq.subimage_height = 128 
-sSeq.trans_x_max = sTrainRTransX.trans_x_max
-sSeq.trans_x_min = sTrainRTransX.trans_x_min
-sSeq.trans_y_max = sTrainRTransX.trans_y_max
-sSeq.trans_y_min = sTrainRTransX.trans_y_min
-#iSeq.scales = numpy.linspace(0.5, 1.30, 16) # (-50, 50, 2)
-sSeq.min_sampling = sTrainRTransX.min_sampling
-sSeq.max_sampling = sTrainRTransX.max_sampling
-sSeq.pixelsampling_x = sSeq.pixelsampling_y = numpy.random.uniform(low=sSeq.min_sampling, high=sSeq.max_sampling, size=sSeq.num_images)
-sSeq.subimage_pixelsampling = 2
-sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2
-sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2
-#sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
-sSeq.add_noise_L0 = True
-sSeq.convert_format = "L"
-sSeq.background_type = None
-#random translation for th w coordinate
-sSeq.translation = 20 #20
-#sSeq.translations_x = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)                                                           
-sSeq.translations_x = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
-sSeq.translations_y = numpy.random.random_integers(sSeq.trans_y_min, sSeq.trans_y_max, sSeq.num_images)
-sSeq.trans_sampled = True
-sSeq.name = "RTans X Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f)"%(sSeq.trans_x_min, 
-    sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.min_sampling*100, sSeq.max_sampling*100)
-system_parameters.test_object_contents(sSeq)
-
-
-####################################################################
-###########    SYSTEM FOR REAL_TRANSLATION_X EXTRACTION      ############
-####################################################################  
-ParamsRTransX = system_parameters.ParamsSystem()
-ParamsRTransX.name = sTrainRTransX.name
-ParamsRTransX.network = "linearNetwork4L"
-ParamsRTransX.iTrain = iTrainRTransX
-ParamsRTransX.sTrain = sTrainRTransX
-ParamsRTransX.iSeenid = iSeenidRTransX
-ParamsRTransX.sSeenid = sSeenidRTransX
-ParamsRTransX.iNewid = iNewidRTransX
-ParamsRTransX.sNewid = sNewidRTransX
-##MEGAWARNING!!!!
-#ParamsRTransX.iNewid = iNewidTransX
-#ParamsRTransX.sNewid = sNewidTransX
-#ParamsRTransX.sNewid.translations_y = ParamsRTransX.sNewid.translations_y * 0.0 + 8.0
-
-ParamsRTransX.block_size = iTrainRTransX.block_size
-ParamsRTransX.train_mode = 'mixed'
-ParamsRTransX.analysis = None
-
-ParamsRTransX.enable_reduced_image_sizes = True
-ParamsRTransX.reduction_factor = 2.0
-ParamsRTransX.hack_image_size = 64
-ParamsRTransX.enable_hack_image_size = True
-
-
-#GC / 17 signals, mse=11.5
-
-
-
-# YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYyYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
-#This network actually supports images in the closed intervals: [-dx1, dx1], [smin0, smax0]
-#but halb-open [-dy0, dy0)
-print "***** Setting Training Information Parameters for Real Translation Y ******"
-iSeq = iTrainRTransY = system_parameters.ParamsInput()
-iSeq.name = "Real Translation Y: Y(-20, 20, 1) translation and dx 20"
-iSeq.data_base_dir = frgc_normalized_base_dir
-iSeq.ids = numpy.arange(0,8000) # 8000, 7965
-
-iSeq.trans = numpy.arange(-1 * pipeline_fd['dy0'], pipeline_fd['dy0'], 1) # (-50, 50, 2)
-if len(iSeq.ids) % len(iSeq.trans) != 0:
-    ex="Here the number of translations must be a divisor of the number of identities"
-    raise Exception(ex)
-iSeq.ages = [None]
-iSeq.genders = [None]
-iSeq.racetweens = [None]
-iSeq.expressions = [None]
-iSeq.morphs = [None]
-iSeq.poses = [None]
-iSeq.lightings = [None]
-iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
-iSeq.step = 1
-iSeq.offset = 0
-iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
-                                            iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
-                                            iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=4, image_postfix=".jpg")
-iSeq.input_files = iSeq.input_files * 4 # warning!!! 4, 8
-#To avoid grouping similar images next to one other
-numpy.random.shuffle(iSeq.input_files)  
-
-iSeq.num_images = len(iSeq.input_files)
-#iSeq.params = [ids, expressions, morphs, poses, lightings]
-iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
-                  iSeq.morphs, iSeq.poses, iSeq.lightings]
-iSeq.block_size = iSeq.num_images / len (iSeq.trans)
-print "BLOCK SIZE =", iSeq.block_size 
-iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.trans)), iSeq.block_size)
-iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
-
-system_parameters.test_object_contents(iSeq)
-
-print "******** Setting Training Data Parameters for Real TransY  ****************"
-sSeq = sTrainRTransY = system_parameters.ParamsDataLoading()
-sSeq.input_files = iSeq.input_files
-sSeq.num_images = iSeq.num_images
-sSeq.block_size = iSeq.block_size
-sSeq.image_width = 256
-sSeq.image_height = 192
-sSeq.subimage_width = 128
-sSeq.subimage_height = 128 
-
-
-sSeq.trans_x_max = pipeline_fd['dx1']
-sSeq.trans_x_min = -1 * pipeline_fd['dx1']
-
-sSeq.trans_y_max = pipeline_fd['dy0']
-sSeq.trans_y_min = -1 * sSeq.trans_y_max
-
-#iSeq.scales = numpy.linspace(0.5, 1.30, 16) # (-50, 50, 2)
-sSeq.min_sampling = pipeline_fd['smin0']
-sSeq.max_sampling = pipeline_fd['smax0']
-
-sSeq.pixelsampling_x = sSeq.pixelsampling_y = numpy.random.uniform(low=sSeq.min_sampling, high=sSeq.max_sampling, size=sSeq.num_images)
-#sSeq.subimage_pixelsampling = 2
-sSeq.subimage_first_row =  sSeq.image_height/2.0-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
-sSeq.subimage_first_column = sSeq.image_width/2.0-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
-#sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
-sSeq.add_noise_L0 = True
-sSeq.convert_format = "L"
-sSeq.background_type = None
-#random translation for th w coordinate
-#sSeq.translation = 20 # 25, Should be 20!!! Warning: 25
-#sSeq.translations_x = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)                                                           
-sSeq.translations_x = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, sSeq.num_images)
-sSeq.translations_y = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
-
-sSeq.trans_sampled = True
-sSeq.name = "RTans Y Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f)"%(sSeq.trans_x_min, 
-    sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.min_sampling*100, sSeq.max_sampling*100)
-iSeq.name = sSeq.name
-system_parameters.test_object_contents(sSeq)
-
-print "***** Setting Seen ID Information Parameters for Real Translation Y *******"
-iSeq = sSeq = None
-iSeq = iSeenidRTransY = system_parameters.ParamsInput()
-iSeq.name = "Test Real Translation Y: (-20, 20, 1) translation"
-iSeq.data_base_dir = frgc_normalized_base_dir
-iSeq.ids = numpy.arange(8000,9000) # WARNING 8900
-iSeq.trans = numpy.arange(sTrainRTransY.trans_y_min, sTrainRTransY.trans_y_max, 1) #WARNING!!!! (-50, 50, 2)
-if len(iSeq.ids) % len(iSeq.trans) != 0:
-    ex="Here the number of translations must be a divisor of the number of identities"
-    raise Exception(ex)
-iSeq.ages = [None]
-iSeq.genders = [None]
-iSeq.racetweens = [None]
-iSeq.expressions = [None]
-iSeq.morphs = [None]
-iSeq.poses = [None]
-iSeq.lightings = [None]
-iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
-iSeq.step = 1
-iSeq.offset = 0
-iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
-                                            iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
-                                            iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=4, image_postfix=".jpg")
-
-iSeq.input_files = iSeq.input_files * 16 # Warning!!! 16
-numpy.random.shuffle(iSeq.input_files)  
-
-iSeq.num_images = len(iSeq.input_files)
-iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
-                  iSeq.morphs, iSeq.poses, iSeq.lightings]
-iSeq.block_size = iSeq.num_images / len (iSeq.trans)
-
-iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.trans)), iSeq.block_size)
-iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
-
-system_parameters.test_object_contents(iSeq)
-
-print "******** Setting Seen Id Data Parameters for Real TransY  ****************"
-sSeq = sSeenidRTransY = system_parameters.ParamsDataLoading()
-sSeq.input_files = iSeq.input_files
-sSeq.num_images = iSeq.num_images
-sSeq.block_size = iSeq.block_size
-sSeq.image_width = 256
-sSeq.image_height = 192
-sSeq.subimage_width = 128
-sSeq.subimage_height = 128 
-sSeq.trans_x_max = sTrainRTransY.trans_x_max
-sSeq.trans_x_min = sTrainRTransY.trans_x_min
-sSeq.trans_y_max = sTrainRTransY.trans_y_max
-sSeq.trans_y_min = sTrainRTransY.trans_y_min
-#iSeq.scales = numpy.linspace(0.5, 1.30, 16) # (-50, 50, 2)
-sSeq.min_sampling = sTrainRTransY.min_sampling
-sSeq.max_sampling = sTrainRTransY.max_sampling
-sSeq.pixelsampling_x = sSeq.pixelsampling_y = numpy.random.uniform(low=sSeq.min_sampling, high=sSeq.max_sampling, size=sSeq.num_images)
-#sSeq.subimage_pixelsampling = 2
-sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2
-sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2
-#sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
-sSeq.add_noise_L0 = True
-sSeq.convert_format = "L"
-sSeq.background_type = None
-#random translation for th w coordinate
-#sSeq.translation = 20 #25, 20, WARNING!!!!!!!
-#sSeq.translations_x = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)                                                           
-sSeq.translations_x = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, sSeq.num_images)
-sSeq.translations_y = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
-sSeq.trans_sampled = True
-sSeq.name = "RTans Y Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f)"%(sSeq.trans_x_min, 
-    sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.min_sampling*100, sSeq.max_sampling*100)
-iSeq.name = sSeq.name
-system_parameters.test_object_contents(sSeq)
-
-
-print "******** Setting New Id Information Parameters for Real Translation Y *****"
-iSeq = sSeq = None
-iSeq = iNewidRTransY = system_parameters.ParamsInput()
-iSeq.name = "New ID Real Translation Y: (-20, 20, 1) translation"
-iSeq.data_base_dir = frgc_normalized_base_dir
-iSeq.ids = numpy.arange(9000,10000) # 8000, 10000
-iSeq.trans = numpy.arange(sTrainRTransY.trans_y_min, sTrainRTransY.trans_y_max, 1) # (-50, 50, 2)
-if len(iSeq.ids) % len(iSeq.trans) != 0:
-    ex="Here the number of translations must be a divisor of the number of identities"
-    raise Exception(ex)
-iSeq.ages = [None]
-iSeq.genders = [None]
-iSeq.racetweens = [None]
-iSeq.expressions = [None]
-iSeq.morphs = [None]
-iSeq.poses = [None]
-iSeq.lightings = [None]
-iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
-iSeq.step = 1
-iSeq.offset = 0
-iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
-                                            iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
-                                            iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=4, image_postfix=".jpg")
- 
-#MEGAWARNING!!!!
-iSeq.input_files = iSeq.input_files * 4 #warning * 4
-numpy.random.shuffle(iSeq.input_files)  
-iSeq.num_images = len(iSeq.input_files)
-iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
-                  iSeq.morphs, iSeq.poses, iSeq.lightings]
-iSeq.block_size = iSeq.num_images / len (iSeq.trans)
-
-iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.trans)), iSeq.block_size)
-iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
-
-system_parameters.test_object_contents(iSeq)
-
-print "******** Setting New ID Data Parameters for Real TransY  ****************"
-sSeq = sNewidRTransY = system_parameters.ParamsDataLoading()
-sSeq.input_files = iSeq.input_files
-sSeq.num_images = iSeq.num_images
-sSeq.block_size = iSeq.block_size
-sSeq.image_width = 256
-sSeq.image_height = 192
-sSeq.subimage_width = 128
-sSeq.subimage_height = 128 
-sSeq.trans_x_max = sTrainRTransY.trans_x_max
-sSeq.trans_x_min = sTrainRTransY.trans_x_min
-sSeq.trans_y_max = sTrainRTransY.trans_y_max
-sSeq.trans_y_min = -1 * sTrainRTransY.trans_y_min
-#iSeq.scales = numpy.linspace(0.5, 1.30, 16) # (-50, 50, 2)
-sSeq.min_sampling = sTrainRTransY.min_sampling
-sSeq.max_sampling = sTrainRTransY.max_sampling
-sSeq.pixelsampling_x = sSeq.pixelsampling_y = numpy.random.uniform(low=sSeq.min_sampling, high=sSeq.max_sampling, size=sSeq.num_images)
-sSeq.subimage_pixelsampling = 2
-sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2
-sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2
-#sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
-sSeq.add_noise_L0 = True
-sSeq.convert_format = "L"
-sSeq.background_type = None
-#random translation for th w coordinate
-sSeq.translation = 20 #20
-#sSeq.translations_x = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)                                                           
-sSeq.translations_x = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, sSeq.num_images)
-sSeq.translations_y = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
-sSeq.trans_sampled = True
-sSeq.name = "RTans Y Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f)"%(sSeq.trans_x_min, 
-    sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.min_sampling*100, sSeq.max_sampling*100)
-iSeq.name = sSeq.name
-system_parameters.test_object_contents(sSeq)
-
-
-####################################################################
-###########    SYSTEM FOR REAL_TRANSLATION_Y EXTRACTION      ############
-####################################################################  
-ParamsRTransY = system_parameters.ParamsSystem()
-ParamsRTransY.name = sTrainRTransY.name
-ParamsRTransY.network = "linearNetwork4L"
-ParamsRTransY.iTrain = iTrainRTransY
-ParamsRTransY.sTrain = sTrainRTransY
-ParamsRTransY.iSeenid = iSeenidRTransY
-ParamsRTransY.sSeenid = sSeenidRTransY
-ParamsRTransY.iNewid = iNewidRTransY
-ParamsRTransY.sNewid = sNewidRTransY
-##MEGAWARNING!!!!
-#ParamsRTransY.iNewid = iNewidTransY
-#ParamsRTransY.sNewid = sNewidTransY
-#ParamsRTransY.sNewid.translations_y = ParamsRTransY.sNewid.translations_y * 0.0 + 8.0
-
-ParamsRTransY.block_size = iTrainRTransY.block_size
-ParamsRTransY.train_mode = 'mixed'
-ParamsRTransY.analysis = None
-#Gaussian classifier:
-#7 => 6.81
-#10 => 6.64
-#12 => 6.68
-#15 =>
-#17 => 6.68
-
-
-
-
-#SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
-#This network actually supports images in the closed intervals: [-dx1, dx1], [-dy1, dy1], [smin, smax]
-print "Studienprojekt. Scale estimation datasets. By Jan, Stephan and Alberto "
-print "***** Setting Training Information Parameters for Scale ******"
-iSeq = iTrainRScale = system_parameters.ParamsInput()
-iSeq.name = "Real Scale: (0.55, 1.1,  50)"
-
-iSeq.data_base_dir = alldbnormalized_base_dir
-alldbnormalized_available_images = numpy.arange(0,55000)
-numpy.random.shuffle(alldbnormalized_available_images)
-
-iSeq.ids = alldbnormalized_available_images[0:30000]
-
-iSeq.scales = numpy.linspace(pipeline_fd['smin0'], pipeline_fd['smax0'], 50) # (-50, 50, 2)
-if len(iSeq.ids) % len(iSeq.scales) != 0:
-    ex="Here the number of scales must be a divisor of the number of identities"
-    raise Exception(ex)
-iSeq.ages = [None]
-iSeq.genders = [None]
-iSeq.racetweens = [None]
-iSeq.expressions = [None]
-iSeq.morphs = [None]
-iSeq.poses = [None]
-iSeq.lightings = [None]
-iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
-iSeq.step = 1
-iSeq.offset = 0
-iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
-                                            iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
-                                            iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
-iSeq.input_files = iSeq.input_files * 2 # 2, 10
-#To avoid grouping similar images next to one other
-numpy.random.shuffle(iSeq.input_files)  
-
-iSeq.num_images = len(iSeq.input_files)
-#iSeq.params = [ids, expressions, morphs, poses, lightings]
-iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
-                  iSeq.morphs, iSeq.poses, iSeq.lightings]
-iSeq.block_size = iSeq.num_images / len (iSeq.scales)
-print "BLOCK SIZE =", iSeq.block_size 
-iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.scales)), iSeq.block_size)
-iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.scales, iSeq.block_size)
-
-system_parameters.test_object_contents(iSeq)
-
-print "******** Setting Training Data Parameters for Real Scale  ****************"
-sSeq = sTrainRScale = system_parameters.ParamsDataLoading()
-sSeq.input_files = iSeq.input_files
-sSeq.num_images = iSeq.num_images
-sSeq.block_size = iSeq.block_size
-sSeq.image_width = 256
-sSeq.image_height = 192
-sSeq.subimage_width = 135
-sSeq.subimage_height = 135
-
-sSeq.trans_x_max = pipeline_fd['dx1']
-sSeq.trans_x_min = -1 * pipeline_fd['dx1']
-sSeq.trans_y_max = pipeline_fd['dy1']
-sSeq.trans_y_min = -1 * pipeline_fd['dy1']
-sSeq.min_sampling = pipeline_fd['smin0']
-sSeq.max_sampling = pipeline_fd['smax0']
- 
-sSeq.pixelsampling_x = sfa_libs.wider_1Darray(iSeq.scales,  iSeq.block_size)
-sSeq.pixelsampling_y =  sfa_libs.wider_1Darray(iSeq.scales,  iSeq.block_size)
-sSeq.subimage_pixelsampling = 2
-sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
-sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
-#sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
-sSeq.add_noise_L0 = True
-sSeq.convert_format = "L"
-sSeq.background_type = None
-
-#random translation for th w coordinate
-sSeq.translation = 20 # 25, Should be 20!!! Warning: 25
-sSeq.translations_x = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, sSeq.num_images)
-sSeq.translations_y = numpy.random.random_integers(sSeq.trans_y_min, sSeq.trans_y_max, sSeq.num_images)
-
-sSeq.trans_sampled = True
-sSeq.name = "Scale. Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f, 50)"%(sSeq.trans_x_min, 
-    sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.min_sampling*100, sSeq.max_sampling*100)
-iSeq.name = sSeq.name
-system_parameters.test_object_contents(sSeq)
-
-
-print "***** Setting SeenId Information Parameters for Scale ******"
-iSeq = iSeenidRScale = system_parameters.ParamsInput()
-iSeq.name = "Real Scale: (0.55, 1.1 / 50)"
-iSeq.data_base_dir = alldbnormalized_base_dir
-iSeq.ids = alldbnormalized_available_images[30000:45000]
-
-iSeq.scales = numpy.linspace(sTrainRScale.min_sampling, sTrainRScale.max_sampling, 50) # (-50, 50, 2)
-if len(iSeq.ids) % len(iSeq.scales) != 0:
-    ex="Here the number of scales must be a divisor of the number of identities"
-    raise Exception(ex)
-iSeq.ages = [None]
-iSeq.genders = [None]
-iSeq.racetweens = [None]
-iSeq.expressions = [None]
-iSeq.morphs = [None]
-iSeq.poses = [None]
-iSeq.lightings = [None]
-iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
-iSeq.step = 1
-iSeq.offset = 0
-iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
-                                            iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
-                                            iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
-iSeq.input_files = iSeq.input_files * 2 # 3 Warning, 20, 32
-#To avoid grouping similar images next to one other
-numpy.random.shuffle(iSeq.input_files)  
-
-iSeq.num_images = len(iSeq.input_files)
-#iSeq.params = [ids, expressions, morphs, poses, lightings]
-iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
-                  iSeq.morphs, iSeq.poses, iSeq.lightings]
-iSeq.block_size = iSeq.num_images / len (iSeq.scales)
-print "BLOCK SIZE =", iSeq.block_size 
-iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.scales)), iSeq.block_size)
-iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.scales, iSeq.block_size)
-
-system_parameters.test_object_contents(iSeq)
-
-print "******** Setting SeenId Data Parameters for Real Scale  ****************"
-sSeq = sSeenidRScale = system_parameters.ParamsDataLoading()
-sSeq.input_files = iSeq.input_files
-sSeq.num_images = iSeq.num_images
-sSeq.block_size = iSeq.block_size
-sSeq.image_width = 256
-sSeq.image_height = 192
-sSeq.subimage_width = 135
-sSeq.subimage_height = 135 
-
-sSeq.trans_x_max = sTrainRScale.trans_x_max
-sSeq.trans_x_min = sTrainRScale.trans_x_min
-sSeq.trans_y_max = sTrainRScale.trans_y_max
-sSeq.trans_y_min = sTrainRScale.trans_y_min
-sSeq.min_sampling = sTrainRScale.min_sampling
-sSeq.max_sampling = sTrainRScale.max_sampling
-
-sSeq.pixelsampling_x = sfa_libs.wider_1Darray(iSeq.scales,  iSeq.block_size)
-sSeq.pixelsampling_y =  sfa_libs.wider_1Darray(iSeq.scales,  iSeq.block_size)
-sSeq.subimage_pixelsampling = 2
-sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
-sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
-#sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
-sSeq.add_noise_L0 = True
-sSeq.convert_format = "L"
-sSeq.background_type = None
-#random translation for th w coo8rdinate
-sSeq.translation = 8 # 25, Should be 20!!! Warning: 25
-sSeq.translations_x = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, sSeq.num_images)
-sSeq.translations_y = numpy.random.random_integers(sSeq.trans_y_min, sSeq.trans_y_max, sSeq.num_images)
-
-sSeq.trans_sampled = True
-sSeq.name = "Scale. Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f, 50)"%(sSeq.trans_x_min, 
-    sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.min_sampling*100, sSeq.max_sampling*100)
-iSeq.name = sSeq.name
-system_parameters.test_object_contents(sSeq)
-
-print "***** Setting NewId Information Parameters for Scale ******"
-iSeq = iNewidRScale = system_parameters.ParamsInput()
-iSeq.name = "Real Scale: (0.5, 1, 50)"
-iSeq.data_base_dir = alldbnormalized_base_dir
-iSeq.ids = alldbnormalized_available_images[45000:55000]
-iSeq.scales = numpy.linspace(sTrainRScale.min_sampling, sTrainRScale.max_sampling, 50) # (-50, 50, 2)
-if len(iSeq.ids) % len(iSeq.scales) != 0:
-    ex="Here the number of scales must be a divisor of the number of identities"
-    raise Exception(ex)
-iSeq.ages = [None]
-iSeq.genders = [None]
-iSeq.racetweens = [None]
-iSeq.expressions = [None]
-iSeq.morphs = [None]
-iSeq.poses = [None]
-iSeq.lightings = [None]
-iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
-iSeq.step = 1
-iSeq.offset = 0
-iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
-                                            iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
-                                            iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
-iSeq.input_files = iSeq.input_files * 1 #8
-#To avoid grouping similar images next to one other
-numpy.random.shuffle(iSeq.input_files)  
-
-iSeq.num_images = len(iSeq.input_files)
-#iSeq.params = [ids, expressions, morphs, poses, lightings]
-iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
-                  iSeq.morphs, iSeq.poses, iSeq.lightings]
-iSeq.block_size = iSeq.num_images / len (iSeq.scales)
-print "BLOCK SIZE =", iSeq.block_size 
-iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.scales)), iSeq.block_size)
-iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.scales, iSeq.block_size)
-
-system_parameters.test_object_contents(iSeq)
-
-print "******** Setting NewId Data Parameters for Real Scale  ****************"
-sSeq = sNewidRScale = system_parameters.ParamsDataLoading()
-sSeq.input_files = iSeq.input_files
-sSeq.num_images = iSeq.num_images
-sSeq.block_size = iSeq.block_size
-sSeq.image_width = 256
-sSeq.image_height = 192
-sSeq.subimage_width = 135
-sSeq.subimage_height = 135 
-
-sSeq.trans_x_max = sTrainRScale.trans_x_max
-sSeq.trans_x_min = sTrainRScale.trans_x_min
-sSeq.trans_y_max = sTrainRScale.trans_y_max
-sSeq.trans_y_min = sTrainRScale.trans_y_min
-sSeq.min_sampling = sTrainRScale.min_sampling
-sSeq.max_sampling = sTrainRScale.max_sampling
-
-sSeq.pixelsampling_x = sfa_libs.wider_1Darray(iSeq.scales,  iSeq.block_size)
-sSeq.pixelsampling_y =  sfa_libs.wider_1Darray(iSeq.scales,  iSeq.block_size)
-sSeq.subimage_pixelsampling = 2
-sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
-sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
-#sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
-sSeq.add_noise_L0 = True
-sSeq.convert_format = "L"
-sSeq.background_type = None
-#random translation for th w coordinate
-sSeq.translation = 8 # 25, Should be 20!!! Warning: 25
-sSeq.translations_x = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, sSeq.num_images)
-sSeq.translations_y = numpy.random.random_integers(sSeq.trans_y_min, sSeq.trans_y_max, sSeq.num_images)
-
-sSeq.trans_sampled = True
-sSeq.name = "Scale. Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f, 50)"%(sSeq.trans_x_min, 
-    sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.min_sampling*100, sSeq.max_sampling*100)
-iSeq.name = sSeq.name
-system_parameters.test_object_contents(sSeq)
-
-####################################################################
-###########    SYSTEM FOR REAL_SCALE EXTRACTION      ############
-####################################################################  
-ParamsRScale = system_parameters.ParamsSystem()
-ParamsRScale.name = sTrainRScale.name
-ParamsRScale.network = "linearNetwork4L"
-ParamsRScale.iTrain = iTrainRScale
-ParamsRScale.sTrain = sTrainRScale
-ParamsRScale.iSeenid = iSeenidRScale
-ParamsRScale.sSeenid = sSeenidRScale
-ParamsRScale.iNewid = iNewidRScale
-ParamsRScale.sNewid = sNewidRScale
-##MEGAWARNING!!!!
-#ParamsRScale.iNewid = iNewidScale
-#ParamsRScale.sNewid = sNewidScale
-#ParamsRScale.sNewid.translations_y = ParamsRScale.sNewid.translations_y * 0.0 + 8.0
-
-ParamsRScale.block_size = iTrainRScale.block_size
-ParamsRScale.train_mode = 'mixed'
-ParamsRScale.analysis = None
-ParamsRScale.enable_reduced_image_sizes = True
-ParamsRScale.reduction_factor = 2.0 # WARNING 2, 4
-ParamsRScale.hack_image_size = 64 # WARNING 64, 32
-ParamsRScale.enable_hack_image_size = True
-
-
-#GC (see text file)
-# 4 => 0.00406
-# 5 => 0.004042
-# 15 => 0.00315
-
-#b=[]
-#flow, layers, benchmark = CreateNetwork(linearNetworkT6L, 128, 128, 100, 'mixed', b)
-
-
-print "Studienprojekt. Illumination estimation datasets. By Jan and Stephan and Alberto "
-print "***** Setting Training Information Parameters for Illumination ******"
-iSeq = iTrainRIllumination = system_parameters.ParamsInput()
-iSeq.name = "Real Illumination:"
-# on_Jan = os.path.lexists("/home/jan")
-# if on_lok21:
-#     pathIllumination = "/local2/escalafl/Alberto/Erg"
-# if on_Jan:
-#     pathIllumination = "/home/jan/Dokumente/Studienprojekt/Pictures Illumination Cars/NewImages"
-# elif on_zappa01:
-#     pathIllumination = "/local/escalafl/Alberto/NewImages"
-# else:
-pathIllumination = user_base_dir + "/Erg"
-
-available_cars = numpy.arange(1,32)
-numpy.random.shuffle(available_cars)
-
-iSeq.data_base_dir = pathIllumination
-iSeq.ids = available_cars[0:22]
-iSeq.illumination = numpy.arange(0,870)
-iSeq.ages = [None]
-iSeq.genders = [None]
-iSeq.racetweens = [None]
-iSeq.expressions = [None]
-iSeq.morphs = [None]
-iSeq.poses = [None]
-iSeq.lightings = iSeq.illumination
-iSeq.slow_signal = 7 #real slow signal is the translation in the x axis, added during image loading
-iSeq.step = 1
-iSeq.offset = 0
-iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "car", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
-                                            iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
-                                            iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=3, image_postfix=".bmp")
-iSeq.input_files = iSeq.input_files * 1
-#To avoid grouping similar images next to one other
-#numpy.random.shuffle(iSeq.input_files)  
-
-iSeq.num_images = len(iSeq.input_files)
-#iSeq.params = [ids, expressions, morphs, poses, lightings]
-iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
-                  iSeq.morphs, iSeq.poses, iSeq.lightings]
-iSeq.block_size = 10*iSeq.num_images / len (iSeq.lightings)
-print "BLOCK SIZE =", iSeq.block_size 
-#print iSeq.block_size
-iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.lightings)/10), iSeq.block_size)
-#print len(iSeq.correct_classes)
-iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.lightings/10, iSeq.block_size/10)
-#print len(iSeq.correct_labels)
-
-
-system_parameters.test_object_contents(iSeq)
-
-print "******** Setting Training Data Parameters for Real Illumination  ****************"
-sSeq = sTrainRIllumination = system_parameters.ParamsDataLoading()
-sSeq.input_files = iSeq.input_files
-sSeq.num_images = iSeq.num_images
-sSeq.block_size = iSeq.block_size
-sSeq.image_width = 150
-sSeq.image_height = 150
-sSeq.subimage_width = 64
-sSeq.subimage_height = 64
-sSeq.min_sampling = 1.7
-sSeq.max_sampling = 1.8
-sSeq.pixelsampling_y = sSeq.pixelsampling_x = numpy.random.uniform(sSeq.min_sampling, sSeq.max_sampling, sSeq.num_images)
-sSeq.subimage_pixelsampling = 1
-sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
-sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
-#sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
-sSeq.add_noise_L0 = True
-sSeq.convert_format = "L"
-sSeq.background_type = None
-#random translation for th w coordinate
-sSeq.translation = 3 # 25, Should be 20!!! Warning: 25
-sSeq.translations_x = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)          
-#sSeq.translations_x = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
-sSeq.translations_y = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)
-sSeq.trans_sampled = False
-system_parameters.test_object_contents(sSeq)
-
-
-iSeq = iSeenidRIllumination = system_parameters.ParamsInput()
-iSeq.name = "Real Illumination: "
-iSeq.data_base_dir = pathIllumination
-iSeq.ids = available_cars[22:27]
-iSeq.illumination = numpy.arange(0,870)
-iSeq.ages = [None]
-iSeq.genders = [None]
-iSeq.racetweens = [None]
-iSeq.expressions = [None]
-iSeq.morphs = [None]
-iSeq.poses = [None]
-iSeq.lightings = iSeq.illumination
-iSeq.slow_signal = 7 #real slow signal is the translation in the x axis, added during image loading
-iSeq.step = 1
-iSeq.offset = 0
-iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "car", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
-                                            iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
-                                            iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=3, image_postfix=".bmp")
-iSeq.input_files = iSeq.input_files * 1
-#To avoid grouping similar images next to one other
-#numpy.random.shuffle(iSeq.input_files)  
-
-iSeq.num_images = len(iSeq.input_files)
-#iSeq.params = [ids, expressions, morphs, poses, lightings]
-iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
-                  iSeq.morphs, iSeq.poses, iSeq.lightings]
-iSeq.block_size = 10*iSeq.num_images / len (iSeq.lightings)
-print "BLOCK SIZE =", iSeq.block_size 
-iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.lightings)/10), iSeq.block_size)
-iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.lightings/10, iSeq.block_size/10)
-
-system_parameters.test_object_contents(iSeq)
-
-print "******** Setting Training Data Parameters for Real Illumination  ****************"
-sSeq = sSeenidRIllumination = system_parameters.ParamsDataLoading()
-sSeq.input_files = iSeq.input_files
-sSeq.num_images = iSeq.num_images
-sSeq.block_size = iSeq.block_size
-sSeq.image_width = 150
-sSeq.image_height = 150
-sSeq.subimage_width = 64
-sSeq.subimage_height = 64
-sSeq.min_sampling = 1.7
-sSeq.max_sampling = 1.8
-sSeq.pixelsampling_y = sSeq.pixelsampling_x = numpy.random.uniform(sSeq.min_sampling, sSeq.max_sampling, sSeq.num_images)
-sSeq.subimage_pixelsampling = 1
-sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
-sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
-#sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
-sSeq.add_noise_L0 = True
-sSeq.convert_format = "L"
-sSeq.background_type = None
-#random translation for th w coordinate
-sSeq.translation = 3 # 25, Should be 20!!! Warning: 25
-sSeq.translations_x = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)          
-#sSeq.translations_x = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
-sSeq.translations_y = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)
-sSeq.trans_sampled = False
-system_parameters.test_object_contents(sSeq)
-
-
-iSeq = iNewidRIllumination = system_parameters.ParamsInput()
-iSeq.name = "Real Illumination: "
-iSeq.data_base_dir = pathIllumination
-iSeq.ids = available_cars[27:32]
-iSeq.illumination = numpy.arange(0,870)
-iSeq.ages = [None]
-iSeq.genders = [None]
-iSeq.racetweens = [None]
-iSeq.expressions = [None]
-iSeq.morphs = [None]
-iSeq.poses = [None]
-iSeq.lightings = iSeq.illumination
-iSeq.slow_signal = 7 #real slow signal is the translation in the x axis, added during image loading
-iSeq.step = 1
-iSeq.offset = 0
-iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "car", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
-                                            iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
-                                            iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=3, image_postfix=".bmp")
-iSeq.input_files = iSeq.input_files * 1
-#To avoid grouping similar images next to one other
-#numpy.random.shuffle(iSeq.input_files)  
-
-iSeq.num_images = len(iSeq.input_files)
-#iSeq.params = [ids, expressions, morphs, poses, lightings]
-iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
-                  iSeq.morphs, iSeq.poses, iSeq.lightings]
-iSeq.block_size = 10*iSeq.num_images / len (iSeq.lightings)
-print "BLOCK SIZE =", iSeq.block_size 
-iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.lightings)/10), iSeq.block_size)
-iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.lightings/10, iSeq.block_size/10)
-
-system_parameters.test_object_contents(iSeq)
-
-print "******** Setting Testing Data Parameters for Real Illumination  ****************"
-sSeq = sNewidRIllumination = system_parameters.ParamsDataLoading()
-sSeq.input_files = iSeq.input_files
-sSeq.num_images = iSeq.num_images
-sSeq.block_size = iSeq.block_size
-sSeq.image_width = 150
-sSeq.image_height = 150
-sSeq.subimage_width = 64
-sSeq.subimage_height = 64
-sSeq.min_sampling = 1.7
-sSeq.max_sampling = 1.8
-sSeq.pixelsampling_y = sSeq.pixelsampling_x = numpy.random.uniform(sSeq.min_sampling, sSeq.max_sampling, sSeq.num_images)
-sSeq.subimage_pixelsampling = 1
-sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
-sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
-#sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
-sSeq.add_noise_L0 = True
-sSeq.convert_format = "L"
-sSeq.background_type = None
-#random translation for th w coordinate
-sSeq.translation = 3 # 25, Should be 20!!! Warning: 25
-sSeq.translations_x = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)          
-#sSeq.translations_x = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
-sSeq.translations_y = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)
-sSeq.trans_sampled = False
-system_parameters.test_object_contents(sSeq)
-
-####################################################################
-###########    SYSTEM FOR REAL_TRANSLATION_X EXTRACTION      ############
-####################################################################  
-ParamsRIllumination = system_parameters.ParamsSystem()
-ParamsRIllumination.name = "Network that extracts Real Translation X information"
-ParamsRIllumination.network = "linearNetwork4L"
-ParamsRIllumination.iTrain = iTrainRIllumination
-ParamsRIllumination.sTrain = sTrainRIllumination
-ParamsRIllumination.iSeenid = iSeenidRIllumination
-ParamsRIllumination.sSeenid = sSeenidRIllumination
-ParamsRIllumination.iNewid = iNewidRIllumination
-ParamsRIllumination.sNewid = sNewidRIllumination
-##MEGAWARNING!!!!
-#ParamsRIllumination.iNewid = iNewidIllumination
-#ParamsRIllumination.sNewid = sNewidIllumination
-#ParamsRIllumination.sNewid.translations_y = ParamsRIllumination.sNewid.translations_y * 0.0 + 8.0
-
-ParamsRIllumination.block_size = iTrainRIllumination.block_size
-ParamsRIllumination.train_mode = 'mixed'
-ParamsRIllumination.analysis = None
-
-#b=[]
-#flow, layers, benchmark = CreateNetwork(linearNetworkT6L, 128, 128, 100, 'mixed', b)
-
-
-print "Studienprojekt. Rotation estimation datasets. By Jan and Stephan and Alberto "
-print "***** Setting Training Information Parameters for Rotation ******"
-iSeq = iTrainRRotation = system_parameters.ParamsInput()
-iSeq.name = "Real Rotation: "
-# on_Jan = os.path.lexists("/home/jan")
-# if on_lok21:
-#     pathRotation = "/local2/escalafl/Alberto/Erg"
-# if on_Jan:
-#     pathRotation = "/media/7270C6F570C6BF5B/Pictures Rotation/Single Pictures"
-# else:
-#     pathRotation = "/home/Stephan/Erg"
-pathRotation = user_base_dir + "/Erg"
-available_cars = numpy.arange(1,40)
-numpy.random.shuffle(available_cars)
-
-iSeq.data_base_dir = pathRotation
-iSeq.ids = available_cars[0:28]
-iSeq.illumination = numpy.arange(0,500)
-iSeq.ages = [None]
-iSeq.genders = [None]
-iSeq.racetweens = [None]
-iSeq.expressions = [None]
-iSeq.morphs = [None]
-iSeq.poses = [None]
-iSeq.lightings = iSeq.illumination
-iSeq.slow_signal = 7 #real slow signal is the translation in the x axis, added during image loading
-iSeq.step = 1
-iSeq.offset = 0
-iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "car", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
-                                            iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
-                                            iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=3, image_postfix=".bmp")
-iSeq.input_files = iSeq.input_files * 1 
-
-iSeq.num_images = len(iSeq.input_files)
-#iSeq.params = [ids, expressions, morphs, poses, lightings]
-iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
-                  iSeq.morphs, iSeq.poses, iSeq.lightings]
-iSeq.block_size = 10*iSeq.num_images / len (iSeq.lightings)
-print "BLOCK SIZE =", iSeq.block_size 
-#print iSeq.block_size
-iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.lightings)/10), iSeq.block_size)
-#print len(iSeq.correct_classes)
-iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.lightings/10, iSeq.block_size/10)
-#print len(iSeq.correct_labels)
-system_parameters.test_object_contents(iSeq)
-
-
-print "******** Setting Training Data Parameters for Real Rotation  ****************"
-sSeq = sTrainRRotation = system_parameters.ParamsDataLoading()
-sSeq.input_files = iSeq.input_files
-sSeq.num_images = iSeq.num_images
-sSeq.block_size = iSeq.block_size
-sSeq.image_width = 80
-sSeq.image_height = 80
-sSeq.subimage_width = 64
-sSeq.subimage_height = 64
-sSeq.min_sampling = 1.0
-sSeq.max_sampling = 1.0
-sSeq.pixelsampling_y = sSeq.pixelsampling_x = numpy.random.uniform(sSeq.min_sampling, sSeq.max_sampling, sSeq.num_images)
-sSeq.subimage_pixelsampling = 1
-sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
-sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
-#sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
-sSeq.add_noise_L0 = True
-sSeq.convert_format = "L"
-sSeq.background_type = None
-#random translation for th w coordinate
-sSeq.translation = 3 # 25, Should be 20!!! Warning: 25
-sSeq.translations_x = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)          
-#sSeq.translations_x = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
-sSeq.translations_y = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)
-sSeq.trans_sampled = False
-system_parameters.test_object_contents(sSeq)
-
-
-iSeq = iSeenidRRotation = system_parameters.ParamsInput()
-iSeq.name = "Real Rotation: "
-iSeq.data_base_dir = pathRotation
-iSeq.ids = available_cars[28:34]
-iSeq.illumination = numpy.arange(0,500)
-iSeq.ages = [None]
-iSeq.genders = [None]
-iSeq.racetweens = [None]
-iSeq.expressions = [None]
-iSeq.morphs = [None]
-iSeq.poses = [None]
-iSeq.lightings = iSeq.illumination
-iSeq.slow_signal = 7 #real slow signal is the translation in the x axis, added during image loading
-iSeq.step = 1
-iSeq.offset = 0
-iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "car", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
-                                            iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
-                                            iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=3, image_postfix=".bmp")
-iSeq.input_files = iSeq.input_files * 1
-#To avoid grouping similar images next to one other
-#numpy.random.shuffle(iSeq.input_files)  
-
-iSeq.num_images = len(iSeq.input_files)
-#iSeq.params = [ids, expressions, morphs, poses, lightings]
-iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
-                  iSeq.morphs, iSeq.poses, iSeq.lightings]
-iSeq.block_size = 10*iSeq.num_images / len (iSeq.lightings)
-print "BLOCK SIZE =", iSeq.block_size 
-iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.lightings)/10), iSeq.block_size)
-iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.lightings/10, iSeq.block_size/10)
-
-system_parameters.test_object_contents(iSeq)
-
-print "******** Setting Training Data Parameters for Real Rotation  ****************"
-sSeq = sSeenidRRotation = system_parameters.ParamsDataLoading()
-sSeq.input_files = iSeq.input_files
-sSeq.num_images = iSeq.num_images
-sSeq.block_size = iSeq.block_size
-sSeq.image_width = 80
-sSeq.image_height = 80
-sSeq.subimage_width = 64
-sSeq.subimage_height = 64
-sSeq.min_sampling = 1.0
-sSeq.max_sampling = 1.0
-sSeq.pixelsampling_y = sSeq.pixelsampling_x = numpy.random.uniform(sSeq.min_sampling, sSeq.max_sampling, sSeq.num_images)
-sSeq.subimage_pixelsampling = 1
-sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
-sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
-#sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
-sSeq.add_noise_L0 = True
-sSeq.convert_format = "L"
-sSeq.background_type = None
-#random translation for th w coordinate
-sSeq.translation = 3 # 25, Should be 20!!! Warning: 25
-sSeq.translations_x = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)          
-#sSeq.translations_x = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
-sSeq.translations_y = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)
-sSeq.trans_sampled = False
-system_parameters.test_object_contents(sSeq)
-
-
-iSeq = iNewidRRotation = system_parameters.ParamsInput()
-iSeq.name = "Real Rotation: "
-iSeq.data_base_dir = pathRotation
-iSeq.ids = available_cars[34:40]
-iSeq.illumination = numpy.arange(0,500)
-iSeq.ages = [None]
-iSeq.genders = [None]
-iSeq.racetweens = [None]
-iSeq.expressions = [None]
-iSeq.morphs = [None]
-iSeq.poses = [None]
-iSeq.lightings = iSeq.illumination
-iSeq.slow_signal = 7 #real slow signal is the translation in the x axis, added during image loading
-iSeq.step = 1
-iSeq.offset = 0
-iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "car", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
-                                            iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
-                                            iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=3, image_postfix=".bmp")
-iSeq.input_files = iSeq.input_files * 1
-#To avoid grouping similar images next to one other
-#numpy.random.shuffle(iSeq.input_files)  
-
-iSeq.num_images = len(iSeq.input_files)
-#iSeq.params = [ids, expressions, morphs, poses, lightings]
-iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
-                  iSeq.morphs, iSeq.poses, iSeq.lightings]
-iSeq.block_size = 10*iSeq.num_images / len (iSeq.lightings)
-print "BLOCK SIZE =", iSeq.block_size 
-iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.lightings)/10), iSeq.block_size)
-iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.lightings/10, iSeq.block_size/10)
-
-system_parameters.test_object_contents(iSeq)
-
-print "******** Setting Testing Data Parameters for Real Illumination  ****************"
-sSeq = sNewidRRotation = system_parameters.ParamsDataLoading()
-sSeq.input_files = iSeq.input_files
-sSeq.num_images = iSeq.num_images
-sSeq.block_size = iSeq.block_size
-sSeq.image_width = 80
-sSeq.image_height = 80
-sSeq.subimage_width = 64
-sSeq.subimage_height = 64
-sSeq.min_sampling = 1.0
-sSeq.max_sampling = 1.0
-sSeq.pixelsampling_y = sSeq.pixelsampling_x = numpy.random.uniform(sSeq.min_sampling, sSeq.max_sampling, sSeq.num_images)
-sSeq.subimage_pixelsampling = 1
-sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
-sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
-#sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
-sSeq.add_noise_L0 = True
-sSeq.convert_format = "L"
-sSeq.background_type = None
-#random translation for th w coordinate
-sSeq.translation = 3 # 25, Should be 20!!! Warning: 25
-sSeq.translations_x = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)          
-#sSeq.translations_x = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
-sSeq.translations_y = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)
-sSeq.trans_sampled = False
-system_parameters.test_object_contents(sSeq)
-
-####################################################################
-###########    SYSTEM FOR REAL_TRANSLATION_X EXTRACTION      ############
-####################################################################  
-ParamsRRotation = system_parameters.ParamsSystem()
-ParamsRRotation.name = "Network that extracts Real Translation X information"
-ParamsRRotation.network = "linearNetwork4L"
-ParamsRRotation.iTrain = iTrainRRotation
-ParamsRRotation.sTrain = sTrainRRotation
-ParamsRRotation.iSeenid = iSeenidRRotation
-ParamsRRotation.sSeenid = sSeenidRRotation
-ParamsRRotation.iNewid = iNewidRRotation
-ParamsRRotation.sNewid = sNewidRRotation
-ParamsRRotation.block_size = iTrainRRotation.block_size
-ParamsRRotation.train_mode = 'mixed'
-ParamsRRotation.analysis = None
-
-
-def double_uniform(min1, max1, min2, max2, size, p2):
-    prob = numpy.random.uniform(0.0, 1.0, size)
-    u1 = numpy.random.uniform(min1, max1, size)
-    u2 = numpy.random.uniform(min2, max2, size)
-    
-    res = u1
-    mask = (prob <= p2) #then take it from u2
-    res[mask] = u2[mask]
-    return res
-
-#TODO: code is slow, improve
-#Box is a list of pairs. Pair i contains the smallest and largest value for coordinate i
-def box_sampling(box, num_samples=1):
-    num_dimensions = len(box)
-    output = numpy.zeros((num_samples, num_dimensions))
-    for i in range(num_dimensions):
-        output[:,i] = numpy.random.uniform(box[i][0], box[i][1], size=num_samples)
-    return output
-
-#x must be a two-dimensional array
-def inside_box(x, box, num_dim):
-    num_samples = len(x)
-    inside = numpy.ones(num_samples, dtype="bool")
-    for i in range(num_dim):
-        inside = inside & (x[:, i] > box[i][0]) & (x[:, i] < box[i][1])    
-    return inside
+        iTrainGender1 = self.iSeqCreateGender(first_id = 0, num_ids = 10, user_base_dir=user_base_dir, data_dir="RenderingsGender60x200", gender_continuous=True, seed=-1)
+        sTrainGender1 = self.sSeqCreateGender(iTrainGender1, contrast_enhance, seed=-1)
         
-#TODO: code is slow, improve   
-def sub_box_sampling(box_in, box_ext, num_samples=1):
-    num_dimensions = len(box_in)
-    if num_dimensions != len(box_ext):
-        err = "Exterion and interior boxes have a different numbe of dimensions!!!"
-        raise Exception(err)
-    output = numpy.zeros((num_samples, num_dimensions))
-    incorrect = numpy.ones(num_samples, dtype="bool")
-    while incorrect.sum()>0:
-#        print "incorrect.sum()=",incorrect.sum()
-        new_candidates = box_sampling(box_ext, incorrect.sum()) 
-        output[incorrect] = new_candidates       
-        incorrect = inside_box(output, box_in, num_dimensions)        
-    return output
-
-#FACE / NO-FACE FACE / NO-FACE FACE / NO-FACE FACE / NO-FACE FACE / NO-FACE FACE / NO-FACE FACE / NO-FACE FACE / NO-FACE
-#Attempt to distinguish between faces and no-faces
-print "***** Setting Training Information Parameters for Face ******"
-iSeq = iTrainRFace = system_parameters.ParamsInput()
-# (0.55+1.1)/2 = 0.825, 0.55/2 = 0.275, 0.55/4 = 0.1375, .825 + .1375 = .9625, .825 - .55/4 = .6875
-iSeq.name = "Real FACE (Centered / Decentered)"
-
-iSeq.data_base_dir = frgc_normalized_base_dir
-iSeq.ids = numpy.arange(0,6000) # 6000
-iSeq.faces = numpy.arange(0,2) # 0=centered normalized face, 1=not centered normalized face
-
-#iSeq.scales = numpy.linspace(pipeline_fd['smin0'], pipeline_fd['smax0'], 50) # (-50, 50, 2)
-if len(iSeq.ids) % len(iSeq.faces) != 0:
-    ex="Here the number of scales must be a divisor of the number of identities"
-    raise Exception(ex)
-iSeq.ages = [None]
-iSeq.genders = [None]
-iSeq.racetweens = [None]
-iSeq.expressions = [None]
-iSeq.morphs = [None]
-iSeq.poses = [None]
-iSeq.lightings = [None]
-iSeq.slow_signal = 0 #real slow signal is whether there is a centered or descentered face
-iSeq.step = 1
-iSeq.offset = 0
-iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
-                                            iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
-                                            iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=4, image_postfix=".jpg")
-iSeq.input_files = iSeq.input_files * 4 #4 was overfitting non linear sfa slightly
-#To avoid grouping similar images next to one other
-numpy.random.shuffle(iSeq.input_files)  
-
-iSeq.num_images = len(iSeq.input_files)
-#iSeq.params = [ids, expressions, morphs, poses, lightings]
-iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
-                  iSeq.morphs, iSeq.poses, iSeq.lightings]
-iSeq.block_size = iSeq.num_images / len (iSeq.faces)
-print "BLOCK SIZE =", iSeq.block_size 
-
-iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.faces)), iSeq.block_size)
-iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.faces*2-1, iSeq.block_size)
-
-system_parameters.test_object_contents(iSeq)
-
-print "******** Setting Training Data Parameters for Real Face  ****************"
-sSeq = sTrainRFace = system_parameters.ParamsDataLoading()
-sSeq.input_files = iSeq.input_files
-sSeq.num_images = iSeq.num_images
-sSeq.block_size = iSeq.block_size
-sSeq.image_width = 256
-sSeq.image_height = 192
-sSeq.subimage_width = 135
-sSeq.subimage_height = 135
-
-sSeq.trans_x_max = pipeline_fd['dx1']
-sSeq.trans_x_min = -1 * pipeline_fd['dx1']
-sSeq.trans_y_max = pipeline_fd['dy1']
-sSeq.trans_y_min = -1 * pipeline_fd['dy1']
-sSeq.min_sampling = pipeline_fd['smin1']
-sSeq.max_sampling = pipeline_fd['smax1']
-
-sSeq.noface_trans_x_max = 45
-sSeq.noface_trans_x_min = -45
-sSeq.noface_trans_y_max = 19
-sSeq.noface_trans_y_min = -19
-sSeq.noface_min_sampling = 0.55
-sSeq.noface_max_sampling = 1.1
- 
-
-sSeq.pixelsampling_x = numpy.zeros(sSeq.num_images)
-sSeq.pixelsampling_y = numpy.zeros(sSeq.num_images) 
-
-#Centered Face
-sSeq.pixelsampling_x[0:iSeq.block_size] = numpy.random.uniform(sSeq.min_sampling, sSeq.max_sampling, size=iSeq.block_size)
-sSeq.pixelsampling_y[0:iSeq.block_size] = sSeq.pixelsampling_x[0:iSeq.block_size] + 0.0 #MUST BE A DIFFERENT OBJECT
-#sSeq.pixelsampling_x[iSeq.block_size:] = numpy.random.uniform(sSeq.min_sampling, sSeq.max_sampling, size=iSeq.block_size)
-#sSeq.pixelsampling_y[iSeq.block_size:] = sSeq.pixelsampling_x[iSeq.block_size:] + 0.0
-#Decentered Face, using different x and y samplings
-sSeq.pixelsampling_x[iSeq.block_size:] = double_uniform(sSeq.noface_min_sampling, sSeq.min_sampling, sSeq.max_sampling, sSeq.noface_max_sampling , size=iSeq.block_size,   p2=0.5)
-sSeq.pixelsampling_y[iSeq.block_size:] = double_uniform(sSeq.noface_min_sampling, sSeq.min_sampling, sSeq.max_sampling, sSeq.noface_max_sampling , size=iSeq.block_size,   p2=0.5)
-
-sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
-sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
-#sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
-sSeq.add_noise_L0 = True
-sSeq.convert_format = "L"
-sSeq.background_type = None
-
-#random translation for th w coordinate
-#sSeq.translation = 20 # 25, Should be 20!!! Warning: 25
-sSeq.translations_x = numpy.zeros(sSeq.num_images)
-sSeq.translations_y = numpy.zeros(sSeq.num_images)
-#Centered Face
-sSeq.translations_x[0:iSeq.block_size] = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, iSeq.block_size)
-sSeq.translations_y[0:iSeq.block_size] = numpy.random.random_integers(sSeq.trans_y_min, sSeq.trans_y_max, iSeq.block_size)
-#sSeq.translations_x[iSeq.block_size:] = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, iSeq.block_size)
-#sSeq.translations_y[iSeq.block_size:] = numpy.random.random_integers(sSeq.trans_y_min, sSeq.trans_y_max, iSeq.block_size)
-#Decentered Face
-sSeq.translations_x[iSeq.block_size:] = double_uniform(sSeq.noface_trans_x_min, sSeq.trans_x_min, sSeq.trans_x_max, sSeq.noface_trans_x_max, size=iSeq.block_size, p2=0.5)
-sSeq.translations_y[iSeq.block_size:] = double_uniform(sSeq.noface_trans_y_min, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.noface_trans_y_max, size=iSeq.block_size, p2=0.5)
-
-sSeq.trans_sampled = True
-sSeq.name = "Face. Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f, 50)"%(sSeq.trans_x_min, 
-    sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, int(sSeq.min_sampling*1000), int(sSeq.max_sampling*1000))
-
-
-print " sSeq.subimage_first_row =", sSeq.subimage_first_row
-print "sSeq.pixelsampling_x", sSeq.pixelsampling_x
-print "sSeq.translations_x", sSeq.translations_x
-
-iSeq.name = sSeq.name
-system_parameters.test_object_contents(sSeq)
-
-
-
-print "***** Setting Seenid Information Parameters for Face ******"
-iSeq = iSeenidRFace = system_parameters.ParamsInput()
-# (0.55+1.1)/2 = 0.825, 0.55/2 = 0.275, 0.55/4 = 0.1375, .825 + .1375 = .9625, .825 - .55/4 = .6875
-iSeq.name = "Real FACE (Centered / Decentered)"
-
-iSeq.data_base_dir = frgc_normalized_base_dir
-iSeq.ids = numpy.arange(6000,8000) # 8000
-iSeq.faces = numpy.arange(0,2) # 0=centered normalized face, 1=not centered normalized face
-
-#iSeq.scales = numpy.linspace(pipeline_fd['smin0'], pipeline_fd['smax0'], 50) # (-50, 50, 2)
-if len(iSeq.ids) % len(iSeq.faces) != 0:
-    ex="Here the number of scales must be a divisor of the number of identities"
-    raise Exception(ex)
-iSeq.ages = [None]
-iSeq.genders = [None]
-iSeq.racetweens = [None]
-iSeq.expressions = [None]
-iSeq.morphs = [None]
-iSeq.poses = [None]
-iSeq.lightings = [None]
-iSeq.slow_signal = 0 #real slow signal is whether there is a centered or descentered face
-iSeq.step = 1
-iSeq.offset = 0
-iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
-                                            iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
-                                            iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=4, image_postfix=".jpg")
-iSeq.input_files = iSeq.input_files * 8
-#To avoid grouping similar images next to one other
-numpy.random.shuffle(iSeq.input_files)  
-
-iSeq.num_images = len(iSeq.input_files)
-#iSeq.params = [ids, expressions, morphs, poses, lightings]
-iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
-                  iSeq.morphs, iSeq.poses, iSeq.lightings]
-iSeq.block_size = iSeq.num_images / len (iSeq.faces)
-print "BLOCK SIZE =", iSeq.block_size 
-
-iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.faces)), iSeq.block_size)
-iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.faces*2-1, iSeq.block_size)
-
-system_parameters.test_object_contents(iSeq)
-
-print "******** Setting SeenID Data Parameters for Real Face  ****************"
-sSeq = sSeenidRFace = system_parameters.ParamsDataLoading()
-sSeq.input_files = iSeq.input_files
-sSeq.num_images = iSeq.num_images
-sSeq.block_size = iSeq.block_size
-sSeq.image_width = 256
-sSeq.image_height = 192
-sSeq.subimage_width = 135
-sSeq.subimage_height = 135
-
-sSeq.trans_x_max = pipeline_fd['dx1']
-sSeq.trans_x_min = -1 * pipeline_fd['dx1']
-sSeq.trans_y_max = pipeline_fd['dy1']
-sSeq.trans_y_min = -1 * pipeline_fd['dy1']
-sSeq.min_sampling = pipeline_fd['smin1']
-sSeq.max_sampling = pipeline_fd['smax1']
-
-sSeq.noface_trans_x_max = 45
-sSeq.noface_trans_x_min = -45
-sSeq.noface_trans_y_max = 19
-sSeq.noface_trans_y_min = -19
-sSeq.noface_min_sampling = 0.55
-sSeq.noface_max_sampling = 1.1
- 
-
-sSeq.pixelsampling_x = numpy.zeros(sSeq.num_images)
-sSeq.pixelsampling_y = numpy.zeros(sSeq.num_images) 
-
-#Centered Face
-sSeq.pixelsampling_x[0:iSeq.block_size] = numpy.random.uniform(sSeq.min_sampling, sSeq.max_sampling, size=iSeq.block_size)
-sSeq.pixelsampling_y[0:iSeq.block_size] = sSeq.pixelsampling_x[0:iSeq.block_size] + 0.0 #MUST BE A DIFFERENT OBJECT
-#sSeq.pixelsampling_x[iSeq.block_size:] = numpy.random.uniform(sSeq.min_sampling, sSeq.max_sampling, size=iSeq.block_size)
-#sSeq.pixelsampling_y[iSeq.block_size:] = sSeq.pixelsampling_x[iSeq.block_size:] + 0.0
-#Decentered Face, using different x and y samplings
-sSeq.pixelsampling_x[iSeq.block_size:] = double_uniform(sSeq.noface_min_sampling, sSeq.min_sampling, sSeq.max_sampling, sSeq.noface_max_sampling , size=iSeq.block_size,   p2=0.5)
-sSeq.pixelsampling_y[iSeq.block_size:] = double_uniform(sSeq.noface_min_sampling, sSeq.min_sampling, sSeq.max_sampling, sSeq.noface_max_sampling , size=iSeq.block_size,   p2=0.5)
-
-sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
-sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
-#sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
-sSeq.add_noise_L0 = True
-sSeq.convert_format = "L"
-sSeq.background_type = None
-
-#random translation for th w coordinate
-#sSeq.translation = 20 # 25, Should be 20!!! Warning: 25
-sSeq.translations_x = numpy.zeros(sSeq.num_images)
-sSeq.translations_y = numpy.zeros(sSeq.num_images)
-#Centered Face
-sSeq.translations_x[0:iSeq.block_size] = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, iSeq.block_size)
-sSeq.translations_y[0:iSeq.block_size] = numpy.random.random_integers(sSeq.trans_y_min, sSeq.trans_y_max, iSeq.block_size)
-#Decentered Face
-sSeq.translations_x[iSeq.block_size:] = double_uniform(sSeq.noface_trans_x_min, sSeq.trans_x_min, sSeq.trans_x_max, sSeq.noface_trans_x_max, size=iSeq.block_size, p2=0.5)
-sSeq.translations_y[iSeq.block_size:] = double_uniform(sSeq.noface_trans_y_min, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.noface_trans_y_max, size=iSeq.block_size, p2=0.5)
-
-sSeq.trans_sampled = True
-sSeq.name = "Face. Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f, 50)"%(sSeq.trans_x_min, 
-    sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, int(sSeq.min_sampling*1000), int(sSeq.max_sampling*1000))
-
-iSeq.name = sSeq.name
-system_parameters.test_object_contents(sSeq)
-
-
-print "***** Setting Newid Information Parameters for Face ******"
-iSeq = iNewidRFace = system_parameters.ParamsInput()
-# (0.55+1.1)/2 = 0.825, 0.55/2 = 0.275, 0.55/4 = 0.1375, .825 + .1375 = .9625, .825 - .55/4 = .6875
-iSeq.name = "Real FACE (Centered / Decentered)"
-
-iSeq.data_base_dir = frgc_normalized_base_dir
-iSeq.ids = numpy.arange(8000,10000) # 8000
-iSeq.faces = numpy.arange(0,2) # 0=centered normalized face, 1=not centered normalized face
-
-#iSeq.scales = numpy.linspace(pipeline_fd['smin0'], pipeline_fd['smax0'], 50) # (-50, 50, 2)
-if len(iSeq.ids) % len(iSeq.faces) != 0:
-    ex="Here the number of scales must be a divisor of the number of identities"
-    raise Exception(ex)
-iSeq.ages = [None]
-iSeq.genders = [None]
-iSeq.racetweens = [None]
-iSeq.expressions = [None]
-iSeq.morphs = [None]
-iSeq.poses = [None]
-iSeq.lightings = [None]
-iSeq.slow_signal = 0 #real slow signal is whether there is a centered or descentered face
-iSeq.step = 1
-iSeq.offset = 0
-iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
-                                            iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
-                                            iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=4, image_postfix=".jpg")
-iSeq.input_files = iSeq.input_files * 2
-#To avoid grouping similar images next to one other
-numpy.random.shuffle(iSeq.input_files)  
-
-iSeq.num_images = len(iSeq.input_files)
-#iSeq.params = [ids, expressions, morphs, poses, lightings]
-iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
-                  iSeq.morphs, iSeq.poses, iSeq.lightings]
-iSeq.block_size = iSeq.num_images / len (iSeq.faces)
-print "BLOCK SIZE =", iSeq.block_size 
-
-iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.faces)), iSeq.block_size)
-iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.faces*2-1, iSeq.block_size)
-
-system_parameters.test_object_contents(iSeq)
-
-print "******** Setting Training Data Parameters for Real Face  ****************"
-sSeq = sNewidRFace = system_parameters.ParamsDataLoading()
-sSeq.input_files = iSeq.input_files
-sSeq.num_images = iSeq.num_images
-sSeq.block_size = iSeq.block_size
-sSeq.image_width = 256
-sSeq.image_height = 192
-sSeq.subimage_width = 135
-sSeq.subimage_height = 135
-
-sSeq.trans_x_max = pipeline_fd['dx1']
-sSeq.trans_x_min = -1 * pipeline_fd['dx1']
-sSeq.trans_y_max = pipeline_fd['dy1']
-sSeq.trans_y_min = -1 * pipeline_fd['dy1']
-sSeq.min_sampling = pipeline_fd['smin1']
-sSeq.max_sampling = pipeline_fd['smax1']
-
-sSeq.noface_trans_x_max = 45
-sSeq.noface_trans_x_min = -45
-sSeq.noface_trans_y_max = 19
-sSeq.noface_trans_y_min = -19
-sSeq.noface_min_sampling = 0.55
-sSeq.noface_max_sampling = 1.1
- 
-
-sSeq.pixelsampling_x = numpy.zeros(sSeq.num_images)
-sSeq.pixelsampling_y = numpy.zeros(sSeq.num_images) 
-
-#Centered Face
-sSeq.pixelsampling_x[0:iSeq.block_size] = numpy.random.uniform(sSeq.min_sampling, sSeq.max_sampling, size=iSeq.block_size)
-sSeq.pixelsampling_y[0:iSeq.block_size] = sSeq.pixelsampling_x[0:iSeq.block_size] + 0.0 #MUST BE A DIFFERENT OBJECT
-#sSeq.pixelsampling_x[iSeq.block_size:] = numpy.random.uniform(sSeq.min_sampling, sSeq.max_sampling, size=iSeq.block_size)
-#sSeq.pixelsampling_y[iSeq.block_size:] = sSeq.pixelsampling_x[iSeq.block_size:] + 0.0
-#Decentered Face, using different x and y samplings
-sSeq.pixelsampling_x[iSeq.block_size:] = double_uniform(sSeq.noface_min_sampling, sSeq.min_sampling, sSeq.max_sampling, sSeq.noface_max_sampling , size=iSeq.block_size,   p2=0.5)
-sSeq.pixelsampling_y[iSeq.block_size:] = double_uniform(sSeq.noface_min_sampling, sSeq.min_sampling, sSeq.max_sampling, sSeq.noface_max_sampling , size=iSeq.block_size,   p2=0.5)
-
-sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
-sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
-#sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
-sSeq.add_noise_L0 = True
-sSeq.convert_format = "L"
-sSeq.background_type = None
-
-#random translation for th w coordinate
-#sSeq.translation = 20 # 25, Should be 20!!! Warning: 25
-sSeq.translations_x = numpy.zeros(sSeq.num_images)
-sSeq.translations_y = numpy.zeros(sSeq.num_images)
-#Centered Face
-sSeq.translations_x[0:iSeq.block_size] = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, iSeq.block_size)
-sSeq.translations_y[0:iSeq.block_size] = numpy.random.random_integers(sSeq.trans_y_min, sSeq.trans_y_max, iSeq.block_size)
-#Decentered Face
-sSeq.translations_x[iSeq.block_size:] = double_uniform(sSeq.noface_trans_x_min, sSeq.trans_x_min, sSeq.trans_x_max, sSeq.noface_trans_x_max, size=iSeq.block_size, p2=0.5)
-sSeq.translations_y[iSeq.block_size:] = double_uniform(sSeq.noface_trans_y_min, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.noface_trans_y_max, size=iSeq.block_size, p2=0.5)
-
-sSeq.trans_sampled = True
-sSeq.name = "Face. Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f, 50)"%(sSeq.trans_x_min, 
-    sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, int(sSeq.min_sampling*1000), int(sSeq.max_sampling*1000))
-
-iSeq.name = sSeq.name
-system_parameters.test_object_contents(sSeq)
-
-
-####################################################################
-###########    SYSTEM FOR REAL_FACE CLASSIFICATION      ############
-####################################################################  
-ParamsRFace = system_parameters.ParamsSystem()
-ParamsRFace.name = sTrainRFace.name
-ParamsRFace.network = "linearNetwork4L"
-ParamsRFace.iTrain = iTrainRFace
-ParamsRFace.sTrain = sTrainRFace
-ParamsRFace.iSeenid = iSeenidRFace
-ParamsRFace.sSeenid = sSeenidRFace
-ParamsRFace.iNewid = iNewidRFace 
-ParamsRFace.sNewid = sNewidRFace 
-##MEGAWARNING!!!!
-#ParamsRFace.iNewid = iNewidScale
-#ParamsRFace.sNewid = sNewidScale
-#ParamsRFace.sNewid.translations_y = ParamsRFace.sNewid.translations_y * 0.0 + 8.0
-
-ParamsRFace.block_size = iTrainRFace.block_size
-ParamsRFace.train_mode = 'clustered' # 'mixed'
-ParamsRFace.analysis = None
-
-import object_cache as cache
-
-robject_center_base_dir = "/local/escalafl/Alberto/FaubelSet_01/Center"
-robject_down_base_dir = "/local/escalafl/Alberto/FaubelSet_01/Down"
-robject_up_base_dir = "/local/escalafl/Alberto/FaubelSet_01/Up"
-
-#Dirty function to deal with filename convention obj#-##__#-##_ ... and  to acces several directories at once
-def find_filenames_beginning_with_numbers(base_dirs=[""], base_filename="obj", base_numbers=None, extension=".png"):
-    if base_numbers is None:
-        return cache.find_filenames_beginning_with(base_dirs, base_filename, recursion=False, extension=extension)
-    else:
-        filenames = []
-        for n, i in enumerate(base_numbers):
-            filenames.append([])
-            for base_dir in base_dirs:
-                filenames[n].extend(cache.find_filenames_beginning_with(base_dir, base_filename+"%d_"%i, recursion=False, extension=extension))
-#            print "looking for %s //  %s"%(base_dir, base_filename+"%d_"%i)
-#            print "found:", cache.find_filenames_beginning_with(base_dir, base_filename+"%d"%i, recursion=False, extension=extension)
-        return filenames
-
-#Cooperation with Christian Faubel. Object Recognition
-#Images by Christian Faubel
-#Attempt to distinguish some types of objects
-robject_convert_format='L'
-print "***** Setting Training Information Parameters for RObject ******"
-iSeq = iTrainRObject = system_parameters.ParamsInput()
-# (0.55+1.1)/2 = 0.825, 0.55/2 = 0.275, 0.55/4 = 0.1375, .825 + .1375 = .9625, .825 - .55/4 = .6875
-iSeq.name = "Real Object Recognition"
-
-iSeq.data_base_dir = [robject_center_base_dir, robject_down_base_dir, robject_up_base_dir]
-iSeq.ids = numpy.arange(1,21) # 1-31
-#iSeq.faces = numpy.arange(0,2) # 0=centered normalized face, 1=not centered normalized face
-#iSeq.scales = numpy.linspace(pipeline_fd['smin0'], pipeline_fd['smax0'], 50) # (-50, 50, 2)
-#if len(iSeq.ids) % len(iSeq.faces) != 0:
-#    ex="Here the number of scales must be a divisor of the number of identities"
-#    raise Exception(ex)
-iSeq.all_input_files = find_filenames_beginning_with_numbers(iSeq.data_base_dir, "obj", iSeq.ids, extension=".png")
-#print "iSeq.all_input_files", iSeq.all_input_files
-
-iSeq.ages = [None]
-iSeq.genders = [None]
-iSeq.racetweens = [None]
-iSeq.expressions = [None]
-iSeq.morphs = [None]
-iSeq.poses = map(len, iSeq.all_input_files)
-iSeq.lightings = [None]
-iSeq.slow_signal = 0 #real slow signal is whether there is a centered or descentered face
-iSeq.step = 1
-iSeq.offset = 0
-iSeq.input_files = []
-for single_file_list in iSeq.all_input_files:
-    iSeq.input_files += single_file_list
-iSeq.block_sizes = numpy.array(iSeq.poses)
-print "totaling %d images"%len(iSeq.input_files)
-
-#image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
-#                                            iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
-#                                            iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=4, image_postfix=".jpg")
-#iSeq.input_files = iSeq.input_files * 8 #4 was overfitting non linear sfa slightly
-#To avoid grouping similar images next to one other
-#numpy.random.shuffle(iSeq.input_files)  
-
-iSeq.num_images = len(iSeq.input_files)
-#iSeq.params = [ids, expressions, morphs, poses, lightings]
-iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
-                  iSeq.morphs, iSeq.poses, iSeq.lightings]
-
-#iSeq.block_size = 10 # WAAARRNNNIIINNGGG!!!
-iSeq.block_size = iSeq.block_sizes
-
-#iSeq.num_images / len (iSeq.faces)
-print "BLOCK SIZE =", iSeq.block_size 
-print "BLOCK SIZES =", iSeq.block_sizes
-
-iSeq.correct_classes = []
-for i, block_size in enumerate(iSeq.block_sizes):
-    iSeq.correct_classes += [iSeq.ids[i]]*block_size
-iSeq.correct_classes = numpy.array(iSeq.correct_classes)
-print iSeq.correct_classes
-#quit()
-
-#sfa_libs.wider_1Darray(numpy.arange(len(iSeq.faces)), iSeq.block_size)
-iSeq.correct_labels = iSeq.correct_classes + 0.0
-print iSeq.correct_labels
-
-
-
-#sfa_libs.wider_1Darray(iSeq.faces*2-1, iSeq.block_size)
-
-system_parameters.test_object_contents(iSeq)
-
-print "******** Setting Training Data Parameters for Real Object  ****************"
-sSeq = sTrainRObject = system_parameters.ParamsDataLoading()
-sSeq.input_files = iSeq.input_files
-sSeq.num_images = iSeq.num_images
-sSeq.block_size = iSeq.block_size
-sSeq.image_width = 52
-sSeq.image_height = 52
-sSeq.subimage_width = 32
-sSeq.subimage_height = 32
-
-#sSeq.trans_x_max = pipeline_fd['dx1']
-#sSeq.trans_x_min = -1 * pipeline_fd['dx1']
-#sSeq.trans_y_max = pipeline_fd['dy1']
-#sSeq.trans_y_min = -1 * pipeline_fd['dy1']
-#sSeq.min_sampling = pipeline_fd['smin1']
-#sSeq.max_sampling = pipeline_fd['smax1']
-#sSeq.noface_trans_x_max = 45
-#sSeq.noface_trans_x_min = -45
-#sSeq.noface_trans_y_max = 19
-#sSeq.noface_trans_y_min = -19
-#sSeq.noface_min_sampling = 0.55
-#sSeq.noface_max_sampling = 1.1
-
-sSeq.pixelsampling_x = 1.5 #1.625
-sSeq.pixelsampling_y = 1.5
-
-##Centered Face
-#sSeq.pixelsampling_x[0:iSeq.block_size] = numpy.random.uniform(sSeq.min_sampling, sSeq.max_sampling, size=iSeq.block_size)
-#sSeq.pixelsampling_y[0:iSeq.block_size] = sSeq.pixelsampling_x[0:iSeq.block_size] + 0.0 #MUST BE A DIFFERENT OBJECT
-##sSeq.pixelsampling_x[iSeq.block_size:] = numpy.random.uniform(sSeq.min_sampling, sSeq.max_sampling, size=iSeq.block_size)
-##sSeq.pixelsampling_y[iSeq.block_size:] = sSeq.pixelsampling_x[iSeq.block_size:] + 0.0
-##Decentered Face, using different x and y samplings
-#sSeq.pixelsampling_x[iSeq.block_size:] = double_uniform(sSeq.noface_min_sampling, sSeq.min_sampling, sSeq.max_sampling, sSeq.noface_max_sampling , size=iSeq.block_size,   p2=0.5)
-#sSeq.pixelsampling_y[iSeq.block_size:] = double_uniform(sSeq.noface_min_sampling, sSeq.min_sampling, sSeq.max_sampling, sSeq.noface_max_sampling , size=iSeq.block_size,   p2=0.5)
-
-sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
-sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
-#sSeq.subimage_first_column =" sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
-sSeq.add_noise_L0 = True
-sSeq.convert_format = robject_convert_format
-sSeq.background_type = None
-
-#random translation for th w coordinate
-#sSeq.translation = 20 # 25, Should be 20!!! Warning: 25
-sSeq.translations_x = numpy.zeros(sSeq.num_images)
-sSeq.translations_y = numpy.zeros(sSeq.num_images)
-#Centered Face
-##sSeq.translations_x[0:iSeq.block_size] = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, iSeq.block_size)
-##sSeq.translations_y[0:iSeq.block_size] = numpy.random.random_integers(sSeq.trans_y_min, sSeq.trans_y_max, iSeq.block_size)
-###sSeq.translations_x[iSeq.block_size:] = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, iSeq.block_size)
-###sSeq.translations_y[iSeq.block_size:] = numpy.random.random_integers(sSeq.trans_y_min, sSeq.trans_y_max, iSeq.block_size)
-###Decentered Face
-##sSeq.translations_x[iSeq.block_size:] = double_uniform(sSeq.noface_trans_x_min, sSeq.trans_x_min, sSeq.trans_x_max, sSeq.noface_trans_x_max, size=iSeq.block_size, p2=0.5)
-##sSeq.translations_y[iSeq.block_size:] = double_uniform(sSeq.noface_trans_y_min, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.noface_trans_y_max, size=iSeq.block_size, p2=0.5)
-
-sSeq.trans_sampled = True
-sSeq.name = "Object"
-#sSeq.name = "Object. Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f, 50)"%(sSeq.trans_x_min, 
-#    sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, int(sSeq.min_sampling*1000), int(sSeq.max_sampling*1000))
-
-print " sSeq.subimage_first_row =", sSeq.subimage_first_row
-print "sSeq.pixelsampling_x", sSeq.pixelsampling_x
-print "sSeq.translations_x", sSeq.translations_x
-
-iSeq.name = sSeq.name
-system_parameters.test_object_contents(sSeq)
-
-
-#2
-print "***** Setting Seenid Information Parameters for RObject ******"
-iSeq = iSeenidRObject = system_parameters.ParamsInput()
-# (0.55+1.1)/2 = 0.825, 0.55/2 = 0.275, 0.55/4 = 0.1375, .825 + .1375 = .9625, .825 - .55/4 = .6875
-iSeq.name = "Real Object Recognition"
-
-iSeq.data_base_dir = [robject_down_base_dir, robject_up_base_dir]
-iSeq.ids = numpy.arange(21,31) # 1-31
-#iSeq.faces = numpy.arange(0,2) # 0=centered normalized face, 1=not centered normalized face
-#iSeq.scales = numpy.linspace(pipeline_fd['smin0'], pipeline_fd['smax0'], 50) # (-50, 50, 2)
-#if len(iSeq.ids) % len(iSeq.faces) != 0:
-#    ex="Here the number of scales must be a divisor of the number of identities"
-#    raise Exception(ex)
-iSeq.all_input_files = find_filenames_beginning_with_numbers(iSeq.data_base_dir, "obj", iSeq.ids, extension=".png")
-#print "iSeq.all_input_files", iSeq.all_input_files
-
-iSeq.ages = [None]
-iSeq.genders = [None]
-iSeq.racetweens = [None]
-iSeq.expressions = [None]
-iSeq.morphs = [None]
-iSeq.poses = map(len, iSeq.all_input_files)
-iSeq.lightings = [None]
-iSeq.slow_signal = 0 #real slow signal is whether there is a centered or descentered face
-iSeq.step = 1
-iSeq.offset = 0
-iSeq.input_files = []
-for single_file_list in iSeq.all_input_files:
-    iSeq.input_files += single_file_list
-iSeq.block_sizes = numpy.array(iSeq.poses)
-print "totaling %d images"%len(iSeq.input_files)
-
-#image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
-#                                            iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
-#                                            iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=4, image_postfix=".jpg")
-#iSeq.input_files = iSeq.input_files * 8 #4 was overfitting non linear sfa slightly
-#To avoid grouping similar images next to one other
-#numpy.random.shuffle(iSeq.input_files)  
-
-iSeq.num_images = len(iSeq.input_files)
-#iSeq.params = [ids, expressions, morphs, poses, lightings]
-iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
-                  iSeq.morphs, iSeq.poses, iSeq.lightings]
-
-#iSeq.block_size = 10 # WAAARRNNNIIINNGGG!!!
-iSeq.block_size = iSeq.block_sizes
-
-#iSeq.num_images / len (iSeq.faces)
-print "BLOCK SIZE =", iSeq.block_size 
-print "BLOCK SIZES =", iSeq.block_sizes
-
-iSeq.correct_classes = []
-for i, block_size in enumerate(iSeq.block_sizes):
-    iSeq.correct_classes += [iSeq.ids[i]]*block_size
-iSeq.correct_classes = numpy.array(iSeq.correct_classes)
-print iSeq.correct_classes
-#quit()
-
-#sfa_libs.wider_1Darray(numpy.arange(len(iSeq.faces)), iSeq.block_size)
-iSeq.correct_labels = iSeq.correct_classes + 0.0
-print iSeq.correct_labels
-
-
-
-#sfa_libs.wider_1Darray(iSeq.faces*2-1, iSeq.block_size)
-
-system_parameters.test_object_contents(iSeq)
-
-print "******** Setting Training Data Parameters for Real Object  ****************"
-sSeq = sSeenidRObject = system_parameters.ParamsDataLoading()
-sSeq.input_files = iSeq.input_files
-sSeq.num_images = iSeq.num_images
-sSeq.block_size = iSeq.block_size
-sSeq.image_width = 52
-sSeq.image_height = 52
-sSeq.subimage_width = 32
-sSeq.subimage_height = 32
-
-#sSeq.trans_x_max = pipeline_fd['dx1']
-#sSeq.trans_x_min = -1 * pipeline_fd['dx1']
-#sSeq.trans_y_max = pipeline_fd['dy1']
-#sSeq.trans_y_min = -1 * pipeline_fd['dy1']
-#sSeq.min_sampling = pipeline_fd['smin1']
-#sSeq.max_sampling = pipeline_fd['smax1']
-#sSeq.noface_trans_x_max = 45
-#sSeq.noface_trans_x_min = -45
-#sSeq.noface_trans_y_max = 19
-#sSeq.noface_trans_y_min = -19
-#sSeq.noface_min_sampling = 0.55
-#sSeq.noface_max_sampling = 1.1
-
-sSeq.pixelsampling_x = 1.5 #1.625
-sSeq.pixelsampling_y = 1.5
-
-##Centered Face
-#sSeq.pixelsampling_x[0:iSeq.block_size] = numpy.random.uniform(sSeq.min_sampling, sSeq.max_sampling, size=iSeq.block_size)
-#sSeq.pixelsampling_y[0:iSeq.block_size] = sSeq.pixelsampling_x[0:iSeq.block_size] + 0.0 #MUST BE A DIFFERENT OBJECT
-##sSeq.pixelsampling_x[iSeq.block_size:] = numpy.random.uniform(sSeq.min_sampling, sSeq.max_sampling, size=iSeq.block_size)
-##sSeq.pixelsampling_y[iSeq.block_size:] = sSeq.pixelsampling_x[iSeq.block_size:] + 0.0
-##Decentered Face, using different x and y samplings
-#sSeq.pixelsampling_x[iSeq.block_size:] = double_uniform(sSeq.noface_min_sampling, sSeq.min_sampling, sSeq.max_sampling, sSeq.noface_max_sampling , size=iSeq.block_size,   p2=0.5)
-#sSeq.pixelsampling_y[iSeq.block_size:] = double_uniform(sSeq.noface_min_sampling, sSeq.min_sampling, sSeq.max_sampling, sSeq.noface_max_sampling , size=iSeq.block_size,   p2=0.5)
-
-sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
-sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
-#sSeq.subimage_first_column =" sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
-sSeq.add_noise_L0 = True
-sSeq.convert_format = robject_convert_format
-sSeq.background_type = None
-
-#random translation for th w coordinate
-#sSeq.translation = 20 # 25, Should be 20!!! Warning: 25
-sSeq.translations_x = numpy.zeros(sSeq.num_images)
-sSeq.translations_y = numpy.zeros(sSeq.num_images)
-#Centered Face
-##sSeq.translations_x[0:iSeq.block_size] = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, iSeq.block_size)
-##sSeq.translations_y[0:iSeq.block_size] = numpy.random.random_integers(sSeq.trans_y_min, sSeq.trans_y_max, iSeq.block_size)
-###sSeq.translations_x[iSeq.block_size:] = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, iSeq.block_size)
-###sSeq.translations_y[iSeq.block_size:] = numpy.random.random_integers(sSeq.trans_y_min, sSeq.trans_y_max, iSeq.block_size)
-###Decentered Face
-##sSeq.translations_x[iSeq.block_size:] = double_uniform(sSeq.noface_trans_x_min, sSeq.trans_x_min, sSeq.trans_x_max, sSeq.noface_trans_x_max, size=iSeq.block_size, p2=0.5)
-##sSeq.translations_y[iSeq.block_size:] = double_uniform(sSeq.noface_trans_y_min, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.noface_trans_y_max, size=iSeq.block_size, p2=0.5)
-
-sSeq.trans_sampled = True
-sSeq.name = "Object"
-#sSeq.name = "Object. Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f, 50)"%(sSeq.trans_x_min, 
-#    sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, int(sSeq.min_sampling*1000), int(sSeq.max_sampling*1000))
-
-print " sSeq.subimage_first_row =", sSeq.subimage_first_row
-print "sSeq.pixelsampling_x", sSeq.pixelsampling_x
-print "sSeq.translations_x", sSeq.translations_x
-
-iSeq.name = sSeq.name
-system_parameters.test_object_contents(sSeq)
-
-#3
-print "***** Setting Training Information Parameters for RObject ******"
-iSeq = iNewidRObject = system_parameters.ParamsInput()
-# (0.55+1.1)/2 = 0.825, 0.55/2 = 0.275, 0.55/4 = 0.1375, .825 + .1375 = .9625, .825 - .55/4 = .6875
-iSeq.name = "Real Object Recognition"
-
-iSeq.data_base_dir =  [robject_center_base_dir]
-iSeq.ids = numpy.arange(21,31) # 1-31
-#iSeq.faces = numpy.arange(0,2) # 0=centered normalized face, 1=not centered normalized face
-#iSeq.scales = numpy.linspace(pipeline_fd['smin0'], pipeline_fd['smax0'], 50) # (-50, 50, 2)
-#if len(iSeq.ids) % len(iSeq.faces) != 0:
-#    ex="Here the number of scales must be a divisor of the number of identities"
-#    raise Exception(ex)
-iSeq.all_input_files = find_filenames_beginning_with_numbers(iSeq.data_base_dir, "obj", iSeq.ids, extension=".png")
-#print "iSeq.all_input_files", iSeq.all_input_files
-
-iSeq.ages = [None]
-iSeq.genders = [None]
-iSeq.racetweens = [None]
-iSeq.expressions = [None]
-iSeq.morphs = [None]
-iSeq.poses = map(len, iSeq.all_input_files)
-iSeq.lightings = [None]
-iSeq.slow_signal = 0 #real slow signal is whether there is a centered or descentered face
-iSeq.step = 1
-iSeq.offset = 0
-iSeq.input_files = []
-for single_file_list in iSeq.all_input_files:
-    iSeq.input_files += single_file_list
-iSeq.block_sizes = numpy.array(iSeq.poses)
-print "totaling %d images"%len(iSeq.input_files)
-
-#image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
-#                                            iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
-#                                            iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=4, image_postfix=".jpg")
-#iSeq.input_files = iSeq.input_files * 8 #4 was overfitting non linear sfa slightly
-#To avoid grouping similar images next to one other
-#numpy.random.shuffle(iSeq.input_files)  
-
-iSeq.num_images = len(iSeq.input_files)
-#iSeq.params = [ids, expressions, morphs, poses, lightings]
-iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
-                  iSeq.morphs, iSeq.poses, iSeq.lightings]
-
-#iSeq.block_size = 10 # WAAARRNNNIIINNGGG!!!
-iSeq.block_size = iSeq.block_sizes
-
-#iSeq.num_images / len (iSeq.faces)
-print "BLOCK SIZE =", iSeq.block_size 
-print "BLOCK SIZES =", iSeq.block_sizes
-
-iSeq.correct_classes = []
-for i, block_size in enumerate(iSeq.block_sizes):
-    iSeq.correct_classes += [iSeq.ids[i]]*block_size
-iSeq.correct_classes = numpy.array(iSeq.correct_classes)
-print iSeq.correct_classes
-#quit()
-
-#sfa_libs.wider_1Darray(numpy.arange(len(iSeq.faces)), iSeq.block_size)
-iSeq.correct_labels = iSeq.correct_classes + 0.0
-print iSeq.correct_labels
-
-
-
-#sfa_libs.wider_1Darray(iSeq.faces*2-1, iSeq.block_size)
-
-system_parameters.test_object_contents(iSeq)
-
-print "******** Setting Training Data Parameters for Real Object  ****************"
-sSeq = sNewidRObject = system_parameters.ParamsDataLoading()
-sSeq.input_files = iSeq.input_files
-sSeq.num_images = iSeq.num_images
-sSeq.block_size = iSeq.block_size
-sSeq.image_width = 52
-sSeq.image_height = 52
-sSeq.subimage_width = 32
-sSeq.subimage_height = 32
-
-#sSeq.trans_x_max = pipeline_fd['dx1']
-#sSeq.trans_x_min = -1 * pipeline_fd['dx1']
-#sSeq.trans_y_max = pipeline_fd['dy1']
-#sSeq.trans_y_min = -1 * pipeline_fd['dy1']
-#sSeq.min_sampling = pipeline_fd['smin1']
-#sSeq.max_sampling = pipeline_fd['smax1']
-#sSeq.noface_trans_x_max = 45
-#sSeq.noface_trans_x_min = -45
-#sSeq.noface_trans_y_max = 19
-#sSeq.noface_trans_y_min = -19
-#sSeq.noface_min_sampling = 0.55
-#sSeq.noface_max_sampling = 1.1
-
-sSeq.pixelsampling_x = 1.5 #1.625
-sSeq.pixelsampling_y = 1.5
-
-##Centered Face
-#sSeq.pixelsampling_x[0:iSeq.block_size] = numpy.random.uniform(sSeq.min_sampling, sSeq.max_sampling, size=iSeq.block_size)
-#sSeq.pixelsampling_y[0:iSeq.block_size] = sSeq.pixelsampling_x[0:iSeq.block_size] + 0.0 #MUST BE A DIFFERENT OBJECT
-##sSeq.pixelsampling_x[iSeq.block_size:] = numpy.random.uniform(sSeq.min_sampling, sSeq.max_sampling, size=iSeq.block_size)
-##sSeq.pixelsampling_y[iSeq.block_size:] = sSeq.pixelsampling_x[iSeq.block_size:] + 0.0
-##Decentered Face, using different x and y samplings
-#sSeq.pixelsampling_x[iSeq.block_size:] = double_uniform(sSeq.noface_min_sampling, sSeq.min_sampling, sSeq.max_sampling, sSeq.noface_max_sampling , size=iSeq.block_size,   p2=0.5)
-#sSeq.pixelsampling_y[iSeq.block_size:] = double_uniform(sSeq.noface_min_sampling, sSeq.min_sampling, sSeq.max_sampling, sSeq.noface_max_sampling , size=iSeq.block_size,   p2=0.5)
-
-sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
-sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
-#sSeq.subimage_first_column =" sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
-sSeq.add_noise_L0 = True
-sSeq.convert_format = robject_convert_format
-sSeq.background_type = None
-
-#random translation for th w coordinate
-#sSeq.translation = 20 # 25, Should be 20!!! Warning: 25
-sSeq.translations_x = numpy.zeros(sSeq.num_images)
-sSeq.translations_y = numpy.zeros(sSeq.num_images)
-#Centered Face
-##sSeq.translations_x[0:iSeq.block_size] = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, iSeq.block_size)
-##sSeq.translations_y[0:iSeq.block_size] = numpy.random.random_integers(sSeq.trans_y_min, sSeq.trans_y_max, iSeq.block_size)
-###sSeq.translations_x[iSeq.block_size:] = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, iSeq.block_size)
-###sSeq.translations_y[iSeq.block_size:] = numpy.random.random_integers(sSeq.trans_y_min, sSeq.trans_y_max, iSeq.block_size)
-###Decentered Face
-##sSeq.translations_x[iSeq.block_size:] = double_uniform(sSeq.noface_trans_x_min, sSeq.trans_x_min, sSeq.trans_x_max, sSeq.noface_trans_x_max, size=iSeq.block_size, p2=0.5)
-##sSeq.translations_y[iSeq.block_size:] = double_uniform(sSeq.noface_trans_y_min, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.noface_trans_y_max, size=iSeq.block_size, p2=0.5)
-
-sSeq.trans_sampled = True
-sSeq.name = "Object"
-#sSeq.name = "Object. Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f, 50)"%(sSeq.trans_x_min, 
-#    sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, int(sSeq.min_sampling*1000), int(sSeq.max_sampling*1000))
-
-print " sSeq.subimage_first_row =", sSeq.subimage_first_row
-print "sSeq.pixelsampling_x", sSeq.pixelsampling_x
-print "sSeq.translations_x", sSeq.translations_x
-
-iSeq.name = sSeq.name
-system_parameters.test_object_contents(sSeq)
-
-####################################################################
-###########    SYSTEM FOR REAL_OBJECT RECOGNITION       ############
-####################################################################  
-ParamsRObject = system_parameters.ParamsSystem()
-ParamsRObject.name = sTrainRObject.name
-ParamsRObject.network = "linearNetwork4L"
-ParamsRObject.iTrain = iTrainRObject
-ParamsRObject.sTrain = sTrainRObject
-ParamsRObject.iSeenid = iSeenidRObject
-ParamsRObject.sSeenid = sSeenidRObject
-ParamsRObject.iNewid = iNewidRObject
-ParamsRObject.sNewid = sNewidRObject
-##MEGAWARNING!!!!
-#ParamsRFace.iNewid = iNewidScale
-#ParamsRFace.sNewid = sNewidScale
-#ParamsRFace.sNewid.translations_y = ParamsRFace.sNewid.translations_y * 0.0 + 8.0
-
-ParamsRObject.block_size = iTrainRObject.block_size
-ParamsRObject.train_mode = 'clustered' # 'mixed'
-ParamsRObject.analysis = None
-ParamsRObject.enable_reduced_image_sizes = False
-ParamsRObject.reduction_factor = 1.0
-ParamsRObject.hack_image_size = 32
-ParamsRObject.enable_hack_image_size = True
-
-
-
-
-
-
-print "***** Project: Processing natural images with SFA,  ******"
-print "***** Image Patches courtesy of Niko Wilbert ******"
-print "***** Setting Training Information Parameters for RawNatural ******"
-iSeq = iTrainRawNatural = system_parameters.ParamsInput()
-iSeq.name = "Natural image patches"
-iSeq.data_base_dir = "/home/escalafl/Databases/cooperations/igel/patches_8x8"
-iSeq.base_filename = "bochum_natural_8_5000.bin"
-
-iSeq.samples = numpy.arange(0, 4000, dtype="int")
-iSeq.ids = iSeq.samples # 1 - 4000+1
-iSeq.num_images = len(iSeq.samples)
-iSeq.ages = [None]
-iSeq.genders = [None]
-iSeq.racetweens = [None]
-iSeq.expressions = [None]
-iSeq.morphs = [None]
-iSeq.poses = [None]
-iSeq.lightings = [None]
-iSeq.slow_signal = 0 #slow parameter is the image number
-iSeq.step = 1
-iSeq.offset = 0
-iSeq.input_files = "LoadRawData"
-iSeq.block_size = 1
-print "totaling %d samples"% iSeq.num_images
-
-iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
-                  iSeq.morphs, iSeq.poses, iSeq.lightings]
-
-print "BLOCK SIZE =", iSeq.block_size 
-
-iSeq.correct_classes = iSeq.ids * 1
-#print iSeq.correct_classes
-#quit()
-#sfa_libs.wider_1Darray(numpy.arange(len(iSeq.faces)), iSeq.block_size)
-iSeq.correct_labels = iSeq.correct_classes * 1
-#print iSeq.correct_labels
-
-#sfa_libs.wider_1Darray(iSeq.faces*2-1, iSeq.block_size)
-system_parameters.test_object_contents(iSeq)
-
-print "******** Setting Training Data Parameters for RawNatural  ****************"
-sSeq = sTrainRawNatural = system_parameters.ParamsDataLoading()
-sSeq.base_filename = iSeq.base_filename
-sSeq.data_base_dir = iSeq.data_base_dir
-sSeq.input_files = iSeq.input_files
-sSeq.samples = iSeq.samples
-sSeq.num_images = iSeq.num_images
-sSeq.block_size = iSeq.block_size
-sSeq.subimage_width = 8
-sSeq.subimage_height = 8
-sSeq.input_dim = 64
-sSeq.dtype = "uint8"
-sSeq.convert_format = "binary"
-sSeq.name = "Natural Patch. 8x8, input_dim = %d, num_images %d"%(sSeq.input_dim, iSeq.num_images)
-iSeq.name = sSeq.name
-system_parameters.test_object_contents(sSeq)
-
-
-print "***** Setting Training Information Parameters for RawNatural ******"
-iSeq = iNewidRawNatural = system_parameters.ParamsInput()
-iSeq.name = "Natural image patches"
-iSeq.data_base_dir = "/home/escalafl/Databases/cooperations/igel/patches_8x8"
-iSeq.base_filename = "bochum_natural_8_5000.bin"
-
-iSeq.samples = numpy.arange(4000, 5000, dtype="int")
-iSeq.ids = iSeq.samples # 1 - 4000+1
-iSeq.num_images = len(iSeq.samples)
-iSeq.ages = [None]
-iSeq.genders = [None]
-iSeq.racetweens = [None]
-iSeq.expressions = [None]
-iSeq.morphs = [None]
-iSeq.poses = [None]
-iSeq.lightings = [None]
-iSeq.slow_signal = 0 #slow parameter is the image number
-iSeq.step = 1
-iSeq.offset = 0
-iSeq.input_files = "LoadRawData"
-iSeq.block_size = 1
-print "totaling %d samples"% iSeq.num_images
-
-iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
-                  iSeq.morphs, iSeq.poses, iSeq.lightings]
-
-print "BLOCK SIZE =", iSeq.block_size 
-
-iSeq.correct_classes = iSeq.ids * 1
-#print iSeq.correct_classes
-#quit()
-#sfa_libs.wider_1Darray(numpy.arange(len(iSeq.faces)), iSeq.block_size)
-iSeq.correct_labels = iSeq.correct_classes * 1
-#print iSeq.correct_labels
-
-#sfa_libs.wider_1Darray(iSeq.faces*2-1, iSeq.block_size)
-system_parameters.test_object_contents(iSeq)
-
-print "******** Setting Training Data Parameters for Natural  ****************"
-sSeq = sNewidRawNatural = system_parameters.ParamsDataLoading()
-sSeq.base_filename = iSeq.base_filename
-sSeq.data_base_dir = iSeq.data_base_dir
-sSeq.input_files = iSeq.input_files
-sSeq.samples = iSeq.samples
-sSeq.num_images = iSeq.num_images
-sSeq.block_size = iSeq.block_size
-sSeq.subimage_width = 8
-sSeq.subimage_height = 8
-sSeq.input_dim = 64
-sSeq.dtype = "uint8"
-sSeq.convert_format = "binary"
-sSeq.name = "Natural Patch. 8x8, input_dim = %d, num_images %d"%(sSeq.input_dim, iSeq.num_images)
-iSeq.name = sSeq.name
-system_parameters.test_object_contents(sSeq)
-
-####################################################################
-###########    SYSTEM FOR RAW NATURAL IMAGE PATCHES      ###########
-####################################################################  
-ParamsRawNatural = system_parameters.ParamsSystem()
-ParamsRawNatural.name = sTrainRawNatural.name
-ParamsRawNatural.network = None
-ParamsRawNatural.iTrain = iTrainRawNatural
-ParamsRawNatural.sTrain = sTrainRawNatural
-ParamsRawNatural.iSeenid = iTrainRawNatural
-ParamsRawNatural.sSeenid = sTrainRawNatural
-ParamsRawNatural.iNewid = iNewidRawNatural
-ParamsRawNatural.sNewid = sNewidRawNatural
-ParamsRawNatural.block_size = iTrainRawNatural.block_size
-ParamsRawNatural.train_mode = 'serial' # 'mixed'
-ParamsRawNatural.analysis = False
-ParamsRawNatural.enable_reduced_image_sizes = False
-ParamsRawNatural.reduction_factor = -1
-ParamsRawNatural.hack_image_size = -1
-ParamsRawNatural.enable_hack_image_size = False
-
-
-
-
-
-print "***** Project: Integration of RBM and SFA,  ******"
-rbm_sfa_iteration = 19999 # 99 or 4999, now also 9999. 14999, 19999
-rbm_sfa_numHid = 64 #64 or 128
-rbm_sfa_data_base_dir = "/home/escalafl/Databases/cooperations/igel/rbm_%d"%rbm_sfa_numHid # 64 or 128
-
-print "***** Setting Training Information Parameters for Natural ******"
-iSeq = iTrainNatural = system_parameters.ParamsInput()
-# (0.55+1.1)/2 = 0.825, 0.55/2 = 0.275, 0.55/4 = 0.1375, .825 + .1375 = .9625, .825 - .55/4 = .6875
-iSeq.name = "Natural images RBM"
-
-iSeq.data_base_dir = rbm_sfa_data_base_dir
-iSeq.iteration = rbm_sfa_iteration
-iSeq.base_filename = "data_bin_%d.bin"%(iSeq.iteration+1)
-
-(iSeq.magic_num, iteration, iSeq.numSamples, iSeq.numHid, iSeq.sampleSpan) = image_loader.read_binary_header(iSeq.data_base_dir, iSeq.base_filename)
-if iteration != iSeq.iteration:
-    er = "wrong iteration number in file, was %d, should be %d"%(iteration, iSeq.iteration)
-    raise Exception(er)
-
-if iSeq.numHid != rbm_sfa_numHid:
-    er = "wrong number of output Neurons %d, 64 were assumed"%iSeq.numHid
-    raise Exception(er)
-
-if iSeq.numSamples != 5000:
-    er = "wrong number of Samples %d, 5000 were assumed"%iSeq.numSamples
-    raise Exception(er)
-
-iSeq.numSamples = 4000
-iSeq.samples = numpy.arange(0, iSeq.numSamples, dtype="int")
-iSeq.ids = numpy.arange(1,iSeq.numSamples+1) # 1 - 4000+1
-iSeq.num_images = len(iSeq.samples)
-iSeq.ages = [None]
-iSeq.genders = [None]
-iSeq.racetweens = [None]
-iSeq.expressions = [None]
-iSeq.morphs = [None]
-iSeq.poses = [None]
-iSeq.lightings = [None]
-iSeq.slow_signal = 0 #slow parameter is the image number
-iSeq.step = 1
-iSeq.offset = 0
-iSeq.input_files = "LoadBinaryData00"
-iSeq.block_size = 1
-print "totaling %d samples"% iSeq.num_images
-
-iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
-                  iSeq.morphs, iSeq.poses, iSeq.lightings]
-
-#iSeq.num_images / len (iSeq.faces)
-print "BLOCK SIZE =", iSeq.block_size 
-
-iSeq.correct_classes = iSeq.ids * 1
-#print iSeq.correct_classes
-#quit()
-#sfa_libs.wider_1Darray(numpy.arange(len(iSeq.faces)), iSeq.block_size)
-iSeq.correct_labels = iSeq.correct_classes * 1
-#print iSeq.correct_labels
-
-#sfa_libs.wider_1Darray(iSeq.faces*2-1, iSeq.block_size)
-system_parameters.test_object_contents(iSeq)
-
-print "******** Setting Training Data Parameters for Natural  ****************"
-sSeq = sTrainNatural = system_parameters.ParamsDataLoading()
-sSeq.base_filename = iSeq.base_filename
-sSeq.data_base_dir = iSeq.data_base_dir
-sSeq.input_files = iSeq.input_files
-sSeq.samples = iSeq.samples
-sSeq.num_images = iSeq.num_images
-sSeq.block_size = iSeq.block_size
-sSeq.subimage_width = rbm_sfa_numHid / 8
-sSeq.subimage_height = rbm_sfa_numHid / sSeq.subimage_width
-sSeq.convert_format = "binary"
-sSeq.name = "RBM Natural. 8x8 (exp 64=%d), iter %d, num_images %d"%(iSeq.numHid, iSeq.iteration, iSeq.num_images)
-iSeq.name = sSeq.name
-system_parameters.test_object_contents(sSeq)
-
-#NOTE: There is no Seenid training data because we do not have labels for the classifier
-
-print "***** Setting Newid Information Parameters for Natural ******"
-iSeq = iNewidNatural = system_parameters.ParamsInput()
-iSeq.name = "Natural images"
-
-iSeq.data_base_dir = rbm_sfa_data_base_dir
-#iSeq.magic_num = 666
-iSeq.iteration = rbm_sfa_iteration #0
-iSeq.base_filename = "data_bin_%d.bin"%(iSeq.iteration+1)
-
-(iSeq.magic_num, iteration, iSeq.numSamples, iSeq.numHid, iSeq.sampleSpan) = image_loader.read_binary_header(iSeq.data_base_dir, iSeq.base_filename)
-if iteration != iSeq.iteration:
-    er = "wrong iteration number in file, was %d, should be %d"%(iteration, iSeq.iteration)
-    raise Exception(er)
-
-if iSeq.numHid != rbm_sfa_numHid:
-    er = "wrong number of output Neurons %d, %d were assumed"%(iSeq.numHid,rbm_sfa_numHid)
-    raise Exception(er)
-
-if iSeq.numSamples != 5000:
-    er = "wrong number of Samples %d, 5000 were assumed"%iSeq.numSamples
-    raise Exception(er)
-
-iSeq.samples = numpy.arange(4000, 5000, dtype="int")
-iSeq.ids = iSeq.samples+1 # 1 - 4000+1
-iSeq.num_images = len(iSeq.samples)
-iSeq.ages = [None]
-iSeq.genders = [None]
-iSeq.racetweens = [None]
-iSeq.expressions = [None]
-iSeq.morphs = [None]
-iSeq.poses = [None]
-iSeq.lightings = [None]
-iSeq.slow_signal = 0 #slow parameter is the image number
-iSeq.step = 1
-iSeq.offset = 0
-iSeq.input_files = "LoadBinaryData00"
-iSeq.block_size = 1
-print "totaling %d images"% iSeq.num_images
-
-iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
-                  iSeq.morphs, iSeq.poses, iSeq.lightings]
-
-#iSeq.num_images / len (iSeq.faces)
-print "BLOCK SIZE =", iSeq.block_size 
-
-iSeq.correct_classes = iSeq.ids * 1
-#print iSeq.correct_classes
-#quit()
-#sfa_libs.wider_1Darray(numpy.arange(len(iSeq.faces)), iSeq.block_size)
-iSeq.correct_labels = iSeq.correct_classes * 1
-#print iSeq.correct_labels
-
-#sfa_libs.wider_1Darray(iSeq.faces*2-1, iSeq.block_size)
-system_parameters.test_object_contents(iSeq)
-
-print "******** Setting Newid Data Parameters for Natural ****************"
-sSeq = sNewidNatural = system_parameters.ParamsDataLoading()
-sSeq.base_filename = iSeq.base_filename
-sSeq.data_base_dir = iSeq.data_base_dir
-sSeq.input_files = iSeq.input_files
-sSeq.num_images = iSeq.num_images
-sSeq.block_size = iSeq.block_size
-sSeq.samples = iSeq.samples
-sSeq.subimage_width = rbm_sfa_numHid / 8
-sSeq.subimage_height = rbm_sfa_numHid / sSeq.subimage_width
-sSeq.convert_format = "binary"
-sSeq.name = "RBM Natural. 8x8 (exp 100=%d), iter %d, num_images %d"%(iSeq.numHid, iSeq.iteration, iSeq.num_images)
-iSeq.name = sSeq.name
-system_parameters.test_object_contents(sSeq)
-#quit()
-
-
-
-####################################################################
-###########     SYSTEM FOR RBM NATURAL ANALYSIS         ############
-####################################################################  
-ParamsNatural = system_parameters.ParamsSystem()
-ParamsNatural.name = sTrainNatural.name
-ParamsNatural.network = None
-ParamsNatural.iTrain = iTrainNatural
-ParamsNatural.sTrain = sTrainNatural
-ParamsNatural.iSeenid = copy.deepcopy(iTrainNatural)
-ParamsNatural.sSeenid = copy.deepcopy(sTrainNatural)
-ParamsNatural.iNewid = iNewidNatural
-ParamsNatural.sNewid = sNewidNatural
-#ParamsNatural.iSeenid = iSeenidNatural
-#ParamsNatural.sSeenid = sSeenidNatural
-#ParamsNatural.iNewid = iNewidNatural
-#ParamsNatural.sNewid = sNewidNatural
-ParamsNatural.block_size = iTrainNatural.block_size
-ParamsNatural.train_mode = 'serial' # 'mixed'
-ParamsNatural.analysis = False
-ParamsNatural.enable_reduced_image_sizes = False
-ParamsNatural.reduction_factor = -1
-ParamsNatural.hack_image_size = -1
-ParamsNatural.enable_hack_image_size = False
-
-
-
-
-
-
-
-
-
-#FaceDiscrimination
-#TODO: Explain this, enlarge largest face, 
-print "***** Setting Training Information Parameters for RFaceCentering******"
-iSeq = iTrainRFaceCentering= system_parameters.ParamsInput()
-# (0.55+1.1)/2 = 0.825, 0.55/2 = 0.275, 0.55/4 = 0.1375, .825 + .1375 = .9625, .825 - .55/4 = .6875
-iSeq.name = "Real FACE DISCRIMINATION (Centered / Decentered)"
-
-iSeq.data_base_dir = alldbnormalized_base_dir
-alldbnormalized_available_images = numpy.arange(0,55000)
-numpy.random.shuffle(alldbnormalized_available_images)
-alldb_noface_available_images = numpy.arange(0,12000)
-numpy.random.shuffle(alldb_noface_available_images)
-
-iSeq.ids = alldbnormalized_available_images[0:6000] #30000, numpy.arange(0,6000) # 6000
-iSeq.faces = numpy.arange(0,10) # 0=centered normalized face, 1=not centered normalized face
-block_sizeT = len(iSeq.ids) / len(iSeq.faces)
-
-#iSeq.scales = numpy.linspace(pipeline_fd['smin0'], pipeline_fd['smax0'], 50) # (-50, 50, 2)
-if len(iSeq.ids) % len(iSeq.faces) != 0:
-    ex="Here the number of scales must be a divisor of the number of identities"
-    raise Exception(ex)
-
-iSeq.ages = [None]
-iSeq.genders = [None]
-iSeq.racetweens = [None]
-iSeq.expressions = [None]
-iSeq.morphs = [None]
-iSeq.poses = [None]
-iSeq.lightings = [None]
-iSeq.slow_signal = 0 #real slow signal is whether there is the amount of face centering
-iSeq.step = 1
-iSeq.offset = 0
-repetition_factorT = 2 # WARNING 2, 8
-iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
-                                            iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
-                                            iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
-iSeq.input_files = iSeq.input_files * repetition_factorT  #  4 was overfitting non linear sfa slightly
-#To avoid grouping similar images next to one other or in the same block
-numpy.random.shuffle(iSeq.input_files)  
-
-iSeq.data2_base_dir = alldb_noface_base_dir
-iSeq.ids2 = alldb_noface_available_images[0: block_sizeT * repetition_factorT]
-iSeq.input_files2 = image_loader.create_image_filenames3(iSeq.data2_base_dir, "image", iSeq.slow_signal, iSeq.ids2, iSeq.ages, \
-                                            iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
-                                            iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
-iSeq.input_files2 = iSeq.input_files2 
-numpy.random.shuffle(iSeq.input_files2)
-
-iSeq.input_files = iSeq.input_files[0:-block_sizeT* repetition_factorT] + iSeq.input_files2
-
-iSeq.num_images = len(iSeq.input_files)
-#iSeq.params = [ids, expressions, morphs, poses, lightings]
-iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
-                  iSeq.morphs, iSeq.poses, iSeq.lightings]
-iSeq.block_size = iSeq.num_images / len (iSeq.faces)
-print "BLOCK SIZE =", iSeq.block_size 
-
-iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.faces)), iSeq.block_size)
-iSeq.correct_labels = iSeq.correct_classes / (len(iSeq.faces)-1)
-
-system_parameters.test_object_contents(iSeq)
-
-print "******** Setting Training Data Parameters for Real Face Centering****************"
-sSeq = sTrainRFaceCentering= system_parameters.ParamsDataLoading()
-sSeq.input_files = iSeq.input_files
-sSeq.num_images = iSeq.num_images
-sSeq.block_size = iSeq.block_size
-sSeq.image_width = 256
-sSeq.image_height = 192
-sSeq.subimage_width = 135
-sSeq.subimage_height = 135
-
-sSeq.trans_x_max = pipeline_fd['dx0'] * 1.0
-sSeq.trans_y_max = pipeline_fd['dy0'] * 1.0 * 0.998
-sSeq.min_sampling = pipeline_fd['smin0'] - 0.1 #WARNING!!!
-sSeq.max_sampling = pipeline_fd['smax0']
-sSeq.avg_sampling = (sSeq.min_sampling + sSeq.max_sampling)/2
-
-
-sSeq.pixelsampling_x = numpy.zeros(sSeq.num_images)
-sSeq.pixelsampling_y = numpy.zeros(sSeq.num_images) 
-sSeq.translations_x = numpy.zeros(sSeq.num_images)
-sSeq.translations_y = numpy.zeros(sSeq.num_images)
-
-
-num_blocks = sSeq.num_images/sSeq.block_size
-for block_nr in range(num_blocks):
-    #For exterior box
-    fraction = ((block_nr+1.0) / (num_blocks-1)) ** 0.333
-    if fraction > 1:
-        fraction = 1
-    x_max = sSeq.trans_x_max * fraction
-    y_max = sSeq.trans_y_max * fraction
-    samp_max = sSeq.avg_sampling + (sSeq.max_sampling-sSeq.avg_sampling) * fraction
-    samp_min = sSeq.avg_sampling + (sSeq.min_sampling-sSeq.avg_sampling) * fraction
-
-    box_ext = [(-x_max, x_max), (-y_max, y_max), (samp_min, samp_max), (samp_min, samp_max)] 
-
-    if block_nr >= 0:
-        #For interior boxiSeq.ids = alldbnormalized_available_images[30000:45000]       
-        if block_nr < num_blocks-1:
-            eff_block_nr = block_nr
-        else:
-            eff_block_nr = block_nr-1
-        fraction2 = (eff_block_nr / (num_blocks-1)) ** 0.333
-        if fraction2 > 1:
-            fraction2 = 1
-        x_max = sSeq.trans_x_max * fraction2
-        y_max = sSeq.trans_y_max * fraction2
-        samp_max = sSeq.avg_sampling + (sSeq.max_sampling-sSeq.avg_sampling) * fraction2
-        samp_min = sSeq.avg_sampling + (sSeq.min_sampling-sSeq.avg_sampling) * fraction2
-        box_in = [(-x_max, x_max), (-y_max, y_max), (samp_min, samp_max), (samp_min, samp_max)] 
-    
-    samples = sub_box_sampling(box_in, box_ext, sSeq.block_size)
-    sSeq.translations_x[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = samples[:,0]
-    sSeq.translations_y[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = samples[:,1]
-    sSeq.pixelsampling_x[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = samples[:,2]
-    sSeq.pixelsampling_y[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = samples[:,3]
+        #iTrainGender2 = iSeqCreateGender(first_id = 40, num_ids = 150, user_base_dir=user_base_dir, data_dir="RenderingsGender60x200", gender_continuous=True, seed=-1)
+        #sTrainGender2 = sSeqCreateGender(iTrainGender2, seed=-1)
+        #sTrainGender2.train_mode = "ignore_data"
+        
+        #iSeenidGender = iSeqCreateGender(first_id = 0, num_ids = 180, user_base_dir=user_base_dir, data_dir="RenderingsGender60x200", gender_continuous=True, seed=-1)
+        iSeenidGender = self.iSeqCreateGender(first_id = 0, num_ids = 180, user_base_dir=user_base_dir, data_dir="RenderingsGender60x200", gender_continuous=True, seed=-1)
+        sSeenidGender = self.sSeqCreateGender(iSeenidGender, contrast_enhance, seed=-1)
+        
+        iNewidGender = self.iSeqCreateGender(first_id = 180, num_ids = 20, user_base_dir=user_base_dir, data_dir="RenderingsGender60x200", gender_continuous=True, seed=-1)
+        sNewidGender = self.sSeqCreateGender(iNewidGender, contrast_enhance, seed=-1)
+        
+        #LABEL TRANSFORMATIONS FOR EXACT LABEL LEARNING
+        random_labels = True and False
+        discontinuous_labels = True and False
+        if random_labels or discontinuous_labels:
+            labels = numpy.sort(list(set(iTrainGender0.correct_labels)))
+        
+            if discontinuous_labels:
+                random_labels = (numpy.arange(-3,3,0.1)+3)%3 - 6
+            else:
+                random_labels = numpy.random.normal(size = len(labels))
+                random_labels = numpy.abs(numpy.random.normal(size = len(labels))).cumsum()
             
-sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
-sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
-
-sSeq.add_noise_L0 = True
-sSeq.convert_format = "L"
-sSeq.background_type = None
-sSeq.trans_sampled = True
-
-sSeq.name = "Face Centering. Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f, 50)"%(-sSeq.trans_x_max, 
-    sSeq.trans_x_max, -sSeq.trans_y_max, sSeq.trans_y_max, int(sSeq.min_sampling*1000), int(sSeq.max_sampling*1000))
-print sSeq.name
-iSeq.name = sSeq.name
-system_parameters.test_object_contents(sSeq)
-
-
-
-print "***** Setting SeenId Information Parameters for RFaceCentering******"
-iSeq = iSeenidRFaceCentering= system_parameters.ParamsInput()
-# (0.55+1.1)/2 = 0.825, 0.55/2 = 0.275, 0.55/4 = 0.1375, .825 + .1375 = .9625, .825 - .55/4 = .6875
-iSeq.name = "Real FACE DISCRIMINATION (Centered / Decentered)"
-
-iSeq.data_base_dir = alldbnormalized_base_dir
-iSeq.ids = alldbnormalized_available_images[30000:45000] # 30000-45000 numpy.arange(6000,8000) # 6000-8000
-iSeq.faces = numpy.arange(0,10) # 0=centered normalized face, 1=not centered normalized face
-block_sizeS = len(iSeq.ids) / len(iSeq.faces)
-
-#iSeq.scales = numpy.linspace(pipeline_fd['smin0'], pipeline_fd['smax0'], 50) # (-50, 50, 2)
-if len(iSeq.ids) % len(iSeq.faces) != 0:
-    ex="Here the number of scales must be a divisor of the number of identities"
-    raise Exception(ex)
-iSeq.ages = [None]
-iSeq.genders = [None]
-iSeq.racetweens = [None]
-iSeq.expressions = [None]
-iSeq.morphs = [None]
-iSeq.poses = [None]
-iSeq.lightings = [None]
-iSeq.slow_signal = 0 #real slow signal is whether there is the amount of face centering
-iSeq.step = 1
-iSeq.offset = 0
-repetition_factorS = 1 # 2 was 4
-iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
-                                            iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
-                                            iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
-iSeq.input_files = iSeq.input_files * repetition_factorS #  4 was overfitting non linear sfa slightly
-#To avoid grouping similar images next to one other or in the same block
-numpy.random.shuffle(iSeq.input_files)  
+            print "labels =", labels
+            print "random_labels = ", random_labels
+            for i, label_val in enumerate(labels):
+                for correct_labels in (iTrainGender0.correct_labels, iTrainGender1.correct_labels, iSeenidGender.correct_labels, iNewidGender.correct_labels): #
+                    correct_labels[correct_labels == label_val] = random_labels[i]
+        else: #regular labels    
+            power = 1.0 #2.0 # 3.0 1.0
+            offset = 0.0 #3.0 # 0.0, 3.0
+            if power==2:
+                iTrainGender0.correct_labels = iTrainGender0.correct_labels ** power
+                iSeenidGender.correct_labels = iSeenidGender.correct_labels ** power
+                iNewidGender.correct_labels =  iNewidGender.correct_labels ** power
+            elif power==3 or power==1:
+                iTrainGender0.correct_labels = sgn_expo(iTrainGender0.correct_labels+offset, power) 
+                iTrainGender1.correct_labels = sgn_expo(iTrainGender1.correct_labels+offset, power) 
+                #iTrainGender2.correct_labels = sgn_expo(iTrainGender2.correct_labels, 1.0) 
+                iSeenidGender.correct_labels =  sgn_expo(iSeenidGender.correct_labels+offset, power)
+                iNewidGender.correct_labels = sgn_expo(iNewidGender.correct_labels+offset, power)
+            else:
+                er = "Dont know how to handle power properly, power=", power
+                raise Exception(er)
 
 
-iSeq.data2_base_dir = alldb_noface_base_dir
-iSeq.ids2 = alldb_noface_available_images[block_sizeT* repetition_factorT: block_sizeT*repetition_factorT+block_sizeS*repetition_factorS]
-
-iSeq.input_files2 = image_loader.create_image_filenames3(iSeq.data2_base_dir, "image", iSeq.slow_signal, iSeq.ids2, iSeq.ages, \
-                                            iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
-                                            iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
-iSeq.input_files2 = iSeq.input_files2 
-numpy.random.shuffle(iSeq.input_files2)
-
-iSeq.input_files = iSeq.input_files[0:-block_sizeS * repetition_factorS] + iSeq.input_files2
-
-
-iSeq.num_images = len(iSeq.input_files)
-#iSeq.params = [ids, expressions, morphs, poses, lightings]
-iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
-                  iSeq.morphs, iSeq.poses, iSeq.lightings]
-iSeq.block_size = iSeq.num_images / len (iSeq.faces)
-print "BLOCK SIZE =", iSeq.block_size 
-
-iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.faces)), iSeq.block_size)
-iSeq.correct_labels = iSeq.correct_classes / (len(iSeq.faces)-1)
-
-system_parameters.test_object_contents(iSeq)
-
-print "******** Setting Seenid Data Parameters for Real Face Centering****************"
-sSeq = sSeenidRFaceCentering= system_parameters.ParamsDataLoading()
-sSeq.input_files = iSeq.input_files
-sSeq.num_images = iSeq.num_images
-sSeq.block_size = iSeq.block_size
-sSeq.image_width = 256
-sSeq.image_height = 192
-sSeq.subimage_width = 135
-sSeq.subimage_height = 135
-
-sSeq.trans_x_max = pipeline_fd['dx0'] * 1.0
-sSeq.trans_y_max = pipeline_fd['dy0'] * 1.0 * 0.998
-sSeq.min_sampling = pipeline_fd['smin0']- 0.1 #WARNING!!!
-sSeq.max_sampling = pipeline_fd['smax0']
-sSeq.avg_sampling = (sSeq.min_sampling + sSeq.max_sampling)/2
-
-
-sSeq.pixelsampling_x = numpy.zeros(sSeq.num_images)
-sSeq.pixelsampling_y = numpy.zeros(sSeq.num_images) 
-sSeq.translations_x = numpy.zeros(sSeq.num_images)
-sSeq.translations_y = numpy.zeros(sSeq.num_images)
-
-num_blocks = sSeq.num_images/sSeq.block_size
-for block_nr in range(num_blocks):
-    #For exterior box
-    fraction = ((block_nr+1.0) / (num_blocks-1)) ** 0.333
-    if fraction > 1:
-        fraction = 1
-    x_max = sSeq.trans_x_max * fraction
-    y_max = sSeq.trans_y_max * fraction
-    samp_max = sSeq.avg_sampling + (sSeq.max_sampling-sSeq.avg_sampling) * fraction
-    samp_min = sSeq.avg_sampling + (sSeq.min_sampling-sSeq.avg_sampling) * fraction
-
-    box_ext = [(-x_max, x_max), (-y_max, y_max), (samp_min, samp_max), (samp_min, samp_max)] 
-
-    if block_nr >= 0:
-        #For interior boxiSeq.ids = alldbnormalized_available_images[30000:45000]       
-        if block_nr < num_blocks-1:
-            eff_block_nr = block_nr
+        add_skin_color_label_classes = True and False
+        multiple_labels = add_skin_color_label_classes and False 
+        first_gender_label = True #and False
+        sampled_by_gender = True #and False
+        
+        #True, False, False, False => learn only skin color
+        #True, True, True, True  => learn both gender and skin color, gender is first label and determines ordering
+        #True, True, True, False => learn both gender and skin color, gender is first label but skin color determines ordering
+        #False, False, True, True => learn only gender 
+        
+        if add_skin_color_label_classes:
+            skin_color_labels_map = load_GT_labels(user_base_dir+"/RenderingsGender60x200"+"/GT_average_color_labels.txt", age_included=False, rAge_included=False, gender_included=False, race_included=False, avgColor_included=True)
+            
+            example_filename = "output133_a999_g362_rt999_e0_c0_p0_i0.tif"
+            filename_len = len(example_filename)
+            
+            skin_color_labels_TrainGender0 =[]   
+            for input_file in iTrainGender0.input_files:
+                input_file_short =  input_file[-filename_len:]
+                skin_color_labels_TrainGender0.append(skin_color_labels_map[input_file_short])  
+            skin_color_labels_TrainGender0 = numpy.array(skin_color_labels_TrainGender0).reshape((-1,1))
+            
+            skin_color_labels_SeenidGender =[]   
+            for input_file in iSeenidGender.input_files:
+                input_file_short =  input_file[-filename_len:]
+                skin_color_labels_SeenidGender.append(skin_color_labels_map[input_file_short])
+            skin_color_labels_SeenidGender = numpy.array(skin_color_labels_SeenidGender).reshape((-1,1))
+        
+            skin_color_labels_NewidGender =[]   
+            for input_file in iNewidGender.input_files:
+                input_file_short =  input_file[-filename_len:]
+                skin_color_labels_NewidGender.append(skin_color_labels_map[input_file_short])
+            skin_color_labels_NewidGender = numpy.array(skin_color_labels_NewidGender).reshape((-1,1))
+        
+            skin_color_labels = skin_color_labels_SeenidGender.flatten()
+            sorting = numpy.argsort(skin_color_labels)
+            num_classes = 60
+            skin_color_classes_SeenidGender = numpy.zeros(iSeenidGender.num_images)
+            skin_color_classes_SeenidGender[sorting] = numpy.arange(iSeenidGender.num_images)*num_classes/iSeenidGender.num_images
+            avg_labels = more_nodes.compute_average_labels_for_each_class(skin_color_classes_SeenidGender, skin_color_labels)
+            all_classes = numpy.unique(skin_color_classes_SeenidGender)
+            print "skin color avg_labels=", avg_labels 
+            skin_color_classes_TrainGender0 = more_nodes.map_labels_to_class_number(all_classes, avg_labels, skin_color_labels_TrainGender0.flatten())
+            skin_color_classes_NewidGender = more_nodes.map_labels_to_class_number(all_classes, avg_labels, skin_color_labels_NewidGender.flatten())
+        
+            skin_color_classes_TrainGender0 = skin_color_classes_TrainGender0.reshape((-1,1))
+            skin_color_classes_SeenidGender = skin_color_classes_SeenidGender.reshape((-1,1))
+            skin_color_classes_NewidGender = skin_color_classes_NewidGender.reshape((-1,1))
+        
+        if multiple_labels==True:
+            if first_gender_label == True:
+                print "Learning both skin color and gender, gender is first label"
+                iTrainGender0.correct_labels = numpy.concatenate((iTrainGender0.correct_labels.reshape(-1,1), skin_color_labels_TrainGender0), axis=1)
+                iSeenidGender.correct_labels = numpy.concatenate((iSeenidGender.correct_labels.reshape(-1,1), skin_color_labels_SeenidGender), axis=1)
+                iNewidGender.correct_labels = numpy.concatenate((iNewidGender.correct_labels.reshape(-1,1), skin_color_labels_NewidGender), axis=1)
+            
+                iTrainGender0.correct_classes = numpy.concatenate((iTrainGender0.correct_classes.reshape(-1,1), skin_color_classes_TrainGender0), axis=1)
+                iSeenidGender.correct_classes = numpy.concatenate((iSeenidGender.correct_classes.reshape(-1,1), skin_color_classes_SeenidGender), axis=1)
+                iNewidGender.correct_classes = numpy.concatenate((iNewidGender.correct_classes.reshape(-1,1), skin_color_classes_NewidGender), axis=1)
+            else:
+                print "Learning both skin color and gender, color is first label"
+                iTrainGender0.correct_labels = numpy.concatenate((skin_color_labels_TrainGender0, iTrainGender0.correct_labels.reshape(-1,1)), axis=1)
+                iSeenidGender.correct_labels = numpy.concatenate((skin_color_labels_SeenidGender, iSeenidGender.correct_labels.reshape(-1,1)), axis=1)
+                iNewidGender.correct_labels = numpy.concatenate((skin_color_labels_NewidGender, iNewidGender.correct_labels.reshape(-1,1)), axis=1)
+            
+                iTrainGender0.correct_classes = numpy.concatenate((skin_color_classes_TrainGender0, iTrainGender0.correct_classes.reshape(-1,1)), axis=1)
+                iSeenidGender.correct_classes = numpy.concatenate((skin_color_classes_SeenidGender, iSeenidGender.correct_classes.reshape(-1,1)), axis=1)
+                iNewidGender.correct_classes = numpy.concatenate((skin_color_classes_NewidGender, iNewidGender.correct_classes.reshape(-1,1)), axis=1)
         else:
-            eff_block_nr = block_nr-1
-        fraction2 = (eff_block_nr / (num_blocks-1)) ** 0.333
-        if fraction2 > 1:
-            fraction2 = 1
-        x_max = sSeq.trans_x_max * fraction2
-        y_max = sSeq.trans_y_max * fraction2
-        samp_max = sSeq.avg_sampling + (sSeq.max_sampling-sSeq.avg_sampling) * fraction2
-        samp_min = sSeq.avg_sampling + (sSeq.min_sampling-sSeq.avg_sampling) * fraction2
-        box_in = [(-x_max, x_max), (-y_max, y_max), (samp_min, samp_max), (samp_min, samp_max)] 
+            if add_skin_color_label_classes:
+                print "Learning skin color instead of gender"
+                iTrainGender0.correct_labels = skin_color_labels_TrainGender0.flatten()
+                iSeenidGender.correct_labels = skin_color_labels_SeenidGender.flatten()
+                iNewidGender.correct_labels = skin_color_labels_NewidGender.flatten()
+                iTrainGender0.correct_classes = skin_color_classes_TrainGender0.flatten()
+                iSeenidGender.correct_classes = skin_color_classes_SeenidGender.flatten()
+                iNewidGender.correct_classes = skin_color_classes_NewidGender.flatten()
+            else:
+                print "Learning gender only"
+        
+        if sampled_by_gender == False:
+            print "reordering by increasing skin color label"
+            for (iSeq, labels) in ((iTrainGender0, skin_color_labels_TrainGender0), 
+                                   (iSeenidGender, skin_color_labels_SeenidGender), 
+                                    (iNewidGender, skin_color_labels_NewidGender)):    
+                all_labels = labels.flatten()
+                reordering = numpy.argsort(all_labels)
+                if multiple_labels:
+                    iSeq.correct_labels = iSeq.correct_labels[reordering,:]
+                    iSeq.correct_classes = iSeq.correct_classes[reordering,:]
+                else:
+                    iSeq.correct_labels = iSeq.correct_labels[reordering]
+                    iSeq.correct_classes = iSeq.correct_classes[reordering]            
+                reordered_files = []
+                for i in range(len(iSeq.input_files)):
+                    reordered_files.append(iSeq.input_files[reordering[i]])
+                iSeq.input_files = reordered_files
+                #print "reordered_files=", reordered_files
+            print "labels/classes reordered, skin color is the first one"
+
+
+        
+        
+        self.name = "Network that extracts gender information"
+        self.network = None
+        semi_supervised_learning = False
+        if semi_supervised_learning:
+            self.iTrain = [[iTrainGender0], [iTrainGender1,]] #[]
+            self.sTrain = [[sTrainGender0], [sTrainGender1,]] #[]
+        else:
+            self.iTrain = [[iTrainGender0]] #[]
+            self.sTrain = [[sTrainGender0]] #[]    
+        self.iSeenid = iSeenidGender
+        self.sSeenid = sSeenidGender
+        self.iNewid = [[iNewidGender]] #[]
+        self.sNewid = [[sNewidGender]] #[]
+        
+        # self.block_size = iTrainGender1.block_size
+        # if gender_continuous:
+        #     self.train_mode = 'mixed'
+        # else:
+        #     self.train_mode = 'clustered'
+            
+        self.analysis = None
+        self.enable_reduced_image_sizes = True #(False paper)
+        self.reduction_factor = 1.0 # 2.0 # 8.0 # 2.0 #1.0 #(1.0 paper)
+        self.hack_image_size  = 135 # 64  # 16 # 64 #128 #(128 paper)
+        self.enable_hack_image_size = True
+
+
+    def iSeqCreateGender(self, first_id = 0, num_ids = 25, user_base_dir=user_base_dir, data_dir="RenderingsGender60x200", gender_continuous=True, seed=None):
+        print "******** Setting Training Information Parameters for Gender (simulated faces) **********"
+        if seed >= 0 or seed is None:
+            numpy.random.seed(seed)
+            print "Gender. Using seed", seed
+    
+        print "******** Setting Training Information Parameters for Gender **********"
+        iSeq = system_parameters.ParamsInput()
+            
+        iSeq.name = "Gender60x200"
+    
+        iSeq.gender_continuous = gender_continuous     
+        iSeq.data_base_dir = user_base_dir + "/" + data_dir
+        iSeq.ids = numpy.arange(first_id,first_id+num_ids) #160, but 180 for paper!
+        iSeq.ages = [999]
+        iSeq.MIN_GENDER = -3
+        iSeq.MAX_GENDER = 3
+        iSeq.GENDER_STEP = 0.10000 #01. 0.20025 default. 0.4 fails, use 0.4005, 0.80075, 0.9005
+        #iSeq.GENDER_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
+        iSeq.real_genders = numpy.arange(iSeq.MIN_GENDER, iSeq.MAX_GENDER, iSeq.GENDER_STEP)
+        iSeq.genders = map(image_loader.code_gender, iSeq.real_genders)
+        iSeq.racetweens = [999]
+        iSeq.expressions = [0]
+        iSeq.morphs = [0]
+        iSeq.poses = [0]
+        iSeq.lightings = [0]
+        iSeq.slow_signal = 2
+        iSeq.step = 1
+        iSeq.offset = 0
+        iSeq.input_files = image_loader.create_image_filenames2(iSeq.data_base_dir, iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+                                                        iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
+                                                        iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset)
+        iSeq.num_images = len(iSeq.input_files)
+        iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
+                              iSeq.morphs, iSeq.poses, iSeq.lightings]
+            
+        if iSeq.gender_continuous:
+            iSeq.block_size = iSeq.num_images / len(iSeq.params[iSeq.slow_signal])  
+            iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.real_genders, iSeq.block_size)
+            iSeq.correct_classes = sfa_libs.wider_1Darray(iSeq.real_genders, iSeq.block_size)
+        else:
+            bs = iSeq.num_images / len(iSeq.params[iSeq.slow_signal])
+            bs1 = len(iSeq.real_genders[iSeq.real_genders<0]) * bs
+            bs2 = len(iSeq.real_genders[iSeq.real_genders>=0]) * bs
+                
+            iSeq.block_size = numpy.array([bs1, bs2])
+            iSeq.correct_labels = numpy.array([-1]*bs1 + [1]*bs2)
+            #iSeq.correct_classes = sfa_libs.wider_1Darray(iSeq.real_genders, iSeq.block_size)
+            iSeq.correct_classes = numpy.array([-1]*bs1 + [1]*bs2)
+                
+        system_parameters.test_object_contents(iSeq)
+        return iSeq
+    
+    def sSeqCreateGender(self, iSeq, contrast_enhance, seed=-1):
+        if seed >= 0 or seed is None: 
+            numpy.random.seed(seed)
+        
+        if iSeq==None:
+            print "Gender: iSeq was None, this might be an indication that the data is not available"
+            sSeq = system_parameters.ParamsDataLoading()
+            return sSeq
+        
+        print "******** Setting Training Data Parameters for Gender  ****************"
+        sSeq = system_parameters.ParamsDataLoading()
+        sSeq.input_files = iSeq.input_files
+        sSeq.num_images = iSeq.num_images
+        sSeq.block_size = iSeq.block_size
+        sSeq.image_width = 256
+        sSeq.image_height = 192
+        sSeq.subimage_width = 135
+        sSeq.subimage_height = 135 
+        sSeq.pixelsampling_x = 1
+        sSeq.pixelsampling_y =  1
+        sSeq.subimage_pixelsampling = 2
+        sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2
+        sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
+        sSeq.add_noise_L0 = True
+        sSeq.convert_format = "L"
+        sSeq.background_type = "black"
+        sSeq.contrast_enhance = contrast_enhance
+        sSeq.translation = 2
+        sSeq.translations_x = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)
+        sSeq.translations_y = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)
+        sSeq.trans_sampled = False
+        if iSeq.gender_continuous:
+            sSeq.train_mode = 'serial' # ('mixed' for paper) regular, 'serial'
+        else:
+            sSeq.train_mode = 'clustered'
+        sSeq.load_data = load_data_from_sSeq
+        system_parameters.test_object_contents(sSeq)
+        return sSeq
+    
+    def extract_gender_from_filename(self, filename):
+        if "M" in filename:
+            return -1
+        elif "F" in filename:
+            return 1
+        else:
+            ex = "gender from filename %s not recognized"%filename
+            raise Exception(ex)   
            
-    samples = sub_box_sampling(box_in, box_ext, sSeq.block_size)
-    sSeq.translations_x[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = samples[:,0]
-    sSeq.translations_y[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = samples[:,1]
-    sSeq.pixelsampling_x[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = samples[:,2]
-    sSeq.pixelsampling_y[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = samples[:,3]
-            
-sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
-sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
-
-sSeq.add_noise_L0 = True
-sSeq.convert_format = "L"
-sSeq.background_type = None
-sSeq.trans_sampled = True
-
-sSeq.name = "Face Centering. Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f, 50)"%(-sSeq.trans_x_max, 
-    sSeq.trans_x_max, -sSeq.trans_y_max, sSeq.trans_y_max, int(sSeq.min_sampling*1000), int(sSeq.max_sampling*1000))
-print sSeq.name
-iSeq.name = sSeq.name
-system_parameters.test_object_contents(sSeq)
+ParamsGenderFunc = ParamsGenderExperiment(experiment_seed, experiment_basedir)
 
 
-print "***** Setting NewId Information Parameters for RFaceCentering******"
-iSeq = iNewidRFaceCentering= system_parameters.ParamsInput()
-# (0.55+1.1)/2 = 0.825, 0.55/2 = 0.275, 0.55/4 = 0.1375, .825 + .1375 = .9625, .825 - .55/4 = .6875
-iSeq.name = "Real FACE DISCRIMINATION (Centered / Decentered)"
 
-iSeq.data_base_dir = alldbnormalized_base_dir
-iSeq.ids = alldbnormalized_available_images[45000:46000] #45000:55000 numpy.arange(8000,10000) # 6000-8000
-iSeq.faces = numpy.arange(0,10) # 0=centered normalized face, 1=not centered normalized face
-block_sizeN = len(iSeq.ids) / len(iSeq.faces)
+####################################################################
+###########        SYSTEM FOR AGE ESTIMATION         ############
+####################################################################  
 
-#iSeq.scales = numpy.linspace(pipeline_fd['smin0'], pipeline_fd['smax0'], 50) # (-50, 50, 2)
-if len(iSeq.ids) % len(iSeq.faces) != 0:
-    ex="Here the number of scales must be a divisor of the number of identities"
-    raise Exception(ex)
-iSeq.ages = [None]
-iSeq.genders = [None]
-iSeq.racetweens = [None]
-iSeq.expressions = [None]
-iSeq.morphs = [None]
-iSeq.poses = [None]
-iSeq.lightings = [None]
-iSeq.slow_signal = 0 #real slow signal is whether there is the amount of face centering
-iSeq.step = 1
-iSeq.offset = 0
-repetition_factorN = 2 # was 4
-iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
-                                            iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
-                                            iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
-iSeq.input_files = iSeq.input_files * repetition_factorN#  4 was overfitting non linear sfa slightly
-#To avoid grouping similar images next to one other or in the same block
-numpy.random.shuffle(iSeq.input_files)  
+class ParamsAgeExperiment(system_parameters.ParamsSystem):
+    def __init__(self, experiment_seed, experiment_basedir):
+        super(ParamsAgeExperiment, self).__init__()
 
-iSeq.data2_base_dir = alldb_noface_base_dir
-iSeq.ids2 = alldb_noface_available_images[block_sizeT*repetition_factorT+block_sizeS*repetition_factorS: block_sizeT*repetition_factorT+block_sizeS*repetition_factorS+block_sizeN*repetition_factorN]
+    def create(self):
+        iTrainAge = self.iSeqCreateAge(first_id=0, num_ids=180, user_base_dir=user_base_dir, data_dir="RendersAge200x23", seed=None)
+        sTrainAge = self.sSeqCreateAge(iTrainAge, seed=-1) 
+        iSeenidAge = self.iSeqCreateAge(first_id=0, num_ids=180, user_base_dir=user_base_dir, data_dir="RendersAge200x23", seed=None)
+        sSeenidAge = self.sSeqCreateAge(iSeenidAge, seed=-1) 
+        iNewidAge = self.iSeqCreateAge(first_id=180, num_ids=20, user_base_dir=user_base_dir, data_dir="RendersAge200x23", seed=None)
+        sNewidAge = self.sSeqCreateAge(iSeenidAge, seed=-1) 
 
-iSeq.input_files2 = image_loader.create_image_filenames3(iSeq.data2_base_dir, "image", iSeq.slow_signal, iSeq.ids2, iSeq.ages, \
-                                            iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
-                                            iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
-iSeq.input_files2 = iSeq.input_files2
-numpy.random.shuffle(iSeq.input_files2)
+        self.name = "Network that extracts Age information"
+        self.network = "linearNetwork4L"
+        self.iTrain = [[iTrainAge]]
+        self.sTrain = [[sTrainAge]]
+        self.iSeenid = iSeenidAge
+        self.sSeenid = sSeenidAge
+        self.iNewid = [[iNewidAge]]
+        self.sNewid = [[sNewidAge]]
+        self.block_size = iTrainAge.block_size
+        self.train_mode = 'mixed'
+        self.analysis = None
+        self.enable_reduced_image_sizes = False
+        self.reduction_factor = 1.0
+        self.hack_image_size = 128
+        self.enable_hack_image_size = True
 
-iSeq.input_files = iSeq.input_files[0:-block_sizeN * repetition_factorN] + iSeq.input_files2
-
-
-iSeq.num_images = len(iSeq.input_files)
-#iSeq.params = [ids, expressions, morphs, poses, lightings]
-iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
-                  iSeq.morphs, iSeq.poses, iSeq.lightings]
-iSeq.block_size = iSeq.num_images / len (iSeq.faces)
-print "BLOCK SIZE =", iSeq.block_size 
-
-iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.faces)), iSeq.block_size)
-iSeq.correct_labels = iSeq.correct_classes / (len(iSeq.faces)-1)
-
-system_parameters.test_object_contents(iSeq)
-
-print "******** Setting Seenid Data Parameters for Real Face Centering****************"
-sSeq = sNewidRFaceCentering= system_parameters.ParamsDataLoading()
-sSeq.input_files = iSeq.input_files
-sSeq.num_images = iSeq.num_images
-sSeq.block_size = iSeq.block_size
-sSeq.image_width = 256
-sSeq.image_height = 192
-sSeq.subimage_width = 135
-sSeq.subimage_height = 135
-
-sSeq.trans_x_max = pipeline_fd['dx0'] * 1.0
-sSeq.trans_y_max = pipeline_fd['dy0'] * 1.0 * 0.998
-sSeq.min_sampling = pipeline_fd['smin0']- 0.1 #WARNING!!!
-sSeq.max_sampling = pipeline_fd['smax0']
-sSeq.avg_sampling = (sSeq.min_sampling + sSeq.max_sampling)/2
-
-
-sSeq.pixelsampling_x = numpy.zeros(sSeq.num_images)
-sSeq.pixelsampling_y = numpy.zeros(sSeq.num_images) 
-sSeq.translations_x = numpy.zeros(sSeq.num_images)
-sSeq.translations_y = numpy.zeros(sSeq.num_images)
-
-num_blocks = sSeq.num_images/sSeq.block_size
-for block_nr in range(num_blocks):
-    #For exterior box
-    fraction = ((block_nr+1.0) / (num_blocks-1)) ** 0.333
-    if fraction > 1:
-        fraction = 1
-    x_max = sSeq.trans_x_max * fraction
-    y_max = sSeq.trans_y_max * fraction
-    samp_max = sSeq.avg_sampling + (sSeq.max_sampling-sSeq.avg_sampling) * fraction
-    samp_min = sSeq.avg_sampling + (sSeq.min_sampling-sSeq.avg_sampling) * fraction
-
-    box_ext = [(-x_max, x_max), (-y_max, y_max), (samp_min, samp_max), (samp_min, samp_max)] 
-
-    if block_nr >= 0:
-        #For interior boxiSeq.ids = alldbnormalized_available_images[30000:45000]       
-        if block_nr < num_blocks-1:
-            eff_block_nr = block_nr
-        else:
-            eff_block_nr = block_nr-1
-        fraction2 = (eff_block_nr / (num_blocks-1)) ** 0.333
-        if fraction2 > 1:
-            fraction2 = 1
-        x_max = sSeq.trans_x_max * fraction2
-        y_max = sSeq.trans_y_max * fraction2
-        samp_max = sSeq.avg_sampling + (sSeq.max_sampling-sSeq.avg_sampling) * fraction2
-        samp_min = sSeq.avg_sampling + (sSeq.min_sampling-sSeq.avg_sampling) * fraction2
-        box_in = [(-x_max, x_max), (-y_max, y_max), (samp_min, samp_max), (samp_min, samp_max)] 
+    def iSeqCreateAge(self, first_id, num_ids, user_base_dir=user_base_dir, data_dir="RendersAge200x23", seed=None):
+        print "***** Setting Information Parameters for Age (simulated faces) ******"
+        iSeq = system_parameters.ParamsInput()
+        iSeq.name = "Age: 23 Ages x 200 identities"
+        iSeq.data_base_dir = user_base_dir + "/" + data_dir
+        iSeq.im_base_name = "age"
+        iSeq.ids = numpy.arange(first_id, first_id + num_ids) # 180, warning speeding up
+        #Available ages: iSeq.ages = [15, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 35, 36, 40, 42, 44, 45, 46, 48, 50, 55, 60, 65]
+        iSeq.ages = numpy.array([15, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 35, 36, 40, 42, 44, 45, 46, 48, 50, 55, 60, 65])
+        #iSeq.ages = numpy.array([15, 20, 24, 30, 35, 40, 45, 50, 55, 60, 65])
+        iSeq.genders = [None]
+        iSeq.racetweens = [None]
+        iSeq.expressions = [0]
+        iSeq.morphs = [0]
+        iSeq.poses = [0]
+        iSeq.lightings = [0]
+        iSeq.slow_signal = 1 
+        iSeq.step = 1 
+        iSeq.offset = 0
+        iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, iSeq.im_base_name, iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+                                                    iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
+                                                    iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, verbose=False)
         
-    samples = sub_box_sampling(box_in, box_ext, sSeq.block_size)
-    sSeq.translations_x[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = samples[:,0]
-    sSeq.translations_y[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = samples[:,1]
-    sSeq.pixelsampling_x[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = samples[:,2]
-    sSeq.pixelsampling_y[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = samples[:,3]
-            
-sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
-sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
-
-sSeq.add_noise_L0 = True
-sSeq.convert_format = "L"
-sSeq.background_type = None
-sSeq.trans_sampled = True
-
-sSeq.name = "Face Centering. Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f, 50)"%(-sSeq.trans_x_max, 
-    sSeq.trans_x_max, -sSeq.trans_y_max, sSeq.trans_y_max, int(sSeq.min_sampling*1000), int(sSeq.max_sampling*1000))
-print sSeq.name
-iSeq.name = sSeq.name
-system_parameters.test_object_contents(sSeq)
-
-
-####################################################################
-###########    SYSTEM FOR REAL_FACE CLASSIFICATION      ############
-####################################################################  
-ParamsRFaceCentering = system_parameters.ParamsSystem()
-ParamsRFaceCentering.name = sTrainRFaceCentering.name
-ParamsRFaceCentering.network = "linearNetwork4L"
-ParamsRFaceCentering.iTrain = iTrainRFaceCentering
-ParamsRFaceCentering.sTrain = sTrainRFaceCentering
-ParamsRFaceCentering.iSeenid = iSeenidRFaceCentering
-ParamsRFaceCentering.sSeenid = sSeenidRFaceCentering
-ParamsRFaceCentering.iNewid = iNewidRFaceCentering
-ParamsRFaceCentering.sNewid = sNewidRFaceCentering
-##MEGAWARNING!!!!
-#ParamsRFace.iNewid = iNewidScale
-#ParamsRFace.sNewid = sNewidScale
-#ParamsRFace.sNewid.translations_y = ParamsRFace.sNewid.translations_y * 0.0 + 8.0
-
-ParamsRFaceCentering.block_size = iTrainRFaceCentering.block_size
-ParamsRFaceCentering.train_mode = 'clustered' #clustered improves final performance! mixed
-# 'mixed'!!! mse 0.31 clustered @ 6000 samples LSFA 11L, mse 0.30 mixed
-# uexp08 => 0.019, 0.0147 @ 30 Signals (clustered)
-# uexp08 => 0.063  @ 30 Signals (mixed, 5 levels)
-# uexp08 => 0.034 @ 30 Signals (mixed, 10 levels)
-# uexp08 => 0.027 @ 30 signals(mixed, 10 levels, pca_sfa_expo) pca_expo
-
-ParamsRFaceCentering.analysis = None
-ParamsRFaceCentering.enable_reduced_image_sizes = True
-ParamsRFaceCentering.reduction_factor = 8.0 # WARNING 2.0, 4.0, 8.0
-ParamsRFaceCentering.hack_image_size = 16 # WARNING 64, 32, 16
-ParamsRFaceCentering.enable_hack_image_size = True
-
-#sys.path.append("/home/escalafl/workspace/hiphi/src/hiphi/utils")
-
-
-
-
-
-
-
-# EYE_L_X, EYE_L_X, EYE_L_X, EYE_L_X, EYE_L_X, EYE_L_X, EYE_L_X, EYE_L_X, EYE_L_X, EYE_L_X, EYE_L_X, EYE_L_X, EYE_L_X, EYE_L_X, EYE_L_X, EYE_L_X, EYE_L_X, EYE_L_X
-#This network actually supports images in the closed intervals: [-eye_dx, eye_dx], [-eye_dy, eye_dy], [eye_smin0, eye_smax0]
-eye_dx = 10
-eye_dy = 10
-eye_smax0 = 0.825 + 0.15
-eye_smin0 = 0.825 - 0.15
-
-print "***** Setting Training Information Parameters for Real Eye Translation X ******"
-iSeq = iTrainREyeTransX = system_parameters.ParamsInput()
-iSeq.data_base_dir = frgc_eyeL_normalized_base_dir
-iSeq.ids = numpy.arange(0,6000) # 8000, 7965
-
-iSeq.trans = numpy.arange(-1 * eye_dx, eye_dx, 1)
-if len(iSeq.ids) % len(iSeq.trans) != 0:
-    ex="Here the number of translations must be a divisor of the number of identities"
-    raise Exception(ex)
-iSeq.ages = [None]
-iSeq.genders = [None]
-iSeq.racetweens = [None]
-iSeq.expressions = [None]
-iSeq.morphs = [None]
-iSeq.poses = [None]
-iSeq.lightings = [None]
-iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
-iSeq.step = 1
-iSeq.offset = 0
-iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
-                                            iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
-                                            iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
-iSeq.input_files = iSeq.input_files * 8 # warning!!! 8
-#To avoid grouping similar images next to one other
-numpy.random.shuffle(iSeq.input_files)  
-
-iSeq.num_images = len(iSeq.input_files)
-iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, iSeq.poses, iSeq.lightings]
-iSeq.block_size = iSeq.num_images / len (iSeq.trans)
-iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.trans)), iSeq.block_size)
-iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
-
-system_parameters.test_object_contents(iSeq)
-
-print "******** Setting Training Data Parameters for Real Eye TransX  ****************"
-sSeq = sTrainREyeTransX = system_parameters.ParamsDataLoading()
-sSeq.input_files = iSeq.input_files
-sSeq.num_images = iSeq.num_images
-sSeq.block_size = iSeq.block_size
-sSeq.image_width = 256
-sSeq.image_height = 192
-sSeq.subimage_width = 64
-sSeq.subimage_height = 64 
-
-sSeq.trans_x_max = eye_dx
-sSeq.trans_x_min = -eye_dx
-sSeq.trans_y_max = eye_dy
-sSeq.trans_y_min = -eye_dy
-sSeq.min_sampling = eye_smin0
-sSeq.max_sampling = eye_smax0
-
-sSeq.pixelsampling_x = numpy.random.uniform(low=sSeq.min_sampling, high=sSeq.max_sampling, size=sSeq.num_images)
-sSeq.pixelsampling_y = sSeq.pixelsampling_x * 1.0
-sSeq.subimage_first_row =  sSeq.image_height/2.0-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
-sSeq.subimage_first_column = sSeq.image_width/2.0-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
-sSeq.add_noise_L0 = True
-sSeq.convert_format = "L"
-sSeq.background_type = None
-sSeq.translations_x = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
-sSeq.translations_y = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, sSeq.num_images)
-
-sSeq.trans_sampled = True
-sSeq.name = "REyeTans X Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f)"%(sSeq.trans_x_min, 
-    sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.min_sampling*100, sSeq.max_sampling*100)
-iSeq.name = sSeq.name
-print sSeq.name
-system_parameters.test_object_contents(sSeq)
-
-
-print "***** Setting Seenid Information Parameters for Real Eye Translation X ******"
-iSeq = iSeenidREyeTransX = system_parameters.ParamsInput()
-iSeq.data_base_dir = frgc_eyeL_normalized_base_dir
-iSeq.ids = numpy.arange(6000,8000) # 8000, 7965
-
-iSeq.trans = numpy.arange(-1 * eye_dx, eye_dx, 1)
-if len(iSeq.ids) % len(iSeq.trans) != 0:
-    ex="Here the number of translations must be a divisor of the number of identities"
-    raise Exception(ex)
-iSeq.ages = [None]
-iSeq.genders = [None]
-iSeq.racetweens = [None]
-iSeq.expressions = [None]
-iSeq.morphs = [None]
-iSeq.poses = [None]
-iSeq.lightings = [None]
-iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
-iSeq.step = 1
-iSeq.offset = 0
-iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
-                                            iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
-                                            iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
-iSeq.input_files = iSeq.input_files * 4 # warning!!! 4
-#To avoid grouping similar images next to one other
-numpy.random.shuffle(iSeq.input_files)  
-
-iSeq.num_images = len(iSeq.input_files)
-iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, iSeq.poses, iSeq.lightings]
-iSeq.block_size = iSeq.num_images / len (iSeq.trans)
-iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.trans)), iSeq.block_size)
-iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
-
-system_parameters.test_object_contents(iSeq)
-
-print "******** Setting Seenid Data Parameters for Real Eye TransX  ****************"
-sSeq = sSeenidREyeTransX = system_parameters.ParamsDataLoading()
-sSeq.input_files = iSeq.input_files
-sSeq.num_images = iSeq.num_images
-sSeq.block_size = iSeq.block_size
-sSeq.image_width = 256
-sSeq.image_height = 192
-sSeq.subimage_width = 64
-sSeq.subimage_height = 64 
-
-sSeq.trans_x_max = eye_dx
-sSeq.trans_x_min = -eye_dx
-sSeq.trans_y_max = eye_dy
-sSeq.trans_y_min = -eye_dy
-sSeq.min_sampling = eye_smin0
-sSeq.max_sampling = eye_smax0
-
-sSeq.pixelsampling_x = numpy.random.uniform(low=sSeq.min_sampling, high=sSeq.max_sampling, size=sSeq.num_images)
-sSeq.pixelsampling_y = sSeq.pixelsampling_x * 1.0
-sSeq.subimage_first_row =  sSeq.image_height/2.0-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
-sSeq.subimage_first_column = sSeq.image_width/2.0-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
-sSeq.add_noise_L0 = True
-sSeq.convert_format = "L"
-sSeq.background_type = None
-sSeq.translations_x = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
-sSeq.translations_y = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, sSeq.num_images)
-
-sSeq.trans_sampled = True
-sSeq.name = "REyeTans X Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f)"%(sSeq.trans_x_min, 
-    sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.min_sampling*100, sSeq.max_sampling*100)
-iSeq.name = sSeq.name
-print sSeq.name
-system_parameters.test_object_contents(sSeq)
-
-
-print "***** Setting Newid Information Parameters for Real Eye Translation X ******"
-iSeq = iNewidREyeTransX = system_parameters.ParamsInput()
-iSeq.data_base_dir = frgc_eyeL_normalized_base_dir
-iSeq.ids = numpy.arange(8000,10000) # 8000, 7965
-
-iSeq.trans = numpy.arange(-1 * eye_dx, eye_dx, 1)
-if len(iSeq.ids) % len(iSeq.trans) != 0:
-    ex="Here the number of translations must be a divisor of the number of identities"
-    raise Exception(ex)
-iSeq.ages = [None]
-iSeq.genders = [None]
-iSeq.racetweens = [None]
-iSeq.expressions = [None]
-iSeq.morphs = [None]
-iSeq.poses = [None]
-iSeq.lightings = [None]
-iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
-iSeq.step = 1
-iSeq.offset = 0
-iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
-                                            iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
-                                            iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
-iSeq.input_files = iSeq.input_files * 4 # warning!!! 4
-#To avoid grouping similar images next to one other
-numpy.random.shuffle(iSeq.input_files)  
-
-iSeq.num_images = len(iSeq.input_files)
-iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, iSeq.poses, iSeq.lightings]
-iSeq.block_size = iSeq.num_images / len (iSeq.trans)
-iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.trans)), iSeq.block_size)
-iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
-
-system_parameters.test_object_contents(iSeq)
-
-print "******** Setting Newid Data Parameters for Real Eye TransX  ****************"
-sSeq = sNewidREyeTransX = system_parameters.ParamsDataLoading()
-sSeq.input_files = iSeq.input_files
-sSeq.num_images = iSeq.num_images
-sSeq.block_size = iSeq.block_size
-sSeq.image_width = 256
-sSeq.image_height = 192
-sSeq.subimage_width = 64
-sSeq.subimage_height = 64 
-
-sSeq.trans_x_max = eye_dx
-sSeq.trans_x_min = -eye_dx
-sSeq.trans_y_max = eye_dy
-sSeq.trans_y_min = -eye_dy
-sSeq.min_sampling = eye_smin0
-sSeq.max_sampling = eye_smax0
-
-sSeq.pixelsampling_x = numpy.random.uniform(low=sSeq.min_sampling, high=sSeq.max_sampling, size=sSeq.num_images)
-sSeq.pixelsampling_y = sSeq.pixelsampling_x * 1.0
-sSeq.subimage_first_row =  sSeq.image_height/2.0-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
-sSeq.subimage_first_column = sSeq.image_width/2.0-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
-sSeq.add_noise_L0 = True
-sSeq.convert_format = "L"
-sSeq.background_type = None
-sSeq.translations_x = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
-sSeq.translations_y = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, sSeq.num_images)
-
-sSeq.trans_sampled = True
-sSeq.name = "REyeTans X Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f)"%(sSeq.trans_x_min, 
-    sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.min_sampling*100, sSeq.max_sampling*100)
-iSeq.name = sSeq.name
-print sSeq.name
-system_parameters.test_object_contents(sSeq)
-
-#iSeenidREyeTransX = copy.deepcopy(iTrainREyeTransX)
-#sSeenidREyeTransX = copy.deepcopy(sTrainREyeTransX)
-#iNewidREyeTransX = copy.deepcopy(iTrainREyeTransX)
-#sNewidREyeTransX = copy.deepcopy(sTrainREyeTransX)
-
-####################################################################
-#######    SYSTEM FOR REAL_EYE_TRANSLATION_X EXTRACTION     ########
-####################################################################  
-ParamsREyeTransX = system_parameters.ParamsSystem()
-ParamsREyeTransX.name = sTrainREyeTransX.name
-ParamsREyeTransX.network = "linearNetwork4L"
-ParamsREyeTransX.iTrain = iTrainREyeTransX
-ParamsREyeTransX.sTrain = sTrainREyeTransX
-ParamsREyeTransX.iSeenid = iSeenidREyeTransX
-ParamsREyeTransX.sSeenid = sSeenidREyeTransX
-ParamsREyeTransX.iNewid = iNewidREyeTransX
-ParamsREyeTransX.sNewid = sNewidREyeTransX
-ParamsREyeTransX.block_size = iTrainREyeTransX.block_size
-ParamsREyeTransX.train_mode = 'mixed'
-ParamsREyeTransX.analysis = None
-ParamsREyeTransX.enable_reduced_image_sizes = True
-ParamsREyeTransX.reduction_factor = 2.0
-ParamsREyeTransX.hack_image_size = 32
-ParamsREyeTransX.enable_hack_image_size = True
-
-
-#REAL_EYE_TRANSLATION_Y REAL_EYE_TRANSLATION_Y REAL_EYE_TRANSLATION_Y REAL_EYE_TRANSLATION_Y REAL_EYE_TRANSLATION_Y REAL_EYE_TRANSLATION_Y
-#Just exchange translations_x and translations_y to create iTrainREyeTransY
-iTrainREyeTransY = copy.deepcopy(iTrainREyeTransX)
-sTrainREyeTransY = copy.deepcopy(sTrainREyeTransX)
-sTrainREyeTransY.name = sTrainREyeTransY.name[0:10]+"Y"+sTrainREyeTransY.name[11:]
-tmp = sTrainREyeTransY.translations_x
-sTrainREyeTransY.translations_x = sTrainREyeTransY.translations_y
-sTrainREyeTransY.translations_y = tmp
-
-iSeenidREyeTransY = copy.deepcopy(iSeenidREyeTransX)
-sSeenidREyeTransY = copy.deepcopy(sSeenidREyeTransX)
-sSeenidREyeTransY.name = sSeenidREyeTransY.name[0:10]+"Y"+sSeenidREyeTransY.name[11:]
-tmp = sSeenidREyeTransY.translations_x
-sSeenidREyeTransY.translations_x = sSeenidREyeTransY.translations_y
-sSeenidREyeTransY.translations_y = tmp
-
-iNewidREyeTransY = copy.deepcopy(iNewidREyeTransX)
-sNewidREyeTransY = copy.deepcopy(sNewidREyeTransX)
-sNewidREyeTransY.name= sSeenidREyeTransY.name[0:10]+"Y"+sSeenidREyeTransY.name[11:]
-tmp = sNewidREyeTransY.translations_x
-sNewidREyeTransY.translations_x = sNewidREyeTransY.translations_y
-sNewidREyeTransY.translations_y = tmp
-
-####################################################################
-######    SYSTEM FOR REAL_EYE_TRANSLATION_Y EXTRACTION     #########
-####################################################################  
-ParamsREyeTransY = system_parameters.ParamsSystem()
-ParamsREyeTransY.name = sTrainREyeTransY.name
-ParamsREyeTransY.network = "linearNetwork4L"
-ParamsREyeTransY.iTrain = iTrainREyeTransY
-ParamsREyeTransY.sTrain = sTrainREyeTransY
-ParamsREyeTransY.iSeenid = iSeenidREyeTransY
-ParamsREyeTransY.sSeenid = sSeenidREyeTransY
-ParamsREyeTransY.iNewid = iNewidREyeTransY
-ParamsREyeTransY.sNewid = sNewidREyeTransY
-ParamsREyeTransY.block_size = iTrainREyeTransY.block_size
-ParamsREyeTransY.train_mode = 'mixed' #mixed
-ParamsREyeTransY.analysis = None
-ParamsREyeTransY.enable_reduced_image_sizes = True
-ParamsREyeTransY.reduction_factor = 2.0
-ParamsREyeTransY.hack_image_size = 32
-ParamsREyeTransY.enable_hack_image_size = True
-
-
-############################################################
-########## Function Defined Data Sources ###################
-############################################################
-
-
-# EYE_L_XYFunc
-# Dataset for joint estimation of PosX and PosY for the left eye, uses 32x32 resolution
-#This network actually supports images in the closed intervals: [-eye_dx, eye_dx], [-eye_dy, eye_dy], [eye_smin0, eye_smax0]
-def iSeqCreateREyePosXY(num_images, eyeLR_normalized_base_dir, all_eyeLR_available_images, first_image=0, slow_var="PosX", num_classes=30, eye_dx=10, eye_dy=10, repetition_factor=8, seed=-1):
-    if seed >= 0 or seed is None: #also works for 
-        numpy.random.seed(seed)
-    #else seed <0 then, do not change seed
+        #print "Filenames = ", iSeq.input_files
+        iSeq.num_images = len(iSeq.input_files)
+        #print "Num Images = ", iSeq.num_images
+        #iSeq.params = [ids, expressions, morphs, poses, lightings]
+        iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
+                          iSeq.morphs, iSeq.poses, iSeq.lightings]
+        iSeq.block_size = iSeq.num_images / len (iSeq.ages)
+        
+        iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.ages)), iSeq.block_size)
+        iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.ages, iSeq.block_size)
+        
+        system_parameters.test_object_contents(iSeq)    
     
-    print "***** Setting information Parameters for REyePosXY******"
-    iSeq = system_parameters.ParamsInput()
-    # (0.55+1.1)/2 = 0.825, 0.55/2 = 0.275, 0.55/4 = 0.1375, .825 + .1375 = .9625, .825 - .55/4 = .6875
-    iSeq.name = "Real EYE LOCATION (PosX / PosY)"
+    def sSeqCreateAge(self, iSeqAge, seed=-1):  
+        print "******** Setting Data Parameters for Age  ****************"
+        sSeqAge = system_parameters.ParamsDataLoading()
+        sSeqAge.input_files = iSeqAge.input_files
+        sSeqAge.num_images = iSeqAge.num_images
+        sSeqAge.block_size = iSeqAge.block_size
+        sSeqAge.image_width = 256
+        sSeqAge.image_height = 192
+        sSeqAge.subimage_width = 135
+        sSeqAge.subimage_height = 135 
+        sSeqAge.pixelsampling_x = 1
+        sSeqAge.pixelsampling_y =  1
+        sSeqAge.subimage_pixelsampling = 2
+        sSeqAge.subimage_first_row =  sSeqAge.image_height/2-sSeqAge.subimage_height*sSeqAge.pixelsampling_y/2
+        sSeqAge.subimage_first_column = sSeqAge.image_width/2-sSeqAge.subimage_width*sSeqAge.pixelsampling_x/2
+        #sSeqAge.subimage_first_column = sSeqAge.image_width/2-sSeqAge.subimage_width*sSeqAge.pixelsampling_x/2+ 5*sSeqAge.pixelsampling_x
+        sSeqAge.add_noise_L0 = True
+        sSeqAge.convert_format = "L"
+        sSeqAge.background_type = "blue"
+        sSeqAge.translation = 1
+        #sSeqAge.translations_x = numpy.random.random_integers(-sSeqAge.translation, sSeqAge.translation, sSeqAge.num_images)                                                           
+        sSeqAge.translations_x = numpy.random.random_integers(-sSeqAge.translation, sSeqAge.translation, sSeqAge.num_images)
+        sSeqAge.translations_y = numpy.random.random_integers(-sSeqAge.translation, sSeqAge.translation, sSeqAge.num_images)
+        sSeqAge.trans_sampled = False
+        sSeqAge.train_mode = 'mixed'
+        sSeqAge.name = iSeqAge.name
+        sSeqAge.load_data = load_data_from_sSeq
+        system_parameters.test_object_contents(sSeqAge)
+    
+ParamsAgeFunc = ParamsAgeExperiment(experiment_seed, experiment_basedir)
 
-    iSeq.data_base_dir = eyeLR_normalized_base_dir
-    iSeq.ids = all_eyeLR_available_images[numpy.arange(first_image, first_image+num_images)] # 6000 8000, 7965
 
+   
+obsolete_code = False
+if obsolete_code:
+    print "******** Setting Train Information Parameters for Identity ***********"
+    iTrainIdentity = system_parameters.ParamsInput()
+    iTrainIdentity.name = "Identities20x500"
+    iTrainIdentity.data_base_dir =user_base_dir + "/Renderings20x500"
+    iTrainIdentity.ids = numpy.arange(0,18)
+    iTrainIdentity.ages = [999]
+    #iTrainIdentity.MIN_GENDER = -3
+    #iTrainIdentity.MAX_GENDER = 3
+    #iTrainIdentity.GENDER_STEP = 0.10000 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
+    #iTrainIdentity.GENDER_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
+    #iTrainIdentity.genders = map(image_loader.code_gender, numpy.arange(iTrainIdentity.MIN_GENDER, iTrainIdentity.MAX_GENDER, iTrainIdentity.GENDER_STEP))
+    iTrainIdentity.genders = [999]
+    iTrainIdentity.racetweens = [999]
+    iTrainIdentity.expressions = [0]
+    iTrainIdentity.morphs = [0]
+    iTrainIdentity.poses = range(0,500)
+    iTrainIdentity.lightings = [0]
+    iTrainIdentity.slow_signal = 0
+    iTrainIdentity.step = 2
+    iTrainIdentity.offset = 0     
+    
+    iTrainIdentity.input_files = image_loader.create_image_filenames(iTrainIdentity.data_base_dir, iTrainIdentity.slow_signal, iTrainIdentity.ids, iTrainIdentity.expressions, iTrainIdentity.morphs, iTrainIdentity.poses, iTrainIdentity.lightings, iTrainIdentity.step, iTrainIdentity.offset)
+    iTrainIdentity.num_images = len(iTrainIdentity.input_files)
+    iTrainIdentity.params = [iTrainIdentity.ids, iTrainIdentity.expressions, iTrainIdentity.morphs, iTrainIdentity.poses, iTrainIdentity.lightings]
+    iTrainIdentity.block_size= iTrainIdentity.num_images / len(iTrainIdentity.params[iTrainIdentity.slow_signal])
+    
+    iTrainIdentity.correct_classes = sfa_libs.wider_1Darray(iTrainIdentity.ids, iTrainIdentity.block_size)
+    iTrainIdentity.correct_labels = sfa_libs.wider_1Darray(iTrainIdentity.ids, iTrainIdentity.block_size)
+    
+    system_parameters.test_object_contents(iTrainIdentity)
+    
+    print "***** Setting Train Sequence Parameters for Identity *****************"
+    sTrainIdentity = system_parameters.ParamsDataLoading()
+    sTrainIdentity.input_files = iTrainIdentity.input_files
+    sTrainIdentity.num_images = iTrainIdentity.num_images
+    sTrainIdentity.image_width = 640
+    sTrainIdentity.image_height = 480
+    sTrainIdentity.subimage_width = 135
+    sTrainIdentity.subimage_height = 135 
+    sTrainIdentity.pixelsampling_x = 2
+    sTrainIdentity.pixelsampling_y =  2
+    sTrainIdentity.subimage_pixelsampling = 2
+    sTrainIdentity.subimage_first_row =  sTrainIdentity.image_height/2-sTrainIdentity.subimage_height*sTrainIdentity.pixelsampling_y/2
+    sTrainIdentity.subimage_first_column = sTrainIdentity.image_width/2-sTrainIdentity.subimage_width*sTrainIdentity.pixelsampling_x/2+ 5*sTrainIdentity.pixelsampling_x
+    sTrainIdentity.add_noise_L0 = False
+    sTrainIdentity.convert_format = "L"
+    sTrainIdentity.background_type = "black"
+    sTrainIdentity.translation = 0
+    sTrainIdentity.translations_x = numpy.random.random_integers(-sTrainIdentity.translation, sTrainIdentity.translation, sTrainIdentity.num_images)
+    sTrainIdentity.translations_y = numpy.random.random_integers(-sTrainIdentity.translation, sTrainIdentity.translation, sTrainIdentity.num_images)
+    sTrainIdentity.trans_sampled = False
+    system_parameters.test_object_contents(sTrainIdentity)
+    
+    
+    print "******** Setting Seen Id Information Parameters for Identity *********"
+    iSeenidIdentity = system_parameters.ParamsInput()
+    iSeenidIdentity.name = "Identities20x500"
+    iSeenidIdentity.data_base_dir =user_base_dir + "/Renderings20x500"
+    iSeenidIdentity.ids = numpy.arange(0,18)
+    iSeenidIdentity.ages = [999]
+    iSeenidIdentity.MIN_GENDER = -3
+    iSeenidIdentity.MAX_GENDER = 3
+    iSeenidIdentity.GENDER_STEP = 0.10000 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
+    #iSeenidIdentity.GENDER_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
+    iSeenidIdentity.genders = map(image_loader.code_gender, numpy.arange(iSeenidIdentity.MIN_GENDER, iSeenidIdentity.MAX_GENDER, iSeenidIdentity.GENDER_STEP))
+    iSeenidIdentity.racetweens = [999]
+    iSeenidIdentity.expressions = [0]
+    iSeenidIdentity.morphs = [0]
+    iSeenidIdentity.poses = range(0,500)
+    iSeenidIdentity.lightings = [0]
+    iSeenidIdentity.slow_signal = 0
+    iSeenidIdentity.step = 2
+    iSeenidIdentity.offset = 1    
+    
+    iSeenidIdentity.input_files = image_loader.create_image_filenames(iSeenidIdentity.data_base_dir, iSeenidIdentity.slow_signal, iSeenidIdentity.ids, iSeenidIdentity.expressions, iSeenidIdentity.morphs, iSeenidIdentity.poses, iSeenidIdentity.lightings, iSeenidIdentity.step, iSeenidIdentity.offset)
+    iSeenidIdentity.num_images = len(iSeenidIdentity.input_files)
+    iSeenidIdentity.params = [iSeenidIdentity.ids, iSeenidIdentity.expressions, iSeenidIdentity.morphs, iSeenidIdentity.poses, iSeenidIdentity.lightings]
+    iSeenidIdentity.block_size= iSeenidIdentity.num_images / len(iSeenidIdentity.params[iSeenidIdentity.slow_signal])
+    
+    iSeenidIdentity.correct_classes = sfa_libs.wider_1Darray(iSeenidIdentity.ids, iSeenidIdentity.block_size)
+    iSeenidIdentity.correct_labels = sfa_libs.wider_1Darray(iSeenidIdentity.ids, iSeenidIdentity.block_size)
+    
+    system_parameters.test_object_contents(iSeenidIdentity)
+    
+    print "******** Setting Seen Id Sequence Parameters for Identity ************"
+    sSeenidIdentity = system_parameters.ParamsDataLoading()
+    sSeenidIdentity.input_files = iSeenidIdentity.input_files
+    sSeenidIdentity.num_images = iSeenidIdentity.num_images
+    sSeenidIdentity.image_width = 640
+    sSeenidIdentity.image_height = 480
+    sSeenidIdentity.subimage_width = 135
+    sSeenidIdentity.subimage_height = 135 
+    sSeenidIdentity.pixelsampling_x = 2
+    sSeenidIdentity.pixelsampling_y =  2
+    sSeenidIdentity.subimage_pixelsampling = 2
+    sSeenidIdentity.subimage_first_row =  sSeenidIdentity.image_height/2-sSeenidIdentity.subimage_height*sSeenidIdentity.pixelsampling_y/2
+    sSeenidIdentity.subimage_first_column = sSeenidIdentity.image_width/2-sSeenidIdentity.subimage_width*sSeenidIdentity.pixelsampling_x/2+ 5*sSeenidIdentity.pixelsampling_x
+    sSeenidIdentity.add_noise_L0 = False
+    sSeenidIdentity.convert_format = "L"
+    sSeenidIdentity.background_type = "black"
+    sSeenidIdentity.translation = 0
+    sSeenidIdentity.translations_x = numpy.random.random_integers(-sSeenidIdentity.translation, sSeenidIdentity.translation, sSeenidIdentity.num_images)
+    sSeenidIdentity.translations_y = numpy.random.random_integers(-sSeenidIdentity.translation, sSeenidIdentity.translation, sSeenidIdentity.num_images)
+    sSeenidIdentity.trans_sampled = False
+    system_parameters.test_object_contents(sSeenidIdentity)
+    
+    
+    print "******** Setting New Id Information Parameters for Identity **********"
+    iNewidIdentity = system_parameters.ParamsInput()
+    iNewidIdentity.name = "Identities20x500"
+    iNewidIdentity.data_base_dir =user_base_dir + "/Renderings20x500"
+    iNewidIdentity.ids = numpy.arange(18,20, dtype="int")
+    iNewidIdentity.ages = [999]
+    iNewidIdentity.MIN_GENDER = -3
+    iNewidIdentity.MAX_GENDER = 3
+    iNewidIdentity.GENDER_STEP = 0.10000 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
+    #iNewidIdentity.GENDER_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
+    iNewidIdentity.genders = map(image_loader.code_gender, numpy.arange(iNewidIdentity.MIN_GENDER, iNewidIdentity.MAX_GENDER, iNewidIdentity.GENDER_STEP))
+    iNewidIdentity.racetweens = [999]
+    iNewidIdentity.expressions = [0]
+    iNewidIdentity.morphs = [0]
+    iNewidIdentity.poses = range(0,500)
+    iNewidIdentity.lightings = [0]
+    iNewidIdentity.slow_signal = 0
+    iNewidIdentity.step = 1
+    iNewidIdentity.offset = 0     
+    
+    iNewidIdentity.input_files = image_loader.create_image_filenames(iNewidIdentity.data_base_dir, iNewidIdentity.slow_signal, iNewidIdentity.ids, iNewidIdentity.expressions, iNewidIdentity.morphs, iNewidIdentity.poses, iNewidIdentity.lightings, iNewidIdentity.step, iNewidIdentity.offset)
+    iNewidIdentity.num_images = len(iNewidIdentity.input_files)
+    iNewidIdentity.params = [iNewidIdentity.ids, iNewidIdentity.expressions, iNewidIdentity.morphs, iNewidIdentity.poses, iNewidIdentity.lightings]
+    iNewidIdentity.block_size= iNewidIdentity.num_images / len(iNewidIdentity.params[iNewidIdentity.slow_signal])
+    
+    iNewidIdentity.correct_classes = sfa_libs.wider_1Darray(iNewidIdentity.ids, iNewidIdentity.block_size)
+    iNewidIdentity.correct_labels = sfa_libs.wider_1Darray(iNewidIdentity.ids, iNewidIdentity.block_size)
+    
+    system_parameters.test_object_contents(iNewidIdentity)
+    
+    print "******** Setting New Id Sequence Parameters for Identity *************"
+    sNewidIdentity = system_parameters.ParamsDataLoading()
+    sNewidIdentity.input_files = iNewidIdentity.input_files
+    sNewidIdentity.num_images = iNewidIdentity.num_images
+    sNewidIdentity.image_width = 640
+    sNewidIdentity.image_height = 480
+    sNewidIdentity.subimage_width = 135
+    sNewidIdentity.subimage_height = 135 
+    sNewidIdentity.pixelsampling_x = 2
+    sNewidIdentity.pixelsampling_y =  2
+    sNewidIdentity.subimage_pixelsampling = 2
+    sNewidIdentity.subimage_first_row =  sNewidIdentity.image_height/2-sNewidIdentity.subimage_height*sNewidIdentity.pixelsampling_y/2
+    sNewidIdentity.subimage_first_column = sNewidIdentity.image_width/2-sNewidIdentity.subimage_width*sNewidIdentity.pixelsampling_x/2+ 5*sNewidIdentity.pixelsampling_x
+    sNewidIdentity.add_noise_L0 = False
+    sNewidIdentity.convert_format = "L"
+    sNewidIdentity.background_type = "black"
+    sNewidIdentity.translation = 0
+    sNewidIdentity.translations_x = numpy.random.random_integers(-sNewidIdentity.translation, sNewidIdentity.translation, sNewidIdentity.num_images)
+    sNewidIdentity.translations_y = numpy.random.random_integers(-sNewidIdentity.translation, sNewidIdentity.translation, sNewidIdentity.num_images)
+    sNewidIdentity.trans_sampled = False
+    system_parameters.test_object_contents(sNewidIdentity)
+    
+    
+    
+    ####################################################################
+    ###########        SYSTEM FOR IDENTITY RECOGNITION      ############
+    ####################################################################  
+    ParamsIdentity = system_parameters.ParamsSystem()
+    ParamsIdentity.name = "Network that extracts identity information"
+    ParamsIdentity.network = "linearNetwork4L"
+    ParamsIdentity.iTrain = iTrainIdentity
+    ParamsIdentity.sTrain = sTrainIdentity
+    ParamsIdentity.iSeenid = iSeenidIdentity
+    ParamsIdentity.sSeenid = sSeenidIdentity
+    ParamsIdentity.iNewid = iNewidIdentity
+    ParamsIdentity.sNewid = sNewidIdentity
+    ParamsIdentity.block_size = iTrainIdentity.block_size
+    ParamsIdentity.train_mode = 'clustered'
+    ParamsIdentity.analysis = None
+            
+    
+    print "******** Setting Train Information Parameters for Angle **************"
+    iTrainAngle = system_parameters.ParamsInput()
+    iTrainAngle.name = "Angle20x500"
+    iTrainAngle.data_base_dir =user_base_dir + "/Renderings20x500"
+    iTrainAngle.ids = numpy.arange(0,18)
+    iTrainAngle.ages = [999]
+    #iTrainAngle.MIN_GENDER = -3
+    #iTrainAngle.MAX_GENDER = 3
+    #iTrainAngle.GENDER_STEP = 0.10000 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
+    #iTrainAngle.GENDER_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
+    #iTrainAngle.genders = map(image_loader.code_gender, numpy.arange(iTrainAngle.MIN_GENDER, iTrainAngle.MAX_GENDER, iTrainAngle.GENDER_STEP))
+    iTrainAngle.genders = [999]
+    iTrainAngle.racetweens = [999]
+    iTrainAngle.expressions = [0]
+    iTrainAngle.morphs = [0]
+    iTrainAngle.real_poses = numpy.linspace(0, 90.0, 125) #0,90,500
+    iTrainAngle.poses = numpy.arange(0,500,4) #0,500
+    iTrainAngle.lightings = [0]
+    iTrainAngle.slow_signal = 3
+    iTrainAngle.step = 1 # 1
+    iTrainAngle.offset = 0     
+    
+    iTrainAngle.input_files = image_loader.create_image_filenames(iTrainAngle.data_base_dir, iTrainAngle.slow_signal, iTrainAngle.ids, iTrainAngle.expressions, iTrainAngle.morphs, iTrainAngle.poses, iTrainAngle.lightings, iTrainAngle.step, iTrainAngle.offset)
+    iTrainAngle.num_images = len(iTrainAngle.input_files)
+    iTrainAngle.params = [iTrainAngle.ids, iTrainAngle.expressions, iTrainAngle.morphs, iTrainAngle.poses, iTrainAngle.lightings]
+    iTrainAngle.block_size= iTrainAngle.num_images / len(iTrainAngle.params[iTrainAngle.slow_signal])
+    
+    iTrainAngle.correct_classes = sfa_libs.wider_1Darray(iTrainAngle.poses, iTrainAngle.block_size)
+    iTrainAngle.correct_labels = sfa_libs.wider_1Darray(iTrainAngle.real_poses, iTrainAngle.block_size)
+    
+    system_parameters.test_object_contents(iTrainAngle)
+    
+    print "***** Setting Train Sequence Parameters for Angle ********************"
+    sTrainAngle = system_parameters.ParamsDataLoading()
+    sTrainAngle.input_files = iTrainAngle.input_files
+    sTrainAngle.num_images = iTrainAngle.num_images
+    sTrainAngle.image_width = 640
+    sTrainAngle.image_height = 480
+    sTrainAngle.subimage_width = 135
+    sTrainAngle.subimage_height = 135 
+    sTrainAngle.pixelsampling_x = 2
+    sTrainAngle.pixelsampling_y =  2
+    sTrainAngle.subimage_pixelsampling = 2
+    sTrainAngle.subimage_first_row =  sTrainAngle.image_height/2-sTrainAngle.subimage_height*sTrainAngle.pixelsampling_y/2
+    sTrainAngle.subimage_first_column = sTrainAngle.image_width/2-sTrainAngle.subimage_width*sTrainAngle.pixelsampling_x/2+ 5*sTrainAngle.pixelsampling_x
+    sTrainAngle.add_noise_L0 = False
+    sTrainAngle.convert_format = "L"
+    sTrainAngle.background_type = "black"
+    sTrainAngle.translation = 1
+    sTrainAngle.translations_x = numpy.random.random_integers(-sTrainAngle.translation, sTrainAngle.translation, sTrainAngle.num_images)
+    sTrainAngle.translations_y = numpy.random.random_integers(-sTrainAngle.translation, sTrainAngle.translation, sTrainAngle.num_images)
+    sTrainAngle.trans_sampled = False
+    system_parameters.test_object_contents(sTrainAngle)
+    
+    
+    print "******** Setting Seen Id Information Parameters for Angle ************"
+    iSeenidAngle = system_parameters.ParamsInput()
+    iSeenidAngle.name = "Angle20x500"
+    iSeenidAngle.data_base_dir =user_base_dir + "/Renderings20x500"
+    iSeenidAngle.ids = numpy.arange(0,18)
+    iSeenidAngle.ages = [999]
+    iSeenidAngle.MIN_GENDER = -3
+    iSeenidAngle.MAX_GENDER = 3
+    iSeenidAngle.GENDER_STEP = 0.10000 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
+    #iSeenidAngle.GENDER_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
+    iSeenidAngle.genders = map(image_loader.code_gender, numpy.arange(iSeenidAngle.MIN_GENDER, iSeenidAngle.MAX_GENDER, iSeenidAngle.GENDER_STEP))
+    iSeenidAngle.racetweens = [999]
+    iSeenidAngle.expressions = [0]
+    iSeenidAngle.morphs = [0]
+    iSeenidAngle.real_poses = numpy.linspace(0,90.0,125) #0,90,500
+    iSeenidAngle.poses = numpy.arange(0,500, 4) #0,500
+    iSeenidAngle.lightings = [0]
+    iSeenidAngle.slow_signal = 3
+    iSeenidAngle.step = 1 # 1
+    iSeenidAngle.offset = 0
+    
+    iSeenidAngle.input_files = image_loader.create_image_filenames(iSeenidAngle.data_base_dir, iSeenidAngle.slow_signal, iSeenidAngle.ids, iSeenidAngle.expressions, iSeenidAngle.morphs, iSeenidAngle.poses, iSeenidAngle.lightings, iSeenidAngle.step, iSeenidAngle.offset)
+    iSeenidAngle.num_images = len(iSeenidAngle.input_files)
+    iSeenidAngle.params = [iSeenidAngle.ids, iSeenidAngle.expressions, iSeenidAngle.morphs, iSeenidAngle.poses, iSeenidAngle.lightings]
+    iSeenidAngle.block_size= iSeenidAngle.num_images / len(iSeenidAngle.params[iSeenidAngle.slow_signal])
+    
+    iSeenidAngle.correct_classes = sfa_libs.wider_1Darray(iSeenidAngle.poses, iSeenidAngle.block_size)
+    iSeenidAngle.correct_labels = sfa_libs.wider_1Darray(iSeenidAngle.real_poses, iSeenidAngle.block_size)
+    
+    system_parameters.test_object_contents(iSeenidAngle)
+    
+    print "******** Setting Seen Id Sequence Parameters for Angle ***************"
+    sSeenidAngle = system_parameters.ParamsDataLoading()
+    sSeenidAngle.input_files = iSeenidAngle.input_files
+    sSeenidAngle.num_images = iSeenidAngle.num_images
+    sSeenidAngle.image_width = 640
+    sSeenidAngle.image_height = 480
+    sSeenidAngle.subimage_width = 135
+    sSeenidAngle.subimage_height = 135 
+    sSeenidAngle.pixelsampling_x = 2
+    sSeenidAngle.pixelsampling_y =  2
+    sSeenidAngle.subimage_pixelsampling = 2
+    sSeenidAngle.subimage_first_row =  sSeenidAngle.image_height/2-sSeenidAngle.subimage_height*sSeenidAngle.pixelsampling_y/2
+    sSeenidAngle.subimage_first_column = sSeenidAngle.image_width/2-sSeenidAngle.subimage_width*sSeenidAngle.pixelsampling_x/2+ 5*sSeenidAngle.pixelsampling_x
+    sSeenidAngle.add_noise_L0 = False
+    sSeenidAngle.convert_format = "L"
+    sSeenidAngle.background_type = "black"
+    sSeenidAngle.translation = 1
+    sSeenidAngle.translations_x = numpy.random.random_integers(-sSeenidAngle.translation, sSeenidAngle.translation, sSeenidAngle.num_images)
+    sSeenidAngle.translations_y = numpy.random.random_integers(-sSeenidAngle.translation, sSeenidAngle.translation, sSeenidAngle.num_images)
+    sSeenidAngle.trans_sampled = False
+    system_parameters.test_object_contents(sSeenidAngle)
+    
+    
+    print "******** Setting New Id Information Parameters for Angle *************"
+    iNewidAngle = system_parameters.ParamsInput()
+    iNewidAngle.name = "Angle20x500"
+    iNewidAngle.data_base_dir =user_base_dir + "/Renderings20x500"
+    iNewidAngle.ids = numpy.arange(18,20)
+    iNewidAngle.ages = [999]
+    iNewidAngle.MIN_GENDER = -3
+    iNewidAngle.MAX_GENDER = 3
+    iNewidAngle.GENDER_STEP = 0.10000 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
+    #iNewidAngle.GENDER_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
+    iNewidAngle.genders = map(image_loader.code_gender, numpy.arange(iNewidAngle.MIN_GENDER, iNewidAngle.MAX_GENDER, iNewidAngle.GENDER_STEP))
+    iNewidAngle.racetweens = [999]
+    iNewidAngle.expressions = [0]
+    iNewidAngle.morphs = [0]
+    iNewidAngle.real_poses = numpy.linspace(0,90.0,500)
+    iNewidAngle.poses = numpy.arange(0,500)
+    iNewidAngle.lightings = [0]
+    iNewidAngle.slow_signal = 3
+    iNewidAngle.step = 1
+    iNewidAngle.offset = 0     
+    
+    iNewidAngle.input_files = image_loader.create_image_filenames(iNewidAngle.data_base_dir, iNewidAngle.slow_signal, iNewidAngle.ids, iNewidAngle.expressions, iNewidAngle.morphs, iNewidAngle.poses, iNewidAngle.lightings, iNewidAngle.step, iNewidAngle.offset)
+    iNewidAngle.num_images = len(iNewidAngle.input_files)
+    iNewidAngle.params = [iNewidAngle.ids, iNewidAngle.expressions, iNewidAngle.morphs, iNewidAngle.poses, iNewidAngle.lightings]
+    iNewidAngle.block_size= iNewidAngle.num_images / len(iNewidAngle.params[iNewidAngle.slow_signal])
+    
+    iNewidAngle.correct_classes = sfa_libs.wider_1Darray(iNewidAngle.poses, iNewidAngle.block_size)
+    iNewidAngle.correct_labels = sfa_libs.wider_1Darray(iNewidAngle.real_poses, iNewidAngle.block_size)
+    
+    system_parameters.test_object_contents(iNewidAngle)
+    
+    print "******** Setting New Id Sequence Parameters for Angle ****************"
+    sNewidAngle = system_parameters.ParamsDataLoading()
+    sNewidAngle.input_files = iNewidAngle.input_files
+    sNewidAngle.num_images = iNewidAngle.num_images
+    sNewidAngle.image_width = 640
+    sNewidAngle.image_height = 480
+    sNewidAngle.subimage_width = 135
+    sNewidAngle.subimage_height = 135 
+    sNewidAngle.pixelsampling_x = 2
+    sNewidAngle.pixelsampling_y =  2
+    sNewidAngle.subimage_pixelsampling = 2
+    sNewidAngle.subimage_first_row =  sNewidAngle.image_height/2-sNewidAngle.subimage_height*sNewidAngle.pixelsampling_y/2
+    sNewidAngle.subimage_first_column = sNewidAngle.image_width/2-sNewidAngle.subimage_width*sNewidAngle.pixelsampling_x/2+ 5*sNewidAngle.pixelsampling_x
+    sNewidAngle.add_noise_L0 = False
+    sNewidAngle.convert_format = "L"
+    sNewidAngle.background_type = "black"
+    sNewidAngle.translation = 1
+    sNewidAngle.translations_x = numpy.random.random_integers(-sNewidAngle.translation, sNewidAngle.translation, sNewidAngle.num_images)
+    sNewidAngle.translations_y = numpy.random.random_integers(-sNewidAngle.translation, sNewidAngle.translation, sNewidAngle.num_images)
+    sNewidAngle.trans_sampled = False
+    system_parameters.test_object_contents(sNewidAngle)
+    
+    
+    
+    ####################################################################
+    ###########        SYSTEM FOR ANGLE RECOGNITION      ############
+    ####################################################################  
+    ParamsAngle = system_parameters.ParamsSystem()
+    ParamsAngle.name = "Network that extracts Angle information"
+    ParamsAngle.network = "linearNetwork4L"
+    ParamsAngle.iTrain = iTrainAngle
+    ParamsAngle.sTrain = sTrainAngle
+    ParamsAngle.iSeenid = iSeenidAngle
+    ParamsAngle.sSeenid = sSeenidAngle
+    ParamsAngle.iNewid = iNewidAngle
+    ParamsAngle.sNewid = sNewidAngle
+    ParamsAngle.block_size = iTrainAngle.block_size
+    ParamsAngle.train_mode = 'mixed'
+    ParamsAngle.analysis = None
+    
+    
+    
+    
+    
+    print "***** Setting Training Information Parameters for Translation X ******"
+    iTrainTransX = system_parameters.ParamsInput()
+    iTrainTransX.name = "Translation X: 60Genders x 200 identities"
+    iTrainTransX.data_base_dir = user_base_dir + "/RenderingsGender60x200"
+    iTrainTransX.ids = numpy.arange(0,150) # 160
+    iTrainTransX.trans = numpy.arange(-50, 50, 2)
+    if len(iTrainTransX.ids) % len(iTrainTransX.trans) != 0:
+        ex="Here the number of translations must be a divisor of the number of identities"
+        raise Exception(ex)
+    iTrainTransX.ages = [999]
+    iTrainTransX.MIN_GENDER= -3
+    iTrainTransX.MAX_GENDER = 3
+    iTrainTransX.GENDER_STEP = 0.10000 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
+    #iTrainTransX.TransX_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
+    iTrainTransX.real_genders = numpy.arange(iTrainTransX.MIN_GENDER, iTrainTransX.MAX_GENDER, iTrainTransX.GENDER_STEP)
+    iTrainTransX.genders = map(image_loader.code_gender, iTrainTransX.real_genders)
+    iTrainTransX.racetweens = [999]
+    iTrainTransX.expressions = [0]
+    iTrainTransX.morphs = [0]
+    iTrainTransX.poses = [0]
+    iTrainTransX.lightings = [0]
+    iTrainTransX.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
+    iTrainTransX.step = 1
+    iTrainTransX.offset = 0
+    iTrainTransX.input_files = image_loader.create_image_filenames2(iTrainTransX.data_base_dir, iTrainTransX.slow_signal, iTrainTransX.ids, iTrainTransX.ages, \
+                                                iTrainTransX.genders, iTrainTransX.racetweens, iTrainTransX.expressions, iTrainTransX.morphs, \
+                                                iTrainTransX.poses, iTrainTransX.lightings, iTrainTransX.step, iTrainTransX.offset)
+    #MEGAWARNING!!!!
+    #iTrainTransX.input_files = iTrainTransX.input_files
+    #numpy.random.shuffle(iTrainTransX.input_files)  
+    #numpy.random.shuffle(iTrainTransX.input_files)  
+    
+    iTrainTransX.num_images = len(iTrainTransX.input_files)
+    #iTrainTransX.params = [ids, expressions, morphs, poses, lightings]
+    iTrainTransX.params = [iTrainTransX.ids, iTrainTransX.ages, iTrainTransX.genders, iTrainTransX.racetweens, iTrainTransX.expressions, \
+                      iTrainTransX.morphs, iTrainTransX.poses, iTrainTransX.lightings]
+    iTrainTransX.block_size = iTrainTransX.num_images / len (iTrainTransX.trans)
+    #print "Blocksize = ", iTrainTransX.block_size
+    #quit()
+    
+    iTrainTransX.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iTrainTransX.trans)), iTrainTransX.block_size)
+    iTrainTransX.correct_labels = sfa_libs.wider_1Darray(iTrainTransX.trans, iTrainTransX.block_size)
+    
+    system_parameters.test_object_contents(iTrainTransX)
+    
+    print "******** Setting Training Data Parameters for TransX  ****************"
+    sTrainTransX = system_parameters.ParamsDataLoading()
+    sTrainTransX.input_files = iTrainTransX.input_files
+    sTrainTransX.num_images = iTrainTransX.num_images
+    sTrainTransX.block_size = iTrainTransX.block_size
+    sTrainTransX.image_width = 256
+    sTrainTransX.image_height = 192
+    sTrainTransX.subimage_width = 135
+    sTrainTransX.subimage_height = 135 
+    sTrainTransX.pixelsampling_x = 1
+    sTrainTransX.pixelsampling_y =  1
+    sTrainTransX.subimage_pixelsampling = 2
+    sTrainTransX.subimage_first_row =  sTrainTransX.image_height/2-sTrainTransX.subimage_height*sTrainTransX.pixelsampling_y/2
+    sTrainTransX.subimage_first_column = sTrainTransX.image_width/2-sTrainTransX.subimage_width*sTrainTransX.pixelsampling_x/2
+    #sTrainTransX.subimage_first_column = sTrainTransX.image_width/2-sTrainTransX.subimage_width*sTrainTransX.pixelsampling_x/2+ 5*sTrainTransX.pixelsampling_x
+    sTrainTransX.add_noise_L0 = True
+    sTrainTransX.convert_format = "L"
+    sTrainTransX.background_type = "black"
+    sTrainTransX.translation = 25
+    #sTrainTransX.translations_x = numpy.random.random_integers(-sTrainTransX.translation, sTrainTransX.translation, sTrainTransX.num_images)                                                           
+    sTrainTransX.translations_x = sfa_libs.wider_1Darray(iTrainTransX.trans, iTrainTransX.block_size)
+    sTrainTransX.translations_y = numpy.random.random_integers(-sTrainTransX.translation, sTrainTransX.translation, sTrainTransX.num_images)
+    sTrainTransX.trans_sampled = False
+    system_parameters.test_object_contents(sTrainTransX)
+    
+    print "***** Setting Seen ID Information Parameters for Translation X *******"
+    iSeenidTransX = system_parameters.ParamsInput()
+    iSeenidTransX.name = "Test Translation X: 60Genders x 200 identities, dx = 1 pixel"
+    iSeenidTransX.data_base_dir = user_base_dir + "/RenderingsGender60x200"
+    iSeenidTransX.ids = numpy.arange(0,50) # 160
+    iSeenidTransX.trans = iTrainTransX.trans + 1
+    if len(iSeenidTransX.ids) % len(iSeenidTransX.trans) != 0:
+        ex="Here the number of translations must be a divisor of the number of identities"
+        raise Exception(ex)
+    iSeenidTransX.ages = [999]
+    iSeenidTransX.MIN_GENDER= -3
+    iSeenidTransX.MAX_GENDER = 3
+    iSeenidTransX.GENDER_STEP = 0.10000 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
+    #iSeenidTransX.TransX_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
+    iSeenidTransX.real_genders = numpy.arange(iSeenidTransX.MIN_GENDER, iSeenidTransX.MAX_GENDER, iSeenidTransX.GENDER_STEP)
+    iSeenidTransX.genders = map(image_loader.code_gender, iSeenidTransX.real_genders)
+    iSeenidTransX.racetweens = [999]
+    iSeenidTransX.expressions = [0]
+    iSeenidTransX.morphs = [0]
+    iSeenidTransX.poses = [0]
+    iSeenidTransX.lightings = [0]
+    iSeenidTransX.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
+    iSeenidTransX.step = 1
+    iSeenidTransX.offset = 0
+    iSeenidTransX.input_files = image_loader.create_image_filenames2(iSeenidTransX.data_base_dir, iSeenidTransX.slow_signal, iSeenidTransX.ids, iSeenidTransX.ages, \
+                                                iSeenidTransX.genders, iSeenidTransX.racetweens, iSeenidTransX.expressions, iSeenidTransX.morphs, \
+                                                iSeenidTransX.poses, iSeenidTransX.lightings, iSeenidTransX.step, iSeenidTransX.offset)
+    #MEGAWARNING!!!!
+    #numpy.random.shuffle(iSeenidTransX.input_files)  
+    #numpy.random.shuffle(iSeenidTransX.input_files)  
+    
+    iSeenidTransX.num_images = len(iSeenidTransX.input_files)
+    #iSeenidTransX.params = [ids, expressions, morphs, poses, lightings]
+    iSeenidTransX.params = [iSeenidTransX.ids, iSeenidTransX.ages, iSeenidTransX.genders, iSeenidTransX.racetweens, iSeenidTransX.expressions, \
+                      iSeenidTransX.morphs, iSeenidTransX.poses, iSeenidTransX.lightings]
+    iSeenidTransX.block_size = iSeenidTransX.num_images / len (iSeenidTransX.trans)
+    
+    iSeenidTransX.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeenidTransX.trans)), iSeenidTransX.block_size)
+    iSeenidTransX.correct_labels = sfa_libs.wider_1Darray(iSeenidTransX.trans, iSeenidTransX.block_size)
+    
+    system_parameters.test_object_contents(iSeenidTransX)
+    
+    print "******** Setting Seen Id Data Parameters for TransX  *****************"
+    sSeenidTransX = system_parameters.ParamsDataLoading()
+    sSeenidTransX.input_files = iSeenidTransX.input_files
+    sSeenidTransX.num_images = iSeenidTransX.num_images
+    sSeenidTransX.block_size = iSeenidTransX.block_size
+    sSeenidTransX.image_width = 256
+    sSeenidTransX.image_height = 192
+    sSeenidTransX.subimage_width = 135
+    sSeenidTransX.subimage_height = 135 
+    sSeenidTransX.pixelsampling_x = 1
+    sSeenidTransX.pixelsampling_y =  1
+    sSeenidTransX.subimage_pixelsampling = 2
+    sSeenidTransX.subimage_first_row =  sSeenidTransX.image_height/2-sSeenidTransX.subimage_height*sSeenidTransX.pixelsampling_y/2
+    sSeenidTransX.subimage_first_column = sSeenidTransX.image_width/2-sSeenidTransX.subimage_width*sSeenidTransX.pixelsampling_x/2
+    #sSeenidTransX.subimage_first_column = sSeenidTransX.image_width/2-sSeenidTransX.subimage_width*sSeenidTransX.pixelsampling_x/2+ 5*sSeenidTransX.pixelsampling_x
+    sSeenidTransX.add_noise_L0 = True
+    sSeenidTransX.convert_format = "L"
+    sSeenidTransX.background_type = "black"
+    sSeenidTransX.translation = 20
+    #sSeenidTransX.translations_x = numpy.random.random_integers(-sSeenidTransX.translation, sSeenidTransX.translation, sSeenidTransX.num_images)                                                           
+    sSeenidTransX.translations_x = sfa_libs.wider_1Darray(iSeenidTransX.trans, iSeenidTransX.block_size)
+    sSeenidTransX.translations_y = numpy.random.random_integers(-sSeenidTransX.translation, sSeenidTransX.translation, sSeenidTransX.num_images)
+    sSeenidTransX.trans_sampled = False
+    system_parameters.test_object_contents(sSeenidTransX)
+    
+    
+    print "******** Setting New Id Information Parameters for Translation X *****"
+    iNewidTransX = system_parameters.ParamsInput()
+    iNewidTransX.name = "New ID Translation X: 60Genders x 200 identities, dx = 1 pixel"
+    iNewidTransX.data_base_dir =user_base_dir + "/RenderingsGender60x200"
+    iNewidTransX.ids = numpy.arange(150,200) # 160
+    iNewidTransX.trans = numpy.arange(-50,50,2)
+    if len(iNewidTransX.ids) % len(iNewidTransX.trans) != 0:
+        ex="Here the number of translations must be a divisor of the number of identities"
+        raise Exception(ex)
+    iNewidTransX.ages = [999]
+    iNewidTransX.MIN_GENDER= -3
+    iNewidTransX.MAX_GENDER = 3
+    iNewidTransX.GENDER_STEP = 0.10000 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
+    #iNewidTransX.TransX_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
+    iNewidTransX.real_genders = numpy.arange(iNewidTransX.MIN_GENDER, iNewidTransX.MAX_GENDER, iNewidTransX.GENDER_STEP)
+    iNewidTransX.genders = map(image_loader.code_gender, iNewidTransX.real_genders)
+    iNewidTransX.racetweens = [999]
+    iNewidTransX.expressions = [0]
+    iNewidTransX.morphs = [0]
+    iNewidTransX.poses = [0]
+    iNewidTransX.lightings = [0]
+    iNewidTransX.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
+    iNewidTransX.step = 1
+    iNewidTransX.offset = 0
+    iNewidTransX.input_files = image_loader.create_image_filenames2(iNewidTransX.data_base_dir, iNewidTransX.slow_signal, iNewidTransX.ids, iNewidTransX.ages, \
+                                                iNewidTransX.genders, iNewidTransX.racetweens, iNewidTransX.expressions, iNewidTransX.morphs, \
+                                                iNewidTransX.poses, iNewidTransX.lightings, iNewidTransX.step, iNewidTransX.offset)
+    #MEGAWARNING!!!!
+    #iNewidTransX.input_files = iNewidTransX.input_files
+    #numpy.random.shuffle(iNewidTransX.input_files)  
+    #numpy.random.shuffle(iNewidTransX.input_files)  
+    
+    iNewidTransX.num_images = len(iNewidTransX.input_files)
+    #iNewidTransX.params = [ids, expressions, morphs, poses, lightings]
+    iNewidTransX.params = [iNewidTransX.ids, iNewidTransX.ages, iNewidTransX.genders, iNewidTransX.racetweens, iNewidTransX.expressions, \
+                      iNewidTransX.morphs, iNewidTransX.poses, iNewidTransX.lightings]
+    iNewidTransX.block_size = iNewidTransX.num_images / len (iNewidTransX.trans)
+    
+    iNewidTransX.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iNewidTransX.trans)), iNewidTransX.block_size)
+    iNewidTransX.correct_labels = sfa_libs.wider_1Darray(iNewidTransX.trans, iNewidTransX.block_size)
+    
+    system_parameters.test_object_contents(iNewidTransX)
+    
+    print "******** Setting Seen Id Data Parameters for TransX  *****************"
+    sNewidTransX = system_parameters.ParamsDataLoading()
+    sNewidTransX.input_files = iNewidTransX.input_files
+    sNewidTransX.num_images = iNewidTransX.num_images
+    sNewidTransX.block_size = iNewidTransX.block_size
+    sNewidTransX.image_width = 256
+    sNewidTransX.image_height = 192
+    sNewidTransX.subimage_width = 135
+    sNewidTransX.subimage_height = 135 
+    sNewidTransX.pixelsampling_x = 1
+    sNewidTransX.pixelsampling_y =  1
+    sNewidTransX.subimage_pixelsampling = 2
+    sNewidTransX.subimage_first_row =  sNewidTransX.image_height/2-sNewidTransX.subimage_height*sNewidTransX.pixelsampling_y/2
+    sNewidTransX.subimage_first_column = sNewidTransX.image_width/2-sNewidTransX.subimage_width*sNewidTransX.pixelsampling_x/2
+    #sNewidTransX.subimage_first_column = sNewidTransX.image_width/2-sNewidTransX.subimage_width*sNewidTransX.pixelsampling_x/2+ 5*sNewidTransX.pixelsampling_x
+    sNewidTransX.add_noise_L0 = True
+    sNewidTransX.convert_format = "L"
+    sNewidTransX.background_type = "black"
+    sNewidTransX.translation = 25 #20
+    #sNewidTransX.translations_x = numpy.random.random_integers(-sNewidTransX.translation, sNewidTransX.translation, sNewidTransX.num_images)                                                           
+    sNewidTransX.translations_x = sfa_libs.wider_1Darray(iNewidTransX.trans, iNewidTransX.block_size)
+    sNewidTransX.translations_y = numpy.random.random_integers(-sNewidTransX.translation, sNewidTransX.translation, sNewidTransX.num_images)
+    sNewidTransX.trans_sampled = False
+    system_parameters.test_object_contents(sNewidTransX)
+    
+    
+    ####################################################################
+    ###########    SYSTEM FOR TRANSLATION_X EXTRACTION      ############
+    ####################################################################  
+    ParamsTransX = system_parameters.ParamsSystem()
+    ParamsTransX.name = "Network that extracts TransX information"
+    ParamsTransX.network = "linearNetwork4L"
+    ParamsTransX.iTrain = iTrainTransX
+    ParamsTransX.sTrain = sTrainTransX
+    ParamsTransX.iSeenid = iSeenidTransX
+    ParamsTransX.sSeenid = sSeenidTransX
+    ParamsTransX.iNewid = iNewidTransX
+    ParamsTransX.sNewid = sNewidTransX
+    ParamsTransX.block_size = iTrainTransX.block_size
+    ParamsTransX.train_mode = 'mixed'
+    ParamsTransX.analysis = None
+    
+    
+    
+    
+    
+    
+    #PIPELINE FOR FACE DETECTION:
+    #Orig=TX: DX0=+/- 45, DY0=+/- 20, DS0= 0.55-1.1
+    #TY: DX1=+/- 20, DY0=+/- 20, DS0= 0.55-1.1
+    #S: DX1=+/- 20, DY1=+/- 10, DS0= 0.55-1.1
+    #TMX: DX1=+/- 20, DY1=+/- 10, DS1= 0.775-1.05
+    #TMY: DX2=+/- 10, DY1=+/- 10, DS1= 0.775-1.05
+    #MS: DX2=+/- 10, DY2=+/- 5, DS1= 0.775-1.05
+    #Out About: DX2=+/- 10, DY2=+/- 5, DS2= 0.8875-1.025
+    #notice: for dx* and dy* intervals are open, while for smin and smax intervals are closed
+    pipeline_fd = dict(dx0 = 45, dy0 = 20, smin0 = 0.55,  smax0 = 1.1,
+                       dx1 = 20, dy1 = 10, smin1 = 0.775, smax1 = 1.05)
+    #Pipeline actually supports inputs in: [-dx0, dx0-2] [-dy0, dy0-2] [smin0, smax0] 
+    #Remember these values are before image resizing
+    
+    #XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    #This network actually supports images in the closed intervals: [smin0, smax0] [-dy0, dy0]
+    #but halb-open [-dx0, dx0) 
+    print "***** Setting Training Information Parameters for Real Translation X ******"
+    iSeq = iTrainRTransX = system_parameters.ParamsInput()
+    iSeq.name = "Real Translation X: (-45, 45, 2) translation and y 40"
+    iSeq.data_base_dir = frgc_normalized_base_dir
+    iSeq.ids = numpy.arange(0,7965) # 8000, 7965
+    
+    iSeq.trans = numpy.arange(-1 * pipeline_fd['dx0'], pipeline_fd['dx0'], 2) # (-50, 50, 2)
+    if len(iSeq.ids) % len(iSeq.trans) != 0:
+        ex="Here the number of translations must be a divisor of the number of identities"
+        raise Exception(ex)
+    iSeq.ages = [None]
+    iSeq.genders = [None]
+    iSeq.racetweens = [None]
+    iSeq.expressions = [None]
+    iSeq.morphs = [None]
+    iSeq.poses = [None]
+    iSeq.lightings = [None]
+    iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
+    iSeq.step = 1
+    iSeq.offset = 0
+    iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+                                                iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
+                                                iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=4, image_postfix=".jpg")
+    iSeq.input_files = iSeq.input_files * 4 # warning!!! 4, 8
+    #To avoid grouping similar images next to one other
+    numpy.random.shuffle(iSeq.input_files)  
+    
+    iSeq.num_images = len(iSeq.input_files)
+    #iSeq.params = [ids, expressions, morphs, poses, lightings]
+    iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
+                      iSeq.morphs, iSeq.poses, iSeq.lightings]
+    iSeq.block_size = iSeq.num_images / len (iSeq.trans)
+    print "BLOCK SIZE =", iSeq.block_size 
+    iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.trans)), iSeq.block_size)
+    iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
+    
+    system_parameters.test_object_contents(iSeq)
+    
+    print "******** Setting Training Data Parameters for Real TransX  ****************"
+    sSeq = sTrainRTransX = system_parameters.ParamsDataLoading()
+    sSeq.input_files = iSeq.input_files
+    sSeq.num_images = iSeq.num_images
+    sSeq.block_size = iSeq.block_size
+    sSeq.image_width = 256
+    sSeq.image_height = 192
+    sSeq.subimage_width = 128
+    sSeq.subimage_height = 128 
+    
+    
+    sSeq.trans_x_max = pipeline_fd['dx0']
+    sSeq.trans_x_min = -1 * pipeline_fd['dx0']
+    
+    #WARNING!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    sSeq.trans_y_max = pipeline_fd['dy0']
+    sSeq.trans_y_min = -1 * sSeq.trans_y_max
+    
+    #iSeq.scales = numpy.linspace(0.5, 1.30, 16) # (-50, 50, 2)
+    sSeq.min_sampling = pipeline_fd['smin0']
+    sSeq.max_sampling = pipeline_fd['smax0']
+    
+    sSeq.pixelsampling_x = sSeq.pixelsampling_y = numpy.random.uniform(low=sSeq.min_sampling, high=sSeq.max_sampling, size=sSeq.num_images)
+    #sSeq.subimage_pixelsampling = 2
+    sSeq.subimage_first_row =  sSeq.image_height/2.0-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
+    sSeq.subimage_first_column = sSeq.image_width/2.0-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
+    #sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
+    sSeq.add_noise_L0 = True
+    sSeq.convert_format = "L"
+    sSeq.background_type = None
+    #random translation for th w coordinate
+    #sSeq.translation = 20 # 25, Should be 20!!! Warning: 25
+    #sSeq.translations_x = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)                                                           
+    sSeq.translations_x = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
+    sSeq.translations_y = numpy.random.random_integers(sSeq.trans_y_min, sSeq.trans_y_max, sSeq.num_images)
+    sSeq.trans_sampled = True
+    sSeq.name = "RTans X Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f)"%(sSeq.trans_x_min, 
+        sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.min_sampling*100, sSeq.max_sampling*100)
+    system_parameters.test_object_contents(sSeq)
+    
+    print "***** Setting Seen ID Information Parameters for Real Translation X *******"
+    iSeq = sSeq = None
+    iSeq = iSeenidRTransX = system_parameters.ParamsInput()
+    iSeq.name = "Test Real Translation X: (-45, 45, 2) translation"
+    iSeq.data_base_dir = frgc_normalized_base_dir
+    iSeq.ids = numpy.arange(8000,8990) # WARNING 8900
+    iSeq.trans = numpy.arange(sTrainRTransX.trans_x_min, sTrainRTransX.trans_x_max, 2) #WARNING!!!! (-50, 50, 2)
+    if len(iSeq.ids) % len(iSeq.trans) != 0:
+        ex="Here the number of translations must be a divisor of the number of identities"
+        raise Exception(ex)
+    iSeq.ages = [None]
+    iSeq.genders = [None]
+    iSeq.racetweens = [None]
+    iSeq.expressions = [None]
+    iSeq.morphs = [None]
+    iSeq.poses = [None]
+    iSeq.lightings = [None]
+    iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
+    iSeq.step = 1
+    iSeq.offset = 0
+    iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+                                                iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
+                                                iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=4, image_postfix=".jpg")
+    
+    iSeq.input_files = iSeq.input_files * 16 # Warning!!! 16, 32
+    numpy.random.shuffle(iSeq.input_files)  
+    
+    iSeq.num_images = len(iSeq.input_files)
+    iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
+                      iSeq.morphs, iSeq.poses, iSeq.lightings]
+    iSeq.block_size = iSeq.num_images / len (iSeq.trans)
+    
+    iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.trans)), iSeq.block_size)
+    iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
+    
+    system_parameters.test_object_contents(iSeq)
+    
+    print "******** Setting Seen Id Data Parameters for Real TransX  ****************"
+    sSeq = sSeenidRTransX = system_parameters.ParamsDataLoading()
+    sSeq.input_files = iSeq.input_files
+    sSeq.num_images = iSeq.num_images
+    sSeq.block_size = iSeq.block_size
+    sSeq.image_width = 256
+    sSeq.image_height = 192
+    sSeq.subimage_width = 128
+    sSeq.subimage_height = 128 
+    sSeq.trans_x_max = sTrainRTransX.trans_x_max
+    sSeq.trans_x_min = sTrainRTransX.trans_x_min
+    sSeq.trans_y_max = sTrainRTransX.trans_y_max
+    sSeq.trans_y_min = sTrainRTransX.trans_y_min
+    #iSeq.scales = numpy.linspace(0.5, 1.30, 16) # (-50, 50, 2)
+    sSeq.min_sampling = sTrainRTransX.min_sampling
+    sSeq.max_sampling = sTrainRTransX.max_sampling
+    sSeq.pixelsampling_x = sSeq.pixelsampling_y = numpy.random.uniform(low=sSeq.min_sampling, high=sSeq.max_sampling, size=sSeq.num_images)
+    #sSeq.subimage_pixelsampling = 2
+    sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2
+    sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2
+    #sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
+    sSeq.add_noise_L0 = True
+    sSeq.convert_format = "L"
+    sSeq.background_type = None
+    #random translation for th w coordinate
+    #sSeq.translation = 20 #25, 20, WARNING!!!!!!!
+    #sSeq.translations_x = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)                                                           
+    sSeq.translations_x = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
+    sSeq.translations_y = numpy.random.random_integers(sSeq.trans_y_min, sSeq.trans_y_max, sSeq.num_images)
+    sSeq.trans_sampled = True
+    sSeq.name = "RTans X Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f)"%(sSeq.trans_x_min, 
+        sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.min_sampling*100, sSeq.max_sampling*100)
+    system_parameters.test_object_contents(sSeq)
+    
+    
+    print "******** Setting New Id Information Parameters for Real Translation X *****"
+    iSeq = sSeq = None
+    iSeq = iNewidRTransX = system_parameters.ParamsInput()
+    iSeq.name = "New ID Real Translation X: (-45, 45, 2) translation"
+    iSeq.data_base_dir = frgc_normalized_base_dir
+    iSeq.ids = numpy.arange(9000,9990) # 8000, 10000
+    iSeq.trans = numpy.arange(sTrainRTransX.trans_x_min, sTrainRTransX.trans_x_max, 2) # (-45, 45, 2)
+    if len(iSeq.ids) % len(iSeq.trans) != 0:
+        ex="Here the number of translations must be a divisor of the number of identities"
+        raise Exception(ex)
+    iSeq.ages = [None]
+    iSeq.genders = [None]
+    iSeq.racetweens = [None]
+    iSeq.expressions = [None]
+    iSeq.morphs = [None]
+    iSeq.poses = [None]
+    iSeq.lightings = [None]
+    iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
+    iSeq.step = 1
+    iSeq.offset = 0
+    iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+                                                iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
+                                                iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=4, image_postfix=".jpg")
+     
+    #MEGAWARNING!!!!
+    iSeq.input_files = iSeq.input_files * 4 #warning * 4
+    numpy.random.shuffle(iSeq.input_files)  
+    iSeq.num_images = len(iSeq.input_files)
+    iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
+                      iSeq.morphs, iSeq.poses, iSeq.lightings]
+    iSeq.block_size = iSeq.num_images / len (iSeq.trans)
+    
+    iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.trans)), iSeq.block_size)
+    iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
+    
+    system_parameters.test_object_contents(iSeq)
+    
+    print "******** Setting New ID Data Parameters for Real TransX  ****************"
+    sSeq = sNewidRTransX = system_parameters.ParamsDataLoading()
+    sSeq.input_files = iSeq.input_files
+    sSeq.num_images = iSeq.num_images
+    sSeq.block_size = iSeq.block_size
+    sSeq.image_width = 256
+    sSeq.image_height = 192
+    sSeq.subimage_width = 128
+    sSeq.subimage_height = 128 
+    sSeq.trans_x_max = sTrainRTransX.trans_x_max
+    sSeq.trans_x_min = sTrainRTransX.trans_x_min
+    sSeq.trans_y_max = sTrainRTransX.trans_y_max
+    sSeq.trans_y_min = sTrainRTransX.trans_y_min
+    #iSeq.scales = numpy.linspace(0.5, 1.30, 16) # (-50, 50, 2)
+    sSeq.min_sampling = sTrainRTransX.min_sampling
+    sSeq.max_sampling = sTrainRTransX.max_sampling
+    sSeq.pixelsampling_x = sSeq.pixelsampling_y = numpy.random.uniform(low=sSeq.min_sampling, high=sSeq.max_sampling, size=sSeq.num_images)
+    sSeq.subimage_pixelsampling = 2
+    sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2
+    sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2
+    #sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
+    sSeq.add_noise_L0 = True
+    sSeq.convert_format = "L"
+    sSeq.background_type = None
+    #random translation for th w coordinate
+    sSeq.translation = 20 #20
+    #sSeq.translations_x = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)                                                           
+    sSeq.translations_x = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
+    sSeq.translations_y = numpy.random.random_integers(sSeq.trans_y_min, sSeq.trans_y_max, sSeq.num_images)
+    sSeq.trans_sampled = True
+    sSeq.name = "RTans X Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f)"%(sSeq.trans_x_min, 
+        sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.min_sampling*100, sSeq.max_sampling*100)
+    system_parameters.test_object_contents(sSeq)
+    
+    
+    ####################################################################
+    ###########    SYSTEM FOR REAL_TRANSLATION_X EXTRACTION      ############
+    ####################################################################  
+    ParamsRTransX = system_parameters.ParamsSystem()
+    ParamsRTransX.name = sTrainRTransX.name
+    ParamsRTransX.network = "linearNetwork4L"
+    ParamsRTransX.iTrain = iTrainRTransX
+    ParamsRTransX.sTrain = sTrainRTransX
+    ParamsRTransX.iSeenid = iSeenidRTransX
+    ParamsRTransX.sSeenid = sSeenidRTransX
+    ParamsRTransX.iNewid = iNewidRTransX
+    ParamsRTransX.sNewid = sNewidRTransX
+    ##MEGAWARNING!!!!
+    #ParamsRTransX.iNewid = iNewidTransX
+    #ParamsRTransX.sNewid = sNewidTransX
+    #ParamsRTransX.sNewid.translations_y = ParamsRTransX.sNewid.translations_y * 0.0 + 8.0
+    
+    ParamsRTransX.block_size = iTrainRTransX.block_size
+    ParamsRTransX.train_mode = 'mixed'
+    ParamsRTransX.analysis = None
+    
+    ParamsRTransX.enable_reduced_image_sizes = True
+    ParamsRTransX.reduction_factor = 2.0
+    ParamsRTransX.hack_image_size = 64
+    ParamsRTransX.enable_hack_image_size = True
+    
+    
+    #GC / 17 signals, mse=11.5
+    
+    
+    
+    # YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYyYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
+    #This network actually supports images in the closed intervals: [-dx1, dx1], [smin0, smax0]
+    #but halb-open [-dy0, dy0)
+    print "***** Setting Training Information Parameters for Real Translation Y ******"
+    iSeq = iTrainRTransY = system_parameters.ParamsInput()
+    iSeq.name = "Real Translation Y: Y(-20, 20, 1) translation and dx 20"
+    iSeq.data_base_dir = frgc_normalized_base_dir
+    iSeq.ids = numpy.arange(0,8000) # 8000, 7965
+    
+    iSeq.trans = numpy.arange(-1 * pipeline_fd['dy0'], pipeline_fd['dy0'], 1) # (-50, 50, 2)
+    if len(iSeq.ids) % len(iSeq.trans) != 0:
+        ex="Here the number of translations must be a divisor of the number of identities"
+        raise Exception(ex)
+    iSeq.ages = [None]
+    iSeq.genders = [None]
+    iSeq.racetweens = [None]
+    iSeq.expressions = [None]
+    iSeq.morphs = [None]
+    iSeq.poses = [None]
+    iSeq.lightings = [None]
+    iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
+    iSeq.step = 1
+    iSeq.offset = 0
+    iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+                                                iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
+                                                iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=4, image_postfix=".jpg")
+    iSeq.input_files = iSeq.input_files * 4 # warning!!! 4, 8
+    #To avoid grouping similar images next to one other
+    numpy.random.shuffle(iSeq.input_files)  
+    
+    iSeq.num_images = len(iSeq.input_files)
+    #iSeq.params = [ids, expressions, morphs, poses, lightings]
+    iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
+                      iSeq.morphs, iSeq.poses, iSeq.lightings]
+    iSeq.block_size = iSeq.num_images / len (iSeq.trans)
+    print "BLOCK SIZE =", iSeq.block_size 
+    iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.trans)), iSeq.block_size)
+    iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
+    
+    system_parameters.test_object_contents(iSeq)
+    
+    print "******** Setting Training Data Parameters for Real TransY  ****************"
+    sSeq = sTrainRTransY = system_parameters.ParamsDataLoading()
+    sSeq.input_files = iSeq.input_files
+    sSeq.num_images = iSeq.num_images
+    sSeq.block_size = iSeq.block_size
+    sSeq.image_width = 256
+    sSeq.image_height = 192
+    sSeq.subimage_width = 128
+    sSeq.subimage_height = 128 
+    
+    
+    sSeq.trans_x_max = pipeline_fd['dx1']
+    sSeq.trans_x_min = -1 * pipeline_fd['dx1']
+    
+    sSeq.trans_y_max = pipeline_fd['dy0']
+    sSeq.trans_y_min = -1 * sSeq.trans_y_max
+    
+    #iSeq.scales = numpy.linspace(0.5, 1.30, 16) # (-50, 50, 2)
+    sSeq.min_sampling = pipeline_fd['smin0']
+    sSeq.max_sampling = pipeline_fd['smax0']
+    
+    sSeq.pixelsampling_x = sSeq.pixelsampling_y = numpy.random.uniform(low=sSeq.min_sampling, high=sSeq.max_sampling, size=sSeq.num_images)
+    #sSeq.subimage_pixelsampling = 2
+    sSeq.subimage_first_row =  sSeq.image_height/2.0-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
+    sSeq.subimage_first_column = sSeq.image_width/2.0-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
+    #sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
+    sSeq.add_noise_L0 = True
+    sSeq.convert_format = "L"
+    sSeq.background_type = None
+    #random translation for th w coordinate
+    #sSeq.translation = 20 # 25, Should be 20!!! Warning: 25
+    #sSeq.translations_x = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)                                                           
+    sSeq.translations_x = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, sSeq.num_images)
+    sSeq.translations_y = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
+    
+    sSeq.trans_sampled = True
+    sSeq.name = "RTans Y Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f)"%(sSeq.trans_x_min, 
+        sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.min_sampling*100, sSeq.max_sampling*100)
+    iSeq.name = sSeq.name
+    system_parameters.test_object_contents(sSeq)
+    
+    print "***** Setting Seen ID Information Parameters for Real Translation Y *******"
+    iSeq = sSeq = None
+    iSeq = iSeenidRTransY = system_parameters.ParamsInput()
+    iSeq.name = "Test Real Translation Y: (-20, 20, 1) translation"
+    iSeq.data_base_dir = frgc_normalized_base_dir
+    iSeq.ids = numpy.arange(8000,9000) # WARNING 8900
+    iSeq.trans = numpy.arange(sTrainRTransY.trans_y_min, sTrainRTransY.trans_y_max, 1) #WARNING!!!! (-50, 50, 2)
+    if len(iSeq.ids) % len(iSeq.trans) != 0:
+        ex="Here the number of translations must be a divisor of the number of identities"
+        raise Exception(ex)
+    iSeq.ages = [None]
+    iSeq.genders = [None]
+    iSeq.racetweens = [None]
+    iSeq.expressions = [None]
+    iSeq.morphs = [None]
+    iSeq.poses = [None]
+    iSeq.lightings = [None]
+    iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
+    iSeq.step = 1
+    iSeq.offset = 0
+    iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+                                                iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
+                                                iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=4, image_postfix=".jpg")
+    
+    iSeq.input_files = iSeq.input_files * 16 # Warning!!! 16
+    numpy.random.shuffle(iSeq.input_files)  
+    
+    iSeq.num_images = len(iSeq.input_files)
+    iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
+                      iSeq.morphs, iSeq.poses, iSeq.lightings]
+    iSeq.block_size = iSeq.num_images / len (iSeq.trans)
+    
+    iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.trans)), iSeq.block_size)
+    iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
+    
+    system_parameters.test_object_contents(iSeq)
+    
+    print "******** Setting Seen Id Data Parameters for Real TransY  ****************"
+    sSeq = sSeenidRTransY = system_parameters.ParamsDataLoading()
+    sSeq.input_files = iSeq.input_files
+    sSeq.num_images = iSeq.num_images
+    sSeq.block_size = iSeq.block_size
+    sSeq.image_width = 256
+    sSeq.image_height = 192
+    sSeq.subimage_width = 128
+    sSeq.subimage_height = 128 
+    sSeq.trans_x_max = sTrainRTransY.trans_x_max
+    sSeq.trans_x_min = sTrainRTransY.trans_x_min
+    sSeq.trans_y_max = sTrainRTransY.trans_y_max
+    sSeq.trans_y_min = sTrainRTransY.trans_y_min
+    #iSeq.scales = numpy.linspace(0.5, 1.30, 16) # (-50, 50, 2)
+    sSeq.min_sampling = sTrainRTransY.min_sampling
+    sSeq.max_sampling = sTrainRTransY.max_sampling
+    sSeq.pixelsampling_x = sSeq.pixelsampling_y = numpy.random.uniform(low=sSeq.min_sampling, high=sSeq.max_sampling, size=sSeq.num_images)
+    #sSeq.subimage_pixelsampling = 2
+    sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2
+    sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2
+    #sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
+    sSeq.add_noise_L0 = True
+    sSeq.convert_format = "L"
+    sSeq.background_type = None
+    #random translation for th w coordinate
+    #sSeq.translation = 20 #25, 20, WARNING!!!!!!!
+    #sSeq.translations_x = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)                                                           
+    sSeq.translations_x = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, sSeq.num_images)
+    sSeq.translations_y = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
+    sSeq.trans_sampled = True
+    sSeq.name = "RTans Y Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f)"%(sSeq.trans_x_min, 
+        sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.min_sampling*100, sSeq.max_sampling*100)
+    iSeq.name = sSeq.name
+    system_parameters.test_object_contents(sSeq)
+    
+    
+    print "******** Setting New Id Information Parameters for Real Translation Y *****"
+    iSeq = sSeq = None
+    iSeq = iNewidRTransY = system_parameters.ParamsInput()
+    iSeq.name = "New ID Real Translation Y: (-20, 20, 1) translation"
+    iSeq.data_base_dir = frgc_normalized_base_dir
+    iSeq.ids = numpy.arange(9000,10000) # 8000, 10000
+    iSeq.trans = numpy.arange(sTrainRTransY.trans_y_min, sTrainRTransY.trans_y_max, 1) # (-50, 50, 2)
+    if len(iSeq.ids) % len(iSeq.trans) != 0:
+        ex="Here the number of translations must be a divisor of the number of identities"
+        raise Exception(ex)
+    iSeq.ages = [None]
+    iSeq.genders = [None]
+    iSeq.racetweens = [None]
+    iSeq.expressions = [None]
+    iSeq.morphs = [None]
+    iSeq.poses = [None]
+    iSeq.lightings = [None]
+    iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
+    iSeq.step = 1
+    iSeq.offset = 0
+    iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+                                                iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
+                                                iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=4, image_postfix=".jpg")
+     
+    #MEGAWARNING!!!!
+    iSeq.input_files = iSeq.input_files * 4 #warning * 4
+    numpy.random.shuffle(iSeq.input_files)  
+    iSeq.num_images = len(iSeq.input_files)
+    iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
+                      iSeq.morphs, iSeq.poses, iSeq.lightings]
+    iSeq.block_size = iSeq.num_images / len (iSeq.trans)
+    
+    iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.trans)), iSeq.block_size)
+    iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
+    
+    system_parameters.test_object_contents(iSeq)
+    
+    print "******** Setting New ID Data Parameters for Real TransY  ****************"
+    sSeq = sNewidRTransY = system_parameters.ParamsDataLoading()
+    sSeq.input_files = iSeq.input_files
+    sSeq.num_images = iSeq.num_images
+    sSeq.block_size = iSeq.block_size
+    sSeq.image_width = 256
+    sSeq.image_height = 192
+    sSeq.subimage_width = 128
+    sSeq.subimage_height = 128 
+    sSeq.trans_x_max = sTrainRTransY.trans_x_max
+    sSeq.trans_x_min = sTrainRTransY.trans_x_min
+    sSeq.trans_y_max = sTrainRTransY.trans_y_max
+    sSeq.trans_y_min = -1 * sTrainRTransY.trans_y_min
+    #iSeq.scales = numpy.linspace(0.5, 1.30, 16) # (-50, 50, 2)
+    sSeq.min_sampling = sTrainRTransY.min_sampling
+    sSeq.max_sampling = sTrainRTransY.max_sampling
+    sSeq.pixelsampling_x = sSeq.pixelsampling_y = numpy.random.uniform(low=sSeq.min_sampling, high=sSeq.max_sampling, size=sSeq.num_images)
+    sSeq.subimage_pixelsampling = 2
+    sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2
+    sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2
+    #sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
+    sSeq.add_noise_L0 = True
+    sSeq.convert_format = "L"
+    sSeq.background_type = None
+    #random translation for th w coordinate
+    sSeq.translation = 20 #20
+    #sSeq.translations_x = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)                                                           
+    sSeq.translations_x = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, sSeq.num_images)
+    sSeq.translations_y = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
+    sSeq.trans_sampled = True
+    sSeq.name = "RTans Y Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f)"%(sSeq.trans_x_min, 
+        sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.min_sampling*100, sSeq.max_sampling*100)
+    iSeq.name = sSeq.name
+    system_parameters.test_object_contents(sSeq)
+    
+    
+    ####################################################################
+    ###########    SYSTEM FOR REAL_TRANSLATION_Y EXTRACTION      ############
+    ####################################################################  
+    ParamsRTransY = system_parameters.ParamsSystem()
+    ParamsRTransY.name = sTrainRTransY.name
+    ParamsRTransY.network = "linearNetwork4L"
+    ParamsRTransY.iTrain = iTrainRTransY
+    ParamsRTransY.sTrain = sTrainRTransY
+    ParamsRTransY.iSeenid = iSeenidRTransY
+    ParamsRTransY.sSeenid = sSeenidRTransY
+    ParamsRTransY.iNewid = iNewidRTransY
+    ParamsRTransY.sNewid = sNewidRTransY
+    ##MEGAWARNING!!!!
+    #ParamsRTransY.iNewid = iNewidTransY
+    #ParamsRTransY.sNewid = sNewidTransY
+    #ParamsRTransY.sNewid.translations_y = ParamsRTransY.sNewid.translations_y * 0.0 + 8.0
+    
+    ParamsRTransY.block_size = iTrainRTransY.block_size
+    ParamsRTransY.train_mode = 'mixed'
+    ParamsRTransY.analysis = None
+    #Gaussian classifier:
+    #7 => 6.81
+    #10 => 6.64
+    #12 => 6.68
+    #15 =>
+    #17 => 6.68
+
+
+    #SSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS
+    #This network actually supports images in the closed intervals: [-dx1, dx1], [-dy1, dy1], [smin, smax]
+    print "Studienprojekt. Scale estimation datasets. By Jan, Stephan and Alberto "
+    print "***** Setting Training Information Parameters for Scale ******"
+    iSeq = iTrainRScale = system_parameters.ParamsInput()
+    iSeq.name = "Real Scale: (0.55, 1.1,  50)"
+    
+    iSeq.data_base_dir = alldbnormalized_base_dir
+    alldbnormalized_available_images = numpy.arange(0,55000)
+    numpy.random.shuffle(alldbnormalized_available_images)
+    
+    iSeq.ids = alldbnormalized_available_images[0:30000]
+    
+    iSeq.scales = numpy.linspace(pipeline_fd['smin0'], pipeline_fd['smax0'], 50) # (-50, 50, 2)
+    if len(iSeq.ids) % len(iSeq.scales) != 0:
+        ex="Here the number of scales must be a divisor of the number of identities"
+        raise Exception(ex)
     iSeq.ages = [None]
     iSeq.genders = [None]
     iSeq.racetweens = [None]
@@ -4594,169 +1694,70 @@ def iSeqCreateREyePosXY(num_images, eyeLR_normalized_base_dir, all_eyeLR_availab
     iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
                                                 iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
                                                 iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
-    iSeq.input_files = iSeq.input_files * repetition_factor # warning!!! 8
+    iSeq.input_files = iSeq.input_files * 2 # 2, 10
     #To avoid grouping similar images next to one other
     numpy.random.shuffle(iSeq.input_files)  
     
     iSeq.num_images = len(iSeq.input_files)
-
-    iSeq.translations_x = numpy.random.uniform(-1 * eye_dx, eye_dx, iSeq.num_images)
-    iSeq.translations_y = numpy.random.uniform(-1 * eye_dy, eye_dy, iSeq.num_images)
-
-    if slow_var=="PosX":        
-        iSeq.translations_x.sort()
-        print "iSeq.translations_x=", iSeq.translations_x
-    elif slow_var=="PosY":
-        iSeq.translations_y.sort()
-    else:
-        er = "slow_var must be either PosX or PosY" 
-        raise Exception(er)
-
-    
-    #if len(iSeq.ids) != len(iSeq.translations_x):
-    #    ex="Here the number of translations must be equal to the number of identities: ", len(iSeq.translations_x),len(iSeq.ids)
-    #    raise Exception(ex)
-
-    iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, iSeq.poses, iSeq.lightings]
-    iSeq.block_size = iSeq.num_images / num_classes
-
-    iSeq.train_mode = "serial" #TODO:should learn both labels simultaneously
-    all_classes = numpy.arange(iSeq.num_images)*num_classes/iSeq.num_images
-    correct_classes_X = numpy.zeros(iSeq.num_images)
-    correct_classes_Y = numpy.zeros(iSeq.num_images)
-    correct_classes_X[numpy.argsort(iSeq.translations_x)] = all_classes.copy()
-    correct_classes_Y[numpy.argsort(iSeq.translations_y)] = all_classes.copy()
-
-    print "correct_classes_X=", correct_classes_X
-    print "correct_classes_Y=", correct_classes_Y
-    
-    iSeq.correct_classes = numpy.stack((correct_classes_X, correct_classes_Y)).T
-    iSeq.correct_labels = numpy.stack((iSeq.translations_x, iSeq.translations_y)).T       
+    #iSeq.params = [ids, expressions, morphs, poses, lightings]
+    iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
+                      iSeq.morphs, iSeq.poses, iSeq.lightings]
+    iSeq.block_size = iSeq.num_images / len (iSeq.scales)
+    print "BLOCK SIZE =", iSeq.block_size 
+    iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.scales)), iSeq.block_size)
+    iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.scales, iSeq.block_size)
     
     system_parameters.test_object_contents(iSeq)
-    return iSeq
-
-def sSeqCreateREyePosXY(iSeq, eye_smax=0.84, eye_smin=0.81, eye_da=22.5, seed=-1):
-    if seed >= 0 or seed is None: #also works for 
-        numpy.random.seed(seed)
-    #else seed <0 then, do not change seed
-    print "******** Setting Training Data Parameters for Real Eye TransX  ****************"
-    sSeq = system_parameters.ParamsDataLoading()
+    
+    print "******** Setting Training Data Parameters for Real Scale  ****************"
+    sSeq = sTrainRScale = system_parameters.ParamsDataLoading()
     sSeq.input_files = iSeq.input_files
     sSeq.num_images = iSeq.num_images
     sSeq.block_size = iSeq.block_size
-    sSeq.train_mode = iSeq.train_mode
     sSeq.image_width = 256
     sSeq.image_height = 192
-    sSeq.subimage_width = 64
-    sSeq.subimage_height = 64 
+    sSeq.subimage_width = 135
+    sSeq.subimage_height = 135
     
-    sSeq.trans_x_max = eye_dx
-    sSeq.trans_x_min = -eye_dx
-    sSeq.trans_y_max = eye_dy
-    sSeq.trans_y_min = -eye_dy
-    sSeq.min_sampling = eye_smin
-    sSeq.max_sampling = eye_smax
-
-    
-    sSeq.translations_x = iSeq.translations_x
-    sSeq.translations_y = iSeq.translations_y
-    sSeq.rotations = numpy.random.uniform(low=-eye_da, high=eye_da, size=sSeq.num_images)
-    sSeq.pixelsampling_x = numpy.random.uniform(low=sSeq.min_sampling, high=sSeq.max_sampling, size=sSeq.num_images) 
-    sSeq.pixelsampling_y = sSeq.pixelsampling_x.copy()
-    sSeq.subimage_first_row =  sSeq.image_height/2.0-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
-    sSeq.subimage_first_column = sSeq.image_width/2.0-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
-    sSeq.contrast_enhance = None #"array_mean_std-127.5-45.0"
+    sSeq.trans_x_max = pipeline_fd['dx1']
+    sSeq.trans_x_min = -1 * pipeline_fd['dx1']
+    sSeq.trans_y_max = pipeline_fd['dy1']
+    sSeq.trans_y_min = -1 * pipeline_fd['dy1']
+    sSeq.min_sampling = pipeline_fd['smin0']
+    sSeq.max_sampling = pipeline_fd['smax0']
+     
+    sSeq.pixelsampling_x = sfa_libs.wider_1Darray(iSeq.scales,  iSeq.block_size)
+    sSeq.pixelsampling_y =  sfa_libs.wider_1Darray(iSeq.scales,  iSeq.block_size)
+    sSeq.subimage_pixelsampling = 2
+    sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
+    sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
+    #sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
     sSeq.add_noise_L0 = True
     sSeq.convert_format = "L"
-    sSeq.background_type = None   
-    sSeq.trans_sampled = False #the translations are specified according to the original image, not according to the sampled patch
-
-    sSeq.name = "REyePosXY Dx in (%d, %d) Dy in (%d, %d), sampling in (%d, %d)"%(sSeq.trans_x_min, 
-        sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, int(sSeq.min_sampling*100), int(sSeq.max_sampling*100))
+    sSeq.background_type = None
+    
+    #random translation for th w coordinate
+    sSeq.translation = 20 # 25, Should be 20!!! Warning: 25
+    sSeq.translations_x = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, sSeq.num_images)
+    sSeq.translations_y = numpy.random.random_integers(sSeq.trans_y_min, sSeq.trans_y_max, sSeq.num_images)
+    
+    sSeq.trans_sampled = True
+    sSeq.name = "Scale. Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f, 50)"%(sSeq.trans_x_min, 
+        sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.min_sampling*100, sSeq.max_sampling*100)
     iSeq.name = sSeq.name
-    print sSeq.name
-    
-    sSeq.load_data = load_data_from_sSeq
-    
     system_parameters.test_object_contents(sSeq)
-
-    return sSeq
-
-ParamsREyeTransXYFunc = system_parameters.ParamsSystem()
-ParamsREyeTransXYFunc.network = "linearNetwork4L"
-all_eyeLR_available_images = numpy.arange(7000, 45000) #51434 #Only use a fraction of the FRGC images (the first images are more important because they have more variations)
-numpy.random.shuffle(all_eyeLR_available_images)
-learn_all_variables = True #Combine two graphs for PosX and PosY
-
-eye_dx = 10.7 #6 #12
-eye_dy = 10.7 #6 #12
-eye_smax= (0.94875 + .01725)*2.0   #*2.5   # (0.825 + 0.015)*2.5 * 1.25 #Factor 1.05 is for an experiment only
-eye_smin= (0.94875 - .01725)*2.0   #*2.5   #(0.825 - 0.015)*2.5 * 1.25
-eye_da = 10 #22.5 #30.0 , 22.5
-ParamsREyeTransXYFunc.iTrain = [[iSeqCreateREyePosXY(30000, alldb_eyeLR_normalized_base_dir, all_eyeLR_available_images, first_image=0, slow_var="PosX", num_classes=50, eye_dx=eye_dx, eye_dy=eye_dy, repetition_factor=4, seed=-1)]] #4
-ParamsREyeTransXYFunc.sTrain = [[sSeqCreateREyePosXY(ParamsREyeTransXYFunc.iTrain[0][0], eye_smax=eye_smax, eye_smin=eye_smin, eye_da=eye_da, seed=-1)]] 
-ParamsREyeTransXYFunc.iSeenid =  iSeqCreateREyePosXY(4000, alldb_eyeLR_normalized_base_dir, all_eyeLR_available_images, first_image=30000, slow_var="PosX", num_classes=50, eye_dx=eye_dx, eye_dy=eye_dy, repetition_factor=2, seed=-1) #2
-ParamsREyeTransXYFunc.sSeenid = sSeqCreateREyePosXY(ParamsREyeTransXYFunc.iSeenid, eye_smax=eye_smax, eye_smin=eye_smin, eye_da=eye_da, seed=-1)
-ParamsREyeTransXYFunc.iNewid = [[iSeqCreateREyePosXY(4000, alldb_eyeLR_normalized_base_dir, all_eyeLR_available_images, first_image=34000, slow_var="PosX", num_classes=50, eye_dx=eye_dx, eye_dy=eye_dy, repetition_factor=1, seed=-1)]]
-ParamsREyeTransXYFunc.sNewid = [[sSeqCreateREyePosXY(ParamsREyeTransXYFunc.iNewid[0][0], eye_smax=eye_smax, eye_smin=eye_smin, eye_da=eye_da, seed=-1)]]
-ParamsREyeTransXYFunc.name = ParamsREyeTransXYFunc.sTrain[0][0].name
-ParamsREyeTransXYFunc.block_size = ParamsREyeTransXYFunc.iTrain[0][0].block_size
-ParamsREyeTransXYFunc.train_mode = 'serial' #ignored
-ParamsREyeTransXYFunc.analysis = None
-ParamsREyeTransXYFunc.enable_reduced_image_sizes = True
-ParamsREyeTransXYFunc.reduction_factor = 1.0
-ParamsREyeTransXYFunc.hack_image_size = 64
-ParamsREyeTransXYFunc.enable_hack_image_size = True
-
-if learn_all_variables: # and False:
-    iSeq = ParamsREyeTransXYFunc.iTrain[0][0]
-    sSeq = ParamsREyeTransXYFunc.sTrain[0][0]
-    sSeq.train_mode = [sSeq.train_mode, ("serial_regression50", iSeq.correct_labels[:,1], 1.0)]
-
-
-ParamsREyeTransXYFunc_64x64 = copy.deepcopy(ParamsREyeTransXYFunc)
-ParamsREyeTransXYFunc_32x32 = copy.deepcopy(ParamsREyeTransXYFunc)
-ParamsREyeTransXYFunc_32x32.reduction_factor = 2.0
-ParamsREyeTransXYFunc_32x32.hack_image_size = 32
-
-#print ParamsREyeTransXYFunc.iTrain[0][0].correct_labels[:,0]
-#print ParamsREyeTransXYFunc.sTrain[0][0].translations_x
-
-
-###############################################################################
-############################### FACE CENTERING ################################
-###############################################################################
-def iSeqCreateRFaceCentering(num_images, alldbnormalized_available_images, alldb_noface_available_images, first_image=0, first_image_no_face=0, repetition_factor=1, seed=-1):
-    if seed >= 0 or seed is None: #also works for 
-        numpy.random.seed(seed)
-    #else seed <0 then, do not change seed
     
-    print "***** Setting information Parameters for RFaceCentering******"
-    iSeq = system_parameters.ParamsInput()
-    # (0.55+1.1)/2 = 0.825, 0.55/2 = 0.275, 0.55/4 = 0.1375, .825 + .1375 = .9625, .825 - .55/4 = .6875
-    iSeq.name = "Real FACE DISCRIMINATION (Centered / Decentered)"
-
     
-    if num_images > len(alldbnormalized_available_images):
-        err = "Number of images to be used exceeds the number of available images"
-        raise Exception(err) 
-
-    if num_images/10 * repetition_factor> len(alldb_noface_available_images):
-        err = "Number of no_face images to be used exceeds the number of available images"
-        raise Exception(err) 
-
+    print "***** Setting SeenId Information Parameters for Scale ******"
+    iSeq = iSeenidRScale = system_parameters.ParamsInput()
+    iSeq.name = "Real Scale: (0.55, 1.1 / 50)"
     iSeq.data_base_dir = alldbnormalized_base_dir
-   
-    iSeq.ids = alldbnormalized_available_images[first_image:first_image + num_images] #30000, numpy.arange(0,6000) # 6000
-    iSeq.faces = numpy.arange(0,10) # 0=centered normalized face, 1=not centered normalized face
-    block_size = len(iSeq.ids) / len(iSeq.faces)
+    iSeq.ids = alldbnormalized_available_images[30000:45000]
     
-    #iSeq.scales = numpy.linspace(pipeline_fd['smin0'], pipeline_fd['smax0'], 50) # (-50, 50, 2)
-    if len(iSeq.ids) % len(iSeq.faces) != 0:
+    iSeq.scales = numpy.linspace(sTrainRScale.min_sampling, sTrainRScale.max_sampling, 50) # (-50, 50, 2)
+    if len(iSeq.ids) % len(iSeq.scales) != 0:
         ex="Here the number of scales must be a divisor of the number of identities"
         raise Exception(ex)
-    
     iSeq.ages = [None]
     iSeq.genders = [None]
     iSeq.racetweens = [None]
@@ -4764,264 +1765,2969 @@ def iSeqCreateRFaceCentering(num_images, alldbnormalized_available_images, alldb
     iSeq.morphs = [None]
     iSeq.poses = [None]
     iSeq.lightings = [None]
-    iSeq.slow_signal = 0 #real slow signal is whether there is the amount of face centering
+    iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
     iSeq.step = 1
     iSeq.offset = 0
     iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
                                                 iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
                                                 iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
-    iSeq.input_files = iSeq.input_files * repetition_factor  #  4 was overfitting non linear sfa slightly
-    #To avoid grouping similar images next to one other or in the same block
+    iSeq.input_files = iSeq.input_files * 2 # 3 Warning, 20, 32
+    #To avoid grouping similar images next to one other
     numpy.random.shuffle(iSeq.input_files)  
     
-    #Background images are not duplicated, instead more are taken
-    iSeq.data2_base_dir = alldb_noface_base_dir
-    iSeq.ids2 = alldb_noface_available_images[first_image_no_face: first_image_no_face + block_size * repetition_factor]
-    iSeq.input_files2 = image_loader.create_image_filenames3(iSeq.data2_base_dir, "image", iSeq.slow_signal, iSeq.ids2, iSeq.ages, \
+    iSeq.num_images = len(iSeq.input_files)
+    #iSeq.params = [ids, expressions, morphs, poses, lightings]
+    iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
+                      iSeq.morphs, iSeq.poses, iSeq.lightings]
+    iSeq.block_size = iSeq.num_images / len (iSeq.scales)
+    print "BLOCK SIZE =", iSeq.block_size 
+    iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.scales)), iSeq.block_size)
+    iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.scales, iSeq.block_size)
+    
+    system_parameters.test_object_contents(iSeq)
+    
+    print "******** Setting SeenId Data Parameters for Real Scale  ****************"
+    sSeq = sSeenidRScale = system_parameters.ParamsDataLoading()
+    sSeq.input_files = iSeq.input_files
+    sSeq.num_images = iSeq.num_images
+    sSeq.block_size = iSeq.block_size
+    sSeq.image_width = 256
+    sSeq.image_height = 192
+    sSeq.subimage_width = 135
+    sSeq.subimage_height = 135 
+    
+    sSeq.trans_x_max = sTrainRScale.trans_x_max
+    sSeq.trans_x_min = sTrainRScale.trans_x_min
+    sSeq.trans_y_max = sTrainRScale.trans_y_max
+    sSeq.trans_y_min = sTrainRScale.trans_y_min
+    sSeq.min_sampling = sTrainRScale.min_sampling
+    sSeq.max_sampling = sTrainRScale.max_sampling
+    
+    sSeq.pixelsampling_x = sfa_libs.wider_1Darray(iSeq.scales,  iSeq.block_size)
+    sSeq.pixelsampling_y =  sfa_libs.wider_1Darray(iSeq.scales,  iSeq.block_size)
+    sSeq.subimage_pixelsampling = 2
+    sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
+    sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
+    #sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
+    sSeq.add_noise_L0 = True
+    sSeq.convert_format = "L"
+    sSeq.background_type = None
+    #random translation for th w coo8rdinate
+    sSeq.translation = 8 # 25, Should be 20!!! Warning: 25
+    sSeq.translations_x = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, sSeq.num_images)
+    sSeq.translations_y = numpy.random.random_integers(sSeq.trans_y_min, sSeq.trans_y_max, sSeq.num_images)
+    
+    sSeq.trans_sampled = True
+    sSeq.name = "Scale. Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f, 50)"%(sSeq.trans_x_min, 
+        sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.min_sampling*100, sSeq.max_sampling*100)
+    iSeq.name = sSeq.name
+    system_parameters.test_object_contents(sSeq)
+    
+    print "***** Setting NewId Information Parameters for Scale ******"
+    iSeq = iNewidRScale = system_parameters.ParamsInput()
+    iSeq.name = "Real Scale: (0.5, 1, 50)"
+    iSeq.data_base_dir = alldbnormalized_base_dir
+    iSeq.ids = alldbnormalized_available_images[45000:55000]
+    iSeq.scales = numpy.linspace(sTrainRScale.min_sampling, sTrainRScale.max_sampling, 50) # (-50, 50, 2)
+    if len(iSeq.ids) % len(iSeq.scales) != 0:
+        ex="Here the number of scales must be a divisor of the number of identities"
+        raise Exception(ex)
+    iSeq.ages = [None]
+    iSeq.genders = [None]
+    iSeq.racetweens = [None]
+    iSeq.expressions = [None]
+    iSeq.morphs = [None]
+    iSeq.poses = [None]
+    iSeq.lightings = [None]
+    iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
+    iSeq.step = 1
+    iSeq.offset = 0
+    iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
                                                 iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
                                                 iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
-    iSeq.input_files2 = iSeq.input_files2 
-    numpy.random.shuffle(iSeq.input_files2)
+    iSeq.input_files = iSeq.input_files * 1 #8
+    #To avoid grouping similar images next to one other
+    numpy.random.shuffle(iSeq.input_files)  
     
-    iSeq.input_files = iSeq.input_files[0:-block_size* repetition_factor] + iSeq.input_files2
+    iSeq.num_images = len(iSeq.input_files)
+    #iSeq.params = [ids, expressions, morphs, poses, lightings]
+    iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
+                      iSeq.morphs, iSeq.poses, iSeq.lightings]
+    iSeq.block_size = iSeq.num_images / len (iSeq.scales)
+    print "BLOCK SIZE =", iSeq.block_size 
+    iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.scales)), iSeq.block_size)
+    iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.scales, iSeq.block_size)
+    
+    system_parameters.test_object_contents(iSeq)
+    
+    print "******** Setting NewId Data Parameters for Real Scale  ****************"
+    sSeq = sNewidRScale = system_parameters.ParamsDataLoading()
+    sSeq.input_files = iSeq.input_files
+    sSeq.num_images = iSeq.num_images
+    sSeq.block_size = iSeq.block_size
+    sSeq.image_width = 256
+    sSeq.image_height = 192
+    sSeq.subimage_width = 135
+    sSeq.subimage_height = 135 
+    
+    sSeq.trans_x_max = sTrainRScale.trans_x_max
+    sSeq.trans_x_min = sTrainRScale.trans_x_min
+    sSeq.trans_y_max = sTrainRScale.trans_y_max
+    sSeq.trans_y_min = sTrainRScale.trans_y_min
+    sSeq.min_sampling = sTrainRScale.min_sampling
+    sSeq.max_sampling = sTrainRScale.max_sampling
+    
+    sSeq.pixelsampling_x = sfa_libs.wider_1Darray(iSeq.scales,  iSeq.block_size)
+    sSeq.pixelsampling_y =  sfa_libs.wider_1Darray(iSeq.scales,  iSeq.block_size)
+    sSeq.subimage_pixelsampling = 2
+    sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
+    sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
+    #sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
+    sSeq.add_noise_L0 = True
+    sSeq.convert_format = "L"
+    sSeq.background_type = None
+    #random translation for th w coordinate
+    sSeq.translation = 8 # 25, Should be 20!!! Warning: 25
+    sSeq.translations_x = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, sSeq.num_images)
+    sSeq.translations_y = numpy.random.random_integers(sSeq.trans_y_min, sSeq.trans_y_max, sSeq.num_images)
+    
+    sSeq.trans_sampled = True
+    sSeq.name = "Scale. Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f, 50)"%(sSeq.trans_x_min, 
+        sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.min_sampling*100, sSeq.max_sampling*100)
+    iSeq.name = sSeq.name
+    system_parameters.test_object_contents(sSeq)
+    
+    ####################################################################
+    ###########    SYSTEM FOR REAL_SCALE EXTRACTION      ############
+    ####################################################################  
+    ParamsRScale = system_parameters.ParamsSystem()
+    ParamsRScale.name = sTrainRScale.name
+    ParamsRScale.network = "linearNetwork4L"
+    ParamsRScale.iTrain = iTrainRScale
+    ParamsRScale.sTrain = sTrainRScale
+    ParamsRScale.iSeenid = iSeenidRScale
+    ParamsRScale.sSeenid = sSeenidRScale
+    ParamsRScale.iNewid = iNewidRScale
+    ParamsRScale.sNewid = sNewidRScale
+    ##MEGAWARNING!!!!
+    #ParamsRScale.iNewid = iNewidScale
+    #ParamsRScale.sNewid = sNewidScale
+    #ParamsRScale.sNewid.translations_y = ParamsRScale.sNewid.translations_y * 0.0 + 8.0
+    
+    ParamsRScale.block_size = iTrainRScale.block_size
+    ParamsRScale.train_mode = 'mixed'
+    ParamsRScale.analysis = None
+    ParamsRScale.enable_reduced_image_sizes = True
+    ParamsRScale.reduction_factor = 2.0 # WARNING 2, 4
+    ParamsRScale.hack_image_size = 64 # WARNING 64, 32
+    ParamsRScale.enable_hack_image_size = True
+    
+    
+    #GC (see text file)
+    # 4 => 0.00406
+    # 5 => 0.004042
+    # 15 => 0.00315
+    
+    #b=[]
+    #flow, layers, benchmark = CreateNetwork(linearNetworkT6L, 128, 128, 100, 'mixed', b)
+    
+    
+    print "Studienprojekt. Illumination estimation datasets. By Jan and Stephan and Alberto "
+    print "***** Setting Training Information Parameters for Illumination ******"
+    iSeq = iTrainRIllumination = system_parameters.ParamsInput()
+    iSeq.name = "Real Illumination:"
+    # on_Jan = os.path.lexists("/home/jan")
+    # if on_lok21:
+    #     pathIllumination = "/local2/escalafl/Alberto/Erg"
+    # if on_Jan:
+    #     pathIllumination = "/home/jan/Dokumente/Studienprojekt/Pictures Illumination Cars/NewImages"
+    # elif on_zappa01:
+    #     pathIllumination = "/local/escalafl/Alberto/NewImages"
+    # else:
+    pathIllumination = user_base_dir + "/Erg"
+    
+    available_cars = numpy.arange(1,32)
+    numpy.random.shuffle(available_cars)
+    
+    iSeq.data_base_dir = pathIllumination
+    iSeq.ids = available_cars[0:22]
+    iSeq.illumination = numpy.arange(0,870)
+    iSeq.ages = [None]
+    iSeq.genders = [None]
+    iSeq.racetweens = [None]
+    iSeq.expressions = [None]
+    iSeq.morphs = [None]
+    iSeq.poses = [None]
+    iSeq.lightings = iSeq.illumination
+    iSeq.slow_signal = 7 #real slow signal is the translation in the x axis, added during image loading
+    iSeq.step = 1
+    iSeq.offset = 0
+    iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "car", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+                                                iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
+                                                iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=3, image_postfix=".bmp")
+    iSeq.input_files = iSeq.input_files * 1
+    #To avoid grouping similar images next to one other
+    #numpy.random.shuffle(iSeq.input_files)  
+    
+    iSeq.num_images = len(iSeq.input_files)
+    #iSeq.params = [ids, expressions, morphs, poses, lightings]
+    iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
+                      iSeq.morphs, iSeq.poses, iSeq.lightings]
+    iSeq.block_size = 10*iSeq.num_images / len (iSeq.lightings)
+    print "BLOCK SIZE =", iSeq.block_size 
+    #print iSeq.block_size
+    iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.lightings)/10), iSeq.block_size)
+    #print len(iSeq.correct_classes)
+    iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.lightings/10, iSeq.block_size/10)
+    #print len(iSeq.correct_labels)
+    
+    
+    system_parameters.test_object_contents(iSeq)
+    
+    print "******** Setting Training Data Parameters for Real Illumination  ****************"
+    sSeq = sTrainRIllumination = system_parameters.ParamsDataLoading()
+    sSeq.input_files = iSeq.input_files
+    sSeq.num_images = iSeq.num_images
+    sSeq.block_size = iSeq.block_size
+    sSeq.image_width = 150
+    sSeq.image_height = 150
+    sSeq.subimage_width = 64
+    sSeq.subimage_height = 64
+    sSeq.min_sampling = 1.7
+    sSeq.max_sampling = 1.8
+    sSeq.pixelsampling_y = sSeq.pixelsampling_x = numpy.random.uniform(sSeq.min_sampling, sSeq.max_sampling, sSeq.num_images)
+    sSeq.subimage_pixelsampling = 1
+    sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
+    sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
+    #sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
+    sSeq.add_noise_L0 = True
+    sSeq.convert_format = "L"
+    sSeq.background_type = None
+    #random translation for th w coordinate
+    sSeq.translation = 3 # 25, Should be 20!!! Warning: 25
+    sSeq.translations_x = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)          
+    #sSeq.translations_x = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
+    sSeq.translations_y = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)
+    sSeq.trans_sampled = False
+    system_parameters.test_object_contents(sSeq)
+    
+    
+    iSeq = iSeenidRIllumination = system_parameters.ParamsInput()
+    iSeq.name = "Real Illumination: "
+    iSeq.data_base_dir = pathIllumination
+    iSeq.ids = available_cars[22:27]
+    iSeq.illumination = numpy.arange(0,870)
+    iSeq.ages = [None]
+    iSeq.genders = [None]
+    iSeq.racetweens = [None]
+    iSeq.expressions = [None]
+    iSeq.morphs = [None]
+    iSeq.poses = [None]
+    iSeq.lightings = iSeq.illumination
+    iSeq.slow_signal = 7 #real slow signal is the translation in the x axis, added during image loading
+    iSeq.step = 1
+    iSeq.offset = 0
+    iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "car", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+                                                iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
+                                                iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=3, image_postfix=".bmp")
+    iSeq.input_files = iSeq.input_files * 1
+    #To avoid grouping similar images next to one other
+    #numpy.random.shuffle(iSeq.input_files)  
+    
+    iSeq.num_images = len(iSeq.input_files)
+    #iSeq.params = [ids, expressions, morphs, poses, lightings]
+    iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
+                      iSeq.morphs, iSeq.poses, iSeq.lightings]
+    iSeq.block_size = 10*iSeq.num_images / len (iSeq.lightings)
+    print "BLOCK SIZE =", iSeq.block_size 
+    iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.lightings)/10), iSeq.block_size)
+    iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.lightings/10, iSeq.block_size/10)
+    
+    system_parameters.test_object_contents(iSeq)
+    
+    print "******** Setting Training Data Parameters for Real Illumination  ****************"
+    sSeq = sSeenidRIllumination = system_parameters.ParamsDataLoading()
+    sSeq.input_files = iSeq.input_files
+    sSeq.num_images = iSeq.num_images
+    sSeq.block_size = iSeq.block_size
+    sSeq.image_width = 150
+    sSeq.image_height = 150
+    sSeq.subimage_width = 64
+    sSeq.subimage_height = 64
+    sSeq.min_sampling = 1.7
+    sSeq.max_sampling = 1.8
+    sSeq.pixelsampling_y = sSeq.pixelsampling_x = numpy.random.uniform(sSeq.min_sampling, sSeq.max_sampling, sSeq.num_images)
+    sSeq.subimage_pixelsampling = 1
+    sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
+    sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
+    #sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
+    sSeq.add_noise_L0 = True
+    sSeq.convert_format = "L"
+    sSeq.background_type = None
+    #random translation for th w coordinate
+    sSeq.translation = 3 # 25, Should be 20!!! Warning: 25
+    sSeq.translations_x = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)          
+    #sSeq.translations_x = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
+    sSeq.translations_y = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)
+    sSeq.trans_sampled = False
+    system_parameters.test_object_contents(sSeq)
+    
+    
+    iSeq = iNewidRIllumination = system_parameters.ParamsInput()
+    iSeq.name = "Real Illumination: "
+    iSeq.data_base_dir = pathIllumination
+    iSeq.ids = available_cars[27:32]
+    iSeq.illumination = numpy.arange(0,870)
+    iSeq.ages = [None]
+    iSeq.genders = [None]
+    iSeq.racetweens = [None]
+    iSeq.expressions = [None]
+    iSeq.morphs = [None]
+    iSeq.poses = [None]
+    iSeq.lightings = iSeq.illumination
+    iSeq.slow_signal = 7 #real slow signal is the translation in the x axis, added during image loading
+    iSeq.step = 1
+    iSeq.offset = 0
+    iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "car", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+                                                iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
+                                                iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=3, image_postfix=".bmp")
+    iSeq.input_files = iSeq.input_files * 1
+    #To avoid grouping similar images next to one other
+    #numpy.random.shuffle(iSeq.input_files)  
+    
+    iSeq.num_images = len(iSeq.input_files)
+    #iSeq.params = [ids, expressions, morphs, poses, lightings]
+    iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
+                      iSeq.morphs, iSeq.poses, iSeq.lightings]
+    iSeq.block_size = 10*iSeq.num_images / len (iSeq.lightings)
+    print "BLOCK SIZE =", iSeq.block_size 
+    iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.lightings)/10), iSeq.block_size)
+    iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.lightings/10, iSeq.block_size/10)
+    
+    system_parameters.test_object_contents(iSeq)
+    
+    print "******** Setting Testing Data Parameters for Real Illumination  ****************"
+    sSeq = sNewidRIllumination = system_parameters.ParamsDataLoading()
+    sSeq.input_files = iSeq.input_files
+    sSeq.num_images = iSeq.num_images
+    sSeq.block_size = iSeq.block_size
+    sSeq.image_width = 150
+    sSeq.image_height = 150
+    sSeq.subimage_width = 64
+    sSeq.subimage_height = 64
+    sSeq.min_sampling = 1.7
+    sSeq.max_sampling = 1.8
+    sSeq.pixelsampling_y = sSeq.pixelsampling_x = numpy.random.uniform(sSeq.min_sampling, sSeq.max_sampling, sSeq.num_images)
+    sSeq.subimage_pixelsampling = 1
+    sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
+    sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
+    #sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
+    sSeq.add_noise_L0 = True
+    sSeq.convert_format = "L"
+    sSeq.background_type = None
+    #random translation for th w coordinate
+    sSeq.translation = 3 # 25, Should be 20!!! Warning: 25
+    sSeq.translations_x = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)          
+    #sSeq.translations_x = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
+    sSeq.translations_y = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)
+    sSeq.trans_sampled = False
+    system_parameters.test_object_contents(sSeq)
+    
+    ####################################################################
+    ###########    SYSTEM FOR REAL_TRANSLATION_X EXTRACTION      ############
+    ####################################################################  
+    ParamsRIllumination = system_parameters.ParamsSystem()
+    ParamsRIllumination.name = "Network that extracts Real Translation X information"
+    ParamsRIllumination.network = "linearNetwork4L"
+    ParamsRIllumination.iTrain = iTrainRIllumination
+    ParamsRIllumination.sTrain = sTrainRIllumination
+    ParamsRIllumination.iSeenid = iSeenidRIllumination
+    ParamsRIllumination.sSeenid = sSeenidRIllumination
+    ParamsRIllumination.iNewid = iNewidRIllumination
+    ParamsRIllumination.sNewid = sNewidRIllumination
+    ##MEGAWARNING!!!!
+    #ParamsRIllumination.iNewid = iNewidIllumination
+    #ParamsRIllumination.sNewid = sNewidIllumination
+    #ParamsRIllumination.sNewid.translations_y = ParamsRIllumination.sNewid.translations_y * 0.0 + 8.0
+    
+    ParamsRIllumination.block_size = iTrainRIllumination.block_size
+    ParamsRIllumination.train_mode = 'mixed'
+    ParamsRIllumination.analysis = None
+    
+    #b=[]
+    #flow, layers, benchmark = CreateNetwork(linearNetworkT6L, 128, 128, 100, 'mixed', b)
+    
+    
+    print "Studienprojekt. Rotation estimation datasets. By Jan and Stephan and Alberto "
+    print "***** Setting Training Information Parameters for Rotation ******"
+    iSeq = iTrainRRotation = system_parameters.ParamsInput()
+    iSeq.name = "Real Rotation: "
+    # on_Jan = os.path.lexists("/home/jan")
+    # if on_lok21:
+    #     pathRotation = "/local2/escalafl/Alberto/Erg"
+    # if on_Jan:
+    #     pathRotation = "/media/7270C6F570C6BF5B/Pictures Rotation/Single Pictures"
+    # else:
+    #     pathRotation = "/home/Stephan/Erg"
+    pathRotation = user_base_dir + "/Erg"
+    available_cars = numpy.arange(1,40)
+    numpy.random.shuffle(available_cars)
+    
+    iSeq.data_base_dir = pathRotation
+    iSeq.ids = available_cars[0:28]
+    iSeq.illumination = numpy.arange(0,500)
+    iSeq.ages = [None]
+    iSeq.genders = [None]
+    iSeq.racetweens = [None]
+    iSeq.expressions = [None]
+    iSeq.morphs = [None]
+    iSeq.poses = [None]
+    iSeq.lightings = iSeq.illumination
+    iSeq.slow_signal = 7 #real slow signal is the translation in the x axis, added during image loading
+    iSeq.step = 1
+    iSeq.offset = 0
+    iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "car", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+                                                iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
+                                                iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=3, image_postfix=".bmp")
+    iSeq.input_files = iSeq.input_files * 1 
+    
+    iSeq.num_images = len(iSeq.input_files)
+    #iSeq.params = [ids, expressions, morphs, poses, lightings]
+    iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
+                      iSeq.morphs, iSeq.poses, iSeq.lightings]
+    iSeq.block_size = 10*iSeq.num_images / len (iSeq.lightings)
+    print "BLOCK SIZE =", iSeq.block_size 
+    #print iSeq.block_size
+    iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.lightings)/10), iSeq.block_size)
+    #print len(iSeq.correct_classes)
+    iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.lightings/10, iSeq.block_size/10)
+    #print len(iSeq.correct_labels)
+    system_parameters.test_object_contents(iSeq)
+    
+    
+    print "******** Setting Training Data Parameters for Real Rotation  ****************"
+    sSeq = sTrainRRotation = system_parameters.ParamsDataLoading()
+    sSeq.input_files = iSeq.input_files
+    sSeq.num_images = iSeq.num_images
+    sSeq.block_size = iSeq.block_size
+    sSeq.image_width = 80
+    sSeq.image_height = 80
+    sSeq.subimage_width = 64
+    sSeq.subimage_height = 64
+    sSeq.min_sampling = 1.0
+    sSeq.max_sampling = 1.0
+    sSeq.pixelsampling_y = sSeq.pixelsampling_x = numpy.random.uniform(sSeq.min_sampling, sSeq.max_sampling, sSeq.num_images)
+    sSeq.subimage_pixelsampling = 1
+    sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
+    sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
+    #sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
+    sSeq.add_noise_L0 = True
+    sSeq.convert_format = "L"
+    sSeq.background_type = None
+    #random translation for th w coordinate
+    sSeq.translation = 3 # 25, Should be 20!!! Warning: 25
+    sSeq.translations_x = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)          
+    #sSeq.translations_x = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
+    sSeq.translations_y = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)
+    sSeq.trans_sampled = False
+    system_parameters.test_object_contents(sSeq)
+    
+    
+    iSeq = iSeenidRRotation = system_parameters.ParamsInput()
+    iSeq.name = "Real Rotation: "
+    iSeq.data_base_dir = pathRotation
+    iSeq.ids = available_cars[28:34]
+    iSeq.illumination = numpy.arange(0,500)
+    iSeq.ages = [None]
+    iSeq.genders = [None]
+    iSeq.racetweens = [None]
+    iSeq.expressions = [None]
+    iSeq.morphs = [None]
+    iSeq.poses = [None]
+    iSeq.lightings = iSeq.illumination
+    iSeq.slow_signal = 7 #real slow signal is the translation in the x axis, added during image loading
+    iSeq.step = 1
+    iSeq.offset = 0
+    iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "car", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+                                                iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
+                                                iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=3, image_postfix=".bmp")
+    iSeq.input_files = iSeq.input_files * 1
+    #To avoid grouping similar images next to one other
+    #numpy.random.shuffle(iSeq.input_files)  
+    
+    iSeq.num_images = len(iSeq.input_files)
+    #iSeq.params = [ids, expressions, morphs, poses, lightings]
+    iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
+                      iSeq.morphs, iSeq.poses, iSeq.lightings]
+    iSeq.block_size = 10*iSeq.num_images / len (iSeq.lightings)
+    print "BLOCK SIZE =", iSeq.block_size 
+    iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.lightings)/10), iSeq.block_size)
+    iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.lightings/10, iSeq.block_size/10)
+    
+    system_parameters.test_object_contents(iSeq)
+    
+    print "******** Setting Training Data Parameters for Real Rotation  ****************"
+    sSeq = sSeenidRRotation = system_parameters.ParamsDataLoading()
+    sSeq.input_files = iSeq.input_files
+    sSeq.num_images = iSeq.num_images
+    sSeq.block_size = iSeq.block_size
+    sSeq.image_width = 80
+    sSeq.image_height = 80
+    sSeq.subimage_width = 64
+    sSeq.subimage_height = 64
+    sSeq.min_sampling = 1.0
+    sSeq.max_sampling = 1.0
+    sSeq.pixelsampling_y = sSeq.pixelsampling_x = numpy.random.uniform(sSeq.min_sampling, sSeq.max_sampling, sSeq.num_images)
+    sSeq.subimage_pixelsampling = 1
+    sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
+    sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
+    #sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
+    sSeq.add_noise_L0 = True
+    sSeq.convert_format = "L"
+    sSeq.background_type = None
+    #random translation for th w coordinate
+    sSeq.translation = 3 # 25, Should be 20!!! Warning: 25
+    sSeq.translations_x = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)          
+    #sSeq.translations_x = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
+    sSeq.translations_y = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)
+    sSeq.trans_sampled = False
+    system_parameters.test_object_contents(sSeq)
+    
+    
+    iSeq = iNewidRRotation = system_parameters.ParamsInput()
+    iSeq.name = "Real Rotation: "
+    iSeq.data_base_dir = pathRotation
+    iSeq.ids = available_cars[34:40]
+    iSeq.illumination = numpy.arange(0,500)
+    iSeq.ages = [None]
+    iSeq.genders = [None]
+    iSeq.racetweens = [None]
+    iSeq.expressions = [None]
+    iSeq.morphs = [None]
+    iSeq.poses = [None]
+    iSeq.lightings = iSeq.illumination
+    iSeq.slow_signal = 7 #real slow signal is the translation in the x axis, added during image loading
+    iSeq.step = 1
+    iSeq.offset = 0
+    iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "car", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+                                                iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
+                                                iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=3, image_postfix=".bmp")
+    iSeq.input_files = iSeq.input_files * 1
+    #To avoid grouping similar images next to one other
+    #numpy.random.shuffle(iSeq.input_files)  
+    
+    iSeq.num_images = len(iSeq.input_files)
+    #iSeq.params = [ids, expressions, morphs, poses, lightings]
+    iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
+                      iSeq.morphs, iSeq.poses, iSeq.lightings]
+    iSeq.block_size = 10*iSeq.num_images / len (iSeq.lightings)
+    print "BLOCK SIZE =", iSeq.block_size 
+    iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.lightings)/10), iSeq.block_size)
+    iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.lightings/10, iSeq.block_size/10)
+    
+    system_parameters.test_object_contents(iSeq)
+    
+    print "******** Setting Testing Data Parameters for Real Illumination  ****************"
+    sSeq = sNewidRRotation = system_parameters.ParamsDataLoading()
+    sSeq.input_files = iSeq.input_files
+    sSeq.num_images = iSeq.num_images
+    sSeq.block_size = iSeq.block_size
+    sSeq.image_width = 80
+    sSeq.image_height = 80
+    sSeq.subimage_width = 64
+    sSeq.subimage_height = 64
+    sSeq.min_sampling = 1.0
+    sSeq.max_sampling = 1.0
+    sSeq.pixelsampling_y = sSeq.pixelsampling_x = numpy.random.uniform(sSeq.min_sampling, sSeq.max_sampling, sSeq.num_images)
+    sSeq.subimage_pixelsampling = 1
+    sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
+    sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
+    #sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
+    sSeq.add_noise_L0 = True
+    sSeq.convert_format = "L"
+    sSeq.background_type = None
+    #random translation for th w coordinate
+    sSeq.translation = 3 # 25, Should be 20!!! Warning: 25
+    sSeq.translations_x = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)          
+    #sSeq.translations_x = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
+    sSeq.translations_y = numpy.random.random_integers(-sSeq.translation, sSeq.translation, sSeq.num_images)
+    sSeq.trans_sampled = False
+    system_parameters.test_object_contents(sSeq)
+    
+    ####################################################################
+    ###########    SYSTEM FOR REAL_TRANSLATION_X EXTRACTION      ############
+    ####################################################################  
+    ParamsRRotation = system_parameters.ParamsSystem()
+    ParamsRRotation.name = "Network that extracts Real Translation X information"
+    ParamsRRotation.network = "linearNetwork4L"
+    ParamsRRotation.iTrain = iTrainRRotation
+    ParamsRRotation.sTrain = sTrainRRotation
+    ParamsRRotation.iSeenid = iSeenidRRotation
+    ParamsRRotation.sSeenid = sSeenidRRotation
+    ParamsRRotation.iNewid = iNewidRRotation
+    ParamsRRotation.sNewid = sNewidRRotation
+    ParamsRRotation.block_size = iTrainRRotation.block_size
+    ParamsRRotation.train_mode = 'mixed'
+    ParamsRRotation.analysis = None
+
+
+    def double_uniform(min1, max1, min2, max2, size, p2):
+        prob = numpy.random.uniform(0.0, 1.0, size)
+        u1 = numpy.random.uniform(min1, max1, size)
+        u2 = numpy.random.uniform(min2, max2, size)
+        
+        res = u1
+        mask = (prob <= p2) #then take it from u2
+        res[mask] = u2[mask]
+        return res
+    
+    #TODO: code is slow, improve
+    #Box is a list of pairs. Pair i contains the smallest and largest value for coordinate i
+    def box_sampling(box, num_samples=1):
+        num_dimensions = len(box)
+        output = numpy.zeros((num_samples, num_dimensions))
+        for i in range(num_dimensions):
+            output[:,i] = numpy.random.uniform(box[i][0], box[i][1], size=num_samples)
+        return output
+    
+    #x must be a two-dimensional array
+    def inside_box(x, box, num_dim):
+        num_samples = len(x)
+        inside = numpy.ones(num_samples, dtype="bool")
+        for i in range(num_dim):
+            inside = inside & (x[:, i] > box[i][0]) & (x[:, i] < box[i][1])    
+        return inside
+            
+    #TODO: code is slow, improve   
+    def sub_box_sampling(box_in, box_ext, num_samples=1):
+        num_dimensions = len(box_in)
+        if num_dimensions != len(box_ext):
+            err = "Exterion and interior boxes have a different numbe of dimensions!!!"
+            raise Exception(err)
+        output = numpy.zeros((num_samples, num_dimensions))
+        incorrect = numpy.ones(num_samples, dtype="bool")
+        while incorrect.sum()>0:
+    #        print "incorrect.sum()=",incorrect.sum()
+            new_candidates = box_sampling(box_ext, incorrect.sum()) 
+            output[incorrect] = new_candidates       
+            incorrect = inside_box(output, box_in, num_dimensions)        
+        return output
+    
+    #FACE / NO-FACE FACE / NO-FACE FACE / NO-FACE FACE / NO-FACE FACE / NO-FACE FACE / NO-FACE FACE / NO-FACE FACE / NO-FACE
+    #Attempt to distinguish between faces and no-faces
+    print "***** Setting Training Information Parameters for Face ******"
+    iSeq = iTrainRFace = system_parameters.ParamsInput()
+    # (0.55+1.1)/2 = 0.825, 0.55/2 = 0.275, 0.55/4 = 0.1375, .825 + .1375 = .9625, .825 - .55/4 = .6875
+    iSeq.name = "Real FACE (Centered / Decentered)"
+    
+    iSeq.data_base_dir = frgc_normalized_base_dir
+    iSeq.ids = numpy.arange(0,6000) # 6000
+    iSeq.faces = numpy.arange(0,2) # 0=centered normalized face, 1=not centered normalized face
+    
+    #iSeq.scales = numpy.linspace(pipeline_fd['smin0'], pipeline_fd['smax0'], 50) # (-50, 50, 2)
+    if len(iSeq.ids) % len(iSeq.faces) != 0:
+        ex="Here the number of scales must be a divisor of the number of identities"
+        raise Exception(ex)
+    iSeq.ages = [None]
+    iSeq.genders = [None]
+    iSeq.racetweens = [None]
+    iSeq.expressions = [None]
+    iSeq.morphs = [None]
+    iSeq.poses = [None]
+    iSeq.lightings = [None]
+    iSeq.slow_signal = 0 #real slow signal is whether there is a centered or descentered face
+    iSeq.step = 1
+    iSeq.offset = 0
+    iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+                                                iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
+                                                iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=4, image_postfix=".jpg")
+    iSeq.input_files = iSeq.input_files * 4 #4 was overfitting non linear sfa slightly
+    #To avoid grouping similar images next to one other
+    numpy.random.shuffle(iSeq.input_files)  
     
     iSeq.num_images = len(iSeq.input_files)
     #iSeq.params = [ids, expressions, morphs, poses, lightings]
     iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
                       iSeq.morphs, iSeq.poses, iSeq.lightings]
     iSeq.block_size = iSeq.num_images / len (iSeq.faces)
-    iSeq.train_mode = "clustered" #"serial" #"clustered"
     print "BLOCK SIZE =", iSeq.block_size 
     
     iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.faces)), iSeq.block_size)
-    iSeq.correct_labels = iSeq.correct_classes / (len(iSeq.faces)-1)
+    iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.faces*2-1, iSeq.block_size)
     
     system_parameters.test_object_contents(iSeq)
-    return iSeq
-
-
-def sSeqCreateRFaceCentering(iSeq, pipeline_fd, pipeline_factor=2.0, seed=-1):
-    if seed >= 0 or seed is None: #also works for 
-        numpy.random.seed(seed)
-    #else seed <0 then, do not change seed
     
-    print "******** Setting Training Data Parameters for Real Face Centering****************"
-    sSeq = system_parameters.ParamsDataLoading()
+    print "******** Setting Training Data Parameters for Real Face  ****************"
+    sSeq = sTrainRFace = system_parameters.ParamsDataLoading()
     sSeq.input_files = iSeq.input_files
     sSeq.num_images = iSeq.num_images
     sSeq.block_size = iSeq.block_size
-    sSeq.train_mode = iSeq.train_mode
     sSeq.image_width = 256
     sSeq.image_height = 192
     sSeq.subimage_width = 135
     sSeq.subimage_height = 135
     
-    sSeq.trans_x_max = pipeline_fd['dx0'] * 1.0 * pipeline_factor
-    sSeq.trans_y_max = pipeline_fd['dy0'] * 1.0 * pipeline_factor#* 0.998
-    sSeq.pang_max = pipeline_fd['da0'] * pipeline_factor
-    sSeq.min_sampling = pipeline_fd['smin0'] #- 0.1 #WARNING!!!
-    sSeq.max_sampling = pipeline_fd['smax0']
-    sSeq.avg_sampling = 0.825 #(sSeq.min_sampling + sSeq.max_sampling)/2
+    sSeq.trans_x_max = pipeline_fd['dx1']
+    sSeq.trans_x_min = -1 * pipeline_fd['dx1']
+    sSeq.trans_y_max = pipeline_fd['dy1']
+    sSeq.trans_y_min = -1 * pipeline_fd['dy1']
+    sSeq.min_sampling = pipeline_fd['smin1']
+    sSeq.max_sampling = pipeline_fd['smax1']
     
+    sSeq.noface_trans_x_max = 45
+    sSeq.noface_trans_x_min = -45
+    sSeq.noface_trans_y_max = 19
+    sSeq.noface_trans_y_min = -19
+    sSeq.noface_min_sampling = 0.55
+    sSeq.noface_max_sampling = 1.1
+     
     
     sSeq.pixelsampling_x = numpy.zeros(sSeq.num_images)
     sSeq.pixelsampling_y = numpy.zeros(sSeq.num_images) 
-    sSeq.rotations = numpy.zeros(sSeq.num_images)
-    sSeq.translations_x = numpy.zeros(sSeq.num_images)
-    sSeq.translations_y = numpy.zeros(sSeq.num_images)
     
+    #Centered Face
+    sSeq.pixelsampling_x[0:iSeq.block_size] = numpy.random.uniform(sSeq.min_sampling, sSeq.max_sampling, size=iSeq.block_size)
+    sSeq.pixelsampling_y[0:iSeq.block_size] = sSeq.pixelsampling_x[0:iSeq.block_size] + 0.0 #MUST BE A DIFFERENT OBJECT
+    #sSeq.pixelsampling_x[iSeq.block_size:] = numpy.random.uniform(sSeq.min_sampling, sSeq.max_sampling, size=iSeq.block_size)
+    #sSeq.pixelsampling_y[iSeq.block_size:] = sSeq.pixelsampling_x[iSeq.block_size:] + 0.0
+    #Decentered Face, using different x and y samplings
+    sSeq.pixelsampling_x[iSeq.block_size:] = double_uniform(sSeq.noface_min_sampling, sSeq.min_sampling, sSeq.max_sampling, sSeq.noface_max_sampling , size=iSeq.block_size,   p2=0.5)
+    sSeq.pixelsampling_y[iSeq.block_size:] = double_uniform(sSeq.noface_min_sampling, sSeq.min_sampling, sSeq.max_sampling, sSeq.noface_max_sampling , size=iSeq.block_size,   p2=0.5)
     
-    num_blocks = sSeq.num_images/sSeq.block_size
-    for block_nr in range(num_blocks):
-        #For exterior box
-        fraction = ((block_nr+1.0) / (num_blocks-1)) ** 0.25 # From 1/(N-1) to 1.0 # **0.333
-        if fraction > 1:
-            fraction = 1
-        x_max = sSeq.trans_x_max * fraction
-        y_max = sSeq.trans_y_max * fraction
-        pang_max = sSeq.pang_max * fraction
-        samp_max = sSeq.avg_sampling + (sSeq.max_sampling-sSeq.avg_sampling) * fraction * pipeline_factor
-        samp_min = sSeq.avg_sampling + (sSeq.min_sampling-sSeq.avg_sampling) * fraction * pipeline_factor
-    
-        box_ext = [(-x_max, x_max), (-y_max, y_max), (-pang_max, pang_max), (samp_min, samp_max), (samp_min, samp_max)] 
-    
-        if block_nr >= 0:
-            #For interior boxiSeq.ids = alldbnormalized_available_images[30000:45000]       
-            if block_nr < num_blocks-1:
-                eff_block_nr = block_nr
-            else:
-                eff_block_nr = block_nr-1
-            fraction2 = (eff_block_nr / (num_blocks-1)) ** 0.25 #** 0.333
-            if fraction2 > 1:
-                fraction2 = 1
-            x_max = sSeq.trans_x_max * fraction2
-            y_max = sSeq.trans_y_max * fraction2
-            pang_max = sSeq.pang_max * fraction2
-            samp_max = sSeq.avg_sampling + (sSeq.max_sampling-sSeq.avg_sampling) * fraction2
-            samp_min = sSeq.avg_sampling + (sSeq.min_sampling-sSeq.avg_sampling) * fraction2
-            box_in = [(-x_max, x_max), (-y_max, y_max), (-pang_max, pang_max), (samp_min, samp_max), (samp_min, samp_max)] 
-        
-        samples = sub_box_sampling(box_in, box_ext, sSeq.block_size)
-        sSeq.translations_x[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = samples[:,0]
-        sSeq.translations_y[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = samples[:,1]
-        sSeq.rotations[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = samples[:,2]
-        sSeq.pixelsampling_x[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = samples[:,3]
-        sSeq.pixelsampling_y[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = samples[:,4]
-                
-    sSeq.subimage_first_row =  sSeq.image_height/2.0-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
-    sSeq.subimage_first_column = sSeq.image_width/2.0-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
-    
+    sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
+    sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
+    #sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
     sSeq.add_noise_L0 = True
     sSeq.convert_format = "L"
     sSeq.background_type = None
-    sSeq.trans_sampled = True 
     
-    sSeq.name = "Face Centering. Dx %d, Dy %d, Da %d, sampling in (%d, %d)"%(sSeq.trans_x_max, sSeq.trans_y_max, int(sSeq.min_sampling*1000), int(sSeq.max_sampling*1000),
-        int(sSeq.min_sampling*1000), int(sSeq.max_sampling*1000))
-    print sSeq.name
+    #random translation for th w coordinate
+    #sSeq.translation = 20 # 25, Should be 20!!! Warning: 25
+    sSeq.translations_x = numpy.zeros(sSeq.num_images)
+    sSeq.translations_y = numpy.zeros(sSeq.num_images)
+    #Centered Face
+    sSeq.translations_x[0:iSeq.block_size] = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, iSeq.block_size)
+    sSeq.translations_y[0:iSeq.block_size] = numpy.random.random_integers(sSeq.trans_y_min, sSeq.trans_y_max, iSeq.block_size)
+    #sSeq.translations_x[iSeq.block_size:] = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, iSeq.block_size)
+    #sSeq.translations_y[iSeq.block_size:] = numpy.random.random_integers(sSeq.trans_y_min, sSeq.trans_y_max, iSeq.block_size)
+    #Decentered Face
+    sSeq.translations_x[iSeq.block_size:] = double_uniform(sSeq.noface_trans_x_min, sSeq.trans_x_min, sSeq.trans_x_max, sSeq.noface_trans_x_max, size=iSeq.block_size, p2=0.5)
+    sSeq.translations_y[iSeq.block_size:] = double_uniform(sSeq.noface_trans_y_min, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.noface_trans_y_max, size=iSeq.block_size, p2=0.5)
+    
+    sSeq.trans_sampled = True
+    sSeq.name = "Face. Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f, 50)"%(sSeq.trans_x_min, 
+        sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, int(sSeq.min_sampling*1000), int(sSeq.max_sampling*1000))
+    
+    
+    print " sSeq.subimage_first_row =", sSeq.subimage_first_row
+    print "sSeq.pixelsampling_x", sSeq.pixelsampling_x
+    print "sSeq.translations_x", sSeq.translations_x
+    
     iSeq.name = sSeq.name
-
-    
-    sSeq.load_data = load_data_from_sSeq #lambda : load_data_from_sSeq(sSeq)
-
     system_parameters.test_object_contents(sSeq)
-    return sSeq
-
-def sphere_sampling(radious, num_dims=1, num_vectors=1):
-    output = numpy.random.uniform(-1,1,(num_vectors, num_dims))
-    norms = ((output**2).sum(axis=1))**0.5
-    new_radious = numpy.random.uniform(0,1,num_vectors)**(1.0 / num_dims) * radious
-    factor = (1/norms * new_radious).reshape((num_vectors,1))
-    norm_output = factor * output  
-    return norm_output
     
-def sub_sphere_sampling(radious_min, radious_max, num_dims=1, num_vectors=1):
-    output = numpy.zeros((num_vectors, num_dims))
-    incorrect = numpy.ones(num_vectors, dtype="bool")
-    num_incorrect = num_vectors
-    while num_incorrect > 0:
-        print "#", num_incorrect
-        #print "incorrect.sum()=",incorrect.sum()
-        new_candidates = sphere_sampling(radious_max, num_dims, num_incorrect) 
-        output[incorrect] = new_candidates       
-        new_radious = (new_candidates**2).sum(axis=1)**0.5
-        still_incorrect = (new_radious < radious_min)
-        incorrect[incorrect==True] = still_incorrect
-        num_incorrect -= (still_incorrect == False).sum()      
-    return output
-
-
-def sSeqCreateRFaceCentering2(iSeq, pipeline_fd, pipeline_factor=2.0, seed=-1):
-    if seed >= 0 or seed is None: #also works for 
-        numpy.random.seed(seed)
-    #else seed <0 then, do not change seed
     
-    print "******** Setting Training Data Parameters for Real Face Centering****************"
-    sSeq = system_parameters.ParamsDataLoading()
+    
+    print "***** Setting Seenid Information Parameters for Face ******"
+    iSeq = iSeenidRFace = system_parameters.ParamsInput()
+    # (0.55+1.1)/2 = 0.825, 0.55/2 = 0.275, 0.55/4 = 0.1375, .825 + .1375 = .9625, .825 - .55/4 = .6875
+    iSeq.name = "Real FACE (Centered / Decentered)"
+    
+    iSeq.data_base_dir = frgc_normalized_base_dir
+    iSeq.ids = numpy.arange(6000,8000) # 8000
+    iSeq.faces = numpy.arange(0,2) # 0=centered normalized face, 1=not centered normalized face
+    
+    #iSeq.scales = numpy.linspace(pipeline_fd['smin0'], pipeline_fd['smax0'], 50) # (-50, 50, 2)
+    if len(iSeq.ids) % len(iSeq.faces) != 0:
+        ex="Here the number of scales must be a divisor of the number of identities"
+        raise Exception(ex)
+    iSeq.ages = [None]
+    iSeq.genders = [None]
+    iSeq.racetweens = [None]
+    iSeq.expressions = [None]
+    iSeq.morphs = [None]
+    iSeq.poses = [None]
+    iSeq.lightings = [None]
+    iSeq.slow_signal = 0 #real slow signal is whether there is a centered or descentered face
+    iSeq.step = 1
+    iSeq.offset = 0
+    iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+                                                iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
+                                                iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=4, image_postfix=".jpg")
+    iSeq.input_files = iSeq.input_files * 8
+    #To avoid grouping similar images next to one other
+    numpy.random.shuffle(iSeq.input_files)  
+    
+    iSeq.num_images = len(iSeq.input_files)
+    #iSeq.params = [ids, expressions, morphs, poses, lightings]
+    iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
+                      iSeq.morphs, iSeq.poses, iSeq.lightings]
+    iSeq.block_size = iSeq.num_images / len (iSeq.faces)
+    print "BLOCK SIZE =", iSeq.block_size 
+    
+    iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.faces)), iSeq.block_size)
+    iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.faces*2-1, iSeq.block_size)
+    
+    system_parameters.test_object_contents(iSeq)
+    
+    print "******** Setting SeenID Data Parameters for Real Face  ****************"
+    sSeq = sSeenidRFace = system_parameters.ParamsDataLoading()
     sSeq.input_files = iSeq.input_files
     sSeq.num_images = iSeq.num_images
     sSeq.block_size = iSeq.block_size
-    sSeq.train_mode = iSeq.train_mode
     sSeq.image_width = 256
     sSeq.image_height = 192
     sSeq.subimage_width = 135
     sSeq.subimage_height = 135
     
-    sSeq.trans_x_max = pipeline_fd['dx0'] * 1.0 * pipeline_factor
-    sSeq.trans_y_max = pipeline_fd['dy0'] * 1.0 * pipeline_factor#* 0.998
-    sSeq.pang_max = pipeline_fd['da0'] * pipeline_factor
-    sSeq.min_sampling = pipeline_fd['smin0'] #- 0.1 #WARNING!!!
-    sSeq.max_sampling = pipeline_fd['smax0']
-    sSeq.avg_sampling = 0.825 #(sSeq.min_sampling + sSeq.max_sampling)/2  
-    sSeq.delta_sampling = max( sSeq.max_sampling-sSeq.avg_sampling, sSeq.avg_sampling-sSeq.min_sampling ) * pipeline_factor
+    sSeq.trans_x_max = pipeline_fd['dx1']
+    sSeq.trans_x_min = -1 * pipeline_fd['dx1']
+    sSeq.trans_y_max = pipeline_fd['dy1']
+    sSeq.trans_y_min = -1 * pipeline_fd['dy1']
+    sSeq.min_sampling = pipeline_fd['smin1']
+    sSeq.max_sampling = pipeline_fd['smax1']
     
-    sSeq.pixelsampling_x = numpy.ones(sSeq.num_images)
-    sSeq.pixelsampling_y = numpy.ones(sSeq.num_images) 
-    sSeq.rotations = numpy.zeros(sSeq.num_images)
-    sSeq.translations_x = numpy.zeros(sSeq.num_images)
-    sSeq.translations_y = numpy.zeros(sSeq.num_images)
-        
-    num_blocks = sSeq.num_images/sSeq.block_size
-    for block_nr in range(num_blocks-1): #Last block (backgrounds) is not randomized
-        radious_min = block_nr/(num_blocks-1.0) * 4 #
-        radious_max = (block_nr+1.0)/(num_blocks-1) * 4
-      
-        vectors = sub_sphere_sampling(radious_min, radious_max, num_dims=4, num_vectors = sSeq.block_size)
-        sSeq.translations_x[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = vectors[:,0] * sSeq.trans_x_max
-        sSeq.translations_y[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = vectors[:,1] * sSeq.trans_y_max
-        sSeq.rotations[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = vectors[:,2] * sSeq.pang_max
-        sSeq.pixelsampling_x[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = sSeq.avg_sampling + vectors[:,3] * sSeq.delta_sampling
+    sSeq.noface_trans_x_max = 45
+    sSeq.noface_trans_x_min = -45
+    sSeq.noface_trans_y_max = 19
+    sSeq.noface_trans_y_min = -19
+    sSeq.noface_min_sampling = 0.55
+    sSeq.noface_max_sampling = 1.1
+     
     
-    sSeq.pixelsampling_y = sSeq.pixelsampling_x.copy()
-                
+    sSeq.pixelsampling_x = numpy.zeros(sSeq.num_images)
+    sSeq.pixelsampling_y = numpy.zeros(sSeq.num_images) 
+    
+    #Centered Face
+    sSeq.pixelsampling_x[0:iSeq.block_size] = numpy.random.uniform(sSeq.min_sampling, sSeq.max_sampling, size=iSeq.block_size)
+    sSeq.pixelsampling_y[0:iSeq.block_size] = sSeq.pixelsampling_x[0:iSeq.block_size] + 0.0 #MUST BE A DIFFERENT OBJECT
+    #sSeq.pixelsampling_x[iSeq.block_size:] = numpy.random.uniform(sSeq.min_sampling, sSeq.max_sampling, size=iSeq.block_size)
+    #sSeq.pixelsampling_y[iSeq.block_size:] = sSeq.pixelsampling_x[iSeq.block_size:] + 0.0
+    #Decentered Face, using different x and y samplings
+    sSeq.pixelsampling_x[iSeq.block_size:] = double_uniform(sSeq.noface_min_sampling, sSeq.min_sampling, sSeq.max_sampling, sSeq.noface_max_sampling , size=iSeq.block_size,   p2=0.5)
+    sSeq.pixelsampling_y[iSeq.block_size:] = double_uniform(sSeq.noface_min_sampling, sSeq.min_sampling, sSeq.max_sampling, sSeq.noface_max_sampling , size=iSeq.block_size,   p2=0.5)
+    
     sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
     sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
-    
+    #sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
     sSeq.add_noise_L0 = True
     sSeq.convert_format = "L"
     sSeq.background_type = None
+    
+    #random translation for th w coordinate
+    #sSeq.translation = 20 # 25, Should be 20!!! Warning: 25
+    sSeq.translations_x = numpy.zeros(sSeq.num_images)
+    sSeq.translations_y = numpy.zeros(sSeq.num_images)
+    #Centered Face
+    sSeq.translations_x[0:iSeq.block_size] = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, iSeq.block_size)
+    sSeq.translations_y[0:iSeq.block_size] = numpy.random.random_integers(sSeq.trans_y_min, sSeq.trans_y_max, iSeq.block_size)
+    #Decentered Face
+    sSeq.translations_x[iSeq.block_size:] = double_uniform(sSeq.noface_trans_x_min, sSeq.trans_x_min, sSeq.trans_x_max, sSeq.noface_trans_x_max, size=iSeq.block_size, p2=0.5)
+    sSeq.translations_y[iSeq.block_size:] = double_uniform(sSeq.noface_trans_y_min, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.noface_trans_y_max, size=iSeq.block_size, p2=0.5)
+    
     sSeq.trans_sampled = True
+    sSeq.name = "Face. Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f, 50)"%(sSeq.trans_x_min, 
+        sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, int(sSeq.min_sampling*1000), int(sSeq.max_sampling*1000))
     
-    sSeq.name = "FaceCentering2. Dx %d, Dy %d, Da %d, Dsampling %d"%(sSeq.trans_x_max, sSeq.trans_y_max,  int(sSeq.pang_max*1000), int(sSeq.delta_sampling*1000))
-    print sSeq.name
     iSeq.name = sSeq.name
-    
-    sSeq.load_data = load_data_from_sSeq #lambda : load_data_from_sSeq(sSeq)
     system_parameters.test_object_contents(sSeq)
-    return sSeq
+    
+    
+    print "***** Setting Newid Information Parameters for Face ******"
+    iSeq = iNewidRFace = system_parameters.ParamsInput()
+    # (0.55+1.1)/2 = 0.825, 0.55/2 = 0.275, 0.55/4 = 0.1375, .825 + .1375 = .9625, .825 - .55/4 = .6875
+    iSeq.name = "Real FACE (Centered / Decentered)"
+    
+    iSeq.data_base_dir = frgc_normalized_base_dir
+    iSeq.ids = numpy.arange(8000,10000) # 8000
+    iSeq.faces = numpy.arange(0,2) # 0=centered normalized face, 1=not centered normalized face
+    
+    #iSeq.scales = numpy.linspace(pipeline_fd['smin0'], pipeline_fd['smax0'], 50) # (-50, 50, 2)
+    if len(iSeq.ids) % len(iSeq.faces) != 0:
+        ex="Here the number of scales must be a divisor of the number of identities"
+        raise Exception(ex)
+    iSeq.ages = [None]
+    iSeq.genders = [None]
+    iSeq.racetweens = [None]
+    iSeq.expressions = [None]
+    iSeq.morphs = [None]
+    iSeq.poses = [None]
+    iSeq.lightings = [None]
+    iSeq.slow_signal = 0 #real slow signal is whether there is a centered or descentered face
+    iSeq.step = 1
+    iSeq.offset = 0
+    iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+                                                iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
+                                                iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=4, image_postfix=".jpg")
+    iSeq.input_files = iSeq.input_files * 2
+    #To avoid grouping similar images next to one other
+    numpy.random.shuffle(iSeq.input_files)  
+    
+    iSeq.num_images = len(iSeq.input_files)
+    #iSeq.params = [ids, expressions, morphs, poses, lightings]
+    iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
+                      iSeq.morphs, iSeq.poses, iSeq.lightings]
+    iSeq.block_size = iSeq.num_images / len (iSeq.faces)
+    print "BLOCK SIZE =", iSeq.block_size 
+    
+    iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.faces)), iSeq.block_size)
+    iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.faces*2-1, iSeq.block_size)
+    
+    system_parameters.test_object_contents(iSeq)
+    
+    print "******** Setting Training Data Parameters for Real Face  ****************"
+    sSeq = sNewidRFace = system_parameters.ParamsDataLoading()
+    sSeq.input_files = iSeq.input_files
+    sSeq.num_images = iSeq.num_images
+    sSeq.block_size = iSeq.block_size
+    sSeq.image_width = 256
+    sSeq.image_height = 192
+    sSeq.subimage_width = 135
+    sSeq.subimage_height = 135
+    
+    sSeq.trans_x_max = pipeline_fd['dx1']
+    sSeq.trans_x_min = -1 * pipeline_fd['dx1']
+    sSeq.trans_y_max = pipeline_fd['dy1']
+    sSeq.trans_y_min = -1 * pipeline_fd['dy1']
+    sSeq.min_sampling = pipeline_fd['smin1']
+    sSeq.max_sampling = pipeline_fd['smax1']
+    
+    sSeq.noface_trans_x_max = 45
+    sSeq.noface_trans_x_min = -45
+    sSeq.noface_trans_y_max = 19
+    sSeq.noface_trans_y_min = -19
+    sSeq.noface_min_sampling = 0.55
+    sSeq.noface_max_sampling = 1.1
+     
+    
+    sSeq.pixelsampling_x = numpy.zeros(sSeq.num_images)
+    sSeq.pixelsampling_y = numpy.zeros(sSeq.num_images) 
+    
+    #Centered Face
+    sSeq.pixelsampling_x[0:iSeq.block_size] = numpy.random.uniform(sSeq.min_sampling, sSeq.max_sampling, size=iSeq.block_size)
+    sSeq.pixelsampling_y[0:iSeq.block_size] = sSeq.pixelsampling_x[0:iSeq.block_size] + 0.0 #MUST BE A DIFFERENT OBJECT
+    #sSeq.pixelsampling_x[iSeq.block_size:] = numpy.random.uniform(sSeq.min_sampling, sSeq.max_sampling, size=iSeq.block_size)
+    #sSeq.pixelsampling_y[iSeq.block_size:] = sSeq.pixelsampling_x[iSeq.block_size:] + 0.0
+    #Decentered Face, using different x and y samplings
+    sSeq.pixelsampling_x[iSeq.block_size:] = double_uniform(sSeq.noface_min_sampling, sSeq.min_sampling, sSeq.max_sampling, sSeq.noface_max_sampling , size=iSeq.block_size,   p2=0.5)
+    sSeq.pixelsampling_y[iSeq.block_size:] = double_uniform(sSeq.noface_min_sampling, sSeq.min_sampling, sSeq.max_sampling, sSeq.noface_max_sampling , size=iSeq.block_size,   p2=0.5)
+    
+    sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
+    sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
+    #sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
+    sSeq.add_noise_L0 = True
+    sSeq.convert_format = "L"
+    sSeq.background_type = None
+    
+    #random translation for th w coordinate
+    #sSeq.translation = 20 # 25, Should be 20!!! Warning: 25
+    sSeq.translations_x = numpy.zeros(sSeq.num_images)
+    sSeq.translations_y = numpy.zeros(sSeq.num_images)
+    #Centered Face
+    sSeq.translations_x[0:iSeq.block_size] = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, iSeq.block_size)
+    sSeq.translations_y[0:iSeq.block_size] = numpy.random.random_integers(sSeq.trans_y_min, sSeq.trans_y_max, iSeq.block_size)
+    #Decentered Face
+    sSeq.translations_x[iSeq.block_size:] = double_uniform(sSeq.noface_trans_x_min, sSeq.trans_x_min, sSeq.trans_x_max, sSeq.noface_trans_x_max, size=iSeq.block_size, p2=0.5)
+    sSeq.translations_y[iSeq.block_size:] = double_uniform(sSeq.noface_trans_y_min, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.noface_trans_y_max, size=iSeq.block_size, p2=0.5)
+    
+    sSeq.trans_sampled = True
+    sSeq.name = "Face. Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f, 50)"%(sSeq.trans_x_min, 
+        sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, int(sSeq.min_sampling*1000), int(sSeq.max_sampling*1000))
+    
+    iSeq.name = sSeq.name
+    system_parameters.test_object_contents(sSeq)
+    
+    
+    ####################################################################
+    ###########    SYSTEM FOR REAL_FACE CLASSIFICATION      ############
+    ####################################################################  
+    ParamsRFace = system_parameters.ParamsSystem()
+    ParamsRFace.name = sTrainRFace.name
+    ParamsRFace.network = "linearNetwork4L"
+    ParamsRFace.iTrain = iTrainRFace
+    ParamsRFace.sTrain = sTrainRFace
+    ParamsRFace.iSeenid = iSeenidRFace
+    ParamsRFace.sSeenid = sSeenidRFace
+    ParamsRFace.iNewid = iNewidRFace 
+    ParamsRFace.sNewid = sNewidRFace 
+    ##MEGAWARNING!!!!
+    #ParamsRFace.iNewid = iNewidScale
+    #ParamsRFace.sNewid = sNewidScale
+    #ParamsRFace.sNewid.translations_y = ParamsRFace.sNewid.translations_y * 0.0 + 8.0
+    
+    ParamsRFace.block_size = iTrainRFace.block_size
+    ParamsRFace.train_mode = 'clustered' # 'mixed'
+    ParamsRFace.analysis = None
 
-alldbnormalized_available_images = numpy.arange(0,55000)
-numpy.random.shuffle(alldbnormalized_available_images)  
-av_fim = alldbnormalized_available_images
-alldb_noface_available_images = numpy.arange(0,18000) #= numpy.arange(0,12000) #???? image18552
-numpy.random.shuffle(alldb_noface_available_images)
-av_nfim =alldb_noface_available_images
 
-iteration = 0
+
+    import object_cache as cache
+    
+    robject_center_base_dir = "/local/escalafl/Alberto/FaubelSet_01/Center"
+    robject_down_base_dir = "/local/escalafl/Alberto/FaubelSet_01/Down"
+    robject_up_base_dir = "/local/escalafl/Alberto/FaubelSet_01/Up"
+    
+    #Dirty function to deal with filename convention obj#-##__#-##_ ... and  to acces several directories at once
+    def find_filenames_beginning_with_numbers(base_dirs=[""], base_filename="obj", base_numbers=None, extension=".png"):
+        if base_numbers is None:
+            return cache.find_filenames_beginning_with(base_dirs, base_filename, recursion=False, extension=extension)
+        else:
+            filenames = []
+            for n, i in enumerate(base_numbers):
+                filenames.append([])
+                for base_dir in base_dirs:
+                    filenames[n].extend(cache.find_filenames_beginning_with(base_dir, base_filename+"%d_"%i, recursion=False, extension=extension))
+    #            print "looking for %s //  %s"%(base_dir, base_filename+"%d_"%i)
+    #            print "found:", cache.find_filenames_beginning_with(base_dir, base_filename+"%d"%i, recursion=False, extension=extension)
+            return filenames
+    
+    #Cooperation with Christian Faubel. Object Recognition
+    #Images by Christian Faubel
+    #Attempt to distinguish some types of objects
+    robject_convert_format='L'
+    print "***** Setting Training Information Parameters for RObject ******"
+    iSeq = iTrainRObject = system_parameters.ParamsInput()
+    # (0.55+1.1)/2 = 0.825, 0.55/2 = 0.275, 0.55/4 = 0.1375, .825 + .1375 = .9625, .825 - .55/4 = .6875
+    iSeq.name = "Real Object Recognition"
+    
+    iSeq.data_base_dir = [robject_center_base_dir, robject_down_base_dir, robject_up_base_dir]
+    iSeq.ids = numpy.arange(1,21) # 1-31
+    #iSeq.faces = numpy.arange(0,2) # 0=centered normalized face, 1=not centered normalized face
+    #iSeq.scales = numpy.linspace(pipeline_fd['smin0'], pipeline_fd['smax0'], 50) # (-50, 50, 2)
+    #if len(iSeq.ids) % len(iSeq.faces) != 0:
+    #    ex="Here the number of scales must be a divisor of the number of identities"
+    #    raise Exception(ex)
+    iSeq.all_input_files = find_filenames_beginning_with_numbers(iSeq.data_base_dir, "obj", iSeq.ids, extension=".png")
+    #print "iSeq.all_input_files", iSeq.all_input_files
+    
+    iSeq.ages = [None]
+    iSeq.genders = [None]
+    iSeq.racetweens = [None]
+    iSeq.expressions = [None]
+    iSeq.morphs = [None]
+    iSeq.poses = map(len, iSeq.all_input_files)
+    iSeq.lightings = [None]
+    iSeq.slow_signal = 0 #real slow signal is whether there is a centered or descentered face
+    iSeq.step = 1
+    iSeq.offset = 0
+    iSeq.input_files = []
+    for single_file_list in iSeq.all_input_files:
+        iSeq.input_files += single_file_list
+    iSeq.block_sizes = numpy.array(iSeq.poses)
+    print "totaling %d images"%len(iSeq.input_files)
+    
+    #image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+    #                                            iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
+    #                                            iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=4, image_postfix=".jpg")
+    #iSeq.input_files = iSeq.input_files * 8 #4 was overfitting non linear sfa slightly
+    #To avoid grouping similar images next to one other
+    #numpy.random.shuffle(iSeq.input_files)  
+    
+    iSeq.num_images = len(iSeq.input_files)
+    #iSeq.params = [ids, expressions, morphs, poses, lightings]
+    iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
+                      iSeq.morphs, iSeq.poses, iSeq.lightings]
+    
+    #iSeq.block_size = 10 # WAAARRNNNIIINNGGG!!!
+    iSeq.block_size = iSeq.block_sizes
+    
+    #iSeq.num_images / len (iSeq.faces)
+    print "BLOCK SIZE =", iSeq.block_size 
+    print "BLOCK SIZES =", iSeq.block_sizes
+    
+    iSeq.correct_classes = []
+    for i, block_size in enumerate(iSeq.block_sizes):
+        iSeq.correct_classes += [iSeq.ids[i]]*block_size
+    iSeq.correct_classes = numpy.array(iSeq.correct_classes)
+    print iSeq.correct_classes
+    #quit()
+    
+    #sfa_libs.wider_1Darray(numpy.arange(len(iSeq.faces)), iSeq.block_size)
+    iSeq.correct_labels = iSeq.correct_classes + 0.0
+    print iSeq.correct_labels
+    
+    
+    
+    #sfa_libs.wider_1Darray(iSeq.faces*2-1, iSeq.block_size)
+    
+    system_parameters.test_object_contents(iSeq)
+    
+    print "******** Setting Training Data Parameters for Real Object  ****************"
+    sSeq = sTrainRObject = system_parameters.ParamsDataLoading()
+    sSeq.input_files = iSeq.input_files
+    sSeq.num_images = iSeq.num_images
+    sSeq.block_size = iSeq.block_size
+    sSeq.image_width = 52
+    sSeq.image_height = 52
+    sSeq.subimage_width = 32
+    sSeq.subimage_height = 32
+    
+    #sSeq.trans_x_max = pipeline_fd['dx1']
+    #sSeq.trans_x_min = -1 * pipeline_fd['dx1']
+    #sSeq.trans_y_max = pipeline_fd['dy1']
+    #sSeq.trans_y_min = -1 * pipeline_fd['dy1']
+    #sSeq.min_sampling = pipeline_fd['smin1']
+    #sSeq.max_sampling = pipeline_fd['smax1']
+    #sSeq.noface_trans_x_max = 45
+    #sSeq.noface_trans_x_min = -45
+    #sSeq.noface_trans_y_max = 19
+    #sSeq.noface_trans_y_min = -19
+    #sSeq.noface_min_sampling = 0.55
+    #sSeq.noface_max_sampling = 1.1
+    
+    sSeq.pixelsampling_x = 1.5 #1.625
+    sSeq.pixelsampling_y = 1.5
+    
+    ##Centered Face
+    #sSeq.pixelsampling_x[0:iSeq.block_size] = numpy.random.uniform(sSeq.min_sampling, sSeq.max_sampling, size=iSeq.block_size)
+    #sSeq.pixelsampling_y[0:iSeq.block_size] = sSeq.pixelsampling_x[0:iSeq.block_size] + 0.0 #MUST BE A DIFFERENT OBJECT
+    ##sSeq.pixelsampling_x[iSeq.block_size:] = numpy.random.uniform(sSeq.min_sampling, sSeq.max_sampling, size=iSeq.block_size)
+    ##sSeq.pixelsampling_y[iSeq.block_size:] = sSeq.pixelsampling_x[iSeq.block_size:] + 0.0
+    ##Decentered Face, using different x and y samplings
+    #sSeq.pixelsampling_x[iSeq.block_size:] = double_uniform(sSeq.noface_min_sampling, sSeq.min_sampling, sSeq.max_sampling, sSeq.noface_max_sampling , size=iSeq.block_size,   p2=0.5)
+    #sSeq.pixelsampling_y[iSeq.block_size:] = double_uniform(sSeq.noface_min_sampling, sSeq.min_sampling, sSeq.max_sampling, sSeq.noface_max_sampling , size=iSeq.block_size,   p2=0.5)
+    
+    sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
+    sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
+    #sSeq.subimage_first_column =" sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
+    sSeq.add_noise_L0 = True
+    sSeq.convert_format = robject_convert_format
+    sSeq.background_type = None
+    
+    #random translation for th w coordinate
+    #sSeq.translation = 20 # 25, Should be 20!!! Warning: 25
+    sSeq.translations_x = numpy.zeros(sSeq.num_images)
+    sSeq.translations_y = numpy.zeros(sSeq.num_images)
+    #Centered Face
+    ##sSeq.translations_x[0:iSeq.block_size] = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, iSeq.block_size)
+    ##sSeq.translations_y[0:iSeq.block_size] = numpy.random.random_integers(sSeq.trans_y_min, sSeq.trans_y_max, iSeq.block_size)
+    ###sSeq.translations_x[iSeq.block_size:] = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, iSeq.block_size)
+    ###sSeq.translations_y[iSeq.block_size:] = numpy.random.random_integers(sSeq.trans_y_min, sSeq.trans_y_max, iSeq.block_size)
+    ###Decentered Face
+    ##sSeq.translations_x[iSeq.block_size:] = double_uniform(sSeq.noface_trans_x_min, sSeq.trans_x_min, sSeq.trans_x_max, sSeq.noface_trans_x_max, size=iSeq.block_size, p2=0.5)
+    ##sSeq.translations_y[iSeq.block_size:] = double_uniform(sSeq.noface_trans_y_min, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.noface_trans_y_max, size=iSeq.block_size, p2=0.5)
+    
+    sSeq.trans_sampled = True
+    sSeq.name = "Object"
+    #sSeq.name = "Object. Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f, 50)"%(sSeq.trans_x_min, 
+    #    sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, int(sSeq.min_sampling*1000), int(sSeq.max_sampling*1000))
+    
+    print " sSeq.subimage_first_row =", sSeq.subimage_first_row
+    print "sSeq.pixelsampling_x", sSeq.pixelsampling_x
+    print "sSeq.translations_x", sSeq.translations_x
+    
+    iSeq.name = sSeq.name
+    system_parameters.test_object_contents(sSeq)
+    
+    
+    #2
+    print "***** Setting Seenid Information Parameters for RObject ******"
+    iSeq = iSeenidRObject = system_parameters.ParamsInput()
+    # (0.55+1.1)/2 = 0.825, 0.55/2 = 0.275, 0.55/4 = 0.1375, .825 + .1375 = .9625, .825 - .55/4 = .6875
+    iSeq.name = "Real Object Recognition"
+    
+    iSeq.data_base_dir = [robject_down_base_dir, robject_up_base_dir]
+    iSeq.ids = numpy.arange(21,31) # 1-31
+    #iSeq.faces = numpy.arange(0,2) # 0=centered normalized face, 1=not centered normalized face
+    #iSeq.scales = numpy.linspace(pipeline_fd['smin0'], pipeline_fd['smax0'], 50) # (-50, 50, 2)
+    #if len(iSeq.ids) % len(iSeq.faces) != 0:
+    #    ex="Here the number of scales must be a divisor of the number of identities"
+    #    raise Exception(ex)
+    iSeq.all_input_files = find_filenames_beginning_with_numbers(iSeq.data_base_dir, "obj", iSeq.ids, extension=".png")
+    #print "iSeq.all_input_files", iSeq.all_input_files
+    
+    iSeq.ages = [None]
+    iSeq.genders = [None]
+    iSeq.racetweens = [None]
+    iSeq.expressions = [None]
+    iSeq.morphs = [None]
+    iSeq.poses = map(len, iSeq.all_input_files)
+    iSeq.lightings = [None]
+    iSeq.slow_signal = 0 #real slow signal is whether there is a centered or descentered face
+    iSeq.step = 1
+    iSeq.offset = 0
+    iSeq.input_files = []
+    for single_file_list in iSeq.all_input_files:
+        iSeq.input_files += single_file_list
+    iSeq.block_sizes = numpy.array(iSeq.poses)
+    print "totaling %d images"%len(iSeq.input_files)
+    
+    #image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+    #                                            iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
+    #                                            iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=4, image_postfix=".jpg")
+    #iSeq.input_files = iSeq.input_files * 8 #4 was overfitting non linear sfa slightly
+    #To avoid grouping similar images next to one other
+    #numpy.random.shuffle(iSeq.input_files)  
+    
+    iSeq.num_images = len(iSeq.input_files)
+    #iSeq.params = [ids, expressions, morphs, poses, lightings]
+    iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
+                      iSeq.morphs, iSeq.poses, iSeq.lightings]
+    
+    #iSeq.block_size = 10 # WAAARRNNNIIINNGGG!!!
+    iSeq.block_size = iSeq.block_sizes
+    
+    #iSeq.num_images / len (iSeq.faces)
+    print "BLOCK SIZE =", iSeq.block_size 
+    print "BLOCK SIZES =", iSeq.block_sizes
+    
+    iSeq.correct_classes = []
+    for i, block_size in enumerate(iSeq.block_sizes):
+        iSeq.correct_classes += [iSeq.ids[i]]*block_size
+    iSeq.correct_classes = numpy.array(iSeq.correct_classes)
+    print iSeq.correct_classes
+    #quit()
+    
+    #sfa_libs.wider_1Darray(numpy.arange(len(iSeq.faces)), iSeq.block_size)
+    iSeq.correct_labels = iSeq.correct_classes + 0.0
+    print iSeq.correct_labels
+    
+    
+    
+    #sfa_libs.wider_1Darray(iSeq.faces*2-1, iSeq.block_size)
+    
+    system_parameters.test_object_contents(iSeq)
+    
+    print "******** Setting Training Data Parameters for Real Object  ****************"
+    sSeq = sSeenidRObject = system_parameters.ParamsDataLoading()
+    sSeq.input_files = iSeq.input_files
+    sSeq.num_images = iSeq.num_images
+    sSeq.block_size = iSeq.block_size
+    sSeq.image_width = 52
+    sSeq.image_height = 52
+    sSeq.subimage_width = 32
+    sSeq.subimage_height = 32
+    
+    #sSeq.trans_x_max = pipeline_fd['dx1']
+    #sSeq.trans_x_min = -1 * pipeline_fd['dx1']
+    #sSeq.trans_y_max = pipeline_fd['dy1']
+    #sSeq.trans_y_min = -1 * pipeline_fd['dy1']
+    #sSeq.min_sampling = pipeline_fd['smin1']
+    #sSeq.max_sampling = pipeline_fd['smax1']
+    #sSeq.noface_trans_x_max = 45
+    #sSeq.noface_trans_x_min = -45
+    #sSeq.noface_trans_y_max = 19
+    #sSeq.noface_trans_y_min = -19
+    #sSeq.noface_min_sampling = 0.55
+    #sSeq.noface_max_sampling = 1.1
+    
+    sSeq.pixelsampling_x = 1.5 #1.625
+    sSeq.pixelsampling_y = 1.5
+    
+    ##Centered Face
+    #sSeq.pixelsampling_x[0:iSeq.block_size] = numpy.random.uniform(sSeq.min_sampling, sSeq.max_sampling, size=iSeq.block_size)
+    #sSeq.pixelsampling_y[0:iSeq.block_size] = sSeq.pixelsampling_x[0:iSeq.block_size] + 0.0 #MUST BE A DIFFERENT OBJECT
+    ##sSeq.pixelsampling_x[iSeq.block_size:] = numpy.random.uniform(sSeq.min_sampling, sSeq.max_sampling, size=iSeq.block_size)
+    ##sSeq.pixelsampling_y[iSeq.block_size:] = sSeq.pixelsampling_x[iSeq.block_size:] + 0.0
+    ##Decentered Face, using different x and y samplings
+    #sSeq.pixelsampling_x[iSeq.block_size:] = double_uniform(sSeq.noface_min_sampling, sSeq.min_sampling, sSeq.max_sampling, sSeq.noface_max_sampling , size=iSeq.block_size,   p2=0.5)
+    #sSeq.pixelsampling_y[iSeq.block_size:] = double_uniform(sSeq.noface_min_sampling, sSeq.min_sampling, sSeq.max_sampling, sSeq.noface_max_sampling , size=iSeq.block_size,   p2=0.5)
+    
+    sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
+    sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
+    #sSeq.subimage_first_column =" sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
+    sSeq.add_noise_L0 = True
+    sSeq.convert_format = robject_convert_format
+    sSeq.background_type = None
+    
+    #random translation for th w coordinate
+    #sSeq.translation = 20 # 25, Should be 20!!! Warning: 25
+    sSeq.translations_x = numpy.zeros(sSeq.num_images)
+    sSeq.translations_y = numpy.zeros(sSeq.num_images)
+    #Centered Face
+    ##sSeq.translations_x[0:iSeq.block_size] = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, iSeq.block_size)
+    ##sSeq.translations_y[0:iSeq.block_size] = numpy.random.random_integers(sSeq.trans_y_min, sSeq.trans_y_max, iSeq.block_size)
+    ###sSeq.translations_x[iSeq.block_size:] = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, iSeq.block_size)
+    ###sSeq.translations_y[iSeq.block_size:] = numpy.random.random_integers(sSeq.trans_y_min, sSeq.trans_y_max, iSeq.block_size)
+    ###Decentered Face
+    ##sSeq.translations_x[iSeq.block_size:] = double_uniform(sSeq.noface_trans_x_min, sSeq.trans_x_min, sSeq.trans_x_max, sSeq.noface_trans_x_max, size=iSeq.block_size, p2=0.5)
+    ##sSeq.translations_y[iSeq.block_size:] = double_uniform(sSeq.noface_trans_y_min, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.noface_trans_y_max, size=iSeq.block_size, p2=0.5)
+    
+    sSeq.trans_sampled = True
+    sSeq.name = "Object"
+    #sSeq.name = "Object. Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f, 50)"%(sSeq.trans_x_min, 
+    #    sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, int(sSeq.min_sampling*1000), int(sSeq.max_sampling*1000))
+    
+    print " sSeq.subimage_first_row =", sSeq.subimage_first_row
+    print "sSeq.pixelsampling_x", sSeq.pixelsampling_x
+    print "sSeq.translations_x", sSeq.translations_x
+    
+    iSeq.name = sSeq.name
+    system_parameters.test_object_contents(sSeq)
+    
+    #3
+    print "***** Setting Training Information Parameters for RObject ******"
+    iSeq = iNewidRObject = system_parameters.ParamsInput()
+    # (0.55+1.1)/2 = 0.825, 0.55/2 = 0.275, 0.55/4 = 0.1375, .825 + .1375 = .9625, .825 - .55/4 = .6875
+    iSeq.name = "Real Object Recognition"
+    
+    iSeq.data_base_dir =  [robject_center_base_dir]
+    iSeq.ids = numpy.arange(21,31) # 1-31
+    #iSeq.faces = numpy.arange(0,2) # 0=centered normalized face, 1=not centered normalized face
+    #iSeq.scales = numpy.linspace(pipeline_fd['smin0'], pipeline_fd['smax0'], 50) # (-50, 50, 2)
+    #if len(iSeq.ids) % len(iSeq.faces) != 0:
+    #    ex="Here the number of scales must be a divisor of the number of identities"
+    #    raise Exception(ex)
+    iSeq.all_input_files = find_filenames_beginning_with_numbers(iSeq.data_base_dir, "obj", iSeq.ids, extension=".png")
+    #print "iSeq.all_input_files", iSeq.all_input_files
+    
+    iSeq.ages = [None]
+    iSeq.genders = [None]
+    iSeq.racetweens = [None]
+    iSeq.expressions = [None]
+    iSeq.morphs = [None]
+    iSeq.poses = map(len, iSeq.all_input_files)
+    iSeq.lightings = [None]
+    iSeq.slow_signal = 0 #real slow signal is whether there is a centered or descentered face
+    iSeq.step = 1
+    iSeq.offset = 0
+    iSeq.input_files = []
+    for single_file_list in iSeq.all_input_files:
+        iSeq.input_files += single_file_list
+    iSeq.block_sizes = numpy.array(iSeq.poses)
+    print "totaling %d images"%len(iSeq.input_files)
+    
+    #image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+    #                                            iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
+    #                                            iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=4, image_postfix=".jpg")
+    #iSeq.input_files = iSeq.input_files * 8 #4 was overfitting non linear sfa slightly
+    #To avoid grouping similar images next to one other
+    #numpy.random.shuffle(iSeq.input_files)  
+    
+    iSeq.num_images = len(iSeq.input_files)
+    #iSeq.params = [ids, expressions, morphs, poses, lightings]
+    iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
+                      iSeq.morphs, iSeq.poses, iSeq.lightings]
+    
+    #iSeq.block_size = 10 # WAAARRNNNIIINNGGG!!!
+    iSeq.block_size = iSeq.block_sizes
+    
+    #iSeq.num_images / len (iSeq.faces)
+    print "BLOCK SIZE =", iSeq.block_size 
+    print "BLOCK SIZES =", iSeq.block_sizes
+    
+    iSeq.correct_classes = []
+    for i, block_size in enumerate(iSeq.block_sizes):
+        iSeq.correct_classes += [iSeq.ids[i]]*block_size
+    iSeq.correct_classes = numpy.array(iSeq.correct_classes)
+    print iSeq.correct_classes
+    #quit()
+    
+    #sfa_libs.wider_1Darray(numpy.arange(len(iSeq.faces)), iSeq.block_size)
+    iSeq.correct_labels = iSeq.correct_classes + 0.0
+    print iSeq.correct_labels
+    
+    
+    
+    #sfa_libs.wider_1Darray(iSeq.faces*2-1, iSeq.block_size)
+    
+    system_parameters.test_object_contents(iSeq)
+    
+    print "******** Setting Training Data Parameters for Real Object  ****************"
+    sSeq = sNewidRObject = system_parameters.ParamsDataLoading()
+    sSeq.input_files = iSeq.input_files
+    sSeq.num_images = iSeq.num_images
+    sSeq.block_size = iSeq.block_size
+    sSeq.image_width = 52
+    sSeq.image_height = 52
+    sSeq.subimage_width = 32
+    sSeq.subimage_height = 32
+    
+    #sSeq.trans_x_max = pipeline_fd['dx1']
+    #sSeq.trans_x_min = -1 * pipeline_fd['dx1']
+    #sSeq.trans_y_max = pipeline_fd['dy1']
+    #sSeq.trans_y_min = -1 * pipeline_fd['dy1']
+    #sSeq.min_sampling = pipeline_fd['smin1']
+    #sSeq.max_sampling = pipeline_fd['smax1']
+    #sSeq.noface_trans_x_max = 45
+    #sSeq.noface_trans_x_min = -45
+    #sSeq.noface_trans_y_max = 19
+    #sSeq.noface_trans_y_min = -19
+    #sSeq.noface_min_sampling = 0.55
+    #sSeq.noface_max_sampling = 1.1
+    
+    sSeq.pixelsampling_x = 1.5 #1.625
+    sSeq.pixelsampling_y = 1.5
+    
+    ##Centered Face
+    #sSeq.pixelsampling_x[0:iSeq.block_size] = numpy.random.uniform(sSeq.min_sampling, sSeq.max_sampling, size=iSeq.block_size)
+    #sSeq.pixelsampling_y[0:iSeq.block_size] = sSeq.pixelsampling_x[0:iSeq.block_size] + 0.0 #MUST BE A DIFFERENT OBJECT
+    ##sSeq.pixelsampling_x[iSeq.block_size:] = numpy.random.uniform(sSeq.min_sampling, sSeq.max_sampling, size=iSeq.block_size)
+    ##sSeq.pixelsampling_y[iSeq.block_size:] = sSeq.pixelsampling_x[iSeq.block_size:] + 0.0
+    ##Decentered Face, using different x and y samplings
+    #sSeq.pixelsampling_x[iSeq.block_size:] = double_uniform(sSeq.noface_min_sampling, sSeq.min_sampling, sSeq.max_sampling, sSeq.noface_max_sampling , size=iSeq.block_size,   p2=0.5)
+    #sSeq.pixelsampling_y[iSeq.block_size:] = double_uniform(sSeq.noface_min_sampling, sSeq.min_sampling, sSeq.max_sampling, sSeq.noface_max_sampling , size=iSeq.block_size,   p2=0.5)
+    
+    sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
+    sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
+    #sSeq.subimage_first_column =" sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2+ 5*sSeq.pixelsampling_x
+    sSeq.add_noise_L0 = True
+    sSeq.convert_format = robject_convert_format
+    sSeq.background_type = None
+    
+    #random translation for th w coordinate
+    #sSeq.translation = 20 # 25, Should be 20!!! Warning: 25
+    sSeq.translations_x = numpy.zeros(sSeq.num_images)
+    sSeq.translations_y = numpy.zeros(sSeq.num_images)
+    #Centered Face
+    ##sSeq.translations_x[0:iSeq.block_size] = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, iSeq.block_size)
+    ##sSeq.translations_y[0:iSeq.block_size] = numpy.random.random_integers(sSeq.trans_y_min, sSeq.trans_y_max, iSeq.block_size)
+    ###sSeq.translations_x[iSeq.block_size:] = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, iSeq.block_size)
+    ###sSeq.translations_y[iSeq.block_size:] = numpy.random.random_integers(sSeq.trans_y_min, sSeq.trans_y_max, iSeq.block_size)
+    ###Decentered Face
+    ##sSeq.translations_x[iSeq.block_size:] = double_uniform(sSeq.noface_trans_x_min, sSeq.trans_x_min, sSeq.trans_x_max, sSeq.noface_trans_x_max, size=iSeq.block_size, p2=0.5)
+    ##sSeq.translations_y[iSeq.block_size:] = double_uniform(sSeq.noface_trans_y_min, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.noface_trans_y_max, size=iSeq.block_size, p2=0.5)
+    
+    sSeq.trans_sampled = True
+    sSeq.name = "Object"
+    #sSeq.name = "Object. Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f, 50)"%(sSeq.trans_x_min, 
+    #    sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, int(sSeq.min_sampling*1000), int(sSeq.max_sampling*1000))
+    
+    print " sSeq.subimage_first_row =", sSeq.subimage_first_row
+    print "sSeq.pixelsampling_x", sSeq.pixelsampling_x
+    print "sSeq.translations_x", sSeq.translations_x
+    
+    iSeq.name = sSeq.name
+    system_parameters.test_object_contents(sSeq)
+    
+    ####################################################################
+    ###########    SYSTEM FOR REAL_OBJECT RECOGNITION       ############
+    ####################################################################  
+    ParamsRObject = system_parameters.ParamsSystem()
+    ParamsRObject.name = sTrainRObject.name
+    ParamsRObject.network = "linearNetwork4L"
+    ParamsRObject.iTrain = iTrainRObject
+    ParamsRObject.sTrain = sTrainRObject
+    ParamsRObject.iSeenid = iSeenidRObject
+    ParamsRObject.sSeenid = sSeenidRObject
+    ParamsRObject.iNewid = iNewidRObject
+    ParamsRObject.sNewid = sNewidRObject
+    ##MEGAWARNING!!!!
+    #ParamsRFace.iNewid = iNewidScale
+    #ParamsRFace.sNewid = sNewidScale
+    #ParamsRFace.sNewid.translations_y = ParamsRFace.sNewid.translations_y * 0.0 + 8.0
+    
+    ParamsRObject.block_size = iTrainRObject.block_size
+    ParamsRObject.train_mode = 'clustered' # 'mixed'
+    ParamsRObject.analysis = None
+    ParamsRObject.enable_reduced_image_sizes = False
+    ParamsRObject.reduction_factor = 1.0
+    ParamsRObject.hack_image_size = 32
+    ParamsRObject.enable_hack_image_size = True
+    
+    
+    
+    
+    
+    
+    print "***** Project: Processing natural images with SFA,  ******"
+    print "***** Image Patches courtesy of Niko Wilbert ******"
+    print "***** Setting Training Information Parameters for RawNatural ******"
+    iSeq = iTrainRawNatural = system_parameters.ParamsInput()
+    iSeq.name = "Natural image patches"
+    iSeq.data_base_dir = "/home/escalafl/Databases/cooperations/igel/patches_8x8"
+    iSeq.base_filename = "bochum_natural_8_5000.bin"
+    
+    iSeq.samples = numpy.arange(0, 4000, dtype="int")
+    iSeq.ids = iSeq.samples # 1 - 4000+1
+    iSeq.num_images = len(iSeq.samples)
+    iSeq.ages = [None]
+    iSeq.genders = [None]
+    iSeq.racetweens = [None]
+    iSeq.expressions = [None]
+    iSeq.morphs = [None]
+    iSeq.poses = [None]
+    iSeq.lightings = [None]
+    iSeq.slow_signal = 0 #slow parameter is the image number
+    iSeq.step = 1
+    iSeq.offset = 0
+    iSeq.input_files = "LoadRawData"
+    iSeq.block_size = 1
+    print "totaling %d samples"% iSeq.num_images
+    
+    iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
+                      iSeq.morphs, iSeq.poses, iSeq.lightings]
+    
+    print "BLOCK SIZE =", iSeq.block_size 
+    
+    iSeq.correct_classes = iSeq.ids * 1
+    #print iSeq.correct_classes
+    #quit()
+    #sfa_libs.wider_1Darray(numpy.arange(len(iSeq.faces)), iSeq.block_size)
+    iSeq.correct_labels = iSeq.correct_classes * 1
+    #print iSeq.correct_labels
+    
+    #sfa_libs.wider_1Darray(iSeq.faces*2-1, iSeq.block_size)
+    system_parameters.test_object_contents(iSeq)
+    
+    print "******** Setting Training Data Parameters for RawNatural  ****************"
+    sSeq = sTrainRawNatural = system_parameters.ParamsDataLoading()
+    sSeq.base_filename = iSeq.base_filename
+    sSeq.data_base_dir = iSeq.data_base_dir
+    sSeq.input_files = iSeq.input_files
+    sSeq.samples = iSeq.samples
+    sSeq.num_images = iSeq.num_images
+    sSeq.block_size = iSeq.block_size
+    sSeq.subimage_width = 8
+    sSeq.subimage_height = 8
+    sSeq.input_dim = 64
+    sSeq.dtype = "uint8"
+    sSeq.convert_format = "binary"
+    sSeq.name = "Natural Patch. 8x8, input_dim = %d, num_images %d"%(sSeq.input_dim, iSeq.num_images)
+    iSeq.name = sSeq.name
+    system_parameters.test_object_contents(sSeq)
+    
+    
+    print "***** Setting Training Information Parameters for RawNatural ******"
+    iSeq = iNewidRawNatural = system_parameters.ParamsInput()
+    iSeq.name = "Natural image patches"
+    iSeq.data_base_dir = "/home/escalafl/Databases/cooperations/igel/patches_8x8"
+    iSeq.base_filename = "bochum_natural_8_5000.bin"
+    
+    iSeq.samples = numpy.arange(4000, 5000, dtype="int")
+    iSeq.ids = iSeq.samples # 1 - 4000+1
+    iSeq.num_images = len(iSeq.samples)
+    iSeq.ages = [None]
+    iSeq.genders = [None]
+    iSeq.racetweens = [None]
+    iSeq.expressions = [None]
+    iSeq.morphs = [None]
+    iSeq.poses = [None]
+    iSeq.lightings = [None]
+    iSeq.slow_signal = 0 #slow parameter is the image number
+    iSeq.step = 1
+    iSeq.offset = 0
+    iSeq.input_files = "LoadRawData"
+    iSeq.block_size = 1
+    print "totaling %d samples"% iSeq.num_images
+    
+    iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
+                      iSeq.morphs, iSeq.poses, iSeq.lightings]
+    
+    print "BLOCK SIZE =", iSeq.block_size 
+    
+    iSeq.correct_classes = iSeq.ids * 1
+    #print iSeq.correct_classes
+    #quit()
+    #sfa_libs.wider_1Darray(numpy.arange(len(iSeq.faces)), iSeq.block_size)
+    iSeq.correct_labels = iSeq.correct_classes * 1
+    #print iSeq.correct_labels
+    
+    #sfa_libs.wider_1Darray(iSeq.faces*2-1, iSeq.block_size)
+    system_parameters.test_object_contents(iSeq)
+    
+    print "******** Setting Training Data Parameters for Natural  ****************"
+    sSeq = sNewidRawNatural = system_parameters.ParamsDataLoading()
+    sSeq.base_filename = iSeq.base_filename
+    sSeq.data_base_dir = iSeq.data_base_dir
+    sSeq.input_files = iSeq.input_files
+    sSeq.samples = iSeq.samples
+    sSeq.num_images = iSeq.num_images
+    sSeq.block_size = iSeq.block_size
+    sSeq.subimage_width = 8
+    sSeq.subimage_height = 8
+    sSeq.input_dim = 64
+    sSeq.dtype = "uint8"
+    sSeq.convert_format = "binary"
+    sSeq.name = "Natural Patch. 8x8, input_dim = %d, num_images %d"%(sSeq.input_dim, iSeq.num_images)
+    iSeq.name = sSeq.name
+    system_parameters.test_object_contents(sSeq)
+    
+    ####################################################################
+    ###########    SYSTEM FOR RAW NATURAL IMAGE PATCHES      ###########
+    ####################################################################  
+    ParamsRawNatural = system_parameters.ParamsSystem()
+    ParamsRawNatural.name = sTrainRawNatural.name
+    ParamsRawNatural.network = None
+    ParamsRawNatural.iTrain = iTrainRawNatural
+    ParamsRawNatural.sTrain = sTrainRawNatural
+    ParamsRawNatural.iSeenid = iTrainRawNatural
+    ParamsRawNatural.sSeenid = sTrainRawNatural
+    ParamsRawNatural.iNewid = iNewidRawNatural
+    ParamsRawNatural.sNewid = sNewidRawNatural
+    ParamsRawNatural.block_size = iTrainRawNatural.block_size
+    ParamsRawNatural.train_mode = 'serial' # 'mixed'
+    ParamsRawNatural.analysis = False
+    ParamsRawNatural.enable_reduced_image_sizes = False
+    ParamsRawNatural.reduction_factor = -1
+    ParamsRawNatural.hack_image_size = -1
+    ParamsRawNatural.enable_hack_image_size = False
+    
+    
+    
+    
+    
+    print "***** Project: Integration of RBM and SFA,  ******"
+    rbm_sfa_iteration = 19999 # 99 or 4999, now also 9999. 14999, 19999
+    rbm_sfa_numHid = 64 #64 or 128
+    rbm_sfa_data_base_dir = "/home/escalafl/Databases/cooperations/igel/rbm_%d"%rbm_sfa_numHid # 64 or 128
+    
+    print "***** Setting Training Information Parameters for Natural ******"
+    iSeq = iTrainNatural = system_parameters.ParamsInput()
+    # (0.55+1.1)/2 = 0.825, 0.55/2 = 0.275, 0.55/4 = 0.1375, .825 + .1375 = .9625, .825 - .55/4 = .6875
+    iSeq.name = "Natural images RBM"
+    
+    iSeq.data_base_dir = rbm_sfa_data_base_dir
+    iSeq.iteration = rbm_sfa_iteration
+    iSeq.base_filename = "data_bin_%d.bin"%(iSeq.iteration+1)
+    
+    (iSeq.magic_num, iteration, iSeq.numSamples, iSeq.numHid, iSeq.sampleSpan) = image_loader.read_binary_header(iSeq.data_base_dir, iSeq.base_filename)
+    if iteration != iSeq.iteration:
+        er = "wrong iteration number in file, was %d, should be %d"%(iteration, iSeq.iteration)
+        raise Exception(er)
+    
+    if iSeq.numHid != rbm_sfa_numHid:
+        er = "wrong number of output Neurons %d, 64 were assumed"%iSeq.numHid
+        raise Exception(er)
+    
+    if iSeq.numSamples != 5000:
+        er = "wrong number of Samples %d, 5000 were assumed"%iSeq.numSamples
+        raise Exception(er)
+    
+    iSeq.numSamples = 4000
+    iSeq.samples = numpy.arange(0, iSeq.numSamples, dtype="int")
+    iSeq.ids = numpy.arange(1,iSeq.numSamples+1) # 1 - 4000+1
+    iSeq.num_images = len(iSeq.samples)
+    iSeq.ages = [None]
+    iSeq.genders = [None]
+    iSeq.racetweens = [None]
+    iSeq.expressions = [None]
+    iSeq.morphs = [None]
+    iSeq.poses = [None]
+    iSeq.lightings = [None]
+    iSeq.slow_signal = 0 #slow parameter is the image number
+    iSeq.step = 1
+    iSeq.offset = 0
+    iSeq.input_files = "LoadBinaryData00"
+    iSeq.block_size = 1
+    print "totaling %d samples"% iSeq.num_images
+    
+    iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
+                      iSeq.morphs, iSeq.poses, iSeq.lightings]
+    
+    #iSeq.num_images / len (iSeq.faces)
+    print "BLOCK SIZE =", iSeq.block_size 
+    
+    iSeq.correct_classes = iSeq.ids * 1
+    #print iSeq.correct_classes
+    #quit()
+    #sfa_libs.wider_1Darray(numpy.arange(len(iSeq.faces)), iSeq.block_size)
+    iSeq.correct_labels = iSeq.correct_classes * 1
+    #print iSeq.correct_labels
+    
+    #sfa_libs.wider_1Darray(iSeq.faces*2-1, iSeq.block_size)
+    system_parameters.test_object_contents(iSeq)
+    
+    print "******** Setting Training Data Parameters for Natural  ****************"
+    sSeq = sTrainNatural = system_parameters.ParamsDataLoading()
+    sSeq.base_filename = iSeq.base_filename
+    sSeq.data_base_dir = iSeq.data_base_dir
+    sSeq.input_files = iSeq.input_files
+    sSeq.samples = iSeq.samples
+    sSeq.num_images = iSeq.num_images
+    sSeq.block_size = iSeq.block_size
+    sSeq.subimage_width = rbm_sfa_numHid / 8
+    sSeq.subimage_height = rbm_sfa_numHid / sSeq.subimage_width
+    sSeq.convert_format = "binary"
+    sSeq.name = "RBM Natural. 8x8 (exp 64=%d), iter %d, num_images %d"%(iSeq.numHid, iSeq.iteration, iSeq.num_images)
+    iSeq.name = sSeq.name
+    system_parameters.test_object_contents(sSeq)
+    
+    #NOTE: There is no Seenid training data because we do not have labels for the classifier
+    
+    print "***** Setting Newid Information Parameters for Natural ******"
+    iSeq = iNewidNatural = system_parameters.ParamsInput()
+    iSeq.name = "Natural images"
+    
+    iSeq.data_base_dir = rbm_sfa_data_base_dir
+    #iSeq.magic_num = 666
+    iSeq.iteration = rbm_sfa_iteration #0
+    iSeq.base_filename = "data_bin_%d.bin"%(iSeq.iteration+1)
+    
+    (iSeq.magic_num, iteration, iSeq.numSamples, iSeq.numHid, iSeq.sampleSpan) = image_loader.read_binary_header(iSeq.data_base_dir, iSeq.base_filename)
+    if iteration != iSeq.iteration:
+        er = "wrong iteration number in file, was %d, should be %d"%(iteration, iSeq.iteration)
+        raise Exception(er)
+    
+    if iSeq.numHid != rbm_sfa_numHid:
+        er = "wrong number of output Neurons %d, %d were assumed"%(iSeq.numHid,rbm_sfa_numHid)
+        raise Exception(er)
+    
+    if iSeq.numSamples != 5000:
+        er = "wrong number of Samples %d, 5000 were assumed"%iSeq.numSamples
+        raise Exception(er)
+    
+    iSeq.samples = numpy.arange(4000, 5000, dtype="int")
+    iSeq.ids = iSeq.samples+1 # 1 - 4000+1
+    iSeq.num_images = len(iSeq.samples)
+    iSeq.ages = [None]
+    iSeq.genders = [None]
+    iSeq.racetweens = [None]
+    iSeq.expressions = [None]
+    iSeq.morphs = [None]
+    iSeq.poses = [None]
+    iSeq.lightings = [None]
+    iSeq.slow_signal = 0 #slow parameter is the image number
+    iSeq.step = 1
+    iSeq.offset = 0
+    iSeq.input_files = "LoadBinaryData00"
+    iSeq.block_size = 1
+    print "totaling %d images"% iSeq.num_images
+    
+    iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
+                      iSeq.morphs, iSeq.poses, iSeq.lightings]
+    
+    #iSeq.num_images / len (iSeq.faces)
+    print "BLOCK SIZE =", iSeq.block_size 
+    
+    iSeq.correct_classes = iSeq.ids * 1
+    #print iSeq.correct_classes
+    #quit()
+    #sfa_libs.wider_1Darray(numpy.arange(len(iSeq.faces)), iSeq.block_size)
+    iSeq.correct_labels = iSeq.correct_classes * 1
+    #print iSeq.correct_labels
+    
+    #sfa_libs.wider_1Darray(iSeq.faces*2-1, iSeq.block_size)
+    system_parameters.test_object_contents(iSeq)
+    
+    print "******** Setting Newid Data Parameters for Natural ****************"
+    sSeq = sNewidNatural = system_parameters.ParamsDataLoading()
+    sSeq.base_filename = iSeq.base_filename
+    sSeq.data_base_dir = iSeq.data_base_dir
+    sSeq.input_files = iSeq.input_files
+    sSeq.num_images = iSeq.num_images
+    sSeq.block_size = iSeq.block_size
+    sSeq.samples = iSeq.samples
+    sSeq.subimage_width = rbm_sfa_numHid / 8
+    sSeq.subimage_height = rbm_sfa_numHid / sSeq.subimage_width
+    sSeq.convert_format = "binary"
+    sSeq.name = "RBM Natural. 8x8 (exp 100=%d), iter %d, num_images %d"%(iSeq.numHid, iSeq.iteration, iSeq.num_images)
+    iSeq.name = sSeq.name
+    system_parameters.test_object_contents(sSeq)
+    #quit()
+    
+    
+    
+    ####################################################################
+    ###########     SYSTEM FOR RBM NATURAL ANALYSIS         ############
+    ####################################################################  
+    ParamsNatural = system_parameters.ParamsSystem()
+    ParamsNatural.name = sTrainNatural.name
+    ParamsNatural.network = None
+    ParamsNatural.iTrain = iTrainNatural
+    ParamsNatural.sTrain = sTrainNatural
+    ParamsNatural.iSeenid = copy.deepcopy(iTrainNatural)
+    ParamsNatural.sSeenid = copy.deepcopy(sTrainNatural)
+    ParamsNatural.iNewid = iNewidNatural
+    ParamsNatural.sNewid = sNewidNatural
+    #ParamsNatural.iSeenid = iSeenidNatural
+    #ParamsNatural.sSeenid = sSeenidNatural
+    #ParamsNatural.iNewid = iNewidNatural
+    #ParamsNatural.sNewid = sNewidNatural
+    ParamsNatural.block_size = iTrainNatural.block_size
+    ParamsNatural.train_mode = 'serial' # 'mixed'
+    ParamsNatural.analysis = False
+    ParamsNatural.enable_reduced_image_sizes = False
+    ParamsNatural.reduction_factor = -1
+    ParamsNatural.hack_image_size = -1
+    ParamsNatural.enable_hack_image_size = False
+else:
+    ParamsNatural = system_parameters.ParamsSystem() #Define an empty object to prevent cuicuilco_run from crashing
+
+
+
+
+
+
+
+
+# #FaceDiscrimination
+# #TODO: Explain this, enlarge largest face, 
+# print "***** Setting Training Information Parameters for RFaceCentering******"
+# iSeq = iTrainRFaceCentering= system_parameters.ParamsInput()
+# # (0.55+1.1)/2 = 0.825, 0.55/2 = 0.275, 0.55/4 = 0.1375, .825 + .1375 = .9625, .825 - .55/4 = .6875
+# iSeq.name = "Real FACE DISCRIMINATION (Centered / Decentered)"
+# 
+# iSeq.data_base_dir = alldbnormalized_base_dir
+# alldbnormalized_available_images = numpy.arange(0,55000)
+# numpy.random.shuffle(alldbnormalized_available_images)
+# alldb_noface_available_images = numpy.arange(0,12000)
+# numpy.random.shuffle(alldb_noface_available_images)
+# 
+# iSeq.ids = alldbnormalized_available_images[0:6000] #30000, numpy.arange(0,6000) # 6000
+# iSeq.faces = numpy.arange(0,10) # 0=centered normalized face, 1=not centered normalized face
+# block_sizeT = len(iSeq.ids) / len(iSeq.faces)
+# 
+# #iSeq.scales = numpy.linspace(pipeline_fd['smin0'], pipeline_fd['smax0'], 50) # (-50, 50, 2)
+# if len(iSeq.ids) % len(iSeq.faces) != 0:
+#     ex="Here the number of scales must be a divisor of the number of identities"
+#     raise Exception(ex)
+# 
+# iSeq.ages = [None]
+# iSeq.genders = [None]
+# iSeq.racetweens = [None]
+# iSeq.expressions = [None]
+# iSeq.morphs = [None]
+# iSeq.poses = [None]
+# iSeq.lightings = [None]
+# iSeq.slow_signal = 0 #real slow signal is whether there is the amount of face centering
+# iSeq.step = 1
+# iSeq.offset = 0
+# repetition_factorT = 2 # WARNING 2, 8
+# iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+#                                             iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
+#                                             iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
+# iSeq.input_files = iSeq.input_files * repetition_factorT  #  4 was overfitting non linear sfa slightly
+# #To avoid grouping similar images next to one other or in the same block
+# numpy.random.shuffle(iSeq.input_files)  
+# 
+# iSeq.data2_base_dir = alldb_noface_base_dir
+# iSeq.ids2 = alldb_noface_available_images[0: block_sizeT * repetition_factorT]
+# iSeq.input_files2 = image_loader.create_image_filenames3(iSeq.data2_base_dir, "image", iSeq.slow_signal, iSeq.ids2, iSeq.ages, \
+#                                             iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
+#                                             iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
+# iSeq.input_files2 = iSeq.input_files2 
+# numpy.random.shuffle(iSeq.input_files2)
+# 
+# iSeq.input_files = iSeq.input_files[0:-block_sizeT* repetition_factorT] + iSeq.input_files2
+# 
+# iSeq.num_images = len(iSeq.input_files)
+# #iSeq.params = [ids, expressions, morphs, poses, lightings]
+# iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
+#                   iSeq.morphs, iSeq.poses, iSeq.lightings]
+# iSeq.block_size = iSeq.num_images / len (iSeq.faces)
+# print "BLOCK SIZE =", iSeq.block_size 
+# 
+# iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.faces)), iSeq.block_size)
+# iSeq.correct_labels = iSeq.correct_classes / (len(iSeq.faces)-1)
+# 
+# system_parameters.test_object_contents(iSeq)
+# 
+# print "******** Setting Training Data Parameters for Real Face Centering****************"
+# sSeq = sTrainRFaceCentering= system_parameters.ParamsDataLoading()
+# sSeq.input_files = iSeq.input_files
+# sSeq.num_images = iSeq.num_images
+# sSeq.block_size = iSeq.block_size
+# sSeq.image_width = 256
+# sSeq.image_height = 192
+# sSeq.subimage_width = 135
+# sSeq.subimage_height = 135
+# 
+# sSeq.trans_x_max = pipeline_fd['dx0'] * 1.0
+# sSeq.trans_y_max = pipeline_fd['dy0'] * 1.0 * 0.998
+# sSeq.min_sampling = pipeline_fd['smin0'] - 0.1 #WARNING!!!
+# sSeq.max_sampling = pipeline_fd['smax0']
+# sSeq.avg_sampling = (sSeq.min_sampling + sSeq.max_sampling)/2
+# 
+# 
+# sSeq.pixelsampling_x = numpy.zeros(sSeq.num_images)
+# sSeq.pixelsampling_y = numpy.zeros(sSeq.num_images) 
+# sSeq.translations_x = numpy.zeros(sSeq.num_images)
+# sSeq.translations_y = numpy.zeros(sSeq.num_images)
+# 
+# 
+# num_blocks = sSeq.num_images/sSeq.block_size
+# for block_nr in range(num_blocks):
+#     #For exterior box
+#     fraction = ((block_nr+1.0) / (num_blocks-1)) ** 0.333
+#     if fraction > 1:
+#         fraction = 1
+#     x_max = sSeq.trans_x_max * fraction
+#     y_max = sSeq.trans_y_max * fraction
+#     samp_max = sSeq.avg_sampling + (sSeq.max_sampling-sSeq.avg_sampling) * fraction
+#     samp_min = sSeq.avg_sampling + (sSeq.min_sampling-sSeq.avg_sampling) * fraction
+# 
+#     box_ext = [(-x_max, x_max), (-y_max, y_max), (samp_min, samp_max), (samp_min, samp_max)] 
+# 
+#     if block_nr >= 0:
+#         #For interior boxiSeq.ids = alldbnormalized_available_images[30000:45000]       
+#         if block_nr < num_blocks-1:
+#             eff_block_nr = block_nr
+#         else:
+#             eff_block_nr = block_nr-1
+#         fraction2 = (eff_block_nr / (num_blocks-1)) ** 0.333
+#         if fraction2 > 1:
+#             fraction2 = 1
+#         x_max = sSeq.trans_x_max * fraction2
+#         y_max = sSeq.trans_y_max * fraction2
+#         samp_max = sSeq.avg_sampling + (sSeq.max_sampling-sSeq.avg_sampling) * fraction2
+#         samp_min = sSeq.avg_sampling + (sSeq.min_sampling-sSeq.avg_sampling) * fraction2
+#         box_in = [(-x_max, x_max), (-y_max, y_max), (samp_min, samp_max), (samp_min, samp_max)] 
+#     
+#     samples = sub_box_sampling(box_in, box_ext, sSeq.block_size)
+#     sSeq.translations_x[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = samples[:,0]
+#     sSeq.translations_y[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = samples[:,1]
+#     sSeq.pixelsampling_x[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = samples[:,2]
+#     sSeq.pixelsampling_y[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = samples[:,3]
+#             
+# sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
+# sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
+# 
+# sSeq.add_noise_L0 = True
+# sSeq.convert_format = "L"
+# sSeq.background_type = None
+# sSeq.trans_sampled = True
+# 
+# sSeq.name = "Face Centering. Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f, 50)"%(-sSeq.trans_x_max, 
+#     sSeq.trans_x_max, -sSeq.trans_y_max, sSeq.trans_y_max, int(sSeq.min_sampling*1000), int(sSeq.max_sampling*1000))
+# print sSeq.name
+# iSeq.name = sSeq.name
+# system_parameters.test_object_contents(sSeq)
+# 
+# 
+# 
+# print "***** Setting SeenId Information Parameters for RFaceCentering******"
+# iSeq = iSeenidRFaceCentering= system_parameters.ParamsInput()
+# # (0.55+1.1)/2 = 0.825, 0.55/2 = 0.275, 0.55/4 = 0.1375, .825 + .1375 = .9625, .825 - .55/4 = .6875
+# iSeq.name = "Real FACE DISCRIMINATION (Centered / Decentered)"
+# 
+# iSeq.data_base_dir = alldbnormalized_base_dir
+# iSeq.ids = alldbnormalized_available_images[30000:45000] # 30000-45000 numpy.arange(6000,8000) # 6000-8000
+# iSeq.faces = numpy.arange(0,10) # 0=centered normalized face, 1=not centered normalized face
+# block_sizeS = len(iSeq.ids) / len(iSeq.faces)
+# 
+# #iSeq.scales = numpy.linspace(pipeline_fd['smin0'], pipeline_fd['smax0'], 50) # (-50, 50, 2)
+# if len(iSeq.ids) % len(iSeq.faces) != 0:
+#     ex="Here the number of scales must be a divisor of the number of identities"
+#     raise Exception(ex)
+# iSeq.ages = [None]
+# iSeq.genders = [None]
+# iSeq.racetweens = [None]
+# iSeq.expressions = [None]
+# iSeq.morphs = [None]
+# iSeq.poses = [None]
+# iSeq.lightings = [None]
+# iSeq.slow_signal = 0 #real slow signal is whether there is the amount of face centering
+# iSeq.step = 1
+# iSeq.offset = 0
+# repetition_factorS = 1 # 2 was 4
+# iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+#                                             iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
+#                                             iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
+# iSeq.input_files = iSeq.input_files * repetition_factorS #  4 was overfitting non linear sfa slightly
+# #To avoid grouping similar images next to one other or in the same block
+# numpy.random.shuffle(iSeq.input_files)  
+# 
+# 
+# iSeq.data2_base_dir = alldb_noface_base_dir
+# iSeq.ids2 = alldb_noface_available_images[block_sizeT* repetition_factorT: block_sizeT*repetition_factorT+block_sizeS*repetition_factorS]
+# 
+# iSeq.input_files2 = image_loader.create_image_filenames3(iSeq.data2_base_dir, "image", iSeq.slow_signal, iSeq.ids2, iSeq.ages, \
+#                                             iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
+#                                             iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
+# iSeq.input_files2 = iSeq.input_files2 
+# numpy.random.shuffle(iSeq.input_files2)
+# 
+# iSeq.input_files = iSeq.input_files[0:-block_sizeS * repetition_factorS] + iSeq.input_files2
+# 
+# 
+# iSeq.num_images = len(iSeq.input_files)
+# #iSeq.params = [ids, expressions, morphs, poses, lightings]
+# iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
+#                   iSeq.morphs, iSeq.poses, iSeq.lightings]
+# iSeq.block_size = iSeq.num_images / len (iSeq.faces)
+# print "BLOCK SIZE =", iSeq.block_size 
+# 
+# iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.faces)), iSeq.block_size)
+# iSeq.correct_labels = iSeq.correct_classes / (len(iSeq.faces)-1)
+# 
+# system_parameters.test_object_contents(iSeq)
+# 
+# print "******** Setting Seenid Data Parameters for Real Face Centering****************"
+# sSeq = sSeenidRFaceCentering= system_parameters.ParamsDataLoading()
+# sSeq.input_files = iSeq.input_files
+# sSeq.num_images = iSeq.num_images
+# sSeq.block_size = iSeq.block_size
+# sSeq.image_width = 256
+# sSeq.image_height = 192
+# sSeq.subimage_width = 135
+# sSeq.subimage_height = 135
+# 
+# sSeq.trans_x_max = pipeline_fd['dx0'] * 1.0
+# sSeq.trans_y_max = pipeline_fd['dy0'] * 1.0 * 0.998
+# sSeq.min_sampling = pipeline_fd['smin0']- 0.1 #WARNING!!!
+# sSeq.max_sampling = pipeline_fd['smax0']
+# sSeq.avg_sampling = (sSeq.min_sampling + sSeq.max_sampling)/2
+# 
+# 
+# sSeq.pixelsampling_x = numpy.zeros(sSeq.num_images)
+# sSeq.pixelsampling_y = numpy.zeros(sSeq.num_images) 
+# sSeq.translations_x = numpy.zeros(sSeq.num_images)
+# sSeq.translations_y = numpy.zeros(sSeq.num_images)
+# 
+# num_blocks = sSeq.num_images/sSeq.block_size
+# for block_nr in range(num_blocks):
+#     #For exterior box
+#     fraction = ((block_nr+1.0) / (num_blocks-1)) ** 0.333
+#     if fraction > 1:
+#         fraction = 1
+#     x_max = sSeq.trans_x_max * fraction
+#     y_max = sSeq.trans_y_max * fraction
+#     samp_max = sSeq.avg_sampling + (sSeq.max_sampling-sSeq.avg_sampling) * fraction
+#     samp_min = sSeq.avg_sampling + (sSeq.min_sampling-sSeq.avg_sampling) * fraction
+# 
+#     box_ext = [(-x_max, x_max), (-y_max, y_max), (samp_min, samp_max), (samp_min, samp_max)] 
+# 
+#     if block_nr >= 0:
+#         #For interior boxiSeq.ids = alldbnormalized_available_images[30000:45000]       
+#         if block_nr < num_blocks-1:
+#             eff_block_nr = block_nr
+#         else:
+#             eff_block_nr = block_nr-1
+#         fraction2 = (eff_block_nr / (num_blocks-1)) ** 0.333
+#         if fraction2 > 1:
+#             fraction2 = 1
+#         x_max = sSeq.trans_x_max * fraction2
+#         y_max = sSeq.trans_y_max * fraction2
+#         samp_max = sSeq.avg_sampling + (sSeq.max_sampling-sSeq.avg_sampling) * fraction2
+#         samp_min = sSeq.avg_sampling + (sSeq.min_sampling-sSeq.avg_sampling) * fraction2
+#         box_in = [(-x_max, x_max), (-y_max, y_max), (samp_min, samp_max), (samp_min, samp_max)] 
+#            
+#     samples = sub_box_sampling(box_in, box_ext, sSeq.block_size)
+#     sSeq.translations_x[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = samples[:,0]
+#     sSeq.translations_y[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = samples[:,1]
+#     sSeq.pixelsampling_x[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = samples[:,2]
+#     sSeq.pixelsampling_y[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = samples[:,3]
+#             
+# sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
+# sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
+# 
+# sSeq.add_noise_L0 = True
+# sSeq.convert_format = "L"
+# sSeq.background_type = None
+# sSeq.trans_sampled = True
+# 
+# sSeq.name = "Face Centering. Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f, 50)"%(-sSeq.trans_x_max, 
+#     sSeq.trans_x_max, -sSeq.trans_y_max, sSeq.trans_y_max, int(sSeq.min_sampling*1000), int(sSeq.max_sampling*1000))
+# print sSeq.name
+# iSeq.name = sSeq.name
+# system_parameters.test_object_contents(sSeq)
+# 
+# 
+# print "***** Setting NewId Information Parameters for RFaceCentering******"
+# iSeq = iNewidRFaceCentering= system_parameters.ParamsInput()
+# # (0.55+1.1)/2 = 0.825, 0.55/2 = 0.275, 0.55/4 = 0.1375, .825 + .1375 = .9625, .825 - .55/4 = .6875
+# iSeq.name = "Real FACE DISCRIMINATION (Centered / Decentered)"
+# 
+# iSeq.data_base_dir = alldbnormalized_base_dir
+# iSeq.ids = alldbnormalized_available_images[45000:46000] #45000:55000 numpy.arange(8000,10000) # 6000-8000
+# iSeq.faces = numpy.arange(0,10) # 0=centered normalized face, 1=not centered normalized face
+# block_sizeN = len(iSeq.ids) / len(iSeq.faces)
+# 
+# #iSeq.scales = numpy.linspace(pipeline_fd['smin0'], pipeline_fd['smax0'], 50) # (-50, 50, 2)
+# if len(iSeq.ids) % len(iSeq.faces) != 0:
+#     ex="Here the number of scales must be a divisor of the number of identities"
+#     raise Exception(ex)
+# iSeq.ages = [None]
+# iSeq.genders = [None]
+# iSeq.racetweens = [None]
+# iSeq.expressions = [None]
+# iSeq.morphs = [None]
+# iSeq.poses = [None]
+# iSeq.lightings = [None]
+# iSeq.slow_signal = 0 #real slow signal is whether there is the amount of face centering
+# iSeq.step = 1
+# iSeq.offset = 0
+# repetition_factorN = 2 # was 4
+# iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+#                                             iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
+#                                             iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
+# iSeq.input_files = iSeq.input_files * repetition_factorN#  4 was overfitting non linear sfa slightly
+# #To avoid grouping similar images next to one other or in the same block
+# numpy.random.shuffle(iSeq.input_files)  
+# 
+# iSeq.data2_base_dir = alldb_noface_base_dir
+# iSeq.ids2 = alldb_noface_available_images[block_sizeT*repetition_factorT+block_sizeS*repetition_factorS: block_sizeT*repetition_factorT+block_sizeS*repetition_factorS+block_sizeN*repetition_factorN]
+# 
+# iSeq.input_files2 = image_loader.create_image_filenames3(iSeq.data2_base_dir, "image", iSeq.slow_signal, iSeq.ids2, iSeq.ages, \
+#                                             iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
+#                                             iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
+# iSeq.input_files2 = iSeq.input_files2
+# numpy.random.shuffle(iSeq.input_files2)
+# 
+# iSeq.input_files = iSeq.input_files[0:-block_sizeN * repetition_factorN] + iSeq.input_files2
+# 
+# 
+# iSeq.num_images = len(iSeq.input_files)
+# #iSeq.params = [ids, expressions, morphs, poses, lightings]
+# iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
+#                   iSeq.morphs, iSeq.poses, iSeq.lightings]
+# iSeq.block_size = iSeq.num_images / len (iSeq.faces)
+# print "BLOCK SIZE =", iSeq.block_size 
+# 
+# iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.faces)), iSeq.block_size)
+# iSeq.correct_labels = iSeq.correct_classes / (len(iSeq.faces)-1)
+# 
+# system_parameters.test_object_contents(iSeq)
+# 
+# print "******** Setting Seenid Data Parameters for Real Face Centering****************"
+# sSeq = sNewidRFaceCentering= system_parameters.ParamsDataLoading()
+# sSeq.input_files = iSeq.input_files
+# sSeq.num_images = iSeq.num_images
+# sSeq.block_size = iSeq.block_size
+# sSeq.image_width = 256
+# sSeq.image_height = 192
+# sSeq.subimage_width = 135
+# sSeq.subimage_height = 135
+# 
+# sSeq.trans_x_max = pipeline_fd['dx0'] * 1.0
+# sSeq.trans_y_max = pipeline_fd['dy0'] * 1.0 * 0.998
+# sSeq.min_sampling = pipeline_fd['smin0']- 0.1 #WARNING!!!
+# sSeq.max_sampling = pipeline_fd['smax0']
+# sSeq.avg_sampling = (sSeq.min_sampling + sSeq.max_sampling)/2
+# 
+# 
+# sSeq.pixelsampling_x = numpy.zeros(sSeq.num_images)
+# sSeq.pixelsampling_y = numpy.zeros(sSeq.num_images) 
+# sSeq.translations_x = numpy.zeros(sSeq.num_images)
+# sSeq.translations_y = numpy.zeros(sSeq.num_images)
+# 
+# num_blocks = sSeq.num_images/sSeq.block_size
+# for block_nr in range(num_blocks):
+#     #For exterior box
+#     fraction = ((block_nr+1.0) / (num_blocks-1)) ** 0.333
+#     if fraction > 1:
+#         fraction = 1
+#     x_max = sSeq.trans_x_max * fraction
+#     y_max = sSeq.trans_y_max * fraction
+#     samp_max = sSeq.avg_sampling + (sSeq.max_sampling-sSeq.avg_sampling) * fraction
+#     samp_min = sSeq.avg_sampling + (sSeq.min_sampling-sSeq.avg_sampling) * fraction
+# 
+#     box_ext = [(-x_max, x_max), (-y_max, y_max), (samp_min, samp_max), (samp_min, samp_max)] 
+# 
+#     if block_nr >= 0:
+#         #For interior boxiSeq.ids = alldbnormalized_available_images[30000:45000]       
+#         if block_nr < num_blocks-1:
+#             eff_block_nr = block_nr
+#         else:
+#             eff_block_nr = block_nr-1
+#         fraction2 = (eff_block_nr / (num_blocks-1)) ** 0.333
+#         if fraction2 > 1:
+#             fraction2 = 1
+#         x_max = sSeq.trans_x_max * fraction2
+#         y_max = sSeq.trans_y_max * fraction2
+#         samp_max = sSeq.avg_sampling + (sSeq.max_sampling-sSeq.avg_sampling) * fraction2
+#         samp_min = sSeq.avg_sampling + (sSeq.min_sampling-sSeq.avg_sampling) * fraction2
+#         box_in = [(-x_max, x_max), (-y_max, y_max), (samp_min, samp_max), (samp_min, samp_max)] 
+#         
+#     samples = sub_box_sampling(box_in, box_ext, sSeq.block_size)
+#     sSeq.translations_x[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = samples[:,0]
+#     sSeq.translations_y[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = samples[:,1]
+#     sSeq.pixelsampling_x[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = samples[:,2]
+#     sSeq.pixelsampling_y[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = samples[:,3]
+#             
+# sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
+# sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
+# 
+# sSeq.add_noise_L0 = True
+# sSeq.convert_format = "L"
+# sSeq.background_type = None
+# sSeq.trans_sampled = True
+# 
+# sSeq.name = "Face Centering. Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f, 50)"%(-sSeq.trans_x_max, 
+#     sSeq.trans_x_max, -sSeq.trans_y_max, sSeq.trans_y_max, int(sSeq.min_sampling*1000), int(sSeq.max_sampling*1000))
+# print sSeq.name
+# iSeq.name = sSeq.name
+# system_parameters.test_object_contents(sSeq)
+# 
+# 
+# ####################################################################
+# ###########    SYSTEM FOR REAL_FACE CLASSIFICATION      ############
+# ####################################################################  
+# ParamsRFaceCentering = system_parameters.ParamsSystem()
+# ParamsRFaceCentering.name = sTrainRFaceCentering.name
+# ParamsRFaceCentering.network = "linearNetwork4L"
+# ParamsRFaceCentering.iTrain = iTrainRFaceCentering
+# ParamsRFaceCentering.sTrain = sTrainRFaceCentering
+# ParamsRFaceCentering.iSeenid = iSeenidRFaceCentering
+# ParamsRFaceCentering.sSeenid = sSeenidRFaceCentering
+# ParamsRFaceCentering.iNewid = iNewidRFaceCentering
+# ParamsRFaceCentering.sNewid = sNewidRFaceCentering
+# ##MEGAWARNING!!!!
+# #ParamsRFace.iNewid = iNewidScale
+# #ParamsRFace.sNewid = sNewidScale
+# #ParamsRFace.sNewid.translations_y = ParamsRFace.sNewid.translations_y * 0.0 + 8.0
+# 
+# ParamsRFaceCentering.block_size = iTrainRFaceCentering.block_size
+# ParamsRFaceCentering.train_mode = 'clustered' #clustered improves final performance! mixed
+# # 'mixed'!!! mse 0.31 clustered @ 6000 samples LSFA 11L, mse 0.30 mixed
+# # uexp08 => 0.019, 0.0147 @ 30 Signals (clustered)
+# # uexp08 => 0.063  @ 30 Signals (mixed, 5 levels)
+# # uexp08 => 0.034 @ 30 Signals (mixed, 10 levels)
+# # uexp08 => 0.027 @ 30 signals(mixed, 10 levels, pca_sfa_expo) pca_expo
+# 
+# ParamsRFaceCentering.analysis = None
+# ParamsRFaceCentering.enable_reduced_image_sizes = True
+# ParamsRFaceCentering.reduction_factor = 8.0 # WARNING 2.0, 4.0, 8.0
+# ParamsRFaceCentering.hack_image_size = 16 # WARNING 64, 32, 16
+# ParamsRFaceCentering.enable_hack_image_size = True
+# 
+# #sys.path.append("/home/escalafl/workspace/hiphi/src/hiphi/utils")
+
+
+
+
+
+
+
+# # EYE_L_X, EYE_L_X, EYE_L_X, EYE_L_X, EYE_L_X, EYE_L_X, EYE_L_X, EYE_L_X, EYE_L_X, EYE_L_X, EYE_L_X, EYE_L_X, EYE_L_X, EYE_L_X, EYE_L_X, EYE_L_X, EYE_L_X, EYE_L_X
+# #This network actually supports images in the closed intervals: [-eye_dx, eye_dx], [-eye_dy, eye_dy], [eye_smin0, eye_smax0]
+# eye_dx = 10
+# eye_dy = 10
+# eye_smax0 = 0.825 + 0.15
+# eye_smin0 = 0.825 - 0.15
+# 
+# print "***** Setting Training Information Parameters for Real Eye Translation X ******"
+# iSeq = iTrainREyeTransX = system_parameters.ParamsInput()
+# iSeq.data_base_dir = frgc_eyeL_normalized_base_dir
+# iSeq.ids = numpy.arange(0,6000) # 8000, 7965
+# 
+# iSeq.trans = numpy.arange(-1 * eye_dx, eye_dx, 1)
+# if len(iSeq.ids) % len(iSeq.trans) != 0:
+#     ex="Here the number of translations must be a divisor of the number of identities"
+#     raise Exception(ex)
+# iSeq.ages = [None]
+# iSeq.genders = [None]
+# iSeq.racetweens = [None]
+# iSeq.expressions = [None]
+# iSeq.morphs = [None]
+# iSeq.poses = [None]
+# iSeq.lightings = [None]
+# iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
+# iSeq.step = 1
+# iSeq.offset = 0
+# iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+#                                             iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
+#                                             iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
+# iSeq.input_files = iSeq.input_files * 8 # warning!!! 8
+# #To avoid grouping similar images next to one other
+# numpy.random.shuffle(iSeq.input_files)  
+# 
+# iSeq.num_images = len(iSeq.input_files)
+# iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, iSeq.poses, iSeq.lightings]
+# iSeq.block_size = iSeq.num_images / len (iSeq.trans)
+# iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.trans)), iSeq.block_size)
+# iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
+# 
+# system_parameters.test_object_contents(iSeq)
+# 
+# print "******** Setting Training Data Parameters for Real Eye TransX  ****************"
+# sSeq = sTrainREyeTransX = system_parameters.ParamsDataLoading()
+# sSeq.input_files = iSeq.input_files
+# sSeq.num_images = iSeq.num_images
+# sSeq.block_size = iSeq.block_size
+# sSeq.image_width = 256
+# sSeq.image_height = 192
+# sSeq.subimage_width = 64
+# sSeq.subimage_height = 64 
+# 
+# sSeq.trans_x_max = eye_dx
+# sSeq.trans_x_min = -eye_dx
+# sSeq.trans_y_max = eye_dy
+# sSeq.trans_y_min = -eye_dy
+# sSeq.min_sampling = eye_smin0
+# sSeq.max_sampling = eye_smax0
+# 
+# sSeq.pixelsampling_x = numpy.random.uniform(low=sSeq.min_sampling, high=sSeq.max_sampling, size=sSeq.num_images)
+# sSeq.pixelsampling_y = sSeq.pixelsampling_x * 1.0
+# sSeq.subimage_first_row =  sSeq.image_height/2.0-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
+# sSeq.subimage_first_column = sSeq.image_width/2.0-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
+# sSeq.add_noise_L0 = True
+# sSeq.convert_format = "L"
+# sSeq.background_type = None
+# sSeq.translations_x = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
+# sSeq.translations_y = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, sSeq.num_images)
+# 
+# sSeq.trans_sampled = True
+# sSeq.name = "REyeTans X Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f)"%(sSeq.trans_x_min, 
+#     sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.min_sampling*100, sSeq.max_sampling*100)
+# iSeq.name = sSeq.name
+# print sSeq.name
+# system_parameters.test_object_contents(sSeq)
+# 
+# 
+# print "***** Setting Seenid Information Parameters for Real Eye Translation X ******"
+# iSeq = iSeenidREyeTransX = system_parameters.ParamsInput()
+# iSeq.data_base_dir = frgc_eyeL_normalized_base_dir
+# iSeq.ids = numpy.arange(6000,8000) # 8000, 7965
+# 
+# iSeq.trans = numpy.arange(-1 * eye_dx, eye_dx, 1)
+# if len(iSeq.ids) % len(iSeq.trans) != 0:
+#     ex="Here the number of translations must be a divisor of the number of identities"
+#     raise Exception(ex)
+# iSeq.ages = [None]
+# iSeq.genders = [None]
+# iSeq.racetweens = [None]
+# iSeq.expressions = [None]
+# iSeq.morphs = [None]
+# iSeq.poses = [None]
+# iSeq.lightings = [None]
+# iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
+# iSeq.step = 1
+# iSeq.offset = 0
+# iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+#                                             iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
+#                                             iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
+# iSeq.input_files = iSeq.input_files * 4 # warning!!! 4
+# #To avoid grouping similar images next to one other
+# numpy.random.shuffle(iSeq.input_files)  
+# 
+# iSeq.num_images = len(iSeq.input_files)
+# iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, iSeq.poses, iSeq.lightings]
+# iSeq.block_size = iSeq.num_images / len (iSeq.trans)
+# iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.trans)), iSeq.block_size)
+# iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
+# 
+# system_parameters.test_object_contents(iSeq)
+# 
+# print "******** Setting Seenid Data Parameters for Real Eye TransX  ****************"
+# sSeq = sSeenidREyeTransX = system_parameters.ParamsDataLoading()
+# sSeq.input_files = iSeq.input_files
+# sSeq.num_images = iSeq.num_images
+# sSeq.block_size = iSeq.block_size
+# sSeq.image_width = 256
+# sSeq.image_height = 192
+# sSeq.subimage_width = 64
+# sSeq.subimage_height = 64 
+# 
+# sSeq.trans_x_max = eye_dx
+# sSeq.trans_x_min = -eye_dx
+# sSeq.trans_y_max = eye_dy
+# sSeq.trans_y_min = -eye_dy
+# sSeq.min_sampling = eye_smin0
+# sSeq.max_sampling = eye_smax0
+# 
+# sSeq.pixelsampling_x = numpy.random.uniform(low=sSeq.min_sampling, high=sSeq.max_sampling, size=sSeq.num_images)
+# sSeq.pixelsampling_y = sSeq.pixelsampling_x * 1.0
+# sSeq.subimage_first_row =  sSeq.image_height/2.0-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
+# sSeq.subimage_first_column = sSeq.image_width/2.0-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
+# sSeq.add_noise_L0 = True
+# sSeq.convert_format = "L"
+# sSeq.background_type = None
+# sSeq.translations_x = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
+# sSeq.translations_y = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, sSeq.num_images)
+# 
+# sSeq.trans_sampled = True
+# sSeq.name = "REyeTans X Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f)"%(sSeq.trans_x_min, 
+#     sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.min_sampling*100, sSeq.max_sampling*100)
+# iSeq.name = sSeq.name
+# print sSeq.name
+# system_parameters.test_object_contents(sSeq)
+# 
+# 
+# print "***** Setting Newid Information Parameters for Real Eye Translation X ******"
+# iSeq = iNewidREyeTransX = system_parameters.ParamsInput()
+# iSeq.data_base_dir = frgc_eyeL_normalized_base_dir
+# iSeq.ids = numpy.arange(8000,10000) # 8000, 7965
+# 
+# iSeq.trans = numpy.arange(-1 * eye_dx, eye_dx, 1)
+# if len(iSeq.ids) % len(iSeq.trans) != 0:
+#     ex="Here the number of translations must be a divisor of the number of identities"
+#     raise Exception(ex)
+# iSeq.ages = [None]
+# iSeq.genders = [None]
+# iSeq.racetweens = [None]
+# iSeq.expressions = [None]
+# iSeq.morphs = [None]
+# iSeq.poses = [None]
+# iSeq.lightings = [None]
+# iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
+# iSeq.step = 1
+# iSeq.offset = 0
+# iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+#                                             iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
+#                                             iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
+# iSeq.input_files = iSeq.input_files * 4 # warning!!! 4
+# #To avoid grouping similar images next to one other
+# numpy.random.shuffle(iSeq.input_files)  
+# 
+# iSeq.num_images = len(iSeq.input_files)
+# iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, iSeq.poses, iSeq.lightings]
+# iSeq.block_size = iSeq.num_images / len (iSeq.trans)
+# iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.trans)), iSeq.block_size)
+# iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
+# 
+# system_parameters.test_object_contents(iSeq)
+# 
+# print "******** Setting Newid Data Parameters for Real Eye TransX  ****************"
+# sSeq = sNewidREyeTransX = system_parameters.ParamsDataLoading()
+# sSeq.input_files = iSeq.input_files
+# sSeq.num_images = iSeq.num_images
+# sSeq.block_size = iSeq.block_size
+# sSeq.image_width = 256
+# sSeq.image_height = 192
+# sSeq.subimage_width = 64
+# sSeq.subimage_height = 64 
+# 
+# sSeq.trans_x_max = eye_dx
+# sSeq.trans_x_min = -eye_dx
+# sSeq.trans_y_max = eye_dy
+# sSeq.trans_y_min = -eye_dy
+# sSeq.min_sampling = eye_smin0
+# sSeq.max_sampling = eye_smax0
+# 
+# sSeq.pixelsampling_x = numpy.random.uniform(low=sSeq.min_sampling, high=sSeq.max_sampling, size=sSeq.num_images)
+# sSeq.pixelsampling_y = sSeq.pixelsampling_x * 1.0
+# sSeq.subimage_first_row =  sSeq.image_height/2.0-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
+# sSeq.subimage_first_column = sSeq.image_width/2.0-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
+# sSeq.add_noise_L0 = True
+# sSeq.convert_format = "L"
+# sSeq.background_type = None
+# sSeq.translations_x = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
+# sSeq.translations_y = numpy.random.random_integers(sSeq.trans_x_min, sSeq.trans_x_max, sSeq.num_images)
+# 
+# sSeq.trans_sampled = True
+# sSeq.name = "REyeTans X Dx in (%d, %d) Dy in (%d, %d), sampling in (%f, %f)"%(sSeq.trans_x_min, 
+#     sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, sSeq.min_sampling*100, sSeq.max_sampling*100)
+# iSeq.name = sSeq.name
+# print sSeq.name
+# system_parameters.test_object_contents(sSeq)
+# 
+# #iSeenidREyeTransX = copy.deepcopy(iTrainREyeTransX)
+# #sSeenidREyeTransX = copy.deepcopy(sTrainREyeTransX)
+# #iNewidREyeTransX = copy.deepcopy(iTrainREyeTransX)
+# #sNewidREyeTransX = copy.deepcopy(sTrainREyeTransX)
+# 
+# ####################################################################
+# #######    SYSTEM FOR REAL_EYE_TRANSLATION_X EXTRACTION     ########
+# ####################################################################  
+# ParamsREyeTransX = system_parameters.ParamsSystem()
+# ParamsREyeTransX.name = sTrainREyeTransX.name
+# ParamsREyeTransX.network = "linearNetwork4L"
+# ParamsREyeTransX.iTrain = iTrainREyeTransX
+# ParamsREyeTransX.sTrain = sTrainREyeTransX
+# ParamsREyeTransX.iSeenid = iSeenidREyeTransX
+# ParamsREyeTransX.sSeenid = sSeenidREyeTransX
+# ParamsREyeTransX.iNewid = iNewidREyeTransX
+# ParamsREyeTransX.sNewid = sNewidREyeTransX
+# ParamsREyeTransX.block_size = iTrainREyeTransX.block_size
+# ParamsREyeTransX.train_mode = 'mixed'
+# ParamsREyeTransX.analysis = None
+# ParamsREyeTransX.enable_reduced_image_sizes = True
+# ParamsREyeTransX.reduction_factor = 2.0
+# ParamsREyeTransX.hack_image_size = 32
+# ParamsREyeTransX.enable_hack_image_size = True
+# 
+# 
+# #REAL_EYE_TRANSLATION_Y REAL_EYE_TRANSLATION_Y REAL_EYE_TRANSLATION_Y REAL_EYE_TRANSLATION_Y REAL_EYE_TRANSLATION_Y REAL_EYE_TRANSLATION_Y
+# #Just exchange translations_x and translations_y to create iTrainREyeTransY
+# iTrainREyeTransY = copy.deepcopy(iTrainREyeTransX)
+# sTrainREyeTransY = copy.deepcopy(sTrainREyeTransX)
+# sTrainREyeTransY.name = sTrainREyeTransY.name[0:10]+"Y"+sTrainREyeTransY.name[11:]
+# tmp = sTrainREyeTransY.translations_x
+# sTrainREyeTransY.translations_x = sTrainREyeTransY.translations_y
+# sTrainREyeTransY.translations_y = tmp
+# 
+# iSeenidREyeTransY = copy.deepcopy(iSeenidREyeTransX)
+# sSeenidREyeTransY = copy.deepcopy(sSeenidREyeTransX)
+# sSeenidREyeTransY.name = sSeenidREyeTransY.name[0:10]+"Y"+sSeenidREyeTransY.name[11:]
+# tmp = sSeenidREyeTransY.translations_x
+# sSeenidREyeTransY.translations_x = sSeenidREyeTransY.translations_y
+# sSeenidREyeTransY.translations_y = tmp
+# 
+# iNewidREyeTransY = copy.deepcopy(iNewidREyeTransX)
+# sNewidREyeTransY = copy.deepcopy(sNewidREyeTransX)
+# sNewidREyeTransY.name= sSeenidREyeTransY.name[0:10]+"Y"+sSeenidREyeTransY.name[11:]
+# tmp = sNewidREyeTransY.translations_x
+# sNewidREyeTransY.translations_x = sNewidREyeTransY.translations_y
+# sNewidREyeTransY.translations_y = tmp
+# 
+# ####################################################################
+# ######    SYSTEM FOR REAL_EYE_TRANSLATION_Y EXTRACTION     #########
+# ####################################################################  
+# ParamsREyeTransY = system_parameters.ParamsSystem()
+# ParamsREyeTransY.name = sTrainREyeTransY.name
+# ParamsREyeTransY.network = "linearNetwork4L"
+# ParamsREyeTransY.iTrain = iTrainREyeTransY
+# ParamsREyeTransY.sTrain = sTrainREyeTransY
+# ParamsREyeTransY.iSeenid = iSeenidREyeTransY
+# ParamsREyeTransY.sSeenid = sSeenidREyeTransY
+# ParamsREyeTransY.iNewid = iNewidREyeTransY
+# ParamsREyeTransY.sNewid = sNewidREyeTransY
+# ParamsREyeTransY.block_size = iTrainREyeTransY.block_size
+# ParamsREyeTransY.train_mode = 'mixed' #mixed
+# ParamsREyeTransY.analysis = None
+# ParamsREyeTransY.enable_reduced_image_sizes = True
+# ParamsREyeTransY.reduction_factor = 2.0
+# ParamsREyeTransY.hack_image_size = 32
+# ParamsREyeTransY.enable_hack_image_size = True
+
+
+############################################################
+########## Function Defined Data Sources ###################
+############################################################
+class ParamsREyePosXYExperiment(system_parameters.ParamsSystem):
+    def __init__(self, experiment_seed, experiment_basedir, learn_all_variables=True, slow_var="PosX"):
+        super(ParamsREyePosXYExperiment, self).__init__()
+        self.learn_all_variables = learn_all_variables  # in {True, False}. If True: combine two graphs for PosX and PosY
+        self.slow_var = slow_var  # in {"PosX", and "PosY"}, the main slow parameter
+
+    def create(self):
+        self.network = "linearNetwork4L"
+        all_eyeLR_available_images = numpy.arange(7000, 45000) #51434 #Only use a fraction of the FRGC images (the first images are more important because they have more variations)
+        numpy.random.shuffle(all_eyeLR_available_images)
+        
+        eye_dx = 10.7 #6 #12
+        eye_dy = 10.7 #6 #12
+        eye_smax= (0.94875 + .01725)*2.0   #*2.5   # (0.825 + 0.015)*2.5 * 1.25 #Factor 1.05 is for an experiment only
+        eye_smin= (0.94875 - .01725)*2.0   #*2.5   #(0.825 - 0.015)*2.5 * 1.25
+        eye_da = 10 #22.5 #30.0 , 22.5
+        self.iTrain = [[self.iSeqCreateREyePosXY(30000, alldb_eyeLR_normalized_base_dir, all_eyeLR_available_images, first_image=0, slow_var=self.slow_var, num_classes=50, eye_dx=eye_dx, eye_dy=eye_dy, repetition_factor=4, seed=-1)]] #4
+        self.sTrain = [[self.sSeqCreateREyePosXY(self.iTrain[0][0], eye_smax=eye_smax, eye_smin=eye_smin, eye_da=eye_da, seed=-1)]] 
+        self.iSeenid =  self.iSeqCreateREyePosXY(4000, alldb_eyeLR_normalized_base_dir, all_eyeLR_available_images, first_image=30000, slow_var=self.slow_var, num_classes=50, eye_dx=eye_dx, eye_dy=eye_dy, repetition_factor=2, seed=-1) #2
+        self.sSeenid = self.sSeqCreateREyePosXY(self.iSeenid, eye_smax=eye_smax, eye_smin=eye_smin, eye_da=eye_da, seed=-1)
+        self.iNewid = [[self.iSeqCreateREyePosXY(4000, alldb_eyeLR_normalized_base_dir, all_eyeLR_available_images, first_image=34000, slow_var=self.slow_var, num_classes=50, eye_dx=eye_dx, eye_dy=eye_dy, repetition_factor=1, seed=-1)]]
+        self.sNewid = [[self.sSeqCreateREyePosXY(self.iNewid[0][0], eye_smax=eye_smax, eye_smin=eye_smin, eye_da=eye_da, seed=-1)]]
+        self.name = self.sTrain[0][0].name
+        self.block_size = self.iTrain[0][0].block_size
+        self.train_mode = 'serial' #ignored
+        self.analysis = None
+        self.enable_reduced_image_sizes = True
+        self.reduction_factor = 1.0
+        self.hack_image_size = 64
+        self.enable_hack_image_size = True
+        
+        if self.learn_all_variables: # and False:
+            iSeq = self.iTrain[0][0]
+            sSeq = self.sTrain[0][0]
+            sSeq.train_mode = [sSeq.train_mode, ("serial_regression50", iSeq.correct_labels[:,1], 1.0)]
+                
+        #print ParamsREyeTransXYFunc.iTrain[0][0].correct_labels[:,0]
+        #print ParamsREyeTransXYFunc.sTrain[0][0].translations_x
+
+    # EYE_L_XYFunc
+    # Dataset for joint estimation of PosX and PosY for the left eye, uses 32x32 resolution
+    #This network actually supports images in the closed intervals: [-eye_dx, eye_dx], [-eye_dy, eye_dy], [eye_smin0, eye_smax0]
+    def iSeqCreateREyePosXY(self, num_images, eyeLR_normalized_base_dir, all_eyeLR_available_images, first_image=0, slow_var="PosX", num_classes=30, eye_dx=10, eye_dy=10, repetition_factor=8, seed=-1):
+        if seed >= 0 or seed is None: #also works for 
+            numpy.random.seed(seed)
+        #else seed <0 then, do not change seed
+        
+        print "***** Setting information Parameters for REyePosXY******"
+        iSeq = system_parameters.ParamsInput()
+        # (0.55+1.1)/2 = 0.825, 0.55/2 = 0.275, 0.55/4 = 0.1375, .825 + .1375 = .9625, .825 - .55/4 = .6875
+        iSeq.name = "Real EYE LOCATION (PosX / PosY)"
+    
+        iSeq.data_base_dir = eyeLR_normalized_base_dir
+        iSeq.ids = all_eyeLR_available_images[numpy.arange(first_image, first_image+num_images)] # 6000 8000, 7965
+    
+        iSeq.ages = [None]
+        iSeq.genders = [None]
+        iSeq.racetweens = [None]
+        iSeq.expressions = [None]
+        iSeq.morphs = [None]
+        iSeq.poses = [None]
+        iSeq.lightings = [None]
+        iSeq.slow_signal = 0 #real slow signal is the translation in the x axis, added during image loading
+        iSeq.step = 1
+        iSeq.offset = 0
+        iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+                                                    iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
+                                                    iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
+        iSeq.input_files = iSeq.input_files * repetition_factor # warning!!! 8
+        #To avoid grouping similar images next to one other
+        numpy.random.shuffle(iSeq.input_files)  
+        
+        iSeq.num_images = len(iSeq.input_files)
+    
+        iSeq.translations_x = numpy.random.uniform(-1 * eye_dx, eye_dx, iSeq.num_images)
+        iSeq.translations_y = numpy.random.uniform(-1 * eye_dy, eye_dy, iSeq.num_images)
+    
+        if slow_var=="PosX":        
+            iSeq.translations_x.sort()
+            print "iSeq.translations_x=", iSeq.translations_x
+        elif slow_var=="PosY":
+            iSeq.translations_y.sort()
+        else:
+            er = "slow_var must be either PosX or PosY" 
+            raise Exception(er)
+    
+        
+        #if len(iSeq.ids) != len(iSeq.translations_x):
+        #    ex="Here the number of translations must be equal to the number of identities: ", len(iSeq.translations_x),len(iSeq.ids)
+        #    raise Exception(ex)
+    
+        iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, iSeq.poses, iSeq.lightings]
+        iSeq.block_size = iSeq.num_images / num_classes
+    
+        iSeq.train_mode = "serial" #TODO:should learn both labels simultaneously
+        all_classes = numpy.arange(iSeq.num_images)*num_classes/iSeq.num_images
+        correct_classes_X = numpy.zeros(iSeq.num_images)
+        correct_classes_Y = numpy.zeros(iSeq.num_images)
+        correct_classes_X[numpy.argsort(iSeq.translations_x)] = all_classes.copy()
+        correct_classes_Y[numpy.argsort(iSeq.translations_y)] = all_classes.copy()
+    
+        print "correct_classes_X=", correct_classes_X
+        print "correct_classes_Y=", correct_classes_Y
+        
+        iSeq.correct_classes = numpy.stack((correct_classes_X, correct_classes_Y)).T
+        iSeq.correct_labels = numpy.stack((iSeq.translations_x, iSeq.translations_y)).T       
+        
+        system_parameters.test_object_contents(iSeq)
+        return iSeq
+    
+    def sSeqCreateREyePosXY(self, iSeq, eye_smax=0.84, eye_smin=0.81, eye_da=22.5, seed=-1):
+        if seed >= 0 or seed is None: #also works for 
+            numpy.random.seed(seed)
+        #else seed <0 then, do not change seed
+        print "******** Setting Training Data Parameters for Real Eye TransX  ****************"
+        sSeq = system_parameters.ParamsDataLoading()
+        sSeq.input_files = iSeq.input_files
+        sSeq.num_images = iSeq.num_images
+        sSeq.block_size = iSeq.block_size
+        sSeq.train_mode = iSeq.train_mode
+        sSeq.image_width = 256
+        sSeq.image_height = 192
+        sSeq.subimage_width = 64
+        sSeq.subimage_height = 64 
+        
+        # sSeq.trans_x_max = eye_dx
+        # sSeq.trans_x_min = -eye_dx
+        # sSeq.trans_y_max = eye_dy
+        # sSeq.trans_y_min = -eye_dy
+        sSeq.min_sampling = eye_smin
+        sSeq.max_sampling = eye_smax
+    
+        sSeq.translations_x = iSeq.translations_x
+        sSeq.translations_y = iSeq.translations_y
+        sSeq.rotations = numpy.random.uniform(low=-eye_da, high=eye_da, size=sSeq.num_images)
+        sSeq.pixelsampling_x = numpy.random.uniform(low=sSeq.min_sampling, high=sSeq.max_sampling, size=sSeq.num_images) 
+        sSeq.pixelsampling_y = sSeq.pixelsampling_x.copy()
+        sSeq.subimage_first_row =  sSeq.image_height/2.0-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
+        sSeq.subimage_first_column = sSeq.image_width/2.0-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
+        sSeq.contrast_enhance = None #"array_mean_std-127.5-45.0"
+        sSeq.add_noise_L0 = True
+        sSeq.convert_format = "L"
+        sSeq.background_type = None   
+        sSeq.trans_sampled = False #the translations are specified according to the original image, not according to the sampled patch
+    
+        sSeq.name = "REyePosXY Dx in (%d, %d) Dy in (%d, %d), sampling in (%d, %d)"%(sSeq.trans_x_min, 
+            sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, int(sSeq.min_sampling*100), int(sSeq.max_sampling*100))
+        iSeq.name = sSeq.name
+        print sSeq.name
+        
+        sSeq.load_data = load_data_from_sSeq
+        
+        system_parameters.test_object_contents(sSeq)
+    
+        return sSeq
+
+
+ParamsREyeTransXYFunc_64x64 = ParamsREyePosXYExperiment(experiment_seed, experiment_basedir, learn_all_variables=True, slow_var="PosX")      
+ParamsREyeTransXYFunc_32x32 = copy.deepcopy(ParamsREyeTransXYFunc_64x64)
+ParamsREyeTransXYFunc_32x32.reduction_factor = 2.0
+ParamsREyeTransXYFunc_32x32.hack_image_size = 32
+
+
+###############################################################################
+############################### FACE CENTERING ################################
+###############################################################################
+class ParamsRFaceCentering2Experiment(system_parameters.ParamsSystem):
+    def __init__(self, experiment_seed, experiment_basedir, pipeline_fd_centering, iteration=0):
+        super(ParamsRFaceCentering2Experiment, self).__init__()
+        self.experiment_seed = experiment_seed
+        self.experiment_basedir = experiment_basedir
+        self.pipeline_fd_centering = pipeline_fd_centering        
+        self.iteration = iteration
+        
+    def create(self):
+        if self.experiment_seed >= 0 or self.experiment_seed is None: 
+            numpy.random.seed(self.experiment_seed)
+
+        alldbnormalized_available_images = numpy.arange(0,55000)
+        numpy.random.shuffle(alldbnormalized_available_images)  
+        av_fim = alldbnormalized_available_images
+        alldb_noface_available_images = numpy.arange(0,18000) #= numpy.arange(0,12000) #???? image18552
+        numpy.random.shuffle(alldb_noface_available_images)
+        av_nfim =alldb_noface_available_images
+        
+        if self.iteration == 0:
+            pipeline_factor = 1.2
+        elif self.iteration == 1:
+            pipeline_factor = 0.25
+        else:
+            er = "unexpected iteration value"+str(iteration)
+            raise Exception(er)
+        
+        iSeq = iTrainRFaceCentering = [[self.iSeqCreateRFaceCentering(30000, av_fim, av_nfim, first_image=0, first_image_no_face=0, repetition_factor=4, seed=-1)]]
+        sSeq = sTrainRFaceCentering = [[self.sSeqCreateRFaceCentering2(iSeq[0][0], pipeline_fd=self.pipeline_fd_centering, pipeline_factor=pipeline_factor, seed=-1)]]
+        print ";)"
+        
+        
+        #iSeq = iTrainRFaceCentering2 = \
+        #[[iSeqCreateRFaceCentering(3000, av_fim, av_nfim, first_image=0, repetition_factor=2, seed=-1)], \
+        #[iSeqCreateRFaceCentering(3000, av_fim, av_nfim, first_image=3000, repetition_factor=2, seed=-1),iSeqCreateRFaceCentering(3000, av_fim, av_nfim, first_image=6000, repetition_factor=2, seed=-1)]]
+        
+        #sTrainRFaceCentering2 = [[sSeqCreateRFaceCentering(iSeq[0][0], seed=-1)], \
+        #                        [sSeqCreateRFaceCentering(iSeq[1][0], seed=-1), sSeqCreateRFaceCentering(iSeq[1][1], seed=-1)]]
+        iSeq = iSeenidRFaceCentering2 = self.iSeqCreateRFaceCentering(15000, av_fim, av_nfim, first_image=30000, first_image_no_face=3000*4, repetition_factor=2, seed=-1)
+        sSeenidRFaceCentering2 =  self.sSeqCreateRFaceCentering2(iSeq, pipeline_fd=self.pipeline_fd_centering, pipeline_factor=pipeline_factor, seed=-1)
+        iSeq = iNewidRFaceCentering2 = [[self.iSeqCreateRFaceCentering(10000, av_fim, av_nfim, first_image=45000, first_image_no_face=3000*4+1500*2, repetition_factor=2, seed=-1)]]
+        sNewidRFaceCentering2 = [[self.sSeqCreateRFaceCentering2(iSeq[0][0], pipeline_fd=self.pipeline_fd_centering, pipeline_factor=pipeline_factor, seed=-1)]]
+              
+        self.name = "Function Based Data Creation for RFaceCentering"
+        self.network = "linearNetwork4L"  #Default Network, but ignored
+        self.iTrain =iTrainRFaceCentering
+        self.sTrain = sTrainRFaceCentering
+        self.iSeenid = iSeenidRFaceCentering2
+        self.sSeenid = sSeenidRFaceCentering2
+        self.iNewid = iNewidRFaceCentering2
+        self.sNewid = sNewidRFaceCentering2
+        self.block_size = iTrainRFaceCentering[0][0].block_size
+        self.train_mode = 'clustered' #clustered improves final performance! mixed
+        self.analysis = None
+        self.enable_reduced_image_sizes = True
+        self.reduction_factor = 2.0 # WARNING 2.0, 4.0, 8.0
+        self.hack_image_size = 64 # WARNING 64, 32, 16
+        self.enable_hack_image_size = True
+        
+    def iSeqCreateRFaceCentering(self, num_images, alldbnormalized_available_images, alldb_noface_available_images, first_image=0, first_image_no_face=0, repetition_factor=1, seed=-1):
+        if seed >= 0 or seed is None: #also works for 
+            numpy.random.seed(seed)
+        #else seed <0 then, do not change seed
+        
+        print "***** Setting information Parameters for RFaceCentering******"
+        iSeq = system_parameters.ParamsInput()
+        # (0.55+1.1)/2 = 0.825, 0.55/2 = 0.275, 0.55/4 = 0.1375, .825 + .1375 = .9625, .825 - .55/4 = .6875
+        iSeq.name = "Real FACE DISCRIMINATION (Centered / Decentered)"
+    
+        
+        if num_images > len(alldbnormalized_available_images):
+            err = "Number of images to be used exceeds the number of available images"
+            raise Exception(err) 
+    
+        if num_images/10 * repetition_factor> len(alldb_noface_available_images):
+            err = "Number of no_face images to be used exceeds the number of available images"
+            raise Exception(err) 
+    
+        iSeq.data_base_dir = alldbnormalized_base_dir
+       
+        iSeq.ids = alldbnormalized_available_images[first_image:first_image + num_images] #30000, numpy.arange(0,6000) # 6000
+        iSeq.faces = numpy.arange(0,10) # 0=centered normalized face, 1=not centered normalized face
+        block_size = len(iSeq.ids) / len(iSeq.faces)
+        
+        #iSeq.scales = numpy.linspace(pipeline_fd['smin0'], pipeline_fd['smax0'], 50) # (-50, 50, 2)
+        if len(iSeq.ids) % len(iSeq.faces) != 0:
+            ex="Here the number of scales must be a divisor of the number of identities"
+            raise Exception(ex)
+        
+        iSeq.ages = [None]
+        iSeq.genders = [None]
+        iSeq.racetweens = [None]
+        iSeq.expressions = [None]
+        iSeq.morphs = [None]
+        iSeq.poses = [None]
+        iSeq.lightings = [None]
+        iSeq.slow_signal = 0 #real slow signal is whether there is the amount of face centering
+        iSeq.step = 1
+        iSeq.offset = 0
+        iSeq.input_files = image_loader.create_image_filenames3(iSeq.data_base_dir, "image", iSeq.slow_signal, iSeq.ids, iSeq.ages, \
+                                                    iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
+                                                    iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
+        iSeq.input_files = iSeq.input_files * repetition_factor  #  4 was overfitting non linear sfa slightly
+        #To avoid grouping similar images next to one other or in the same block
+        numpy.random.shuffle(iSeq.input_files)  
+        
+        #Background images are not duplicated, instead more are taken
+        iSeq.data2_base_dir = alldb_noface_base_dir
+        iSeq.ids2 = alldb_noface_available_images[first_image_no_face: first_image_no_face + block_size * repetition_factor]
+        iSeq.input_files2 = image_loader.create_image_filenames3(iSeq.data2_base_dir, "image", iSeq.slow_signal, iSeq.ids2, iSeq.ages, \
+                                                    iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, \
+                                                    iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset, len_ids=5, image_postfix=".jpg")
+        iSeq.input_files2 = iSeq.input_files2 
+        numpy.random.shuffle(iSeq.input_files2)
+        
+        iSeq.input_files = iSeq.input_files[0:-block_size* repetition_factor] + iSeq.input_files2
+        
+        iSeq.num_images = len(iSeq.input_files)
+        #iSeq.params = [ids, expressions, morphs, poses, lightings]
+        iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
+                          iSeq.morphs, iSeq.poses, iSeq.lightings]
+        iSeq.block_size = iSeq.num_images / len (iSeq.faces)
+        iSeq.train_mode = "clustered" #"serial" #"clustered"
+        print "BLOCK SIZE =", iSeq.block_size 
+        
+        iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.faces)), iSeq.block_size)
+        iSeq.correct_labels = iSeq.correct_classes / (len(iSeq.faces)-1)
+        
+        system_parameters.test_object_contents(iSeq)
+        return iSeq
+    
+    
+    def sSeqCreateRFaceCentering(self, iSeq, pipeline_fd, pipeline_factor=2.0, seed=-1):
+        if seed >= 0 or seed is None: #also works for 
+            numpy.random.seed(seed)
+        #else seed <0 then, do not change seed
+        
+        print "******** Setting Training Data Parameters for Real Face Centering****************"
+        sSeq = system_parameters.ParamsDataLoading()
+        sSeq.input_files = iSeq.input_files
+        sSeq.num_images = iSeq.num_images
+        sSeq.block_size = iSeq.block_size
+        sSeq.train_mode = iSeq.train_mode
+        sSeq.image_width = 256
+        sSeq.image_height = 192
+        sSeq.subimage_width = 135
+        sSeq.subimage_height = 135
+        
+        sSeq.trans_x_max = pipeline_fd['dx0'] * 1.0 * pipeline_factor
+        sSeq.trans_y_max = pipeline_fd['dy0'] * 1.0 * pipeline_factor#* 0.998
+        sSeq.pang_max = pipeline_fd['da0'] * pipeline_factor
+        sSeq.min_sampling = pipeline_fd['smin0'] #- 0.1 #WARNING!!!
+        sSeq.max_sampling = pipeline_fd['smax0']
+        sSeq.avg_sampling = 0.825 #(sSeq.min_sampling + sSeq.max_sampling)/2
+        
+        
+        sSeq.pixelsampling_x = numpy.zeros(sSeq.num_images)
+        sSeq.pixelsampling_y = numpy.zeros(sSeq.num_images) 
+        sSeq.rotations = numpy.zeros(sSeq.num_images)
+        sSeq.translations_x = numpy.zeros(sSeq.num_images)
+        sSeq.translations_y = numpy.zeros(sSeq.num_images)
+        
+        
+        num_blocks = sSeq.num_images/sSeq.block_size
+        for block_nr in range(num_blocks):
+            #For exterior box
+            fraction = ((block_nr+1.0) / (num_blocks-1)) ** 0.25 # From 1/(N-1) to 1.0 # **0.333
+            if fraction > 1:
+                fraction = 1
+            x_max = sSeq.trans_x_max * fraction
+            y_max = sSeq.trans_y_max * fraction
+            pang_max = sSeq.pang_max * fraction
+            samp_max = sSeq.avg_sampling + (sSeq.max_sampling-sSeq.avg_sampling) * fraction * pipeline_factor
+            samp_min = sSeq.avg_sampling + (sSeq.min_sampling-sSeq.avg_sampling) * fraction * pipeline_factor
+        
+            box_ext = [(-x_max, x_max), (-y_max, y_max), (-pang_max, pang_max), (samp_min, samp_max), (samp_min, samp_max)] 
+        
+            if block_nr >= 0:
+                #For interior boxiSeq.ids = alldbnormalized_available_images[30000:45000]       
+                if block_nr < num_blocks-1:
+                    eff_block_nr = block_nr
+                else:
+                    eff_block_nr = block_nr-1
+                fraction2 = (eff_block_nr / (num_blocks-1)) ** 0.25 #** 0.333
+                if fraction2 > 1:
+                    fraction2 = 1
+                x_max = sSeq.trans_x_max * fraction2
+                y_max = sSeq.trans_y_max * fraction2
+                pang_max = sSeq.pang_max * fraction2
+                samp_max = sSeq.avg_sampling + (sSeq.max_sampling-sSeq.avg_sampling) * fraction2
+                samp_min = sSeq.avg_sampling + (sSeq.min_sampling-sSeq.avg_sampling) * fraction2
+                box_in = [(-x_max, x_max), (-y_max, y_max), (-pang_max, pang_max), (samp_min, samp_max), (samp_min, samp_max)] 
+            
+            samples = sub_box_sampling(box_in, box_ext, sSeq.block_size)
+            sSeq.translations_x[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = samples[:,0]
+            sSeq.translations_y[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = samples[:,1]
+            sSeq.rotations[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = samples[:,2]
+            sSeq.pixelsampling_x[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = samples[:,3]
+            sSeq.pixelsampling_y[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = samples[:,4]
+                    
+        sSeq.subimage_first_row =  sSeq.image_height/2.0-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
+        sSeq.subimage_first_column = sSeq.image_width/2.0-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
+        
+        sSeq.add_noise_L0 = True
+        sSeq.convert_format = "L"
+        sSeq.background_type = None
+        sSeq.trans_sampled = True 
+        
+        sSeq.name = "Face Centering. Dx %d, Dy %d, Da %d, sampling in (%d, %d)"%(sSeq.trans_x_max, sSeq.trans_y_max, int(sSeq.min_sampling*1000), int(sSeq.max_sampling*1000),
+            int(sSeq.min_sampling*1000), int(sSeq.max_sampling*1000))
+        print sSeq.name
+        iSeq.name = sSeq.name
+    
+        
+        sSeq.load_data = load_data_from_sSeq #lambda : load_data_from_sSeq(sSeq)
+    
+        system_parameters.test_object_contents(sSeq)
+        return sSeq
+    
+    def sphere_sampling(self, radious, num_dims=1, num_vectors=1):
+        output = numpy.random.uniform(-1,1,(num_vectors, num_dims))
+        norms = ((output**2).sum(axis=1))**0.5
+        new_radious = numpy.random.uniform(0,1,num_vectors)**(1.0 / num_dims) * radious
+        factor = (1/norms * new_radious).reshape((num_vectors,1))
+        norm_output = factor * output  
+        return norm_output
+        
+    def sub_sphere_sampling(self, radious_min, radious_max, num_dims=1, num_vectors=1):
+        output = numpy.zeros((num_vectors, num_dims))
+        incorrect = numpy.ones(num_vectors, dtype="bool")
+        num_incorrect = num_vectors
+        while num_incorrect > 0:
+            print "#", num_incorrect
+            #print "incorrect.sum()=",incorrect.sum()
+            new_candidates = self.sphere_sampling(radious_max, num_dims, num_incorrect) 
+            output[incorrect] = new_candidates       
+            new_radious = (new_candidates**2).sum(axis=1)**0.5
+            still_incorrect = (new_radious < radious_min)
+            incorrect[incorrect==True] = still_incorrect
+            num_incorrect -= (still_incorrect == False).sum()      
+        return output
+    
+    
+    def sSeqCreateRFaceCentering2(self, iSeq, pipeline_fd, pipeline_factor=2.0, seed=-1):
+        if seed >= 0 or seed is None: #also works for 
+            numpy.random.seed(seed)
+        #else seed <0 then, do not change seed
+        
+        print "******** Setting Training Data Parameters for Real Face Centering****************"
+        sSeq = system_parameters.ParamsDataLoading()
+        sSeq.input_files = iSeq.input_files
+        sSeq.num_images = iSeq.num_images
+        sSeq.block_size = iSeq.block_size
+        sSeq.train_mode = iSeq.train_mode
+        sSeq.image_width = 256
+        sSeq.image_height = 192
+        sSeq.subimage_width = 135
+        sSeq.subimage_height = 135
+        
+        sSeq.trans_x_max = pipeline_fd['dx0'] * 1.0 * pipeline_factor
+        sSeq.trans_y_max = pipeline_fd['dy0'] * 1.0 * pipeline_factor#* 0.998
+        sSeq.pang_max = pipeline_fd['da0'] * pipeline_factor
+        sSeq.min_sampling = pipeline_fd['smin0'] #- 0.1 #WARNING!!!
+        sSeq.max_sampling = pipeline_fd['smax0']
+        sSeq.avg_sampling = 0.825 #(sSeq.min_sampling + sSeq.max_sampling)/2  
+        sSeq.delta_sampling = max( sSeq.max_sampling-sSeq.avg_sampling, sSeq.avg_sampling-sSeq.min_sampling ) * pipeline_factor
+        
+        sSeq.pixelsampling_x = numpy.ones(sSeq.num_images)
+        sSeq.pixelsampling_y = numpy.ones(sSeq.num_images) 
+        sSeq.rotations = numpy.zeros(sSeq.num_images)
+        sSeq.translations_x = numpy.zeros(sSeq.num_images)
+        sSeq.translations_y = numpy.zeros(sSeq.num_images)
+            
+        num_blocks = sSeq.num_images/sSeq.block_size
+        for block_nr in range(num_blocks-1): #Last block (backgrounds) is not randomized
+            radious_min = block_nr/(num_blocks-1.0) * 4 #
+            radious_max = (block_nr+1.0)/(num_blocks-1) * 4
+          
+            vectors = self.sub_sphere_sampling(radious_min, radious_max, num_dims=4, num_vectors = sSeq.block_size)
+            sSeq.translations_x[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = vectors[:,0] * sSeq.trans_x_max
+            sSeq.translations_y[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = vectors[:,1] * sSeq.trans_y_max
+            sSeq.rotations[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = vectors[:,2] * sSeq.pang_max
+            sSeq.pixelsampling_x[block_nr*sSeq.block_size: (block_nr+1)*sSeq.block_size] = sSeq.avg_sampling + vectors[:,3] * sSeq.delta_sampling
+        
+        sSeq.pixelsampling_y = sSeq.pixelsampling_x.copy()
+                    
+        sSeq.subimage_first_row =  sSeq.image_height/2-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
+        sSeq.subimage_first_column = sSeq.image_width/2-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
+        
+        sSeq.add_noise_L0 = True
+        sSeq.convert_format = "L"
+        sSeq.background_type = None
+        sSeq.trans_sampled = True
+        
+        sSeq.name = "FaceCentering2. Dx %d, Dy %d, Da %d, Dsampling %d"%(sSeq.trans_x_max, sSeq.trans_y_max,  int(sSeq.pang_max*1000), int(sSeq.delta_sampling*1000))
+        print sSeq.name
+        iSeq.name = sSeq.name
+        
+        sSeq.load_data = load_data_from_sSeq #lambda : load_data_from_sSeq(sSeq)
+        system_parameters.test_object_contents(sSeq)
+        return sSeq
+
 pipeline_fd_centering = dict(dx0 = 40,  dy0 = 20,  da0=22.5, smin0 = 0.694,  smax0 = 0.981,
                              dx1 = 555, dy1 = 10, smin1 = 0.775, smax1 = 1.05)
-if iteration == 0:
-    pipeline_factor = 1.2
-elif iteration == 1:
-    pipeline_factor = 0.25
-
-
-iSeq = iTrainRFaceCentering = [[iSeqCreateRFaceCentering(30000, av_fim, av_nfim, first_image=0, first_image_no_face=0, repetition_factor=4, seed=-1)]]
-sSeq = sTrainRFaceCentering = [[sSeqCreateRFaceCentering2(iSeq[0][0], pipeline_fd=pipeline_fd_centering, pipeline_factor=pipeline_factor, seed=-1)]]
-print ";)"
-
-
-#iSeq = iTrainRFaceCentering2 = \
-#[[iSeqCreateRFaceCentering(3000, av_fim, av_nfim, first_image=0, repetition_factor=2, seed=-1)], \
-#[iSeqCreateRFaceCentering(3000, av_fim, av_nfim, first_image=3000, repetition_factor=2, seed=-1),iSeqCreateRFaceCentering(3000, av_fim, av_nfim, first_image=6000, repetition_factor=2, seed=-1)]]
-
-#sTrainRFaceCentering2 = [[sSeqCreateRFaceCentering(iSeq[0][0], seed=-1)], \
-#                        [sSeqCreateRFaceCentering(iSeq[1][0], seed=-1), sSeqCreateRFaceCentering(iSeq[1][1], seed=-1)]]
-iSeq = iSeenidRFaceCentering2 = iSeqCreateRFaceCentering(15000, av_fim, av_nfim, first_image=30000, first_image_no_face=3000*4, repetition_factor=2, seed=-1)
-sSeenidRFaceCentering2 =  sSeqCreateRFaceCentering2(iSeq, pipeline_fd=pipeline_fd_centering, pipeline_factor=pipeline_factor, seed=-1)
-iSeq = iNewidRFaceCentering2 = [[iSeqCreateRFaceCentering(10000, av_fim, av_nfim, first_image=45000, first_image_no_face=3000*4+1500*2, repetition_factor=2, seed=-1)]]
-sNewidRFaceCentering2 = [[sSeqCreateRFaceCentering2(iSeq[0][0], pipeline_fd=pipeline_fd_centering, pipeline_factor=pipeline_factor, seed=-1)]]
-      
-ParamsRFaceCenteringFunc = system_parameters.ParamsSystem()
-ParamsRFaceCenteringFunc.name = "Function Based Data Creation for RFaceCentering"
-ParamsRFaceCenteringFunc.network = "linearNetwork4L"  #Default Network, but ignored
-ParamsRFaceCenteringFunc.iTrain =iTrainRFaceCentering
-ParamsRFaceCenteringFunc.sTrain = sTrainRFaceCentering
-ParamsRFaceCenteringFunc.iSeenid = iSeenidRFaceCentering2
-ParamsRFaceCenteringFunc.sSeenid = sSeenidRFaceCentering2
-ParamsRFaceCenteringFunc.iNewid = iNewidRFaceCentering2
-ParamsRFaceCenteringFunc.sNewid = sNewidRFaceCentering2
-ParamsRFaceCenteringFunc.block_size = iTrainRFaceCentering[0][0].block_size
-ParamsRFaceCenteringFunc.train_mode = 'clustered' #clustered improves final performance! mixed
-ParamsRFaceCenteringFunc.analysis = None
-ParamsRFaceCenteringFunc.enable_reduced_image_sizes = True
-ParamsRFaceCenteringFunc.reduction_factor = 2.0 # WARNING 2.0, 4.0, 8.0
-ParamsRFaceCenteringFunc.hack_image_size = 64 # WARNING 64, 32, 16
-ParamsRFaceCenteringFunc.enable_hack_image_size = True
-
-
-
-
+fd_centering_iteration = 0  # valid values: 0 or 1
+ParamsRFaceCentering2Func = ParamsRFaceCentering2Experiment(experiment_seed, experiment_basedir, pipeline_fd_centering, iteration=fd_centering_iteration)
 
 # #PIPELINE FOR FACE DETECTION:
 # #Orig=TX: DX0=+/- 45, DY0=+/- 20, DS0= 0.55-1.1
@@ -6579,7 +6285,7 @@ class ParamsRTransXYPAngScaleExperiment(system_parameters.ParamsSystem):
     #dx0 = 45, 45 Steps,
     #dy0 = 20, 20 Steps,
     #smin0 = 0.55, smax0 = 1.1, 40 Steps
-    def iSeqCreateRTransXYPAngScale(self, dx=45, dy=20, da=22.5, smin=0.55, smax=1.1, num_steps=20, slow_var = "X", continuous=False, pre_mirroring="none", num_images_used=10000, images_base_dir= alldbnormalized_base_dir, normalized_images = alldbnormalized_available_images, first_image_index=0, repetition_factor=1, seed=-1):
+    def iSeqCreateRTransXYPAngScale(self, dx=45, dy=20, da=22.5, smin=0.55, smax=1.1, num_steps=20, slow_var = "X", continuous=False, pre_mirroring="none", num_images_used=10000, images_base_dir= alldbnormalized_base_dir, normalized_images = None, first_image_index=0, repetition_factor=1, seed=-1):
         if seed >= 0 or seed is None: #also works for 
             numpy.random.seed(seed)
     
@@ -8406,6 +8112,7 @@ class ParamsMNISTExperiment(system_parameters.ParamsSystem):
         super(ParamsMNISTExperiment, self).__init__()
         self.experiment_seed = experiment_seed
         self.experiment_basedir = experiment_basedir
+        
     def create(self):
         #import mnist
         
@@ -8778,6 +8485,7 @@ class ParamsRatlabExperiment(system_parameters.ParamsSystem):
         super(ParamsRatlabExperiment, self).__init__()
         self.experiment_seed = experiment_seed
         self.experiment_basedir = experiment_basedir
+        
     def create(self):
         print "Ratlab: starting with experiment_seed=", self.experiment_seed
         numpy.random.seed(self.experiment_seed+123451313)
