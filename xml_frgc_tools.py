@@ -6,7 +6,7 @@ import string
 import sys
 from lxml import etree
 import PIL
-import Image
+from PIL import Image
 import numpy
 import scipy
 

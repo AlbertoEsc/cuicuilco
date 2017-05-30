@@ -141,8 +141,8 @@ output_instead_of_SVM2 = False
 number_of_target_labels_per_orig_label = 0
 coherent_seeds = False or True
 
-cuicuilco_queue = "/home/escalafl/workspace4/cuicuilco_MDP3.2/src/queue_cuicuilco.txt"
-cuicuilco_lock_file = "/home/escalafl/workspace4/cuicuilco_MDP3.2/src/queue_cuicuilco"
+cuicuilco_queue = "queue_cuicuilco.txt"
+cuicuilco_lock_file = "queue_cuicuilco"
 minutes_sleep = 0
 
 t0 = time.time()
