@@ -3723,8 +3723,9 @@ HiGSFANetworkU11L_NoOverlap_4x4L0_PosXPosYScaleAngle_32x32 = copy.deepcopy(HiGSF
 HiGSFANetworkU11L_NoOverlap_4x4L0_PosXPosYScaleAngle_32x32.layers = HiGSFANetworkU11L_NoOverlap_4x4L0_PosXPosYScaleAngle_32x32.layers[0:-2]
 
 ####################### NETWORKS FOR EYE DETECTION WITHOUT OVERLAP ####################################
-delta_thresholds = [3, 8, 14, 24, 28, 34, 40, 40, 40, 40, 40, 40]
-output_dims =      [   16,    28,    50,    75,    75,    75,   75,   75,   75,   75,   80,   80]
+# delta_thresholds = [  3,  8, 14, 24, 28, 34, 40, 40, 40, 40, 40, 40]
+delta_thresholds = [  3,  8, 14, 24, 24, 24, 24, 24, 24, 24, 24, 24]
+output_dims =      [ 16, 28, 50, 75, 75, 75, 75, 75, 75, 75, 80, 80]
 network = HiGSFANetworkU11L_NoOverlap_4x4L0_EyeL = copy.deepcopy(HiGSFANetworkU11L_NoOverlap_4x4L0)
 for i, layer in enumerate(network.layers):
     layer.sfa_args["max_preserved_sfa"] = delta_thresholds[i]

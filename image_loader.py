@@ -293,7 +293,7 @@ def simple_normalization_Age(im, relevant_width, relevant_height, obj_avg=0.0, o
 def load_image_data_monoprocessor(image_files, image_array, image_width, image_height, subimage_width, subimage_height,
                                   pre_mirroring_flags=False, pixelsampling_x=2, pixelsampling_y=2, subimage_first_row=0,
                                   subimage_first_column=0, add_noise=True, convert_format="L", translations_x=None,
-                                  translations_y=None, trans_sampled=True, rotation=None, contrast_enhance=None,
+                                  translations_y=None, trans_sampled=True, rotations=None, rotate_before_translation=False, contrast_enhance=None,
                                   obj_avgs=None, obj_stds=None, background_type=None, color_background_filter=None,
                                   subimage_reference_point=0, verbose=False):
     t0 = time.time()
@@ -330,8 +330,8 @@ def load_image_data_monoprocessor(image_files, image_array, image_width, image_h
         raise Exception(err)
         # quit()
 
-    #    if rotation==None:
-    #        er = "rotation disabled :("
+    #    if rotations==None:
+    #        er = "rotations disabled :("
     #        raise Exception(er)
 
     if isinstance(image_width, (numpy.float, numpy.float64, numpy.int)):
@@ -362,8 +362,8 @@ def load_image_data_monoprocessor(image_files, image_array, image_width, image_h
     if isinstance(translations_y, (numpy.float, numpy.float64, numpy.int)):
         translations_y = numpy.ones(num_images) * translations_y
 
-    if isinstance(rotation, (numpy.float, numpy.float64, numpy.int)):
-        rotation = numpy.ones(num_images) * rotation
+    if isinstance(rotations, (numpy.float, numpy.float64, numpy.int)):
+        rotations = numpy.ones(num_images) * rotations
 
     if isinstance(obj_avgs, (numpy.float, numpy.float64, numpy.int)):
         obj_avgs = numpy.ones(num_images) * obj_avgs
@@ -438,17 +438,23 @@ def load_image_data_monoprocessor(image_files, image_array, image_width, image_h
 
                 # Warning, make this conditional
                 # im = ImageOps.autocontrast(im, 2)
-
+                
                 x0 = subimage_first_column[act_im_num] + translations_x[act_im_num]
                 y0 = subimage_first_row[act_im_num] + translations_y[act_im_num]
                 x1 = subimage_first_column[act_im_num] + translations_x[act_im_num] + subimage_width * pixelsampling_x[
                     act_im_num]
                 y1 = subimage_first_row[act_im_num] + translations_y[act_im_num] + subimage_height * pixelsampling_y[
                     act_im_num]
-                if not (rotation is None):
-                    delta_ang = rotation[act_im_num]
+                if rotations is not None:
+                    delta_ang = rotations[act_im_num]
                 else:
                     delta_ang = None
+
+                if rotate_before_translation:
+                    print ":Y",
+                    if delta_ang is not None:
+                        im = rotate_improved(im, delta_ang, Image.BICUBIC)
+
 
                     #            print "IMAGE: ", image_file
                 # subimage_coordinates = (x0, y0, x1, y1)
@@ -479,7 +485,7 @@ def load_image_data_monoprocessor(image_files, image_array, image_width, image_h
                     #                print "Image size: im.size[0], im.size[1] = ", im.size[0],  im.size[1]
                     #                raise Exception(err)
                 # print "AAA"
-                if delta_ang is not None:
+                if delta_ang is not None and not rotate_before_translation:
                     rotation_center_x = (x0 + x1 - 1) / 2.0
                     rotation_center_y = (y0 + y1 - 1) / 2.0
 
@@ -860,7 +866,7 @@ def vectorize(scalar_vector, length, preserve_None=False):
 def load_image_data(image_files, image_array, image_width, image_height, subimage_width, subimage_height,
                     pre_mirroring_flags=False, pixelsampling_x=2, pixelsampling_y=2, subimage_first_row=0,
                     subimage_first_column=0, add_noise=True, convert_format="L", translations_x=None,
-                    translations_y=None, trans_sampled=True, rotation=None, contrast_enhance=None, obj_avgs=None,
+                    translations_y=None, trans_sampled=True, rotations=None, rotate_before_translation=False, contrast_enhance=None, obj_avgs=None,
                     obj_stds=None, background_type=None, color_background_filter=None, subimage_reference_point=0,
                     verbose=False):
     num_proc = os.getenv("CUICUILCO_IMAGE_LOADING_NUM_PROC")
@@ -879,7 +885,7 @@ def load_image_data(image_files, image_array, image_width, image_height, subimag
                                              subimage_height, pre_mirroring_flags, pixelsampling_x, pixelsampling_y,
                                              subimage_first_row, subimage_first_column, add_noise,
                                              convert_format, translations_x, translations_y, trans_sampled,
-                                             rotation, contrast_enhance, obj_avgs, obj_stds, background_type,
+                                             rotations, rotate_before_translation, contrast_enhance, obj_avgs, obj_stds, background_type,
                                              color_background_filter, subimage_reference_point, verbose)
 
     t0 = time.time()
@@ -924,7 +930,7 @@ def load_image_data(image_files, image_array, image_width, image_height, subimag
     pixelsamplings_y = vectorize(pixelsampling_y, num_images)
     translations_x = vectorize(translations_x, num_images)
     translations_y = vectorize(translations_y, num_images)
-    delta_angs = vectorize(rotation, num_images, True)
+    delta_angs = vectorize(rotations, num_images, True)
     obj_avgs = vectorize(obj_avgs, num_images, True)
     obj_stds = vectorize(obj_stds, num_images)
 
@@ -976,7 +982,7 @@ def load_image_data(image_files, image_array, image_width, image_height, subimag
             unique_image_files_subsets[i % num_proc].append(image_file)
 
         all_im_params = (pre_mirroring_flags, pixelsamplings_x, pixelsamplings_y, subimages_first_row,
-                         subimages_first_column, translations_x, translations_y, delta_angs, contrast_enhance,
+                         subimages_first_column, translations_x, translations_y, delta_angs, rotate_before_translation, contrast_enhance,
                          obj_avgs, obj_stds)
 
         queue = multiprocessing.Queue()
@@ -1040,8 +1046,8 @@ def load_multiple_image_data(unique_image_files_subset, act_im_num_indices, subi
     subimages = numpy.zeros((num_images, subimage_width * subimage_height * pixel_dimensions))
 
     (pre_mirroring_flags, pixelsamplings_x, pixelsamplings_y, subimages_first_row, subimages_first_column,
-     translations_x, translations_y, delta_angs, contrast_enhance, objs_avg, objs_std) = all_im_params
-
+     translations_x, translations_y, delta_angs, rotate_before_translation, contrast_enhance, objs_avg, objs_std) = all_im_params
+      
     # Noise is added to whole matrix, to prevent randomness differences w.r.t. non parallelized version
     add_noise2 = False
     image_counter = 0
@@ -1060,7 +1066,7 @@ def load_multiple_image_data(unique_image_files_subset, act_im_num_indices, subi
             im_params = (subimage_width, subimage_height, pre_mirroring_flags[act_im_num], pixelsamplings_x[act_im_num],
                          pixelsamplings_y[act_im_num], subimages_first_row[act_im_num],
                          subimages_first_column[act_im_num], add_noise2, convert_format, translations_x[act_im_num],
-                         translations_y[act_im_num], delta_angs[act_im_num], contrast_enhance, objs_avg[act_im_num],
+                         translations_y[act_im_num], delta_angs[act_im_num], rotate_before_translation, contrast_enhance, objs_avg[act_im_num],
                          objs_std[act_im_num], background_type, color_background_filter, verbose, save_intermediate)
             # time.sleep(1) #TURBO WARNING!!!
             subimages[image_counter] = load_single_image_data(im_orig, im_params)
@@ -1080,7 +1086,7 @@ def load_multiple_image_data(unique_image_files_subset, act_im_num_indices, subi
 # Translations are given in original image coordinates
 def load_single_image_data(im_orig, im_params):
     (subimage_width, subimage_height, pre_mirroring_flag, pixelsampling_x, pixelsampling_y, subimage_first_row,
-     subimage_first_column, add_noise, convert_format, translation_x, translation_y, delta_ang, contrast_enhance,
+     subimage_first_column, add_noise, convert_format, translation_x, translation_y, delta_ang, rotate_before_translation, contrast_enhance,
      obj_avg, obj_std, background_type, color_background_filter, verbose, save_intermediate) = im_params
 
     out_size = (subimage_width, subimage_height)
@@ -1108,7 +1114,11 @@ def load_single_image_data(im_orig, im_params):
             print "Image size: im.size[0], im.size[1] = ", im.size[0], im.size[1]
             raise Exception(err)
 
-        if delta_ang is not None:
+        if rotate_before_translation:
+            if delta_ang is not None:
+                im = rotate_improved(im, delta_ang, Image.BICUBIC)
+                
+        if delta_ang is not None and not rotate_before_translation:
             rotation_center_x = (x0 + x1 - 1) / 2.0
             rotation_center_y = (y0 + y1 - 1) / 2.0
 

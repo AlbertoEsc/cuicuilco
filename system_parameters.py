@@ -190,7 +190,8 @@ class ParamsDataLoading(object):
         self.translations_x = None
         self.translations_y = None
         self.trans_sampled = True
-        self.rotation = None
+        self.rotate_before_translation = False
+        self.rotations = None
         self.contrast_enhance = None
         self.load_data = None
         self.block_size = 1
@@ -440,7 +441,7 @@ def load_data_from_sSeq(self):
                                            seq.pixelsampling_y,
                                            seq.subimage_first_row, seq.subimage_first_column, seq.add_noise_L0,
                                            seq.convert_format, seq.translations_x, seq.translations_y,
-                                           seq.trans_sampled, seq.rotation, seq.contrast_enhance, seq.obj_avgs,
+                                           seq.trans_sampled, seq.rotations, seq.rotate_before_translation, seq.contrast_enhance, seq.obj_avgs,
                                            seq.obj_stds, background_type=seq.background_type,
                                            color_background_filter=seq.filter, verbose=False)
     return data

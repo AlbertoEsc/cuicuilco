@@ -4276,17 +4276,21 @@ class ParamsREyePosXYExperiment(system_parameters.ParamsSystem):
         all_eyeLR_available_images = numpy.arange(7000, 45000) #51434 #Only use a fraction of the FRGC images (the first images are more important because they have more variations)
         numpy.random.shuffle(all_eyeLR_available_images)
         
-        eye_dx = 10.7 #6 #12
-        eye_dy = 10.7 #6 #12
+        eye_dx = 10.7  # 6 #12
+        eye_dy = 10.7  # 6 #12
         eye_smax= (0.94875 + .01725)*2.0   #*2.5   # (0.825 + 0.015)*2.5 * 1.25 #Factor 1.05 is for an experiment only
         eye_smin= (0.94875 - .01725)*2.0   #*2.5   #(0.825 - 0.015)*2.5 * 1.25
-        eye_da = 10 #22.5 #30.0 , 22.5
+        eye_da = 10.0 # 22.5 #30.0 , 22.5
+        obj_avg_std=0.1  # 0.1 Final data in range (0, 1), centered at 0.5
+        obj_std_min=0.1  # 0.10
+        obj_std_max=0.22  # 0.20
+        
         self.iTrain = [[self.iSeqCreateREyePosXY(30000, alldb_eyeLR_normalized_base_dir, all_eyeLR_available_images, first_image=0, slow_var=self.slow_var, num_classes=50, eye_dx=eye_dx, eye_dy=eye_dy, repetition_factor=4, seed=-1)]] #4
-        self.sTrain = [[self.sSeqCreateREyePosXY(self.iTrain[0][0], eye_smax=eye_smax, eye_smin=eye_smin, eye_da=eye_da, seed=-1)]] 
+        self.sTrain = [[self.sSeqCreateREyePosXY(self.iTrain[0][0], eye_smax=eye_smax, eye_smin=eye_smin, eye_da=eye_da, contrast_enhance = True, obj_avg_std=obj_avg_std, obj_std_min=obj_std_min, obj_std_max=obj_std_max, seed=-1)]] 
         self.iSeenid =  self.iSeqCreateREyePosXY(4000, alldb_eyeLR_normalized_base_dir, all_eyeLR_available_images, first_image=30000, slow_var=self.slow_var, num_classes=50, eye_dx=eye_dx, eye_dy=eye_dy, repetition_factor=2, seed=-1) #2
-        self.sSeenid = self.sSeqCreateREyePosXY(self.iSeenid, eye_smax=eye_smax, eye_smin=eye_smin, eye_da=eye_da, seed=-1)
+        self.sSeenid = self.sSeqCreateREyePosXY(self.iSeenid, eye_smax=eye_smax, eye_smin=eye_smin, eye_da=eye_da, contrast_enhance = True, obj_avg_std=obj_avg_std, obj_std_min=obj_std_min, obj_std_max=obj_std_max,seed=-1)
         self.iNewid = [[self.iSeqCreateREyePosXY(4000, alldb_eyeLR_normalized_base_dir, all_eyeLR_available_images, first_image=34000, slow_var=self.slow_var, num_classes=50, eye_dx=eye_dx, eye_dy=eye_dy, repetition_factor=1, seed=-1)]]
-        self.sNewid = [[self.sSeqCreateREyePosXY(self.iNewid[0][0], eye_smax=eye_smax, eye_smin=eye_smin, eye_da=eye_da, seed=-1)]]
+        self.sNewid = [[self.sSeqCreateREyePosXY(self.iNewid[0][0], eye_smax=eye_smax, eye_smin=eye_smin, eye_da=eye_da, contrast_enhance = True, obj_avg_std=0.0, obj_std_min=0.5*(obj_std_max+obj_std_min), obj_std_max=0.5*(obj_std_max+obj_std_min), seed=-1)]]
         self.name = self.sTrain[0][0].name
         self.block_size = self.iTrain[0][0].block_size
 
@@ -4356,9 +4360,9 @@ class ParamsREyePosXYExperiment(system_parameters.ParamsSystem):
         iSeq.block_size = iSeq.num_images / num_classes
     
         iSeq.train_mode = "serial" #TODO:should learn both labels simultaneously
-        all_classes = numpy.arange(iSeq.num_images)*num_classes/iSeq.num_images
-        correct_classes_X = numpy.zeros(iSeq.num_images)
-        correct_classes_Y = numpy.zeros(iSeq.num_images)
+        all_classes = numpy.arange(iSeq.num_images, dtype="int")*num_classes/iSeq.num_images
+        correct_classes_X = numpy.zeros(iSeq.num_images, dtype="int")
+        correct_classes_Y = numpy.zeros(iSeq.num_images, dtype="int")
         correct_classes_X[numpy.argsort(iSeq.translations_x)] = all_classes.copy()
         correct_classes_Y[numpy.argsort(iSeq.translations_y)] = all_classes.copy()
     
@@ -4371,7 +4375,7 @@ class ParamsREyePosXYExperiment(system_parameters.ParamsSystem):
         system_parameters.test_object_contents(iSeq)
         return iSeq
     
-    def sSeqCreateREyePosXY(self, iSeq, eye_smax=0.84, eye_smin=0.81, eye_da=22.5, seed=-1):
+    def sSeqCreateREyePosXY(self, iSeq, eye_smax=0.84, eye_smin=0.81, eye_da=22.5, contrast_enhance = True, obj_avg_std=0.0, obj_std_min=0.2, obj_std_max=0.2, seed=-1):
         if seed >= 0 or seed is None: #also works for 
             numpy.random.seed(seed)
         #else seed <0 then, do not change seed
@@ -4400,11 +4404,19 @@ class ParamsREyePosXYExperiment(system_parameters.ParamsSystem):
         sSeq.pixelsampling_y = sSeq.pixelsampling_x.copy()
         sSeq.subimage_first_row =  sSeq.image_height/2.0-sSeq.subimage_height*sSeq.pixelsampling_y/2.0
         sSeq.subimage_first_column = sSeq.image_width/2.0-sSeq.subimage_width*sSeq.pixelsampling_x/2.0
-        sSeq.contrast_enhance = None #"array_mean_std-127.5-45.0"
+        
+        sSeq.contrast_enhance = "AgeContrastEnhancement_Avg_Std" #"array_mean_std-127.5-45.0", None, "AgeContrastEnhancement_Avg_Std" (setup needed)
+        if obj_avg_std > 0:
+            sSeq.obj_avgs = numpy.random.normal(0.0, obj_avg_std, size=sSeq.num_images) #mean intensity, centered at zero here
+        else:
+            sSeq.obj_avgs = numpy.zeros(sSeq.num_images)
+        sSeq.obj_stds = numpy.random.uniform(obj_std_min, obj_std_max, sSeq.num_images) #contrast
+        
         sSeq.add_noise_L0 = True
         sSeq.convert_format = "L"
         sSeq.background_type = None   
         sSeq.trans_sampled = False #the translations are specified according to the original image, not according to the sampled patch
+        sSeq.rotate_before_translation = True
     
         sSeq.name = "REyePosXY Dx in (%d, %d) Dy in (%d, %d), sampling in (%d, %d)"%(sSeq.trans_x_min, 
             sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, int(sSeq.min_sampling*100), int(sSeq.max_sampling*100))
@@ -5445,7 +5457,7 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
         iSeq_set = iNewidRGTSRB_Labels = [[self.iSeqCreateRGTSRB_Labels(GTSRB_annotationsTest, repetition_factors=1, seed=-1)]]
         sNewidRGTSRB = self.sSeqCreateRGTSRB(iSeq_set[0][0], delta_translation=0.0, delta_scaling=0.0, delta_rotation=0.0, contrast_enhance=contrast_enhance, activate_HOG=activate_HOG, switch_SFA_over_HOG= switch_SFA_over_HOG, feature_noise=0.0, seed=-1)
         #sSeq_set.add_noise_L0 = False
-        #sSeq_set.rotation = 0.0              
+        #sSeq_set.rotations = 0.0              
         
         #    print iTrainRGTSRB_Labels[0][0].input_files[0:5]
         #    print iSeenidRGTSRB_Labels.input_files[0:5]
@@ -5957,7 +5969,7 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
         sSeq.translations_x = numpy.random.uniform(-delta_translation, delta_translation, sSeq.num_images)                                                           
         sSeq.translations_y = numpy.random.uniform(-delta_translation, delta_translation, sSeq.num_images)                                                           
         
-        sSeq.rotation = numpy.random.uniform(-delta_rotation, delta_rotation, sSeq.num_images)
+        sSeq.rotations = numpy.random.uniform(-delta_rotation, delta_rotation, sSeq.num_images)
             
     #    if contrast_enhance == False:
     #        print "WTF 2???"
@@ -6480,9 +6492,9 @@ class ParamsRTransXYPAngScaleExperiment(system_parameters.ParamsSystem):
             sSeq.translations_y = numpy.random.uniform(sSeq.trans_y_min, sSeq.trans_y_max, sSeq.num_images)
             
         if iSeq.slow_var == "PAng":
-            sSeq.rotation = iSeq.trans_pangs_scales
+            sSeq.rotations = iSeq.trans_pangs_scales
         else:
-            sSeq.rotation = numpy.random.uniform(sSeq.da_min, sSeq.da_max, sSeq.num_images)
+            sSeq.rotations = numpy.random.uniform(sSeq.da_min, sSeq.da_max, sSeq.num_images)
     
         if iSeq.slow_var == "Scale":
             sSeq.pixelsampling_x = iSeq.trans_pangs_scales #sfa_libs.wider_1Darray(iSeq.scales,  iSeq.block_size)
@@ -6493,13 +6505,13 @@ class ParamsRTransXYPAngScaleExperiment(system_parameters.ParamsSystem):
     
         if iSeq.slow_var == "All":
             all_classes = (numpy.arange(sSeq.num_images)*50.0/sSeq.num_images).astype(int)
-            iSeq.correct_labels = numpy.stack((sSeq.translations_x, sSeq.translations_y, sSeq.rotation, sSeq.pixelsampling_x)).T
+            iSeq.correct_labels = numpy.stack((sSeq.translations_x, sSeq.translations_y, sSeq.rotations, sSeq.pixelsampling_x)).T
             
             translations_y_ordering = numpy.argsort(sSeq.translations_y)
             translations_y_classes = numpy.zeros(sSeq.num_images, dtype=int)
             translations_y_classes[translations_y_ordering] = all_classes
             
-            rotation_ordering = numpy.argsort(sSeq.rotation)
+            rotation_ordering = numpy.argsort(sSeq.rotations)
             rotation_classes = numpy.zeros(sSeq.num_images, dtype=int)
             rotation_classes[rotation_ordering] = all_classes
             
@@ -8073,7 +8085,7 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
         sSeq.pixelsampling_x = numpy.random.uniform(low=sSeq.min_sampling, high=sSeq.max_sampling, size=sSeq.num_images)
         sSeq.pixelsampling_y = sSeq.pixelsampling_x + 0.0
     
-        sSeq.rotation = numpy.random.uniform(-sSeq.delta_rotation, sSeq.delta_rotation, sSeq.num_images)
+        sSeq.rotations = numpy.random.uniform(-sSeq.delta_rotation, sSeq.delta_rotation, sSeq.num_images)
         if iSeq.obj_avg_std is None:
             sSeq.obj_avgs = [None,]*sSeq.num_images
             print "Good 1/3"
@@ -8416,9 +8428,9 @@ class ParamsMNISTExperiment(system_parameters.ParamsSystem):
         sSeq.pixelsampling_x = numpy.random.uniform(low=sSeq.min_sampling, high=sSeq.max_sampling, size=sSeq.num_images)
         sSeq.pixelsampling_y = sSeq.pixelsampling_x + 0.0
         if sSeq.delta_rotation != None:
-            sSeq.rotation = numpy.random.uniform(-sSeq.delta_rotation, sSeq.delta_rotation, sSeq.num_images)
+            sSeq.rotations = numpy.random.uniform(-sSeq.delta_rotation, sSeq.delta_rotation, sSeq.num_images)
         else:
-            sSeq.rotation = None
+            sSeq.rotations = None
         if iSeq.obj_avg_std > 0:
             sSeq.obj_avgs = numpy.random.normal(0.0, iSeq.obj_avg_std, size=sSeq.num_images)
         else:
@@ -8631,9 +8643,9 @@ class ParamsRatlabExperiment(system_parameters.ParamsSystem):
         sSeq.pixelsampling_x = numpy.random.uniform(low=sSeq.min_sampling, high=sSeq.max_sampling, size=sSeq.num_images)
         sSeq.pixelsampling_y = sSeq.pixelsampling_x + 0.0
         if sSeq.delta_rotation != None:
-            sSeq.rotation = numpy.random.uniform(-sSeq.delta_rotation, sSeq.delta_rotation, sSeq.num_images)
+            sSeq.rotations = numpy.random.uniform(-sSeq.delta_rotation, sSeq.delta_rotation, sSeq.num_images)
         else:
-            sSeq.rotation = None
+            sSeq.rotations = None
         if iSeq.obj_avg_std > 0:
             sSeq.obj_avgs = numpy.random.normal(0.0, iSeq.obj_avg_std, size=sSeq.num_images)
         else:
