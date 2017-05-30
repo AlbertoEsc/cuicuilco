@@ -152,7 +152,12 @@ def load_GT_labels(self, labels_filename, age_included=True, rAge_included=False
 class ParamsGenderExperiment(system_parameters.ParamsSystem):
     def __init__(self, experiment_seed, experiment_basedir, learn_all_variables=True):
         super(ParamsGenderExperiment, self).__init__()
-
+        self.analysis = None
+        self.enable_reduced_image_sizes = True #(False paper)
+        self.reduction_factor = 1.0 # 2.0 # 8.0 # 2.0 #1.0 #(1.0 paper)
+        self.hack_image_size  = 135 # 64  # 16 # 64 #128 #(128 paper)
+        self.enable_hack_image_size = True
+        
     def create(self):
         numpy.random.seed(experiment_seed+987987987)
         contrast_enhance = "ContrastGenderMultiply"
@@ -333,11 +338,7 @@ class ParamsGenderExperiment(system_parameters.ParamsSystem):
         # else:
         #     self.train_mode = 'clustered'
             
-        self.analysis = None
-        self.enable_reduced_image_sizes = True #(False paper)
-        self.reduction_factor = 1.0 # 2.0 # 8.0 # 2.0 #1.0 #(1.0 paper)
-        self.hack_image_size  = 135 # 64  # 16 # 64 #128 #(128 paper)
-        self.enable_hack_image_size = True
+
 
 
     def iSeqCreateGender(self, first_id = 0, num_ids = 25, user_base_dir=user_base_dir, data_dir="RenderingsGender60x200", gender_continuous=True, seed=None):
@@ -452,7 +453,13 @@ ParamsGenderFunc = ParamsGenderExperiment(experiment_seed, experiment_basedir)
 class ParamsAgeExperiment(system_parameters.ParamsSystem):
     def __init__(self, experiment_seed, experiment_basedir):
         super(ParamsAgeExperiment, self).__init__()
-
+        self.train_mode = 'mixed'
+        self.analysis = None
+        self.enable_reduced_image_sizes = False
+        self.reduction_factor = 1.0
+        self.hack_image_size = 128
+        self.enable_hack_image_size = True
+        
     def create(self):
         iTrainAge = self.iSeqCreateAge(first_id=0, num_ids=180, user_base_dir=user_base_dir, data_dir="RendersAge200x23", seed=None)
         sTrainAge = self.sSeqCreateAge(iTrainAge, seed=-1) 
@@ -470,12 +477,6 @@ class ParamsAgeExperiment(system_parameters.ParamsSystem):
         self.iNewid = [[iNewidAge]]
         self.sNewid = [[sNewidAge]]
         self.block_size = iTrainAge.block_size
-        self.train_mode = 'mixed'
-        self.analysis = None
-        self.enable_reduced_image_sizes = False
-        self.reduction_factor = 1.0
-        self.hack_image_size = 128
-        self.enable_hack_image_size = True
     
     def iSeqCreateAge(self, first_id, num_ids, user_base_dir=user_base_dir, data_dir="RendersAge200x23", seed=None):
         print "***** Setting Information Parameters for Age (simulated faces) ******"
@@ -4263,7 +4264,13 @@ class ParamsREyePosXYExperiment(system_parameters.ParamsSystem):
         super(ParamsREyePosXYExperiment, self).__init__()
         self.learn_all_variables = learn_all_variables  # in {True, False}. If True: combine two graphs for PosX and PosY
         self.slow_var = slow_var  # in {"PosX", and "PosY"}, the main slow parameter
-
+        self.train_mode = 'serial' #ignored
+        self.analysis = None
+        self.enable_reduced_image_sizes = True
+        self.reduction_factor = 1.0
+        self.hack_image_size = 64
+        self.enable_hack_image_size = True
+        
     def create(self):
         self.network = "linearNetwork4L"
         all_eyeLR_available_images = numpy.arange(7000, 45000) #51434 #Only use a fraction of the FRGC images (the first images are more important because they have more variations)
@@ -4282,13 +4289,7 @@ class ParamsREyePosXYExperiment(system_parameters.ParamsSystem):
         self.sNewid = [[self.sSeqCreateREyePosXY(self.iNewid[0][0], eye_smax=eye_smax, eye_smin=eye_smin, eye_da=eye_da, seed=-1)]]
         self.name = self.sTrain[0][0].name
         self.block_size = self.iTrain[0][0].block_size
-        self.train_mode = 'serial' #ignored
-        self.analysis = None
-        self.enable_reduced_image_sizes = True
-        self.reduction_factor = 1.0
-        self.hack_image_size = 64
-        self.enable_hack_image_size = True
-        
+
         if self.learn_all_variables: # and False:
             iSeq = self.iTrain[0][0]
             sSeq = self.sTrain[0][0]
@@ -4334,6 +4335,8 @@ class ParamsREyePosXYExperiment(system_parameters.ParamsSystem):
     
         iSeq.translations_x = numpy.random.uniform(-1 * eye_dx, eye_dx, iSeq.num_images)
         iSeq.translations_y = numpy.random.uniform(-1 * eye_dy, eye_dy, iSeq.num_images)
+        iSeq.eye_dx = eye_dx
+        iSeq.eye_dy = eye_dy
     
         if slow_var=="PosX":        
             iSeq.translations_x.sort()
@@ -4383,10 +4386,10 @@ class ParamsREyePosXYExperiment(system_parameters.ParamsSystem):
         sSeq.subimage_width = 64
         sSeq.subimage_height = 64 
         
-        # sSeq.trans_x_max = eye_dx
-        # sSeq.trans_x_min = -eye_dx
-        # sSeq.trans_y_max = eye_dy
-        # sSeq.trans_y_min = -eye_dy
+        sSeq.trans_x_max = iSeq.eye_dx
+        sSeq.trans_x_min = -iSeq.eye_dx
+        sSeq.trans_y_max = iSeq.eye_dy
+        sSeq.trans_y_min = -iSeq.eye_dy
         sSeq.min_sampling = eye_smin
         sSeq.max_sampling = eye_smax
     
@@ -4431,7 +4434,14 @@ class ParamsRFaceCentering2Experiment(system_parameters.ParamsSystem):
         self.experiment_basedir = experiment_basedir
         self.pipeline_fd_centering = pipeline_fd_centering        
         self.iteration = iteration
-        
+
+        self.train_mode = 'clustered' #clustered improves final performance! mixed
+        self.analysis = None
+        self.enable_reduced_image_sizes = True
+        self.reduction_factor = 2.0 # WARNING 2.0, 4.0, 8.0
+        self.hack_image_size = 64 # WARNING 64, 32, 16
+        self.enable_hack_image_size = True
+                
     def create(self):
         if self.experiment_seed >= 0 or self.experiment_seed is None: 
             numpy.random.seed(self.experiment_seed)
@@ -4476,12 +4486,6 @@ class ParamsRFaceCentering2Experiment(system_parameters.ParamsSystem):
         self.iNewid = iNewidRFaceCentering2
         self.sNewid = sNewidRFaceCentering2
         self.block_size = iTrainRFaceCentering[0][0].block_size
-        self.train_mode = 'clustered' #clustered improves final performance! mixed
-        self.analysis = None
-        self.enable_reduced_image_sizes = True
-        self.reduction_factor = 2.0 # WARNING 2.0, 4.0, 8.0
-        self.hack_image_size = 64 # WARNING 64, 32, 16
-        self.enable_hack_image_size = True
         
     def iSeqCreateRFaceCentering(self, num_images, alldbnormalized_available_images, alldb_noface_available_images, first_image=0, first_image_no_face=0, repetition_factor=1, seed=-1):
         if seed >= 0 or seed is None: #also works for 
@@ -6574,6 +6578,15 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
         self.experiment_seed = experiment_seed
         self.experiment_basedir = experiment_basedir
         self.age_use_RGB_images = False #LRec_use_RGB_images
+        
+        self.train_mode = "Weird Mode" #Ignored for the moment 
+        self.analysis = None
+        self.enable_reduced_image_sizes = True
+        self.reduction_factor = 160.0/96 #160.0/72 ## 160.0/96 # (article 2.0) T=2.0 WARNING 1.0, 2.0, 4.0, 8.0
+        self.hack_image_size = 96 #72 ## 96 # (article 80) # T=80 T=64 WARNING  96, 80, 128,  64,  32 , 16
+        self.enable_hack_image_size = True
+        self.patch_network_for_RGB = False #
+        
     def create(self):
         print "Age estimation. experiment_seed=", self.experiment_seed
         numpy.random.seed(self.experiment_seed) #seed|-5789
@@ -7073,13 +7086,7 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
         
         if iTrainRAge != None and iTrainRAge[0][0]!=None:
             self.block_size = iTrainRAge[0][0].block_size
-        self.train_mode = "Weird Mode" #Ignored for the moment 
-        self.analysis = None
-        self.enable_reduced_image_sizes = True
-        self.reduction_factor = 160.0/96 #160.0/72 ## 160.0/96 # (article 2.0) T=2.0 WARNING 1.0, 2.0, 4.0, 8.0
-        self.hack_image_size = 96 #72 ## 96 # (article 80) # T=80 T=64 WARNING  96, 80, 128,  64,  32 , 16
-        self.enable_hack_image_size = True
-        self.patch_network_for_RGB = False #
+
         
         #print sTrainRAge[0][0].translations_x
         #print sSeenidRAge.translations_x
@@ -8115,6 +8122,13 @@ class ParamsMNISTExperiment(system_parameters.ParamsSystem):
         self.experiment_seed = experiment_seed
         self.experiment_basedir = experiment_basedir
         
+        self.train_mode = "Weird Mode" #Ignored for the moment 
+        self.analysis = None
+        self.enable_reduced_image_sizes = False # True
+        self.reduction_factor = 1.0 # T=1.0 WARNING 1.0, 2.0, 3, 4
+        self.hack_image_size = 24 # 28, T=24 WARNING      24, 12, 8, 6 #IS IT 24 or 28!!!!! 28=2*2*7, 24=2*2*2*3
+        self.enable_hack_image_size = False #True
+        self.patch_network_for_RGB = False # 
     def create(self):
         #import mnist
         
@@ -8193,13 +8207,7 @@ class ParamsMNISTExperiment(system_parameters.ParamsSystem):
         
         if iTrainMNIST != None and iTrainMNIST[0][0]!=None:
             self.block_size = iTrainMNIST[0][0].block_size
-        self.train_mode = "Weird Mode" #Ignored for the moment 
-        self.analysis = None
-        self.enable_reduced_image_sizes = False # True
-        self.reduction_factor = 1.0 # T=1.0 WARNING 1.0, 2.0, 3, 4
-        self.hack_image_size = 24 # 28, T=24 WARNING      24, 12, 8, 6 #IS IT 24 or 28!!!!! 28=2*2*7, 24=2*2*2*3
-        self.enable_hack_image_size = False #True
-        self.patch_network_for_RGB = False # 
+
         
     
     def load_MNIST_clusters(self, digits_used=[2,8], image_set='training', images_base_dir='/home/escalafl/Databases/MNIST'):
@@ -8487,7 +8495,15 @@ class ParamsRatlabExperiment(system_parameters.ParamsSystem):
         super(ParamsRatlabExperiment, self).__init__()
         self.experiment_seed = experiment_seed
         self.experiment_basedir = experiment_basedir
-        
+     
+        self.train_mode = "Weird Mode" #This value should not be used anymore
+        self.analysis = None
+        self.enable_reduced_image_sizes = False # True
+        self.reduction_factor = 1.0 # T=1.0 WARNING 1.0, 2.0, 3, 4
+        self.hack_image_size = 24 # 28, T=24 WARNING      24, 12, 8, 6 #IS IT 24 or 28!!!!! 28=2*2*7, 24=2*2*2*3
+        self.enable_hack_image_size = False #True
+        self.patch_network_for_RGB = False #    
+
     def create(self):
         print "Ratlab: starting with experiment_seed=", self.experiment_seed
         numpy.random.seed(self.experiment_seed+123451313)
@@ -8512,15 +8528,7 @@ class ParamsRatlabExperiment(system_parameters.ParamsSystem):
         
         self.name = "Function Based Data Creation for ratlab"
         self.network = "linearNetwork4L" #Default Network, but ignored
-     
-        self.train_mode = "Weird Mode" #This value should not be used anymore
-        self.analysis = None
-        self.enable_reduced_image_sizes = False # True
-        self.reduction_factor = 1.0 # T=1.0 WARNING 1.0, 2.0, 3, 4
-        self.hack_image_size = 24 # 28, T=24 WARNING      24, 12, 8, 6 #IS IT 24 or 28!!!!! 28=2*2*7, 24=2*2*2*3
-        self.enable_hack_image_size = False #True
-        self.patch_network_for_RGB = False # 
-        
+            
     def iSeqCreateRatlab(self, ratlab_images, first_image_index=0, num_images_used=0, data_base_dir=""):
         if first_image_index + num_images_used > len(ratlab_images):
             err = "first_image_index + num_images_per_digit_used > len(ratlab_images." + "%d + %d > %d"%(first_image_index, num_images_used, len(ratlab_images))

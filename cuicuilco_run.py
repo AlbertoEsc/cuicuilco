@@ -857,12 +857,13 @@ def main():
     # hack_image_size = 64
     # enable_hack_image_size = True
     if enable_hack_image_size:
+        print "changing the native image size (width and height) to: ", hack_image_size
         sSeq_force_image_size(sTrain_set, hack_image_size, hack_image_size)
         sSeq_force_image_size(sSeenid, hack_image_size, hack_image_size)
         sSeq_force_image_size(sNewid_set, hack_image_size, hack_image_size)
 
     subimage_shape, max_clip, signals_per_image, in_channel_dim = sSeq_getinfo_format(sTrain)
-
+    
     # Filter used for loading images with transparent background
     # filter = generate_color_filter2((seq.subimage_height, seq.subimage_width))
     if use_filter == "ColoredNoise" or use_filter == "1":
