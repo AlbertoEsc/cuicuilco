@@ -1569,7 +1569,7 @@ if patch_flow:
                     print "Finishing training of node %d:" % i, self.flow[i]
                     if self.flow[i].is_training():
                         self.flow[i].stop_training()
-                    print "Post2 self.flow[i].output_dim=", self.flow[i].output_dim
+                    print "Post2 self.flow[%d].output_dim="%i, self.flow[i].output_dim
 
             ttrain1 = time.time()
 

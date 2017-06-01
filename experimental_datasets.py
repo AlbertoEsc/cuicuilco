@@ -4281,13 +4281,13 @@ class ParamsREyePosXYExperiment(system_parameters.ParamsSystem):
         eye_smax= (0.94875 + .01725)*2.0   #*2.5   # (0.825 + 0.015)*2.5 * 1.25 #Factor 1.05 is for an experiment only
         eye_smin= (0.94875 - .01725)*2.0   #*2.5   #(0.825 - 0.015)*2.5 * 1.25
         eye_da = 10.0 # 22.5 #30.0 , 22.5
-        obj_avg_std=0.1  # 0.1 Final data in range (0, 1), centered at 0.5
-        obj_std_min=0.1  # 0.10
-        obj_std_max=0.22  # 0.20
+        obj_avg_std=0.11  # 0.1 Final data in range (0, 1), centered at 0.5
+        obj_std_min=0.14  # 0.10
+        obj_std_max=0.16  # 0.20
         
         self.iTrain = [[self.iSeqCreateREyePosXY(30000, alldb_eyeLR_normalized_base_dir, all_eyeLR_available_images, first_image=0, slow_var=self.slow_var, num_classes=50, eye_dx=eye_dx, eye_dy=eye_dy, repetition_factor=4, seed=-1)]] #4
         self.sTrain = [[self.sSeqCreateREyePosXY(self.iTrain[0][0], eye_smax=eye_smax, eye_smin=eye_smin, eye_da=eye_da, contrast_enhance = True, obj_avg_std=obj_avg_std, obj_std_min=obj_std_min, obj_std_max=obj_std_max, seed=-1)]] 
-        self.iSeenid =  self.iSeqCreateREyePosXY(4000, alldb_eyeLR_normalized_base_dir, all_eyeLR_available_images, first_image=30000, slow_var=self.slow_var, num_classes=50, eye_dx=eye_dx, eye_dy=eye_dy, repetition_factor=2, seed=-1) #2
+        self.iSeenid =  self.iSeqCreateREyePosXY(4000+4000, alldb_eyeLR_normalized_base_dir, all_eyeLR_available_images, first_image=30000-4000, slow_var=self.slow_var, num_classes=50, eye_dx=eye_dx, eye_dy=eye_dy, repetition_factor=2, seed=-1) #2
         self.sSeenid = self.sSeqCreateREyePosXY(self.iSeenid, eye_smax=eye_smax, eye_smin=eye_smin, eye_da=eye_da, contrast_enhance = True, obj_avg_std=obj_avg_std, obj_std_min=obj_std_min, obj_std_max=obj_std_max,seed=-1)
         self.iNewid = [[self.iSeqCreateREyePosXY(4000, alldb_eyeLR_normalized_base_dir, all_eyeLR_available_images, first_image=34000, slow_var=self.slow_var, num_classes=50, eye_dx=eye_dx, eye_dy=eye_dy, repetition_factor=1, seed=-1)]]
         self.sNewid = [[self.sSeqCreateREyePosXY(self.iNewid[0][0], eye_smax=eye_smax, eye_smin=eye_smin, eye_da=eye_da, contrast_enhance = True, obj_avg_std=0.0, obj_std_min=0.5*(obj_std_max+obj_std_min), obj_std_max=0.5*(obj_std_max+obj_std_min), seed=-1)]]

@@ -748,6 +748,9 @@ def unsigned_2_08expo(x, expo1=2, expo2=0.8):
 def unsigned_08expo(x):
     return numexpr.evaluate("abs(x)**0.8")
 
+def unsigned_075expo(x):
+    return numexpr.evaluate("abs(x)**0.75")
+
 #def unsigned_08expo_slow(x):
 #    return numpy.abs(x) ** 0.8
 
@@ -1408,8 +1411,14 @@ def ch3o8s4QT(x):
 def ch3o9s4QT(x):
     return ch3_Offset_sF_QT(x, Off=9, F=4)
 
+def ch3o0s5QT(x):
+    return ch3_Offset_sF_QT(x, Off=0, F=5)
+
 def ch3o9s5QT(x):
     return ch3_Offset_sF_QT(x, Off=9, F=5)
+
+def ch3o0s6QT(x):
+    return ch3_Offset_sF_QT(x, Off=0, F=6)
 
 def ch3o9s6QT(x):
     return ch3_Offset_sF_QT(x, Off=9, F=6)
@@ -1543,6 +1552,9 @@ def ch3o6s10QT(x):
 def ch3o9s10QT(x):
     return ch3_Offset_sF_QT(x, Off=9, F=10)
 
+def ch3o24s10QT(x):
+    return ch3_Offset_sF_QT(x, Off=24, F=10)
+
 def ch3o6s11QT(x):
     return ch3_Offset_sF_QT(x, Off=6, F=11)
 
@@ -1579,6 +1591,9 @@ def ch3o6s15QT(x):
 def ch3o9s15QT(x):
     return ch3_Offset_sF_QT(x, Off=9, F=15)
 
+def ch3o24s15QT(x):
+    return ch3_Offset_sF_QT(x, Off=24, F=15)
+
 def ch3o0s16QT(x):
     return ch3_Offset_sF_QT(x, Off=0, F=16)
 
@@ -1611,6 +1626,9 @@ def ch3o6s20QT(x):
 
 def ch3o9s20QT(x):
     return ch3_Offset_sF_QT(x, Off=9, F=20)
+
+def ch3o24s20QT(x):
+    return ch3_Offset_sF_QT(x, Off=24, F=20)
 
 def ch3o9s21QT(x):
     return ch3_Offset_sF_QT(x, Off=9, F=21)
