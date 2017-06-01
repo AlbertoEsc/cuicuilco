@@ -557,35 +557,38 @@ def load_image_data_monoprocessor(image_files, image_array, image_width, image_h
                                             "AgeContrastEnhancement15", "AgeContrastEnhancement20",
                                             "AgeContrastEnhancement25"]:
                         # im_contrasted = ImageOps.autocontrast(im_rotated, 2)
+                        # These variables are necessary to support the case x1 < x0 and y1 < y0
+                        abs_width = abs(x1 - x0)
+                        abs_height = abs(y1 - y0)
                         if contrast_enhance == "AgeContrastEnhancement_Avg_Std":
-                            obj_center_width = (x1 - x0 + 1) * 0.7
-                            obj_center_height = (y1 - y0 + 1) * 0.7
+                            obj_center_width = (abs_width + 1) * 0.7
+                            obj_center_height = (abs_height + 1) * 0.7
                             im_contrasted = simple_normalization_Age(im_rotated, obj_center_width, obj_center_height,
                                                                      obj_avg=obj_avgs[act_im_num],
                                                                      obj_std=obj_stds[act_im_num])
                         elif contrast_enhance == "AgeContrastEnhancement":
-                            face_center_width = (x1 - x0 + 1) * 0.7
-                            face_center_height = (y1 - y0 + 1) * 0.7
+                            face_center_width = (abs_width + 1) * 0.7
+                            face_center_height = (abs_height + 1) * 0.7
                             im_contrasted = simple_normalization_Age(im_rotated, face_center_width, face_center_height,
                                                                      obj_std=0.2)
                         elif contrast_enhance == "AgeContrastEnhancement15":
-                            face_center_width = (x1 - x0 + 1) * 0.7
-                            face_center_height = (y1 - y0 + 1) * 0.7
+                            face_center_width = (abs_width + 1) * 0.7
+                            face_center_height = (abs_height + 1) * 0.7
                             im_contrasted = simple_normalization_Age(im_rotated, face_center_width, face_center_height,
                                                                      obj_std=0.15)
                         elif contrast_enhance == "AgeContrastEnhancement20":
-                            face_center_width = (x1 - x0 + 1) * 0.7
-                            face_center_height = (y1 - y0 + 1) * 0.7
+                            face_center_width = (abs_width + 1) * 0.7
+                            face_center_height = (abs_height + 1) * 0.7
                             im_contrasted = simple_normalization_Age(im_rotated, face_center_width, face_center_height,
                                                                      obj_std=0.20)
                         elif contrast_enhance == "AgeContrastEnhancement25":
-                            face_center_width = (x1 - x0 + 1) * 0.7
-                            face_center_height = (y1 - y0 + 1) * 0.7
+                            face_center_width = (abs_width + 1) * 0.7
+                            face_center_height = (abs_height + 1) * 0.7
                             im_contrasted = simple_normalization_Age(im_rotated, face_center_width, face_center_height,
                                                                      obj_std=0.25)
                         elif contrast_enhance == "GTSRBContrastEnhancement":
-                            object_width = (x1 - x0 + 1) * 0.5
-                            object_height = (y1 - y0 + 1) * 0.7
+                            object_width = (abs_width + 1) * 0.5
+                            object_height = (abs_height + 1) * 0.7
                             #                            im_contrasted = simple_normalization_GTSRB(im_rotated,
                             # object_width*0.9, object_height * 0.9)
                             im_contrasted = simple_normalization_GTSRB(im_rotated, object_width, object_height)
@@ -676,35 +679,37 @@ def load_image_data_monoprocessor(image_files, image_array, image_width, image_h
                                             "AgeContrastEnhancement15", "AgeContrastEnhancement20",
                                             "AgeContrastEnhancement25"]:
                         # im_contrasted = ImageOps.autocontrast(im_rotated, 2)
+                        abs_width = abs(x1 - x0)
+                        abs_height = abs(y1 - y0)
                         if contrast_enhance == "AgeContrastEnhancement_Avg_Std":
-                            obj_center_width = (x1 - x0 + 1) * 0.7
-                            obj_center_height = (y1 - y0 + 1) * 0.7
+                            obj_center_width = (abs_width + 1) * 0.7
+                            obj_center_height = (abs_height + 1) * 0.7
                             im_contrasted = simple_normalization_Age(im_rotated, obj_center_width, obj_center_height,
                                                                      obj_avg=obj_avgs[act_im_num],
                                                                      obj_std=obj_stds[act_im_num])
                         elif contrast_enhance == "AgeContrastEnhancement":
-                            face_center_width = (x1 - x0 + 1) * 0.7
-                            face_center_height = (y1 - y0 + 1) * 0.7
+                            face_center_width = (abs_width + 1) * 0.7
+                            face_center_height = (abs_height + 1) * 0.7
                             im_contrasted = simple_normalization_Age(im_rotated, face_center_width, face_center_height,
                                                                      obj_std=0.2)
                         elif contrast_enhance == "AgeContrastEnhancement15":
-                            face_center_width = (x1 - x0 + 1) * 0.7
-                            face_center_height = (y1 - y0 + 1) * 0.7
+                            face_center_width = (abs_width + 1) * 0.7
+                            face_center_height = (abs_height + 1) * 0.7
                             im_contrasted = simple_normalization_Age(im_rotated, face_center_width, face_center_height,
                                                                      obj_std=0.15)
                         elif contrast_enhance == "AgeContrastEnhancement20":
-                            face_center_width = (x1 - x0 + 1) * 0.7
-                            face_center_height = (y1 - y0 + 1) * 0.7
+                            face_center_width = (abs_width + 1) * 0.7
+                            face_center_height = (abs_height + 1) * 0.7
                             im_contrasted = simple_normalization_Age(im_rotated, face_center_width, face_center_height,
                                                                      obj_std=0.20)
                         elif contrast_enhance == "AgeContrastEnhancement25":
-                            face_center_width = (x1 - x0 + 1) * 0.7
-                            face_center_height = (y1 - y0 + 1) * 0.7
+                            face_center_width = (abs_width + 1) * 0.7
+                            face_center_height = (abs_height + 1) * 0.7
                             im_contrasted = simple_normalization_Age(im_rotated, face_center_width, face_center_height,
                                                                      obj_std=0.25)
                         elif contrast_enhance == "GTSRBContrastEnhancement":
-                            object_width = (x1 - x0 + 1) * 0.5
-                            object_height = (y1 - y0 + 1) * 0.7
+                            object_width = (abs_width + 1) * 0.5
+                            object_height = (abs_height + 1) * 0.7
                             im_contrasted = simple_normalization_GTSRB(im_rotated, object_width, object_height)
                         elif contrast_enhance == "ContrastGenderMultiply":
                             im_contrasted = simple_normalization_GenderMultiply(im_rotated)
@@ -1274,30 +1279,32 @@ def contrast_enhance_image(im_rotated, x0, x1, y0, y1, obj_avg, obj_std, contras
                             "ContrastGenderMultiply", "AgeContrastEnhancement15", "AgeContrastEnhancement20",
                             "AgeContrastEnhancement25"]:
         # im_contrasted = ImageOps.autocontrast(im_rotated, 2)
+        abs_width = abs(x1 - x0)
+        abs_height = abs(y1 - y0)
         if contrast_enhance == "AgeContrastEnhancement_Avg_Std":
-            obj_center_width = (x1 - x0 + 1) * 0.7
-            obj_center_height = (y1 - y0 + 1) * 0.7
+            obj_center_width = (abs_width + 1) * 0.7
+            obj_center_height = (abs_height + 1) * 0.7
             im_contrasted = simple_normalization_Age(im_rotated, obj_center_width, obj_center_height, obj_avg=obj_avg,
                                                      obj_std=obj_std)
         elif contrast_enhance == "AgeContrastEnhancement":
-            face_center_width = (x1 - x0 + 1) * 0.7
-            face_center_height = (y1 - y0 + 1) * 0.7
+            face_center_width = (abs_width + 1) * 0.7
+            face_center_height = (abs_height + 1) * 0.7
             im_contrasted = simple_normalization_Age(im_rotated, face_center_width, face_center_height, obj_std=0.2)
         elif contrast_enhance == "AgeContrastEnhancement15":
-            face_center_width = (x1 - x0 + 1) * 0.7
-            face_center_height = (y1 - y0 + 1) * 0.7
+            face_center_width = (abs_width + 1) * 0.7
+            face_center_height = (abs_height + 1) * 0.7
             im_contrasted = simple_normalization_Age(im_rotated, face_center_width, face_center_height, obj_std=0.15)
         elif contrast_enhance == "AgeContrastEnhancement20":
-            face_center_width = (x1 - x0 + 1) * 0.7
-            face_center_height = (y1 - y0 + 1) * 0.7
+            face_center_width = (abs_width + 1) * 0.7
+            face_center_height = (abs_height + 1) * 0.7
             im_contrasted = simple_normalization_Age(im_rotated, face_center_width, face_center_height, obj_std=0.20)
         elif contrast_enhance == "AgeContrastEnhancement25":
-            face_center_width = (x1 - x0 + 1) * 0.7
-            face_center_height = (y1 - y0 + 1) * 0.7
+            face_center_width = (abs_width + 1) * 0.7
+            face_center_height = (abs_height + 1) * 0.7
             im_contrasted = simple_normalization_Age(im_rotated, face_center_width, face_center_height, obj_std=0.25)
         elif contrast_enhance == "GTSRBContrastEnhancement":
-            object_width = (x1 - x0 + 1) * 0.5
-            object_height = (y1 - y0 + 1) * 0.7
+            object_width = (abs_width + 1) * 0.5
+            object_height = (abs_height + 1) * 0.7
             im_contrasted = simple_normalization_GTSRB(im_rotated, object_width, object_height)
         elif contrast_enhance == "ContrastGenderMultiply":
             im_contrasted = simple_normalization_GenderMultiply(simple_normalization_GenderMultiply(
@@ -1366,7 +1373,8 @@ def extract_subimages_basic(images, image_indices, coordinates, out_size=(64, 64
 
 
 def extract_subimages_rotate(images, image_indices, all_coordinates, delta_angs, out_size=(64, 64),
-                             interpolation_format=interpolation_format):
+                             interpolation_format=interpolation_format, contrast_enhance=None, obj_avg=0.11,
+                             obj_std=0.15):
     if len(image_indices) != len(all_coordinates):
         raise Exception("number of images indices %d and number of coordinates %d do not match" %
                         (len(image_indices), len(all_coordinates)))
@@ -1379,7 +1387,8 @@ def extract_subimages_rotate(images, image_indices, all_coordinates, delta_angs,
         subimage_coordinates = all_coordinates[i]
         if delta_angs[i] != 0:
             im_out = extract_subimage_rotate(images[im_index], subimage_coordinates, delta_angs[i], out_size=out_size,
-                                             interpolation_format=interpolation_format)
+                                             interpolation_format=interpolation_format,
+                                             contrast_enhance=contrast_enhance, obj_avg=obj_avg, obj_std=obj_std)
         else:
             im_out = images[im_index].transform(out_size, Image.EXTENT, subimage_coordinates, interpolation_format)
         subimages.append(im_out)
@@ -1387,7 +1396,8 @@ def extract_subimages_rotate(images, image_indices, all_coordinates, delta_angs,
 
 
 def extract_subimage_rotate(image, subimage_coordinates, delta_ang, out_size=(64, 64), allow_out_of_image_sampling=True,
-                            interpolation_format=interpolation_format):
+                            interpolation_format=interpolation_format, contrast_enhance=None, obj_avg=0.11,
+                            obj_std=0.15):
     (x0, y0, x1, y1) = subimage_coordinates
     if (x0 < 0 or y0 < 0 or x1 >= image.size[0] or y1 >= image.size[1]) and not allow_out_of_image_sampling:
         err = "Image Loading Failed: Subimage out of Image"
@@ -1447,11 +1457,11 @@ def extract_subimage_rotate(image, subimage_coordinates, delta_ang, out_size=(64
             rotation_window_height + 0.5))  # Avoiding type problem, even though variables are actually integer
 
         crop_coordinates = (rotation_crop_x0, rotation_crop_y0, rotation_crop_x1, rotation_crop_y1)
-        im_crop_first = image.transform(crop_size, Image.EXTENT, crop_coordinates)  # , Image.BICUBIC)
+        im_crop_first = image.transform(crop_size, Image.EXTENT, crop_coordinates)  # , Image.BICUBIC) METHOD?
 
         # print delta_ang
         im_rotated = rotate_improved(im_crop_first, delta_ang, Image.BICUBIC)
-        im_contrasted = im_rotated
+        im_contrasted = contrast_enhance_image(im_rotated, x0, x1, y0, y1, obj_avg, obj_std, contrast_enhance)
 
         center_x_geometric = (crop_size[0] - 1) / 2.0
         center_y_geometric = (crop_size[1] - 1) / 2.0
@@ -1470,11 +1480,13 @@ def extract_subimage_rotate(image, subimage_coordinates, delta_ang, out_size=(64
         y0 = (new_center_y - (ori_height - 1) / 2.0)  # WWW added -1
         y1 = (new_center_y + (ori_height - 1) / 2.0) + 1  # WWW added -1 and +1
 
-    # WARNING: Apparently the next three lines should have one identation less.
-    # WARNING: Why is interpolation_format being ignored
         # print "transform_coords = x0, x1, y0, y1=", x0, x1, y0, y1
-        subimage_coordinates = (x0, y0, x1, y1)
-        im_out = im_contrasted.transform(out_size, Image.EXTENT, subimage_coordinates, interpolation_format_sampling)
+        # subimage_coordinates = (x0, y0, x1, y1)
+        im_out = final_sampling_and_contrast_enhance(im_contrasted, out_size, x0, x1, y0, y1, contrast_enhance)
+        # im_out = im_contrasted.transform(out_size, Image.EXTENT, subimage_coordinates, interpolation_format_sampling)
+    else:
+        er = "Image extraction method not implemented"
+        raise Exception(er)
     return im_out
 
 
