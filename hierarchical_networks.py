@@ -3724,7 +3724,7 @@ HiGSFANetworkU11L_NoOverlap_4x4L0_PosXPosYScaleAngle_32x32.layers = HiGSFANetwor
 
 ####################### NETWORKS FOR EYE DETECTION WITHOUT OVERLAP ####################################
 # delta_thresholds = [  3,  8, 14, 24, 28, 34, 40, 40, 40, 40, 40, 40]
-delta_thresholds = [  3,  8, 14, 24, 24, 24, 24, 24, 24, 24, 24, 24]
+delta_thresholds = [  3,  8, 14, 24, 24, 24, 24, 24, 24, 24, 24, 24] # changed 24 to 20, 14 to 10, 8 to 6
 output_dims =      [ 16, 28, 50, 75, 75, 75, 75, 75, 75, 75, 80, 80]
 network = HiGSFANetworkU11L_NoOverlap_4x4L0_EyeL = copy.deepcopy(HiGSFANetworkU11L_NoOverlap_4x4L0)
 for i, layer in enumerate(network.layers):
@@ -3764,6 +3764,10 @@ HiGSFANetworkU11L_Overlap_4x4L0_EyeL_64x64.layers = HiGSFANetworkU11L_Overlap_4x
 HiGSFANetworkU11L_Overlap_4x4L0_EyeL_32x32 = copy.deepcopy(HiGSFANetworkU11L_Overlap_4x4L0_EyeL_64x64)
 HiGSFANetworkU11L_Overlap_4x4L0_EyeL_32x32.layers = HiGSFANetworkU11L_Overlap_4x4L0_EyeL_32x32.layers[0:-2]
 
+HiGSFANetworkSpecial11L_Overlap_4x4L0_EyeL_64x64 = copy.deepcopy(HiGSFANetworkU11L_Overlap_4x4L0_EyeL_64x64)
+HiGSFANetworkSpecial11L_Overlap_4x4L0_EyeL_64x64.layers[-5].sfa_args["expansion_funcs"] = [identity, unsigned_08expo, ch3o0s4QT]
+HiGSFANetworkSpecial11L_Overlap_4x4L0_EyeL_64x64.layers[-3].sfa_args["expansion_funcs"] = [identity, unsigned_08expo, ch3o0s4QT]  
+HiGSFANetworkSpecial11L_Overlap_4x4L0_EyeL_64x64.layers[-1].sfa_args["expansion_funcs"] = [identity, unsigned_08expo, ch3o24s10QT]
 
 #WARNING, ADDING AN ADDITIONAL SFA NODE IN THE LAST LAYER, 80x80 resolution (Node 9)
 #double_SFA_top_node = True and False
