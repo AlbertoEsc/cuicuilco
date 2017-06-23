@@ -758,7 +758,7 @@ def main():
     # take k=1? or choose from command line? NOPE. Take always first label (k=0). sSeq must compute proper classes for
     # chosen label anyway.
     # TODO: let the user choose objective_label through a command line argument
-    objective_label = 0
+    objective_label = 1  # = 0, = 1, = 2, = 3
     if graph_exact_label_learning:
         if isinstance(iTrain_set, list):
             iTrain0 = iTrain_set[len(iTrain_set) - 1][0]

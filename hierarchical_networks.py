@@ -3707,7 +3707,7 @@ for i, layer in enumerate(network.layers):
     layer.sfa_out_dim = output_dims[i]
 
 ####################### Networks FOR POS X, POS Y, SCALE, ANGLE WITHOUT OVERLAP #######################
-delta_thresholds = [4, 6, 10, 14, 20, 20, 20, 20, 20, 20, 20, 20] * 12
+delta_thresholds = [4, 6, 10, 14, 20, 20, 20, 20, 20, 20, 20, 20] 
 output_dims =      [   16,    28,    50,    75,    75,    75,   75,   75,   75,   75,   80,   80]
 network = HiGSFANetworkU11L_NoOverlap_4x4L0_PosXPosYScaleAngle = copy.deepcopy(HiGSFANetworkU11L_NoOverlap_4x4L0)
 for i, layer in enumerate(network.layers):
@@ -3719,8 +3719,26 @@ HiGSFANetworkU11L_NoOverlap_4x4L0_PosXPosYScaleAngle_128x128 = copy.deepcopy(HiG
 HiGSFANetworkU11L_NoOverlap_4x4L0_PosXPosYScaleAngle_64x64 = copy.deepcopy(HiGSFANetworkU11L_NoOverlap_4x4L0_PosXPosYScaleAngle)
 HiGSFANetworkU11L_NoOverlap_4x4L0_PosXPosYScaleAngle_64x64.layers = HiGSFANetworkU11L_NoOverlap_4x4L0_PosXPosYScaleAngle_64x64.layers[0:-2]
 
-HiGSFANetworkU11L_NoOverlap_4x4L0_PosXPosYScaleAngle_32x32 = copy.deepcopy(HiGSFANetworkU11L_NoOverlap_4x4L0_PosXPosYScaleAngle)
+HiGSFANetworkU11L_NoOverlap_4x4L0_PosXPosYScaleAngle_32x32 = copy.deepcopy(HiGSFANetworkU11L_NoOverlap_4x4L0_PosXPosYScaleAngle_64x64)
 HiGSFANetworkU11L_NoOverlap_4x4L0_PosXPosYScaleAngle_32x32.layers = HiGSFANetworkU11L_NoOverlap_4x4L0_PosXPosYScaleAngle_32x32.layers[0:-2]
+
+
+
+####################### Network TO EMULATE u08expoNetworkU11L FOR POS X, POS Y, SCALE, ANGLE WITHOUT OVERLAP #######################
+delta_thresholds = [    4,     6,    10,    14,    20,    20,   20,   20,   20,   20,   20,   20]
+output_dims =      [   13,    20,    35,    60,    60,    60,   60,   60,   60,   60,   60,   60]
+network = HiGSFANetworkU11L_NoOverlap_4x4L0_Basic_PosXPosYScaleAngle = copy.deepcopy(HiGSFANetworkU11L_NoOverlap_4x4L0)
+for i, layer in enumerate(network.layers):
+    layer.sfa_args["max_preserved_sfa"] = delta_thresholds[i]
+    layer.sfa_out_dim = output_dims[i]
+
+HiGSFANetworkU11L_NoOverlap_4x4L0_Basic_PosXPosYScaleAngle_128x128 = copy.deepcopy(HiGSFANetworkU11L_NoOverlap_4x4L0_Basic_PosXPosYScaleAngle)
+
+HiGSFANetworkU11L_NoOverlap_4x4L0_Basic_PosXPosYScaleAngle_64x64 = copy.deepcopy(HiGSFANetworkU11L_NoOverlap_4x4L0_Basic_PosXPosYScaleAngle)
+HiGSFANetworkU11L_NoOverlap_4x4L0_Basic_PosXPosYScaleAngle_64x64.layers = HiGSFANetworkU11L_NoOverlap_4x4L0_Basic_PosXPosYScaleAngle_64x64.layers[0:-2]
+
+HiGSFANetworkU11L_NoOverlap_4x4L0_Basic_PosXPosYScaleAngle_32x32 = copy.deepcopy(HiGSFANetworkU11L_NoOverlap_4x4L0_Basic_PosXPosYScaleAngle_64x64)
+HiGSFANetworkU11L_NoOverlap_4x4L0_Basic_PosXPosYScaleAngle_32x32.layers = HiGSFANetworkU11L_NoOverlap_4x4L0_Basic_PosXPosYScaleAngle_32x32.layers[0:-2]
 
 ####################### NETWORKS FOR EYE DETECTION WITHOUT OVERLAP ####################################
 # delta_thresholds = [  3,  8, 14, 24, 28, 34, 40, 40, 40, 40, 40, 40]
@@ -3833,6 +3851,69 @@ layer.x_field_channels=10
 layer.y_field_channels=8
 layer.x_field_spacing=5
 layer.y_field_spacing=4
+layer.pca_node_class = mdp.nodes.SFANode
+layer.pca_out_dim = 32
+layer.pca_args = {} # Specific parameters are defined later
+layer.ord_node_class = None
+layer.exp_funcs = [identity, ]
+layer.red_node_class = None
+layer.sfa_node_class = mdp.nodes.SFA2Node
+layer.sfa_out_dim = 32
+layer.sfa_args = {} # Specific parameters are defined later
+layer.cloneLayer = True
+layer.name = comp_layer_name(layer.cloneLayer, layer.exp_funcs, layer.x_field_channels, layer.y_field_channels, layer.pca_out_dim, layer.sfa_out_dim)
+
+layer = pSFARatlab_L1 = system_parameters.ParamsSFALayer()
+layer.name = "Layer 1 for the Ratlab experiment"
+layer.x_field_channels=14
+layer.y_field_channels=6
+layer.x_field_spacing=7
+layer.y_field_spacing=3
+layer.pca_node_class = mdp.nodes.SFANode
+layer.pca_out_dim = 32
+layer.pca_args = {} # Specific parameters are defined later
+layer.ord_node_class = None
+layer.exp_funcs = [identity, ]
+layer.red_node_class = None
+layer.sfa_node_class = mdp.nodes.SFA2Node
+layer.sfa_out_dim = 32
+layer.sfa_args = {} # Specific parameters are defined later
+layer.cloneLayer = True
+layer.name = comp_layer_name(layer.cloneLayer, layer.exp_funcs, layer.x_field_channels, layer.y_field_channels, layer.pca_out_dim, layer.sfa_out_dim)
+
+layer = pSFARatlab_L2 = system_parameters.ParamsSFALayer()
+layer.name = "Layer 2 for the Ratlab experiment"
+layer.x_field_channels=8
+layer.y_field_channels=2
+layer.x_field_spacing=8
+layer.y_field_spacing=2
+layer.pca_node_class = mdp.nodes.SFANode
+layer.pca_out_dim = 32
+layer.pca_args = {} # Specific parameters are defined later
+layer.ord_node_class = None
+layer.exp_funcs = [identity,]
+layer.red_node_class = None
+layer.sfa_node_class = mdp.nodes.SFA2Node
+layer.sfa_out_dim = 32
+layer.sfa_args = {} # Specific parameters are defined later
+layer.cloneLayer = False
+layer.name = comp_layer_name(layer.cloneLayer, layer.exp_funcs, layer.x_field_channels, layer.y_field_channels, layer.pca_out_dim, layer.sfa_out_dim)
+
+network = RatlabNetwork3L = system_parameters.ParamsNetwork()
+network.name = "Ratlab Network, 3 Layers of SFA & QSFA"
+network.L0 = pSFARatlab_L0
+network.L1 = pSFARatlab_L1
+network.L2 = pSFARatlab_L2
+network.layers = [network.L0, network.L1, network.L2]
+
+
+################# Improved network for Ratlab experiment ############
+layer = pSFARatlab_L0 = system_parameters.ParamsSFALayer()
+layer.name = "Layer 0 for the Ratlab experiment"
+layer.x_field_channels=10
+layer.y_field_channels=8
+layer.x_field_spacing=5
+layer.y_field_spacing=4
 layer.pca_node_class = mdp.nodes.iGSFANode
 layer.pca_out_dim = 32
 layer.pca_args = {} # Specific parameters are defined later
@@ -3881,7 +3962,7 @@ layer.sfa_args = {} # Specific parameters are defined later
 layer.cloneLayer = False
 layer.name = comp_layer_name(layer.cloneLayer, layer.exp_funcs, layer.x_field_channels, layer.y_field_channels, layer.pca_out_dim, layer.sfa_out_dim)
 
-network = RatlabNetwork3L = system_parameters.ParamsNetwork()
+network = RatlabImprovedNetwork3L = system_parameters.ParamsNetwork()
 network.name = "Ratlab Network, 3 Layers of SFA & QSFA"
 network.L0 = pSFARatlab_L0
 network.L1 = pSFARatlab_L1
@@ -3893,9 +3974,9 @@ for i, layer in enumerate(network.layers):
     layer.pca_args["offsetting_mode"]=None
     layer.pca_args["reconstruct_with_sfa"]=False    
     layer.pca_args["expansion_funcs"] = None
-    layer.pca_args["max_preserved_sfa"]= 12 # 4.0 #4.0 => preserves only SFA components; 16 => half of the computed features are slow, and the remaining reconstructive
+    layer.pca_args["max_preserved_sfa"]= 17 # 4.0 #4.0 => preserves only SFA components; 16 => half of the computed features are slow, and the remaining reconstructive
 
     layer.sfa_args["offsetting_mode"]=None
     layer.sfa_args["reconstruct_with_sfa"]=False    
     layer.sfa_args["expansion_funcs"] = [identity, QT]
-    layer.sfa_args["max_preserved_sfa"]= 12 # 4.0 #4.0 => preserves only SFA components; 16 => half of the computed features are slow, and the remaining reconstructive
+    layer.sfa_args["max_preserved_sfa"]= 17 # 4.0 #4.0 => preserves only SFA components; 16 => half of the computed features are slow, and the remaining reconstructive
