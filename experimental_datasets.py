@@ -8154,8 +8154,8 @@ class ParamsMNISTExperiment(system_parameters.ParamsSystem):
         digits_used = digits_used[0:num_digits_used]
         print "digits used for MNIST:", digits_used
         
-        clusters_MNIST, images_array_MNIST = self.load_MNIST_clusters(digits_used=digits_used, image_set='training', images_base_dir='/home/escalafl/Databases/MNIST')
-        clusters_MNIST_test, images_array_MNIST_test = self.load_MNIST_clusters(digits_used=digits_used, image_set='testing', images_base_dir='/home/escalafl/Databases/MNIST')
+        clusters_MNIST, images_array_MNIST = self.load_MNIST_clusters(digits_used=digits_used, image_set='training', images_base_dir=self.experiment_basedir+ '/MNIST')
+        clusters_MNIST_test, images_array_MNIST_test = self.load_MNIST_clusters(digits_used=digits_used, image_set='testing', images_base_dir=self.experiment_basedir+ '/MNIST')
         
         numpy.random.seed(experiment_seed+987987987)
         
@@ -8220,21 +8220,22 @@ class ParamsMNISTExperiment(system_parameters.ParamsSystem):
         if iTrainMNIST != None and iTrainMNIST[0][0]!=None:
             self.block_size = iTrainMNIST[0][0].block_size
 
-        
-    
+
     def load_MNIST_clusters(self, digits_used=[2,8], image_set='training', images_base_dir='/home/escalafl/Databases/MNIST'):
         import mnist
 
         images, labels = mnist.read(digits_used, image_set, images_base_dir)
+        labels = labels.reshape((-1,))
         #print images
-        #print images.shape
+        #print images.shape, labels.shape
         
         num_images = len(labels)
         all_indices = numpy.arange(num_images)
-        
+        #print "num_images=", num_images
+
         clusters = {}
         for i, digit in enumerate(digits_used):
-            #print "cluster ", i, " for digit ", digits_used
+            #print "cluster ", i, " for digit ", digit
             cluster_indices = all_indices[(labels==digit)]
             clusters[digit] = cluster_indices
             numpy.random.shuffle(clusters[digit])

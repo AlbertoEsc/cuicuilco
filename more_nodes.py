@@ -3202,3 +3202,43 @@ def f_residual(x_app_i, node, y_i):
     #    res = (y_i - node.execute(x_app_i))
     # print "returning resudial res=", res
     return res_long
+
+
+class SFA_GaussianClassifier(mdp.ClassifierNode):
+    def __init__(self, reduced_dim=None, **argv):
+        super(SFA_GaussianClassifier, self).__init__(**argv)
+        self.gc_node = mdp.nodes.GaussianClassifier()
+        self.reduced_dim = reduced_dim
+        self.sfa_node = mdp.nodes.SFANode(output_dim=self.reduced_dim)
+
+    def _train(self, x, labels=None):
+        ordering = numpy.argsort(labels)
+        x_ordered = x[ordering,:]
+        self.sfa_node.train(x_ordered)
+        self.sfa_node.stop_training()
+        y = self.sfa_node.execute(x)
+        self.gc_node.train(y, labels=labels)
+        self.gc_node.stop_training()
+
+    def _label(self, x):
+        y = self.sfa_node.execute(x)
+        return self.gc_node.label(y)
+
+    def regression(self, x, avg_labels, estimate_std=False):
+        y = self.sfa_node.execute(x)
+        return self.gc_node.regression(y, avg_labels, estimate_std)
+
+    def regressionMAE(self, x, avg_labels):
+        y = self.sfa_node.execute(x)
+        return self.gc_node.regressionMAE(y, avg_labels)
+
+    def softCR(self, x, true_classes):
+        y = self.sfa_node.execute(x)
+        return self.gc_node.softCR(y, true_classes)
+
+    def class_probabilities(self, x):
+        y = self.sfa_node.execute(x)
+        return self.gc_node.class_probabilities(y)
+
+    def is_trainable(self):
+        return True

@@ -127,6 +127,7 @@ confusion_matrix = False
 features_residual_information = 5000  # 0
 compute_input_information = True
 convert_labels_days_to_years = False
+sfa_gc_reduced_dim = None
 
 clip_seenid_newid_to_training = False
 add_noise_to_seenid = False
@@ -1785,7 +1786,7 @@ def main():
         #        print "mean(cf_sl[c=%d,:])="%c, cf_sl[cf_correct_classes==c, :].mean(axis=0)
         #        print "std(cf_sl[c=%d,:])="%c, cf_sl[cf_correct_classes==c, :].std(axis=0)
 
-        GC_node = mdp.nodes.GaussianClassifier()
+        GC_node = mdp.nodes.SFA_GaussianClassifier(reduced_dim=sfa_gc_reduced_dim)
         GC_node.train(x=cf_sl[:, 0:reg_num_signals],
                       labels=cf_correct_classes)  # Functions for regression use class values!!!
         GC_node.stop_training()
