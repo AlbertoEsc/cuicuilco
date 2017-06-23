@@ -6529,6 +6529,7 @@ class ParamsRTransXYPAngScaleExperiment(system_parameters.ParamsSystem):
     
         sSeq.contrast_enhance = "array_mean_std-137.5-45.0" #None #"array_mean_std-127.5-45.0"
         sSeq.trans_sampled = True #TODO: Why are translations specified according to the sampled images?
+        sSeq.rotate_before_translation = True
         
         sSeq.name = "RTansXYPAngScale %s Dx in (%d, %d) Dy in (%d, %d), sampling in (%d, %d)"%(iSeq.slow_var, sSeq.trans_x_min, 
             sSeq.trans_x_max, sSeq.trans_y_min, sSeq.trans_y_max, int(sSeq.min_sampling*100), int(sSeq.max_sampling*100))
@@ -8521,16 +8522,16 @@ class ParamsRatlabExperiment(system_parameters.ParamsSystem):
         print "Ratlab: starting with experiment_seed=", self.experiment_seed
         numpy.random.seed(self.experiment_seed+123451313)
         
-        num_available_images = 9600
-        num_images_training = 6800
+        num_available_images = 120000  # 110000  # 9600
+        num_images_training =   80000  # 100000  # 6800
         num_images_test = num_available_images - num_images_training
-        ratlab_data_base_dir = self.experiment_basedir + "/ratlab_sequence"
+        ratlab_data_base_dir = self.experiment_basedir + "/ratlab_sequence_200000"
         ratlab_images = ["frame_%05d.png"%d for d in range(num_available_images)] # frame_00000.png ... frame_09599.png
         
         self.iTrain = [[self.iSeqCreateRatlab(ratlab_images, first_image_index=0, num_images_used=num_images_training, data_base_dir=ratlab_data_base_dir)]]
         self.sTrain = [[self.sSeqCreateRatlab(self.iTrain[0][0], seed=-1, use_RGB_images=True)]]
         
-        self.iSeenid = self.iSeqCreateRatlab(ratlab_images, first_image_index=0, num_images_used=num_images_training, data_base_dir=ratlab_data_base_dir)
+        self.iSeenid = self.iSeqCreateRatlab(ratlab_images, first_image_index=num_images_training, num_images_used=num_images_test/2, data_base_dir=ratlab_data_base_dir)
         self.sSeenid = self.sSeqCreateRatlab(self.iSeenid, seed=-1, use_RGB_images=True)
         
         self.iNewid = [[self.iSeqCreateRatlab(ratlab_images, first_image_index=num_images_training, num_images_used=num_images_test, data_base_dir=ratlab_data_base_dir)]]
