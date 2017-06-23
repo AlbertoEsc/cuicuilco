@@ -134,6 +134,7 @@ add_noise_to_seenid = False
 
 dataset_for_display_train = 0
 dataset_for_display_newid = 0
+objective_label = 0
 
 # ELL options
 graph_exact_label_learning = False
@@ -286,7 +287,8 @@ if __name__ == "__main__":  # ############## Parse command line arguments ######
                                                           "GraphExactLabelLearning=", "OutputInsteadOfSVM2=",
                                                           "NumberTargetLabels=", "ConfusionMatrix=",
                                                           "MapDaysToYears=", "AddNoiseToSeenid=", "ClipSeenidNewid=",
-                                                          "HierarchicalNetwork=", "ExperimentalDataset=", "help"])
+                                                          "HierarchicalNetwork=", "ExperimentalDataset=",
+                                                          "SFAGCReducedDim=", "ObjectiveLabel=", "help"])
                 print "opts=", opts
                 print "args=", args
 
@@ -559,6 +561,12 @@ if __name__ == "__main__":  # ############## Parse command line arguments ######
                         name_default_experiment = arg
                         print "Setting name_default_experiment to", name_default_experiment
                         DefaultExperimentalDataset = available_experiments[name_default_experiment]
+                    elif opt in ('--SFAGCReducedDim',):
+                        sfa_gc_reduced_dim = bool(int(arg))
+                        print "Setting sfa_gc_reduced_dim to", sfa_gc_reduced_dim
+                    elif opt in ('--ObjectiveLabel',):
+                        objective_label = bool(int(arg))
+                        print "Setting objective_label to", objective_label
                     elif opt in ('--help',):
                         txt = \
                             """Cuicuilco: displaying help information
@@ -759,7 +767,7 @@ def main():
     # take k=1? or choose from command line? NOPE. Take always first label (k=0). sSeq must compute proper classes for
     # chosen label anyway.
     # TODO: let the user choose objective_label through a command line argument
-    objective_label = 1  # = 0, = 1, = 2, = 3
+      # = 0, = 1, = 2, = 3
     if graph_exact_label_learning:
         if isinstance(iTrain_set, list):
             iTrain0 = iTrain_set[len(iTrain_set) - 1][0]
