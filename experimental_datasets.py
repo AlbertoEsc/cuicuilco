@@ -69,10 +69,10 @@ if not experiment_basedir:
 user_base_dir = experiment_basedir #"/local/tmp/escalafl/Alberto"
 frgc_normalized_base_dir = experiment_basedir + "/FRGC_Normalized"    
 frgc_noface_base_dir = experiment_basedir + "/FRGC_NoFace"
-alldb_noface_base_dir = experiment_basedir + "/AllDB_NoFace"
-alldbnormalized_base_dir = experiment_basedir + "/AllDBNormalized"
+alldb_noface_base_dir = experiment_basedir + "/faces/AllDB_NoFace"
+alldbnormalized_base_dir = experiment_basedir + "/faces/AllDBNormalized"
 frgc_eyeL_normalized_base_dir = experiment_basedir + "/FRGC_EyeL"
-alldb_eyeLR_normalized_base_dir = experiment_basedir + "/AllDB_EyeLR" 
+alldb_eyeLR_normalized_base_dir = experiment_basedir + "/faces/AllDB_EyeLR" 
 print "Running on unknown host"
     
 
