@@ -3707,7 +3707,8 @@ for i, layer in enumerate(network.layers):
     layer.sfa_out_dim = output_dims[i]
 
 ####################### Networks FOR POS X, POS Y, SCALE, ANGLE WITHOUT OVERLAP #######################
-delta_thresholds = [4, 6, 10, 14, 20, 20, 20, 20, 20, 20, 20, 20] 
+#delta_thresholds = [4, 6, 10, 14, 20, 20, 20, 20, 20, 20, 20, 20] 
+delta_thresholds = [4, 6, 10, 14, 20, 20, 25, 30, 30, 30, 30, 30]
 output_dims =      [   16,    28,    50,    75,    75,    75,   75,   75,   75,   75,   80,   80]
 network = HiGSFANetworkU11L_NoOverlap_4x4L0_PosXPosYScaleAngle = copy.deepcopy(HiGSFANetworkU11L_NoOverlap_4x4L0)
 for i, layer in enumerate(network.layers):

@@ -557,19 +557,18 @@ def describe_flow(flow):
     length = len(flow)
 
     total_size = 0
-    print "Flow has %d nodes" % length
+    print "Flow has %d nodes:" % length
     for i in range(length):
         node = flow[i]
         node_size = compute_node_size(node)
         total_size += node_size
-        print i
-        print str(node)
-        print node.input_dim
-        print node.output_dim
-        print node_size
+        #print i
+        #print str(node)
+        #print node.input_dim
+        #print node.output_dim
+        #print node_size
 
-        print "Node[%d] is %s, has input_dim=%d, output_dim=%d and size=%d" % (
-        i, str(node), node.input_dim, node.output_dim, node_size)
+        print "Node[%d] is %s, has input_dim=%d, output_dim=%d and size=%d" % (i, str(node), node.input_dim, node.output_dim, node_size)
         if isinstance(node, mdp.hinet.CloneLayer):
             print "   contains %d cloned nodes of type %s, each with input_dim=%d, output_dim=%d" % \
                   (len(node.nodes), str(node.nodes[0]), node.nodes[0].input_dim, node.nodes[0].output_dim)
@@ -3205,17 +3204,20 @@ def f_residual(x_app_i, node, y_i):
 
 
 class SFA_GaussianClassifier(mdp.ClassifierNode):
-    def __init__(self, reduced_dim=None, **argv):
+    def __init__(self, reduced_dim=None, verbose=False, **argv):
         super(SFA_GaussianClassifier, self).__init__(**argv)
         self.gc_node = mdp.nodes.GaussianClassifier()
         self.reduced_dim = reduced_dim
         self.sfa_node = mdp.nodes.SFANode(output_dim=self.reduced_dim)
+        self.verbose = verbose
 
     def _train(self, x, labels=None):
         ordering = numpy.argsort(labels)
         x_ordered = x[ordering,:]
         self.sfa_node.train(x_ordered)
         self.sfa_node.stop_training()
+        if self.verbose:
+	    print "SFA_GaussianClassifier: sfa_node.d = ", self.sfa_node.d
         y = self.sfa_node.execute(x)
         self.gc_node.train(y, labels=labels)
         self.gc_node.stop_training()

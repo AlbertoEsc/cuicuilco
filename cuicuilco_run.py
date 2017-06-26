@@ -562,10 +562,10 @@ if __name__ == "__main__":  # ############## Parse command line arguments ######
                         print "Setting name_default_experiment to", name_default_experiment
                         DefaultExperimentalDataset = available_experiments[name_default_experiment]
                     elif opt in ('--SFAGCReducedDim',):
-                        sfa_gc_reduced_dim = bool(int(arg))
+                        sfa_gc_reduced_dim = int(arg)
                         print "Setting sfa_gc_reduced_dim to", sfa_gc_reduced_dim
                     elif opt in ('--ObjectiveLabel',):
-                        objective_label = bool(int(arg))
+                        objective_label = int(arg)
                         print "Setting objective_label to", objective_label
                     elif opt in ('--help',):
                         txt = \
@@ -1794,7 +1794,7 @@ def main():
         #        print "mean(cf_sl[c=%d,:])="%c, cf_sl[cf_correct_classes==c, :].mean(axis=0)
         #        print "std(cf_sl[c=%d,:])="%c, cf_sl[cf_correct_classes==c, :].std(axis=0)
 
-        GC_node = mdp.nodes.SFA_GaussianClassifier(reduced_dim=sfa_gc_reduced_dim)
+        GC_node = mdp.nodes.SFA_GaussianClassifier(reduced_dim=sfa_gc_reduced_dim, verbose=True)
         GC_node.train(x=cf_sl[:, 0:reg_num_signals],
                       labels=cf_correct_classes)  # Functions for regression use class values!!!
         GC_node.stop_training()
