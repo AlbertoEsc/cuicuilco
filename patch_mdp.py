@@ -650,21 +650,24 @@ def node_train_params(self, data, params=None, verbose=False):
 
 # Patch all nodes to offer train_params
 # Additionally, list_train_params should be added to relevant nodes
+print "Adding train_params to all mdp Nodes"
 for node_str in dir(mdp.nodes):
     node_class = getattr(mdp.nodes, node_str)
     if inspect.isclass(node_class) and issubclass(node_class, mdp.Node):
         # This assumes that is_trainable() is a class function, however this might be false in some cases
         #        if node_class.is_trainable():
-        print "Adding train_params to mdp.Node: ", node_str
+        # print "Adding train_params to mdp.Node: ", node_str
         node_class.train_params = node_train_params
+
 # Do the same with nodes contained in hinet
+print "Adding train_params to (hinet) mdp.hinet Nodes: ", node_str
 for node_str in dir(mdp.hinet):
     node_class = getattr(mdp.hinet, node_str)
     if inspect.isclass(node_class) and issubclass(node_class, mdp.Node):
         if not issubclass(node_class, (mdp.hinet.Layer, mdp.hinet.CloneLayer)):
             # This assumes that is_trainable() is a class function, however this might be false in some cases
             #        if node_class.is_trainable():
-            print "Adding train_params to (hinet) mdp.Node: ", node_str
+            # print "Adding train_params to (hinet) mdp.Node: ", node_str
             node_class.train_params = node_train_params
 
 
@@ -687,23 +690,27 @@ def node_execute_data_vec(self, data_vec, exec_params=None):
 
 
 # Patch all nodes to offer execute_data_vec
+print "Adding execute_data_vec to all nodes"
 for node_str in dir(mdp.nodes):
     node_class = getattr(mdp.nodes, node_str)
-    print node_class
+    # print node_class
     if inspect.isclass(node_class) and issubclass(node_class, mdp.Node):
-        print "Adding execute_data_vec to node:", node_str
+        # print "Adding execute_data_vec to node:", node_str
         node_class.execute_data_vec = node_execute_data_vec
     else:
-        print "Not a node:", node_str
+        pass
+        # print "execute_data_vec not added (Not a node)", node_str
 
+print "Adding execute_data_vec to all hinet nodes"
 for node_str in dir(mdp.hinet):
     node_class = getattr(mdp.hinet, node_str)
-    print node_class
+    # print node_class
     if inspect.isclass(node_class) and issubclass(node_class, mdp.Node):
-        print "Adding execute_data_vec to (hinet) node:", node_str
+        # print "Adding execute_data_vec to (hinet) node:", node_str
         node_class.execute_data_vec = node_execute_data_vec
     else:
-        print "Not a node:", node_str
+        pass
+        # print "Not a node:", node_str
 
 
 def ParallelSFANode_join(self, forked_node):

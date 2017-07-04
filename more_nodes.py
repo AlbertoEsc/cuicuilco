@@ -562,11 +562,6 @@ def describe_flow(flow):
         node = flow[i]
         node_size = compute_node_size(node)
         total_size += node_size
-        #print i
-        #print str(node)
-        #print node.input_dim
-        #print node.output_dim
-        #print node_size
 
         print "Node[%d] is %s, has input_dim=%d, output_dim=%d and size=%d" % (i, str(node), node.input_dim, node.output_dim, node_size)
         if isinstance(node, mdp.hinet.CloneLayer):
