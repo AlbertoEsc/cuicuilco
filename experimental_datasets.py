@@ -79,7 +79,7 @@ print "Running on unknown host"
 def repeat_list_elements(a_list, rep):
     return [element for _ in range(rep) for element in a_list]
 
-def load_GT_labels(self, labels_filename, age_included=True, rAge_included=False, gender_included=True, race_included=False, avgColor_included=False):
+def load_GT_labels(labels_filename, age_included=True, rAge_included=False, gender_included=True, race_included=False, avgColor_included=False):
     fd = open(labels_filename, 'r')
 
     c_age = 1
@@ -6586,7 +6586,7 @@ ParamsRTransXYPAngScaleFunc_32x32.hack_image_size = 32
 #################                  AGE Extraction Experiments                             #############################
 #######################################################################################################################
 class ParamsRAgeExperiment(system_parameters.ParamsSystem):
-    def __init__(self, experiment_seed, experiment_basedir):
+    def __init__(self, experiment_seed, experiment_basedir, subimage_width_height=96):
         super(ParamsRAgeExperiment, self).__init__()
         self.experiment_seed = experiment_seed
         self.experiment_basedir = experiment_basedir
@@ -6595,8 +6595,8 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
         self.train_mode = "Weird Mode" #Ignored for the moment 
         self.analysis = None
         self.enable_reduced_image_sizes = True
-        self.reduction_factor = 160.0/96 #160.0/72 ## 160.0/96 # (article 2.0) T=2.0 WARNING 1.0, 2.0, 4.0, 8.0
-        self.hack_image_size = 96 #72 ## 96 # (article 80) # T=80 T=64 WARNING  96, 80, 128,  64,  32 , 16
+        self.reduction_factor = 160.0/subimage_width_height #160.0/72 ## 160.0/96 # (article 2.0) T=2.0 WARNING 1.0, 2.0, 4.0, 8.0
+        self.hack_image_size = subimage_width_height #72 ## 96 # (article 80) # T=80 T=64 WARNING  96, 80, 128,  64,  32 , 16
         self.enable_hack_image_size = True
         self.patch_network_for_RGB = False #
         
@@ -6690,7 +6690,8 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
         
         #print "age_labeled_files_list_INIBilder", age_labeled_files_list_INIBilder
         #age_trim_number_MORPH = 200
-        age_clusters_MORPH = self.age_cluster_labeled_files(age_labeled_files_list_MORPH, repetition=3, num_clusters=num_clusters_MORPH_serial, trim_number=None, shuffle_each_cluster=False) #r=5, r=6, trim_number=None
+        # TODO: repetition=3, changed it only for a fast exercise
+	age_clusters_MORPH = self.age_cluster_labeled_files(age_labeled_files_list_MORPH, repetition=1, num_clusters=num_clusters_MORPH_serial, trim_number=None, shuffle_each_cluster=False) #r=5, r=6, trim_number=None
         #age_clusters_MORPH = age_cluster_list(age_files_dict_MORPH, repetition=pre_repetitions, smallest_number_images=age_trim_number_MORPH, largest_number_images=age_trim_number_MORPH) #Cluster so that all clusters have size at least 1400 or 1270 for L1KPO
         print "len(age_clusters_MORPH)=", len(age_clusters_MORPH)
         num_images_per_cluster_used_MORPH = age_clusters_MORPH[0][0]
@@ -8123,9 +8124,9 @@ else:
     ex = "CUICUILCO_EXPERIMENT_SEED unset"
     raise Exception(ex)
 
-ParamsRAgeFunc = ParamsRAgeExperiment(experiment_seed, experiment_basedir)
-
-
+ParamsRAgeFunc = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 96)
+ParamsRAgeFunc_48 = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 48)
+ParamsRAgeFunc_24 = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 24)
 #######################################################################################################################
 #################                   MNIST Number Database Experiments                     #############################
 #######################################################################################################################
