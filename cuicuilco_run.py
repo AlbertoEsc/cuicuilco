@@ -1532,19 +1532,28 @@ def main():
     print "taking into account objective_label=%d" % objective_label
     if len(iTrain.correct_labels.shape) == 2:
         print "correction..."
-        iTrain.correct_labels = iTrain.correct_labels[:, objective_label].flatten()
-        Parameters.iSeenid.correct_labels = Parameters.iSeenid.correct_labels[:, objective_label].flatten()
-        Parameters.iNewid[0][0].correct_labels = Parameters.iNewid[0][0].correct_labels[:, objective_label].flatten()
+        correct_objective_labels_training = iTrain.correct_labels[:, objective_label].flatten()
+        correct_objective_labels_seenid = Parameters.iSeenid.correct_labels[:, objective_label].flatten()
+        correct_objective_labels_newid = Parameters.iNewid[0][0].correct_labels[:, objective_label].flatten()
 
-        iTrain.correct_classes = iTrain.correct_classes[:, objective_label].flatten()
-        Parameters.iSeenid.correct_classes = Parameters.iSeenid.correct_classes[:, objective_label].flatten()
-        Parameters.iNewid[0][0].correct_classes = Parameters.iNewid[0][0].correct_classes[:, objective_label].flatten()
-    print "iTrain.correct_classes=", iTrain.correct_classes
-    print "iTrain.correct_labels=", iTrain.correct_labels
-    print "Parameters.iNewid[0][0].correct_classes", Parameters.iNewid[0][0].correct_classes
-    print "Parameters.iNewid[0][0].correct_labels", Parameters.iNewid[0][0].correct_labels
-    print "Parameters.iSeenid.correct_classes=", Parameters.iSeenid.correct_classes
-    print "Parameters.iSeenid.correct_labels=", Parameters.iSeenid.correct_labels
+        correct_objective_classes_training = iTrain.correct_classes[:, objective_label].flatten()
+        correct_objective_classes_seenid = Parameters.iSeenid.correct_classes[:, objective_label].flatten()
+        correct_objective_classes_newid = Parameters.iNewid[0][0].correct_classes[:, objective_label].flatten()
+    else:
+        correct_objective_labels_training = iTrain.correct_labels
+        correct_objective_labels_seenid = Parameters.iSeenid.correct_labels
+        correct_objective_labels_newid = Parameters.iNewid[0][0].correct_labels
+
+        correct_objective_classes_training = iTrain.correct_classes
+        correct_objective_classes_seenid = Parameters.iSeenid.correct_classes
+        correct_objective_classes_newid = Parameters.iNewid[0][0].correct_classes
+        
+    print "correct_objective_classes_training=", correct_objective_classes_training
+    print "correct_objective_labels_training=", correct_objective_labels_training
+    print "correct_objective_classes_newid", correct_objective_classes_newid
+    print "correct_objective_labels_newid", correct_objective_labels_newid
+    print "correct_objective_classes_seenid=", correct_objective_classes_seenid
+    print "correct_objective_labels_seenid=", correct_objective_labels_seenid
     print "done"
 
     if coherent_seeds:
@@ -1603,9 +1612,9 @@ def main():
         benchmark.append(("Computation of delta, eta values for Train SFA Signal", t_delta_eta1 - t_delta_eta0))
 
     print "Setting correct classes and labels for the Classifier/Regression, Train SFA Signal"
-    correct_classes_training = iTrain.correct_classes
+    correct_classes_training = correct_objective_classes_training
     print "correct_classes_training=", correct_classes_training
-    correct_labels_training = iTrain.correct_labels
+    correct_labels_training = correct_objective_labels_training
 
     if convert_labels_days_to_years:
         correct_labels_training = correct_labels_training / DAYS_IN_A_YEAR
@@ -1709,8 +1718,8 @@ def main():
     print "computed delta/eta in %0.3f ms" % ((t_delta_eta1 - t_delta_eta0) * 1000.0)
 
     print "Setting correct labels/classes data for seenid"
-    correct_classes_seenid = iSeenid.correct_classes
-    correct_labels_seenid = iSeenid.correct_labels
+    correct_classes_seenid = correct_objective_classes_seenid
+    correct_labels_seenid = correct_objective_labels_seenid
     correct_labels_seenid_real = correct_labels_seenid.copy()
 
     if convert_labels_days_to_years:
@@ -1732,13 +1741,13 @@ def main():
     # cf_sl = sl_seq_training
     # cf_num_samples = cf_sl.shape[0]
     # cf_correct_labels = correct_labels_training
-    # cf_correct_classes = iTrain.correct_classes
+    # cf_correct_classes = correct_objective_classes_training
     # cf_spacing = cf_block_size = iTrain.block_size
 
     cf_sl = sl_seq_seenid
     cf_num_samples = cf_sl.shape[0]
     cf_correct_labels = correct_labels_seenid_real
-    cf_correct_classes = iSeenid.correct_classes
+    cf_correct_classes = correct_objective_classes_seenid
     cf_spacing = cf_block_size = iSeenid.block_size
 
     all_classes = numpy.unique(cf_correct_classes)
@@ -2109,8 +2118,8 @@ def main():
 
     t_class0 = time.time()
 
-    correct_classes_newid = iNewid.correct_classes
-    correct_labels_newid = iNewid.correct_labels
+    correct_classes_newid = correct_objective_classes_newid
+    correct_labels_newid = correct_objective_labels_newid
 
     if convert_labels_days_to_years:
         if correct_labels_newid.mean() < 200:
@@ -2882,6 +2891,20 @@ def main():
                 false_background = (regression[0:-bs] > cutoff_background).sum() * 1.0 / len(regression[0:-bs])
                 print "correct_background = ", correct_background, "false_background =", false_background
 
+    # Display brute delta values for labels besides the main one
+    if len(iTrain.correct_labels.shape) == 2:
+        print "Displaying brute (ordered and scale normalized) delta values for all labels"
+        num_labels = iTrain.correct_labels.shape[1]
+        for j in range(0, num_labels):
+            ordering = numpy.argsort(iTrain.correct_labels[:,j].flatten()) # flatten() might be unnecessary
+            print "brute (ordering label %d) delta training="%j, sfa_libs.comp_delta_normalized(sl_seq_training[ordering,:])
+            
+            ordering = numpy.argsort(iSeenid.correct_labels[:,j].flatten()) # flatten() might be unnecessary
+            print "brute (ordering label %d) delta seenid="%j, sfa_libs.comp_delta_normalized(sl_seq_seenid[ordering,:])
+
+            ordering = numpy.argsort(iNewid.correct_labels[:,j].flatten()) # flatten() might be unnecessary
+            print "brute (ordering label %d) delta newid="%j, sfa_libs.comp_delta_normalized(sl_seq_newid[ordering,:])
+
     if minutes_sleep < 0:
         lock.acquire()
         q = open(cuicuilco_queue, "r")
@@ -2898,6 +2921,11 @@ def main():
             q2.write(line)
         q2.close()
         lock.release()
+
+
+
+
+
 
     if enable_display:
         print "Creating GUI..."
