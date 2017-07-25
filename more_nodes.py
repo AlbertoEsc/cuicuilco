@@ -3203,19 +3203,25 @@ class SFA_GaussianClassifier(mdp.ClassifierNode):
         super(SFA_GaussianClassifier, self).__init__(**argv)
         self.gc_node = mdp.nodes.GaussianClassifier()
         self.reduced_dim = reduced_dim
-        self.sfa_node = mdp.nodes.SFANode(output_dim=self.reduced_dim)
+        if self.reduced_dim > 0:
+            self.sfa_node = mdp.nodes.SFANode(output_dim=self.reduced_dim)
+        else:
+            self.sfa_node = mdp.nodes.IdentityNode()
         self.verbose = verbose
 
     def _train(self, x, labels=None):
-        ordering = numpy.argsort(labels)
-        x_ordered = x[ordering,:]
-        self.sfa_node.train(x_ordered)
-        self.sfa_node.stop_training()
-        if self.verbose:
-	    print "SFA_GaussianClassifier: sfa_node.d = ", self.sfa_node.d
+        if self.reduced_dim > 0: 
+            ordering = numpy.argsort(labels)
+            x_ordered = x[ordering,:]
+            self.sfa_node.train(x_ordered)
+            self.sfa_node.stop_training()
+            if self.verbose:
+                print "SFA_GaussianClassifier: sfa_node.d = ", self.sfa_node.d
+        else: # sfa_node is the identity node
+            pass
         y = self.sfa_node.execute(x)
         self.gc_node.train(y, labels=labels)
-        self.gc_node.stop_training()
+        self.gc_node.stop_training()            
 
     def _label(self, x):
         y = self.sfa_node.execute(x)

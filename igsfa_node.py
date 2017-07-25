@@ -22,7 +22,7 @@ class iGSFANode(mdp.Node):
     """
     def __init__(self, input_dim=None, output_dim=None, pre_expansion_node_class=None, pre_expansion_out_dim=None,
                  expansion_funcs=None, expansion_output_dim=None, expansion_starting_point=None,
-                 max_lenght_slow_part=None, offsetting_mode="all features", max_preserved_sfa=1.9999,
+                 max_lenght_slow_part=None, offsetting_mode="sensitivity_based_pure", max_preserved_sfa=1.9999,
                  reconstruct_with_sfa=True, **argv):
         super(iGSFANode, self).__init__(input_dim=input_dim, output_dim=output_dim, **argv)
         self.pre_expansion_node_class = pre_expansion_node_class  # Type of node used to expand the data
@@ -225,7 +225,8 @@ class iGSFANode(mdp.Node):
             s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x ** self.exponent_variance  # Scale according to ranking
             print "method: data dependent (setting magn_n_fa_x later)"
         else:
-            er = "unknown feature scaling method"
+            er = "unknown feature offsetting mode=" + str(self.offsetting_mode) + "for reconstruct_with_sfa=" + \
+                 str(self.reconstruct_with_sfa)
             raise Exception(er)
 
         print "training PCA..."

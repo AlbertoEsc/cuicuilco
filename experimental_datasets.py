@@ -6196,7 +6196,7 @@ class ParamsRTransXYPAngScaleExperiment(system_parameters.ParamsSystem):
         #smax = 1.1
         
         print "dx=", dx, "dy=", dy,"da=", da,"smin=", smin,"smax=", smax
-        iSeq_set = iTrainRTransXYPAngScale = [[self.iSeqCreateRTransXYPAngScale(dx=dx, dy=dy, da=da, smin=smin, smax=smax, num_steps=50, slow_var=slow_var, continuous=continuous, num_images_used=30000, #30000 
+        iSeq_set = iTrainRTransXYPAngScale = [[self.iSeqCreateRTransXYPAngScale(dx=dx, dy=dy, da=da, smin=smin, smax=smax, num_steps=50, slow_var=slow_var, continuous=continuous, num_images_used=55000, #30000 
                                                               images_base_dir=alldbnormalized_base_dir, normalized_images = alldbnormalized_available_images, 
                                                               first_image_index=0, pre_mirroring="none", repetition_factor=2, seed=-1)]] ####repetition factor is 2
         #Experiment below is just for display purposes!!! comment it out!
@@ -6219,9 +6219,9 @@ class ParamsRTransXYPAngScaleExperiment(system_parameters.ParamsSystem):
         #                             [copy.deepcopy(sSeq0), sSeqCreateRTransY(iSeq_set[4][1], seed=-1)],
         #                             ]
         
-        iSeq_set = iSeenidRTransXYPAngScale = self.iSeqCreateRTransXYPAngScale(dx=dx, dy=dy, da=da, smin=smin, smax=smax, num_steps=50, slow_var=slow_var, continuous=True, num_images_used=25000, #20000
+        iSeq_set = iSeenidRTransXYPAngScale = self.iSeqCreateRTransXYPAngScale(dx=dx, dy=dy, da=da, smin=smin, smax=smax, num_steps=50, slow_var=slow_var, continuous=True, num_images_used=55000, #20000
                                                               images_base_dir=alldbnormalized_base_dir, normalized_images = alldbnormalized_available_images, 
-                                                              first_image_index=30000, pre_mirroring="none", repetition_factor=2, seed=-1)
+                                                              first_image_index=0, pre_mirroring="none", repetition_factor=2, seed=-1)
         sSeenidRTransXYPAngScale = self.sSeqCreateRTransXYPAngScale(iSeq_set, seed=-1)
         
         #WARNING, here continuous=continuous was wrong!!! we should always use the same test data!!!
@@ -8506,11 +8506,13 @@ ParamsMNISTFunc = ParamsMNISTExperiment(experiment_seed, experiment_basedir)
 #RATLAB experiment!!!!
 
 class ParamsRatlabExperiment(system_parameters.ParamsSystem):
-    def __init__(self, experiment_seed, experiment_basedir):
+    def __init__(self, experiment_seed, experiment_basedir, num_images_training=80000, num_images_test=40000):
         super(ParamsRatlabExperiment, self).__init__()
         self.experiment_seed = experiment_seed
         self.experiment_basedir = experiment_basedir
-     
+        self.num_images_training = num_images_training
+        self.num_images_test = num_images_test
+        self.num_available_images = 200000
         self.train_mode = "Weird Mode" #This value should not be used anymore
         self.analysis = None
         self.enable_reduced_image_sizes = False # True
@@ -8519,23 +8521,35 @@ class ParamsRatlabExperiment(system_parameters.ParamsSystem):
         self.enable_hack_image_size = False #True
         self.patch_network_for_RGB = False #    
 
+    def compute_indices_first_training_test_images(self):
+        success = False
+        x0_training = numpy.random.randint(0, self.num_available_images - self.num_images_training)
+        while not success:
+            x0_test = numpy.random.randint(0, self.num_available_images - self.num_images_test)
+            if x0_test >= x0_training + self.num_images_training:
+                success = True
+            elif x0_training >= x0_test + self.num_images_test:
+                success = True
+        return x0_training, x0_test
+    
     def create(self):
         print "Ratlab: starting with experiment_seed=", self.experiment_seed
         numpy.random.seed(self.experiment_seed+123451313)
-        
-        num_available_images = 120000  # 110000  # 9600
-        num_images_training =   80000  # 100000  # 6800
-        num_images_test = num_available_images - num_images_training
+
+        num_available_images = self.num_available_images
+        num_images_training =  self.num_images_training  # 100000  # 6800
+        num_images_test = self.num_images_test
         ratlab_data_base_dir = self.experiment_basedir + "/ratlab_sequence_200000"
         ratlab_images = ["frame_%05d.png"%d for d in range(num_available_images)] # frame_00000.png ... frame_09599.png
+        first_image_training, first_image_test = self.compute_indices_first_training_test_images()
         
-        self.iTrain = [[self.iSeqCreateRatlab(ratlab_images, first_image_index=0, num_images_used=num_images_training, data_base_dir=ratlab_data_base_dir)]]
+        self.iTrain = [[self.iSeqCreateRatlab(ratlab_images, first_image_index=first_image_training, num_images_used=num_images_training, data_base_dir=ratlab_data_base_dir)]]
         self.sTrain = [[self.sSeqCreateRatlab(self.iTrain[0][0], seed=-1, use_RGB_images=True)]]
         
-        self.iSeenid = self.iSeqCreateRatlab(ratlab_images, first_image_index=num_images_training, num_images_used=num_images_test/2, data_base_dir=ratlab_data_base_dir)
+        self.iSeenid = self.iSeqCreateRatlab(ratlab_images, first_image_index=first_image_training, num_images_used=num_images_test/4, data_base_dir=ratlab_data_base_dir)
         self.sSeenid = self.sSeqCreateRatlab(self.iSeenid, seed=-1, use_RGB_images=True)
         
-        self.iNewid = [[self.iSeqCreateRatlab(ratlab_images, first_image_index=num_images_training, num_images_used=num_images_test, data_base_dir=ratlab_data_base_dir)]]
+        self.iNewid = [[self.iSeqCreateRatlab(ratlab_images, first_image_index=first_image_test, num_images_used=num_images_test, data_base_dir=ratlab_data_base_dir)]]
         self.sNewid = [[self.sSeqCreateRatlab(self.iNewid[0][0], seed=-1, use_RGB_images=True)]]
         
         print "len(self.iTrain[0][0].input_files)=",len(self.iTrain[0][0].input_files)
@@ -8666,4 +8680,7 @@ class ParamsRatlabExperiment(system_parameters.ParamsSystem):
         system_parameters.test_object_contents(sSeq)
         return sSeq
 
-ParamsRatlabFunc = ParamsRatlabExperiment(experiment_seed, experiment_basedir)
+ParamsRatlabFunc_320x40_training_80k = ParamsRatlabExperiment(experiment_seed, experiment_basedir, 80000, 40000)
+ParamsRatlabFunc_320x40_training_40k = ParamsRatlabExperiment(experiment_seed, experiment_basedir, 40000, 40000)
+ParamsRatlabFunc_320x40_training_20k = ParamsRatlabExperiment(experiment_seed, experiment_basedir, 20000, 40000)
+ParamsRatlabFunc_320x40_training_10k = ParamsRatlabExperiment(experiment_seed, experiment_basedir, 10000, 40000)

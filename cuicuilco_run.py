@@ -127,7 +127,7 @@ confusion_matrix = False
 features_residual_information = 5000  # 0
 compute_input_information = True
 convert_labels_days_to_years = False
-sfa_gc_reduced_dim = None
+sfa_gc_reduced_dim = 0
 
 clip_seenid_newid_to_training = False
 add_noise_to_seenid = False
@@ -767,7 +767,7 @@ def main():
     # take k=1? or choose from command line? NOPE. Take always first label (k=0). sSeq must compute proper classes for
     # chosen label anyway.
     # TODO: let the user choose objective_label through a command line argument
-      # = 0, = 1, = 2, = 3
+    # = 0, = 1, = 2, = 3
     if graph_exact_label_learning:
         if isinstance(iTrain_set, list):
             iTrain0 = iTrain_set[len(iTrain_set) - 1][0]

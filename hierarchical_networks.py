@@ -3900,7 +3900,7 @@ layer.sfa_args = {} # Specific parameters are defined later
 layer.cloneLayer = False
 layer.name = comp_layer_name(layer.cloneLayer, layer.exp_funcs, layer.x_field_channels, layer.y_field_channels, layer.pca_out_dim, layer.sfa_out_dim)
 
-network = RatlabNetwork3L = system_parameters.ParamsNetwork()
+network = RatlabNetwork3L_320x40 = system_parameters.ParamsNetwork()
 network.name = "Ratlab Network, 3 Layers of SFA & QSFA"
 network.L0 = pSFARatlab_L0
 network.L1 = pSFARatlab_L1
@@ -3963,7 +3963,7 @@ layer.sfa_args = {} # Specific parameters are defined later
 layer.cloneLayer = False
 layer.name = comp_layer_name(layer.cloneLayer, layer.exp_funcs, layer.x_field_channels, layer.y_field_channels, layer.pca_out_dim, layer.sfa_out_dim)
 
-network = RatlabImprovedNetwork3L = system_parameters.ParamsNetwork()
+network = RatlabImprovedNetwork3L_320x40 = system_parameters.ParamsNetwork()
 network.name = "Ratlab Network, 3 Layers of SFA & QSFA"
 network.L0 = pSFARatlab_L0
 network.L1 = pSFARatlab_L1
@@ -3975,9 +3975,11 @@ for i, layer in enumerate(network.layers):
     layer.pca_args["offsetting_mode"]=None
     layer.pca_args["reconstruct_with_sfa"]=False    
     layer.pca_args["expansion_funcs"] = None
-    layer.pca_args["max_preserved_sfa"]= 17 # 4.0 #4.0 => preserves only SFA components; 16 => half of the computed features are slow, and the remaining reconstructive
+    layer.pca_args["max_preserved_sfa"]= 3 # 4.0 #4.0 => preserves only SFA components; 16 => half of the computed features are slow, and the remaining reconstructive
 
     layer.sfa_args["offsetting_mode"]=None
     layer.sfa_args["reconstruct_with_sfa"]=False    
     layer.sfa_args["expansion_funcs"] = [identity, QT]
-    layer.sfa_args["max_preserved_sfa"]= 17 # 4.0 #4.0 => preserves only SFA components; 16 => half of the computed features are slow, and the remaining reconstructive
+    layer.sfa_args["max_preserved_sfa"]= 3 # 4.0 #4.0 => preserves only SFA components; 16 => half of the computed features are slow, and the remaining reconstructive
+
+

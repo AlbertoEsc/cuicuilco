@@ -574,8 +574,7 @@ mdp.nodes.iGSFANode.list_train_params = ["scheduler", "n_parallel", "train_mode"
                                          "edge_weights"]
 mdp.nodes.SFAAdaptiveNLNode.list_train_params = ["scheduler", "n_parallel", "train_mode", "block_size"]
 mdp.nodes.NLIPCANode.list_train_params = ["exp_func", "norm_class"]
-mdp.nodes.HistogramEqualizationNode.list_train_params = [
-    "num_pivots"]  # This function replaces the traditional Node.train
+mdp.nodes.HistogramEqualizationNode.list_train_params = ["num_pivots"]
 
 
 # It extracts the relevant parameters from params according to Node.list_train_params (if available)
@@ -584,10 +583,14 @@ def extract_params_relevant_for_node_train(node, params):
     if isinstance(params, list):
         return [extract_params_relevant_for_node_train(node, param) for param in params]
 
+    if params is None:
+        return{}
+
     if isinstance(node, (mdp.hinet.Layer, mdp.hinet.CloneLayer)):
         add_list_train_params_to_layer_or_node(node)
 
     all_params = {}
+    print "node=", node
     if "list_train_params" in dir(node):
         # list_train_params = self.list_train_params
         for par, val in params.items():
