@@ -6814,7 +6814,7 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
         #age_files_dict_set1 = find_available_images(age_eyes_normalized_base_dir_set1, from_subdirs=None) #change from_subdirs to select a subset of all ages!
         age_files_list_set1 = self.list_available_images(age_eyes_normalized_base_dir_set1, from_subdirs=None, verbose=False)
         age_labeled_files_list_set1 = self.append_GT_labels_to_files(age_files_list_set1, age_all_labels_map_MORPH)
-        age_clusters_set1 = self.age_cluster_labeled_files(age_labeled_files_list_set1, repetition=22, num_clusters=32, trim_number=None, shuffle_each_cluster=False) #r=22
+        age_clusters_set1 = self.age_cluster_labeled_files(age_labeled_files_list_set1, repetition=5, num_clusters=32, trim_number=None, shuffle_each_cluster=False) #r=22
         #WARNING, should be: repetition=22
         #age_clusters_set1 = age_cluster_labeled_files(age_labeled_files_list_set1, repetition=16, num_clusters=33, trim_number=None, shuffle_each_cluster=False)
           
@@ -8124,9 +8124,10 @@ else:
     ex = "CUICUILCO_EXPERIMENT_SEED unset"
     raise Exception(ex)
 
-ParamsRAgeFunc = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 96)
+ParamsRAgeFunc_96 = ParamsRAgeFunc = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 96)
 ParamsRAgeFunc_48 = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 48)
 ParamsRAgeFunc_24 = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 24)
+
 #######################################################################################################################
 #################                   MNIST Number Database Experiments                     #############################
 #######################################################################################################################

@@ -3275,7 +3275,94 @@ layer.exp_funcs = [identity, unsigned_08expo_m1, unsigned_08expo_p1]
 layer.red_out_dim = len(sfa_libs.apply_funcs_to_signal(layer.exp_funcs, numpy.zeros((1,layer.pca_out_dim)))[0])-2
 
 
-                    
+################### Experimental HiGSFA Network with sigmoid activations ##############
+network = HiGSFANetworkU11L_Overlap6x6L0_Sigmoids_GUO_3Labels = copy.deepcopy(linearPCANetworkU11L)
+rec_field_size = 6  # 6 => 192x192, 5=> 160x160, 4=>128x128
+LRec_use_RGB_images = False  # or True
+network.layers[0].x_field_channels = rec_field_size
+network.layers[0].y_field_channels = rec_field_size
+# overlapping L0
+network.layers[0].x_field_spacing = int(numpy.ceil(rec_field_size / 2.0))  # rec_field_size rec_field_size/2
+network.layers[0].y_field_spacing = int(numpy.ceil(rec_field_size / 2.0))  # rec_field_size rec_field_size/2
+network.layers[0].pca_node_class = mdp.nodes.PCANode
+if LRec_use_RGB_images:
+    network.layers[
+        0].pca_out_dim = 56  # 50 Problem, more color components also remove higher frequency ones = code image as intensity+color!!!
+else:
+    network.layers[0].pca_out_dim = 20  # 16 #20 #30 #28 #20 #22 more_feats2, 50 for RGB
+
+for i in range(1, len(network.layers), 2):
+    network.layers[i].x_field_channels = 3
+    network.layers[i].y_field_channels = 1
+    network.layers[i].x_field_spacing = 2
+    network.layers[i].y_field_spacing = 1
+for i in range(2, len(network.layers), 2):
+    network.layers[i].x_field_channels = 1
+    network.layers[i].y_field_channels = 3
+    network.layers[i].x_field_spacing = 1
+    network.layers[i].y_field_spacing = 2
+
+if LRec_use_RGB_images == False:
+    HiGSFANet_out_dims = [18, 27, 37, 66, 79, 88, 88, 93, 95, 75, 75]  # New test
+    print "Number of network features set without RGB:", HiGSFANet_out_dims
+else:
+    print "unsupported"
+    quit()
+    HiGSFANet_out_dims = [39, 51, 65, 70, 70, 70, 70, 70, 70, 70, 70]  # (less features)
+    print "Adjusting number of network features due to RGB:", HiGSFANet_out_dims
+
+print "HiGSFANetworkU11L_Overlap6x6L0 L0-10_SFA_out_dim = ", HiGSFANet_out_dims
+
+# expanded_dims = [104, 284, 423, 492, 552, 582, 435, 300, 235, 190]  # Dimensions of original HiGSFA network
+# expanded_dims = [50, 150, 200, 250, 250, 300, 200, 150, 100, 100]  # Test
+expanded_dims = [25, 70, 100, 125, 130, 140, 110, 75, 110, 50, 1, 1]  # Test
+
+for i, layer in enumerate(network.layers):
+    layer.sfa_node_class = mdp.nodes.iGSFANode
+    layer.sfa_out_dim = HiGSFANet_out_dims[i]
+    layer.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": "RandomSigmoids",
+                      "max_lenght_slow_part": None, "offsetting_mode": "sensitivity_based_pure",
+                      "max_preserved_sfa": 1.91, "expansion_output_dim":expanded_dims[i]}  # 1.85, 1.91 #only for tuning/experimentation, official is below
+
+# network.layers[0].sfa_args["max_preserved_sfa"] = 3
+# network.layers[1].sfa_args["max_preserved_sfa"] = 4
+# network.layers[2].sfa_args["max_preserved_sfa"] = 1.933 + 0.003 + 0.0015
+# network.layers[3].sfa_args["max_preserved_sfa"] = 1.933 + 0.005 + 0.0015
+# network.layers[4].sfa_args["max_preserved_sfa"] = 1.933 + 0.005 + 0.0023
+# network.layers[5].sfa_args["max_preserved_sfa"] = 1.953 + 0.005 + 0.0031
+# network.layers[6].sfa_args["max_preserved_sfa"] = 1.973
+# network.layers[7].sfa_args["max_preserved_sfa"] = 1.98
+# network.layers[8].sfa_args["max_preserved_sfa"] = 1.98
+
+# WARNING, ADDING AN ADDITIONAL SFA NODE IN THE LAST LAYER, 80x80 resolution (Node 9)
+double_SFA_top_node = True  # and False
+if double_SFA_top_node:
+    print "adding additional top node (two nodes in layer 8)"
+    layer = network.layers[8]
+    # NODE 19
+    layer.pca_node_class = mdp.nodes.iGSFANode
+    layer.pca_out_dim = HiGSFANet_out_dims[8]
+    layer.pca_args = dict(layer.sfa_args)
+    # NODE 20 / layer[9]
+    layer.sfa_node_class = mdp.nodes.iGSFANode
+    layer.sfa_out_dim = HiGSFANet_out_dims[9]
+    layer.sfa_args = dict(layer.sfa_args)
+    layer.sfa_args["max_preserved_sfa"] = 1.9  # ! 1.81 # ** 1.81
+    layer.sfa_args["expansion_output_dim"] = expanded_dims[9]
+
+my_DT = 1.96  # =1.96, 3 Labels
+for i in range(2, 9):
+    network.layers[i].sfa_args["max_preserved_sfa"] = my_DT
+network.layers[8].pca_args["max_preserved_sfa"] = my_DT
+
+HiGSFANetworkU11L_Overlap6x6L0_Sigmoids_GUO_3Labels_96x96 = copy.deepcopy(HiGSFANetworkU11L_Overlap6x6L0_Sigmoids_GUO_3Labels)
+HiGSFANetworkU11L_Overlap6x6L0_Sigmoids_GUO_3Labels_96x96.layers = HiGSFANetworkU11L_Overlap6x6L0_Sigmoids_GUO_3Labels_96x96.layers[0:9]
+HiGSFANetworkU11L_Overlap6x6L0_Sigmoids_GUO_3Labels_48x48 = copy.deepcopy(HiGSFANetworkU11L_Overlap6x6L0_Sigmoids_GUO_3Labels_96x96)
+HiGSFANetworkU11L_Overlap6x6L0_Sigmoids_GUO_3Labels_48x48.layers = HiGSFANetworkU11L_Overlap6x6L0_Sigmoids_GUO_3Labels_96x96.layers[0:6]+[HiGSFANetworkU11L_Overlap6x6L0_Sigmoids_GUO_3Labels_96x96.layers[8]]
+HiGSFANetworkU11L_Overlap6x6L0_Sigmoids_GUO_3Labels_24x24 = copy.deepcopy(HiGSFANetworkU11L_Overlap6x6L0_Sigmoids_GUO_3Labels_96x96)
+HiGSFANetworkU11L_Overlap6x6L0_Sigmoids_GUO_3Labels_24x24.layers = HiGSFANetworkU11L_Overlap6x6L0_Sigmoids_GUO_3Labels_96x96.layers[0:4]+[HiGSFANetworkU11L_Overlap6x6L0_Sigmoids_GUO_3Labels_96x96.layers[8]]
+
+
 ####################################################################
 ###########           THIN Non-LINEAR NETWORK               ############
 ####################################################################  
