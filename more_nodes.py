@@ -130,12 +130,15 @@ class GeneralExpansionNode(mdp.Node):
         return exp_dim
 
     def output_sizes(self, n):
-        sizes = numpy.zeros(len(self.funcs), dtype=int)
-        x = numpy.zeros((1, n))
-        for i, func in enumerate(self.funcs):
-            outx = func(x)
-            sizes[i] = outx.shape[1]
-            print "SS",
+        if self.funcs == "RandomSigmoids":
+            sizes = [self.exp_output_dim]
+        else:
+            sizes = numpy.zeros(len(self.funcs), dtype=int)
+            x = numpy.zeros((1, n))
+            for i, func in enumerate(self.funcs):
+                outx = func(x)
+                sizes[i] = outx.shape[1]
+                print "SS",
         return sizes
 
     def is_trainable(self):
@@ -230,7 +233,8 @@ class GeneralExpansionNode(mdp.Node):
                 out[:, current_pos:current_pos + self.expanded_dims[i]] = func(x)
                 current_pos += self.expanded_dims[i]
         else:
-            data_norm = (x - self.rs_data_training_mean) / self.rs_data_training_std
+            data_norm = (4.0/self.input_dim) ** 0.5 * ( x - self.rs_data_training_mean) / self.rs_data_training_std
+            # A variation of He random weight initialization
             out = extract_sigmoid_features(data_norm, self.rs_coefficients, self.rs_offsets, scale=1.0, offset=0.0,
                                            use_special_features=True)
         return out

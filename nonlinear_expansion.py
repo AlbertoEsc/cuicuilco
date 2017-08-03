@@ -1174,6 +1174,9 @@ def maximum_99mix2_ex(x):
 def Fu08_ex(x,F):
     return unsigned_08expo(x[:,0:F])
 
+def s3u08ex(x):
+    return Fu08_ex(x, 3)
+
 def s10u08ex(x):
     return Fu08_ex(x, 10)
 

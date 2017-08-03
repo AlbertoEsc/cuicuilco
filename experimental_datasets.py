@@ -6276,9 +6276,9 @@ class ParamsRTransXYPAngScaleExperiment(system_parameters.ParamsSystem):
             iSeq = iTrainRTransXYPAngScale[0][0]
             sSeq = sTrainRTransXYPAngScale[0][0]
             sSeq.train_mode = [sSeq.train_mode, 
-                               ("serial_regression50", iSeq.correct_labels[:,1], 1.0),
-                               ("serial_regression50", iSeq.correct_labels[:,2], 1.0),
-                               ("serial_regression50", iSeq.correct_labels[:,3], 1.0)]
+                               ("serial_regression50", iSeq.correct_labels[:,1], 1.25),
+                               ("serial_regression50", iSeq.correct_labels[:,2], 1.5),
+                               ("serial_regression50", iSeq.correct_labels[:,3], 1.75)] # Using experimental weights, otherwise they should be 1.0
         
         self.name = "Function Based Data Creation for RTransXYPAngScale"
         self.network = "linearNetwork4L" #Default Network, but ignored
