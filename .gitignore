@@ -18,13 +18,14 @@ MNIST_ILFO/
 MNIST_Results/
 MNIST_Semisupervised/
 NLIPCAtest/
-auxiliary/
+Cuicuilco_auxiliary/
 backup_2015_02_13/
 backup_2016_04_13/
 backup_cui_run_2015_06_26/
 cuic_libsvm2/
 del/
 libsvm_data/
+obsolete_backup/
 older_program_executions/
 r/
 r2/
@@ -34,6 +35,9 @@ r5/
 r6/
 r7/
 scripts_iteration/
+scripts_tuning/
+scripts_various/
+tmp_data_images_results/
 tune_msw256/
 tune_msw32/
 tune_msw64/
