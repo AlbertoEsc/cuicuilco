@@ -6691,7 +6691,7 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
         #print "age_labeled_files_list_INIBilder", age_labeled_files_list_INIBilder
         #age_trim_number_MORPH = 200
         # TODO: repetition=3, changed it only for a fast exercise
-	age_clusters_MORPH = self.age_cluster_labeled_files(age_labeled_files_list_MORPH, repetition=1, num_clusters=num_clusters_MORPH_serial, trim_number=None, shuffle_each_cluster=False) #r=5, r=6, trim_number=None
+	age_clusters_MORPH = self.age_cluster_labeled_files(age_labeled_files_list_MORPH, repetition=3, num_clusters=num_clusters_MORPH_serial, trim_number=None, shuffle_each_cluster=False) #r=5, r=6, trim_number=None
         #age_clusters_MORPH = age_cluster_list(age_files_dict_MORPH, repetition=pre_repetitions, smallest_number_images=age_trim_number_MORPH, largest_number_images=age_trim_number_MORPH) #Cluster so that all clusters have size at least 1400 or 1270 for L1KPO
         print "len(age_clusters_MORPH)=", len(age_clusters_MORPH)
         num_images_per_cluster_used_MORPH = age_clusters_MORPH[0][0]
@@ -6814,7 +6814,7 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
         #age_files_dict_set1 = find_available_images(age_eyes_normalized_base_dir_set1, from_subdirs=None) #change from_subdirs to select a subset of all ages!
         age_files_list_set1 = self.list_available_images(age_eyes_normalized_base_dir_set1, from_subdirs=None, verbose=False)
         age_labeled_files_list_set1 = self.append_GT_labels_to_files(age_files_list_set1, age_all_labels_map_MORPH)
-        age_clusters_set1 = self.age_cluster_labeled_files(age_labeled_files_list_set1, repetition=5, num_clusters=32, trim_number=None, shuffle_each_cluster=False) #r=22
+        age_clusters_set1 = self.age_cluster_labeled_files(age_labeled_files_list_set1, repetition=11, num_clusters=32, trim_number=None, shuffle_each_cluster=False) #r=22
         #WARNING, should be: repetition=22
         #age_clusters_set1 = age_cluster_labeled_files(age_labeled_files_list_set1, repetition=16, num_clusters=33, trim_number=None, shuffle_each_cluster=False)
           
@@ -7050,7 +7050,7 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
         #160x160: use_orig_label_as_class 
         #TODO:get rid of this conditional. Add Leave-k-out for MORPH+FGNet
         testing_INIBilder = (num_images_per_cluster_used_INIBilder > 0) and False
-        testing_FGNet = True #and False #Warning, should be False normally
+        testing_FGNet = True and False #Warning, should be False normally
         if (not testing_INIBilder) and (not testing_FGNet): 
             if leave_k_out_MORPH==0 and option_setup_CNN==0:
                 print "Selecting NewId without using leave_k_out_strategy" ###WARNING!!!! HERE 0.16 instead of 0.2 should be used???

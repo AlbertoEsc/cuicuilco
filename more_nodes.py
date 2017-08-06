@@ -99,12 +99,13 @@ class RandomizedMaskNode(mdp.Node):
 
 class GeneralExpansionNode(mdp.Node):
     def __init__(self, funcs, input_dim=None, dtype=None, \
-                 use_pseudoinverse=True, use_hint=False, output_dim=None, starting_point=None, max_steady_factor=1.5,
+                 use_pseudoinverse=True, use_hint=False, output_dim=None, starting_point=None, use_special_features=False, max_steady_factor=1.5,
                  delta_factor=0.6, min_delta=0.00001):
         self.funcs = funcs
         self.exp_output_dim = output_dim
         self.expanded_dims = None
         self.starting_point = starting_point
+	self.use_special_features = use_special_features
         if self.funcs == "RandomSigmoids" and self.exp_output_dim <= 0:
             er = "output_dim in GeneralExpansion node with RandomSigmoids should be at least 1, but is" + \
                  str(self.exp_output_dim)
@@ -157,10 +158,12 @@ class GeneralExpansionNode(mdp.Node):
         self.rs_data_training_mean = x.mean(axis=0)
         self.rs_data_training_std = x.std(axis=0)
 
-        starting_point = self.starting_point
+        
+	print "GeneralExpansionNode: output_dim=", self.output_dim,
+	starting_point = self.starting_point
         c1, l1 = generate_random_sigmoid_weights(self.input_dim, self.output_dim)
         if starting_point == "Identity":
-            print "starting_point: adding identity coefficients to expansion"
+            print "starting_point: adding (encoded) identity coefficients to expansion"
             c1[0:input_dim, 0:input_dim] = numpy.identity(input_dim)
             l1[0:input_dim] = numpy.ones(input_dim) * 1.0  # Code identity
         elif starting_point == "Sigmoids":
@@ -168,13 +171,17 @@ class GeneralExpansionNode(mdp.Node):
             c1[0:input_dim, 0:input_dim] = 4.0 * numpy.identity(input_dim)
             l1[0:input_dim] = numpy.ones(input_dim) * 0.0
         elif starting_point == "08Exp":
-            print "starting_point: adding 08Exp coefficients to expansion"
+            print "starting_point: adding (encoded) 08Exp coefficients to expansion"
             c1[0:input_dim, 0:input_dim] = numpy.identity(input_dim)
             c1[0:input_dim, input_dim:2 * input_dim] = numpy.identity(input_dim)
 
             l1[0:input_dim] = numpy.ones(input_dim) * 1.0  # Code identity
             l1[input_dim:2 * input_dim] = numpy.ones(input_dim) * 0.8  # Code abs(x)**0.8
-        elif starting_point is None:
+        elif starting_point == "Pseudo-Identity":
+            print "starting_point: adding pseudo-identity coefficients to expansion"
+            c1[0:input_dim, 0:input_dim] = 0.1 * numpy.identity(input_dim)
+            l1[0:input_dim] = numpy.zeros(input_dim)  # nothig is encoded
+	elif starting_point is None:
             print "starting_point: no starting point"
         else:
             er = "Unknown starting_point", starting_point
@@ -233,10 +240,11 @@ class GeneralExpansionNode(mdp.Node):
                 out[:, current_pos:current_pos + self.expanded_dims[i]] = func(x)
                 current_pos += self.expanded_dims[i]
         else:
-            data_norm = (4.0/self.input_dim) ** 0.5 * ( x - self.rs_data_training_mean) / self.rs_data_training_std
+            # 4.0 was working fine, 2.0 was apparently better. This also depends on how many features are computed!!!
+            data_norm = (2.0/self.input_dim) ** 0.5 * ( x - self.rs_data_training_mean) / self.rs_data_training_std
             # A variation of He random weight initialization
             out = extract_sigmoid_features(data_norm, self.rs_coefficients, self.rs_offsets, scale=1.0, offset=0.0,
-                                           use_special_features=True)
+                                           use_special_features=self.use_special_features)
         return out
 
 

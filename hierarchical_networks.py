@@ -3313,19 +3313,22 @@ else:
 
 print "HiGSFANetworkU11L_Overlap6x6L0 L0-10_SFA_out_dim = ", HiGSFANet_out_dims
 
-# expanded_dims = [104, 284, 423, 492, 552, 582, 435, 300, 235, 190]  # Dimensions of original HiGSFA network
-# expanded_dims = [50, 150, 200, 250, 250, 300, 200, 150, 100, 100]  # Test
-expanded_dims = [25, 70, 100, 125, 130, 140, 110, 75, 110, 50, 1, 1]  # Test
+# expanded_dims = [104, 284, 423, 492, 552, 582, 435, 300, 235, 190, 1, 1]  # Dimensions of original HiGSFA network
+# expanded_dims = [104, 284, 423, 492, 552, 582, 435, 400, 350, 350, 1, 1] # Corrected to allow identity matrix in expansion
+expanded_dims = [180, 350, 423, 492, 552, 582, 435, 400, 400, 350, 1, 1] # TEST A
+# expanded_dims = [ 50, 150, 200, 250, 250, 300, 250, 150, 200, 200, 1, 1]  # Test
+# expanded_dims = [ 25,  70, 100, 125, 130, 140, 110,  75, 110, 100, 1, 1]  # Test
 
 for i, layer in enumerate(network.layers):
     layer.sfa_node_class = mdp.nodes.iGSFANode
     layer.sfa_out_dim = HiGSFANet_out_dims[i]
     layer.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": "RandomSigmoids",
                       "max_lenght_slow_part": None, "offsetting_mode": "sensitivity_based_pure",
-                      "max_preserved_sfa": 1.91, "expansion_output_dim":expanded_dims[i]}  # 1.85, 1.91 #only for tuning/experimentation, official is below
+                      "max_preserved_sfa": 1.91, "expansion_output_dim":expanded_dims[i],
+		      "expansion_starting_point":"Pseudo-Identity", }  # 1.85, 1.91 #only for tuning/experimentation, official is below
 
-# network.layers[0].sfa_args["max_preserved_sfa"] = 3
-# network.layers[1].sfa_args["max_preserved_sfa"] = 4
+network.layers[0].sfa_args["max_preserved_sfa"] = 3
+network.layers[1].sfa_args["max_preserved_sfa"] = 4
 # network.layers[2].sfa_args["max_preserved_sfa"] = 1.933 + 0.003 + 0.0015
 # network.layers[3].sfa_args["max_preserved_sfa"] = 1.933 + 0.005 + 0.0015
 # network.layers[4].sfa_args["max_preserved_sfa"] = 1.933 + 0.005 + 0.0023
@@ -3335,7 +3338,7 @@ for i, layer in enumerate(network.layers):
 # network.layers[8].sfa_args["max_preserved_sfa"] = 1.98
 
 # WARNING, ADDING AN ADDITIONAL SFA NODE IN THE LAST LAYER, 80x80 resolution (Node 9)
-double_SFA_top_node = True  # and False
+double_SFA_top_node = True and False
 if double_SFA_top_node:
     print "adding additional top node (two nodes in layer 8)"
     layer = network.layers[8]
@@ -3347,10 +3350,10 @@ if double_SFA_top_node:
     layer.sfa_node_class = mdp.nodes.iGSFANode
     layer.sfa_out_dim = HiGSFANet_out_dims[9]
     layer.sfa_args = dict(layer.sfa_args)
-    layer.sfa_args["max_preserved_sfa"] = 1.9  # ! 1.81 # ** 1.81
+    layer.sfa_args["max_preserved_sfa"] = 1.9  
     layer.sfa_args["expansion_output_dim"] = expanded_dims[9]
 
-my_DT = 1.96  # =1.96, 3 Labels
+my_DT = 1.98 #1.96  # =1.96, 3 Labels
 for i in range(2, 9):
     network.layers[i].sfa_args["max_preserved_sfa"] = my_DT
 network.layers[8].pca_args["max_preserved_sfa"] = my_DT
