@@ -20,6 +20,9 @@ import numpy
 import scipy
 import scipy.misc
 
+import sklearn.svm as slsvm
+#print slsvm
+
 # mpl.style.use('classic')
 
 import PIL
@@ -100,6 +103,11 @@ svm_gamma = 0
 svm_C = 1.0
 svm_min = -1.0
 svm_max = 1.0
+enable_svr = False
+svr_gamma = 'auto'  # 0.1
+svr_C = 1.0
+svr_epsilon = 0.1
+svr_instead_of_SVM2 = False
 enable_lr = False
 load_network_number = None
 ask_network_loading = True
@@ -258,7 +266,8 @@ if __name__ == "__main__":  # ############## Parse command line arguments ######
                 opts, args = getopt.getopt(argv[1:], "", ["InputFilename=", "OutputFilename=", "EnableDisplay=",
                                                           "CacheAvailable=", "NumFeaturesSup=", "SkipFeaturesSup=",
                                                           'SVM_gamma=', 'SVM_C=', 'EnableSVM=', "LoadNetworkNumber=",
-                                                          "AskNetworkLoading=",
+                                                          'SVR_gamma=', 'SVR_C=', 'SVR_epsilon=', 'EnableSVR=',
+                                                          "SVRInsteadOfSVM2=", "AskNetworkLoading=",
                                                           'EnableLR=', "NParallel=", "EnableScheduler=",
                                                           "SaveOutputFeaturesDir=",
                                                           "LoadAndAppendOutputFeaturesDir=",
@@ -330,6 +339,25 @@ if __name__ == "__main__":  # ############## Parse command line arguments ######
                     elif opt in ('--EnableSVM',):
                         enable_svm = int(arg)
                         print "Setting enable_svm to", enable_svm
+                    #TODO: ADD command line parameters for SVR
+                    elif opt in ('--SVR_gamma',):
+                        if arg == 'auto':
+                            svr_gamma = 'auto'
+                        else:
+                            svr_gamma = float(arg)
+                        print "Setting svr_gamma to", svr_gamma
+                    elif opt in ('--SVR_epsilon',):
+                        svr_epsilon = float(arg)
+                        print "Setting svr_epsilon to", svr_epsilon
+                    elif opt in ('--SVR_C',):
+                        svr_C = float(arg)
+                        print "Setting svr_C to", svr_C
+                    elif opt in ('--EnableSVR',):
+                        enable_svr = int(arg)
+                        print "Setting enable_svr to", enable_svr
+                    elif opt in ('--SVRInsteadOfSVM2',):
+                        svr_instead_of_SVM2 = bool(int(arg))
+                        print "Setting svr_instead_of_SVM2 to", svr_instead_of_SVM2
                     elif opt in ('--LoadNetworkNumber',):
                         load_network_number = int(arg)
                         print "Setting load_network_number to", load_network_number
@@ -1776,6 +1804,8 @@ def main():
     else:
         enable_svm_cfr = False
 
+    # TODO: do I need this construct also fro SVR?
+
     if reg_num_signals <= 8192 and (Parameters.analysis is not False) and enable_lr:
         enable_lr_cfr = True
     else:
@@ -1837,7 +1867,6 @@ def main():
 
     if enable_svm_cfr:
         print "Training SVM..."
-
         params = {"C": svm_C, "gamma": svm_gamma, "nu": 0.6, "eps": 0.0001}
         svm_node = mdp.nodes.LibSVMClassifier(kernel="RBF", classifier="C_SVC", params=params, probability=True)
         data_mins, data_maxs = svm_compute_range(cf_sl[:, 0:reg_num_signals])
@@ -1846,6 +1875,11 @@ def main():
         if svm_gamma == 0:
             svm_gamma = 1.0 / (num_blocks)
         svm_node.stop_training()
+
+    if enable_svr:
+        print "Training SVR..."
+        svr = slsvm.SVR(C=svr_C, epsilon=svr_epsilon, gamma=svr_gamma)
+        svr.fit(cf_sl[:, 0:reg_num_signals], cf_correct_labels) #[:,0]
 
     if enable_lr_cfr:
         print "Training LR..."
@@ -1863,8 +1897,7 @@ def main():
         classifier_write.update_cache(GC_node, None, None, classifier_filename, overwrite=True, verbose=True)
 
     ############################################################
-    # ###TODO: make classifier cash work!
-    # ###TODO: review eban_svm model & implementation! beat normal svm!
+    # ###TODO: make classifier cache work!
 
     print "Executing/Executed over training set..."
     print "Input Signal: Training Data"
@@ -1907,7 +1940,6 @@ def main():
         classes_kNN_training = labels_kNN_training = numpy.zeros(num_images_training)
 
     skip_svm_training = False
-
     if enable_svm_cfr and skip_svm_training is False:
         print "SVM classify..."
         classes_svm_training = svm_node.label(
@@ -1922,6 +1954,12 @@ def main():
         classes_svm_training = regression_svm_training = regression2_svm_training = regression3_svm_training = \
             numpy.zeros(num_images_training)
 
+    if enable_svr:
+        print "SVR regression..."
+        regression_svr_training = svr.predict(sl_seq_training[:, 0:reg_num_signals])
+    else:
+        regression_svr_training = numpy.zeros(num_images_training)
+
     if enable_lr_cfr:
         print "LR execute..."
         regression_lr_training = lr_node.execute(sl_seq_training[:, 0:reg_num_signals]).flatten()
@@ -1933,6 +1971,10 @@ def main():
         print "Applying cutoff to the label estimations for LR and Linear Scaling (SVM2)"
         regression2_svm_training = cutoff(regression2_svm_training, orig_train_label_min, orig_train_label_max)
         regression_lr_training = cutoff(regression_lr_training, orig_train_label_min, orig_train_label_max)
+
+    if svr_instead_of_SVM2:
+        print "replacing regression estimation for svm2 by svr estimation"
+        regression2_svm_training = regression_svr_training
 
     print "Classification of training data: ", labels_kNN_training
     t_classifier_train2 = time.time()
@@ -2007,6 +2049,11 @@ def main():
         classes_svm_seenid = regression_svm_seenid = regression2_svm_seenid = regression3_svm_seenid = numpy.zeros(
             num_images_seenid)
 
+    if enable_svr:
+        regression_svr_seenid = svr.predict(sl_seq_seenid[:, 0:reg_num_signals])
+    else:
+        regression_svr_seenid = numpy.zeros(num_images_seenid)
+
     if enable_lr_cfr:
         regression_lr_seenid = lr_node.execute(sl_seq_seenid[:, 0:reg_num_signals]).flatten()
     else:
@@ -2017,6 +2064,10 @@ def main():
         print "Applying cutoff to the label estimations for LR and Linear Scaling (SVM2)"
         regression2_svm_seenid = cutoff(regression2_svm_seenid, orig_train_label_min, orig_train_label_max)
         regression_lr_seenid = cutoff(regression_lr_seenid, orig_train_label_min, orig_train_label_max)
+
+    if svr_instead_of_SVM2:
+        print "replacing regression estimation for svm2 by svr estimation"
+        regression2_svm_seenid = regression_svr_seenid
 
     print "labels_kNN_seenid.shape=", labels_kNN_seenid.shape
 
@@ -2179,6 +2230,11 @@ def main():
         classes_svm_newid = regression_svm_newid = regression2_svm_newid = regression3_svm_newid = numpy.zeros(
             num_images_newid)
 
+    if enable_svr:
+        regression_svr_newid = svr.predict(sl_seq_newid[:, 0:reg_num_signals])
+    else:
+        regression_svr_newid = numpy.zeros(num_images_newid)
+
     if enable_lr_cfr:
         regression_lr_newid = lr_node.execute(sl_seq_newid[:, 0:reg_num_signals]).flatten()
     else:
@@ -2189,6 +2245,11 @@ def main():
         print "Applying cutoff to the label estimations for LR and Linear Scaling (SVM2)"
         regression2_svm_newid = cutoff(regression2_svm_newid, orig_train_label_min, orig_train_label_max)
         regression_lr_newid = cutoff(regression_lr_newid, orig_train_label_min, orig_train_label_max)
+
+    if svr_instead_of_SVM2:
+        print "replacing regression estimation for svm2 by svr estimation"
+        regression2_svm_newid = regression_svr_newid
+
 
     t_class1 = time.time()
     print "Classification/Regression over New Id in %0.3f s" % ((t_class1 - t_class0))
