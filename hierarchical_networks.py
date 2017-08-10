@@ -3353,7 +3353,7 @@ if double_SFA_top_node:
     layer.sfa_args["max_preserved_sfa"] = 1.9  
     layer.sfa_args["expansion_output_dim"] = expanded_dims[9]
 
-my_DT = 1.98 #1.96  # =1.96, 3 Labels
+my_DT = 1.985  # TEST B # 1.98 # 1.96  # =1.96, 3 Labels
 for i in range(2, 9):
     network.layers[i].sfa_args["max_preserved_sfa"] = my_DT
 network.layers[8].pca_args["max_preserved_sfa"] = my_DT

@@ -2430,10 +2430,13 @@ def main():
             labels_kNN_training)
         results.mse_lr_train = distance_squared_Euclidean(correct_labels_training, regression_lr_training) / len(
             labels_kNN_training)
+
         # MAE
         results.maeOpt_gauss_train = classifiers.mean_average_error(correct_labels_training,
                                                                     regressionMAE_Gauss_training)
         results.mae_gauss_train = classifiers.mean_average_error(regression_Gauss_training, correct_labels_training)
+        results.mae_svr_train = classifiers.mean_average_error(regression_svr_training, correct_labels_training)
+
         # RMSE
         results.rmse_ncc_train = results.mse_ncc_train ** 0.5
         results.rmse_kNN_train = results.mse_kNN_train ** 0.5
@@ -2453,7 +2456,6 @@ def main():
             labels_kNN_seenid)
         results.mse_gauss_seenid = distance_squared_Euclidean(correct_labels_seenid, regression_Gauss_seenid) / len(
             labels_kNN_seenid)
-        results.maeOpt_gauss_seenid = classifiers.mean_average_error(correct_labels_seenid, regressionMAE_Gauss_seenid)
         results.mse_svm_seenid = distance_squared_Euclidean(correct_labels_seenid, regression_svm_seenid) / len(
             labels_kNN_seenid)
         results.mse2_svm_seenid = distance_squared_Euclidean(correct_labels_seenid, regression2_svm_seenid) / len(
@@ -2462,7 +2464,10 @@ def main():
             labels_kNN_seenid)
         results.mse_lr_seenid = distance_squared_Euclidean(correct_labels_seenid, regression_lr_seenid) / len(
             labels_kNN_seenid)
+
         results.mae_gauss_seenid = classifiers.mean_average_error(regression_Gauss_seenid, correct_labels_seenid)
+        results.maeOpt_gauss_seenid = classifiers.mean_average_error(correct_labels_seenid, regressionMAE_Gauss_seenid)
+        results.mae_svr_seenid = classifiers.mean_average_error(regression_svr_seenid, correct_labels_seenid)
 
         results.rmse_ncc_seenid = results.mse_ncc_seenid ** 0.5
         results.rmse_kNN_seenid = results.mse_kNN_seenid ** 0.5
@@ -2483,7 +2488,6 @@ def main():
             labels_kNN_newid)
         results.mse_gauss_newid = distance_squared_Euclidean(correct_labels_newid, regression_Gauss_newid) / len(
             labels_kNN_newid)
-        results.maeOpt_gauss_newid = classifiers.mean_average_error(correct_labels_newid, regressionMAE_Gauss_newid)
         results.mse_svm_newid = distance_squared_Euclidean(correct_labels_newid, regression_svm_newid) / len(
             labels_kNN_newid)
         results.mse2_svm_newid = distance_squared_Euclidean(correct_labels_newid, regression2_svm_newid) / len(
@@ -2492,7 +2496,10 @@ def main():
             labels_kNN_newid)
         results.mse_lr_newid = distance_squared_Euclidean(correct_labels_newid, regression_lr_newid) / len(
             labels_kNN_newid)
+
         results.mae_gauss_newid = classifiers.mean_average_error(correct_labels_newid, regression_Gauss_newid)
+        results.maeOpt_gauss_newid = classifiers.mean_average_error(correct_labels_newid, regressionMAE_Gauss_newid)
+        results.mae_svr_newid = classifiers.mean_average_error(regression_svr_newid, correct_labels_newid)
 
         results.rmse_ncc_newid = results.mse_ncc_newid ** 0.5
         results.rmse_kNN_newid = results.mse_kNN_newid ** 0.5
@@ -2636,33 +2643,33 @@ def main():
         print "sl_seq_seenid.var(axis=0)=", sl_seq_seenid.var(axis=0)
         print "sl_seq_newid.var(axis=0)=", sl_seq_newid.var(axis=0)
 
-    print "Train: %0.3f CR_NCC, %0.3f CR_kNN, CR_Gauss %0.5f, softCR_Gauss=%0.5f, CR_SVM %0.3f, MSE_NCC %0.3f, MSE_kNN %0.3f, MSE_Gauss= %0.3f MSE3_SVM %0.3f, MSE2_SVM %0.3f, MSE_SVM %0.3f, MSE_LR %0.3f, MAE= %0.5f MAE(Opt)= %0.3f" % (
+    print "Train: %0.3f CR_NCC, %0.3f CR_kNN, CR_Gauss %0.5f, softCR_Gauss=%0.5f, CR_SVM %0.3f, MSE_NCC %0.3f, MSE_kNN %0.3f, MSE_Gauss= %0.3f MSE3_SVM %0.3f, MSE2_SVM %0.3f, MSE_SVM %0.3f, MSE_LR %0.3f" % (
         results.class_ncc_rate_train, results.class_kNN_rate_train, results.class_Gauss_rate_train,
         softCR_Gauss_training, results.class_svm_rate_train, results.mse_ncc_train, results.mse_kNN_train,
         results.mse_gauss_train,
-        results.mse3_svm_train, results.mse2_svm_train, results.mse_svm_train, results.mse_lr_train,
-        results.mae_gauss_train, results.maeOpt_gauss_train)
-    print "Seen Id: %0.3f CR_NCC, %0.3f CR_kNN, CR_Gauss %0.5f, softCR_Gauss=%0.5f, CR_SVM %0.3f, MSE_NCC %0.3f, MSE_kNN %0.3f, MSE_Gauss= %0.3f MSE3_SVM %0.3f, MSE2_SVM %0.3f, MSE_SVM %0.3f, MSE_LR %0.3f, MAE= %0.5f MAE(Opt)= %0.3f" % (
+        results.mse3_svm_train, results.mse2_svm_train, results.mse_svm_train, results.mse_lr_train)
+    print "Seen Id: %0.3f CR_NCC, %0.3f CR_kNN, CR_Gauss %0.5f, softCR_Gauss=%0.5f, CR_SVM %0.3f, MSE_NCC %0.3f, MSE_kNN %0.3f, MSE_Gauss= %0.3f MSE3_SVM %0.3f, MSE2_SVM %0.3f, MSE_SVM %0.3f, MSE_LR %0.3f" % (
         results.class_ncc_rate_seenid, results.class_kNN_rate_seenid, results.class_Gauss_rate_seenid,
         softCR_Gauss_seenid, results.class_svm_rate_seenid, results.mse_ncc_seenid, results.mse_kNN_seenid,
         results.mse_gauss_seenid,
-        results.mse3_svm_seenid, results.mse2_svm_seenid, results.mse_svm_seenid, results.mse_lr_seenid,
-        results.mae_gauss_seenid, results.maeOpt_gauss_seenid)
-    print "New Id: %0.3f CR_NCC, %0.3f CR_kNN, CR_Gauss %0.5f, softCR_Gauss=%0.5f, CR_SVM %0.3f, MSE_NCC %0.3f, MSE_kNN %0.3f, MSE_Gauss= %0.3f MSE3_SVM %0.3f, MSE2_SVM %0.3f, MSE_SVM %0.3f, MSE_LR %0.3f , MAE= %0.5f MAE(Opt)= %0.3f" % (
+        results.mse3_svm_seenid, results.mse2_svm_seenid, results.mse_svm_seenid, results.mse_lr_seenid)
+    print "New Id: %0.3f CR_NCC, %0.3f CR_kNN, CR_Gauss %0.5f, softCR_Gauss=%0.5f, CR_SVM %0.3f, MSE_NCC %0.3f, MSE_kNN %0.3f, MSE_Gauss= %0.3f MSE3_SVM %0.3f, MSE2_SVM %0.3f, MSE_SVM %0.3f, MSE_LR %0.3f" % (
         results.class_ncc_rate_newid, results.class_kNN_rate_newid, results.class_Gauss_rate_newid, softCR_Gauss_newid,
         results.class_svm_rate_newid, results.mse_ncc_newid, results.mse_kNN_newid, results.mse_gauss_newid,
-        results.mse3_svm_newid, results.mse2_svm_newid, results.mse_svm_newid, results.mse_lr_newid,
-        results.mae_gauss_newid, results.maeOpt_gauss_newid)
+        results.mse3_svm_newid, results.mse2_svm_newid, results.mse_svm_newid, results.mse_lr_newid)
 
-    print "Train:   RMSE_NCC %0.3f, RMSE_kNN %0.3f, RMSE_Gauss= %0.5f RMSE3_SVM %0.3f, RMSE2_SVM %0.3f, RMSE_SVM %0.3f, RMSE_LR %0.3f" % (
+    print "Train:   RMSE_NCC %0.3f, RMSE_kNN %0.3f, RMSE_Gauss= %0.5f RMSE3_SVM %0.3f, RMSE2_SVM %0.3f, RMSE_SVM %0.3f, RMSE_LR %0.3f, MAE= %0.5f MAE(Opt)= %0.3f, MAE_SVR= %0.5f" % (
         results.rmse_ncc_train, results.rmse_kNN_train, results.rmse_gauss_train,
-        results.rmse3_svm_train, results.rmse2_svm_train, results.rmse_svm_train, results.rmse_lr_train)
-    print "Seen Id: RMSE_NCC %0.3f, RMSE_kNN %0.3f, RMSE_Gauss= %0.5f RMSE3_SVM %0.3f, RMSE2_SVM %0.3f, RMSE_SVM %0.3f, RMSE_LR %0.3f" % (
+        results.rmse3_svm_train, results.rmse2_svm_train, results.rmse_svm_train, results.rmse_lr_train,
+        results.mae_gauss_train, results.maeOpt_gauss_train, results.mae_svr_train)
+    print "Seen Id: RMSE_NCC %0.3f, RMSE_kNN %0.3f, RMSE_Gauss= %0.5f RMSE3_SVM %0.3f, RMSE2_SVM %0.3f, RMSE_SVM %0.3f, RMSE_LR %0.3f, MAE= %0.5f MAE(Opt)= %0.3f, MAE_SVR= %0.5f" % (
         results.rmse_ncc_seenid, results.rmse_kNN_seenid, results.rmse_gauss_seenid,
-        results.rmse3_svm_seenid, results.rmse2_svm_seenid, results.rmse_svm_seenid, results.rmse_lr_seenid)
-    print "New Id:  RMSE_NCC %0.3f, RMSE_kNN %0.3f, RMSE_Gauss= %0.5f RMSE3_SVM %0.3f, RMSE2_SVM %0.3f, RMSE_SVM %0.3f, RMSE_LR %0.3f" % (
+        results.rmse3_svm_seenid, results.rmse2_svm_seenid, results.rmse_svm_seenid, results.rmse_lr_seenid,
+        results.mae_gauss_seenid, results.maeOpt_gauss_seenid, results.mae_svr_seenid)
+    print "New Id:  RMSE_NCC %0.3f, RMSE_kNN %0.3f, RMSE_Gauss= %0.5f RMSE3_SVM %0.3f, RMSE2_SVM %0.3f, RMSE_SVM %0.3f, RMSE_LR %0.3f, MAE= %0.5f MAE(Opt)= %0.3f, MAE_SVR= %0.5f" % (
         results.rmse_ncc_newid, results.rmse_kNN_newid, results.rmse_gauss_newid,
-        results.rmse3_svm_newid, results.rmse2_svm_newid, results.rmse_svm_newid, results.rmse_lr_newid)
+        results.rmse3_svm_newid, results.rmse2_svm_newid, results.rmse_svm_newid, results.rmse_lr_newid,
+        results.mae_gauss_newid, results.maeOpt_gauss_newid, results.mae_svr_newid)
 
     if False:
         starting_point = "Sigmoids"  # None, "Sigmoids", "Identity"
