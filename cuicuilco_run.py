@@ -1878,8 +1878,9 @@ def main():
 
     if enable_svr:
         print "Training SVR..."
-        svr = slsvm.SVR(C=svr_C, epsilon=svr_epsilon, gamma=svr_gamma)
-        svr.fit(cf_sl[:, 0:reg_num_signals], cf_correct_labels) #[:,0]
+        data_mins, data_maxs = svm_compute_range(cf_sl[:, 0:reg_num_signals])
+	svr = slsvm.SVR(C=svr_C, epsilon=svr_epsilon, gamma=svr_gamma)
+        svr.fit(svm_scale(cf_sl[:, 0:reg_num_signals], data_mins, data_maxs, svm_min, svm_max), cf_correct_labels) #[:,0]
 
     if enable_lr_cfr:
         print "Training LR..."
@@ -1956,7 +1957,7 @@ def main():
 
     if enable_svr:
         print "SVR regression..."
-        regression_svr_training = svr.predict(sl_seq_training[:, 0:reg_num_signals])
+        regression_svr_training = svr.predict(svm_scale(sl_seq_training[:, 0:reg_num_signals], data_mins, data_maxs, svm_min, svm_max))
     else:
         regression_svr_training = numpy.zeros(num_images_training)
 
@@ -2050,7 +2051,7 @@ def main():
             num_images_seenid)
 
     if enable_svr:
-        regression_svr_seenid = svr.predict(sl_seq_seenid[:, 0:reg_num_signals])
+        regression_svr_seenid = svr.predict(svm_scale(sl_seq_seenid[:, 0:reg_num_signals], data_mins, data_maxs, svm_min, svm_max))
     else:
         regression_svr_seenid = numpy.zeros(num_images_seenid)
 
@@ -2231,7 +2232,7 @@ def main():
             num_images_newid)
 
     if enable_svr:
-        regression_svr_newid = svr.predict(sl_seq_newid[:, 0:reg_num_signals])
+        regression_svr_newid = svr.predict(svm_scale(sl_seq_newid[:, 0:reg_num_signals], data_mins, data_maxs, svm_min, svm_max))
     else:
         regression_svr_newid = numpy.zeros(num_images_newid)
 
