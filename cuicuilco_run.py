@@ -5,14 +5,26 @@
 #            hierarchical networks for supervised learning
 
 # By Alberto Escalante. Alberto.Escalante@neuroinformatik.ruhr-uni-bochum.de 
-# First Version 9 Dec 2009. Current version May 2017
 # Ruhr-University-Bochum, Institute of Neurocomputation, Group of Prof. Dr. Wiskott
 
 
 #####################################################################################################################
 # USAGE EXAMPLES:
-# python cuicuilco_run.py --Experiment=ParamsNatural --Network=u08expoNetwork1L --InputFilename=/scratch/escalafl/
-# cooperations/igel/rbm_64/data_bin_4000.bin --OutputFilename=deleteme2.txt
+# python -u cuicuilco_run.py --Experiment=ParamsMNISTFunc --HierarchicalNetwork=SFANetwork1L
+# or a much more involved example: ;)
+# python -u cuicuilco_run.py --EnableDisplay=0 --CacheAvailable=1 --NetworkCacheReadDir=/local/SavedNetworks
+# --NetworkCacheWriteDir=/local/SavedNetworks --NodeCacheReadDir=/local/SavedNodes
+# --NodeCacheWriteDir=/local/SavedNodes --ClassifierCacheWriteDir=None --SaveSubimagesTraining=0
+# --SaveAverageSubimageTraining=0 --NumFeaturesSup=8 --SaveSorted_AE_GaussNewid=0
+# --SaveSortedIncorrectClassGaussNewid=0 --ComputeSlowFeaturesNewidAcrossNet=0 --UseFilter=0 --EnableGC=1 --EnableKNN=0
+# --kNN_k=3 --EnableNCC=0 --EnableSVM=0 --SVM_C=0.125 --SVM_gamma=1.0 --EnableLR=0 --AskNetworkLoading=0
+# --LoadNetworkNumber=-1 --NParallel=2 --EnableScheduler=0 --EstimateExplainedVarWithInverse=0
+# --EstimateExplainedVarWithKNN_k=0 --EstimateExplainedVarWithKNNLinApp=0 --EstimateExplainedVarLinGlobal_N=0
+# --AddNormalizationNode=0 --MakeLastPCANodeWhithening=0 --FeatureCutOffLevel=0.0 --ExportDataToLibsvm=0
+# --IntegerLabelEstimation=1 --MapDaysToYears=1 --CumulativeScores=0 --DatasetForDisplayNewid=0
+# --GraphExactLabelLearning=0 --OutputInsteadOfSVM2=0 --NumberTargetLabels=0 --EnableSVR=1 --SVR_gamma=auto --SVR_C=4.0
+# --SVR_epsilon=0.1 --SVRInsteadOfSVM2=1 --ExperimentalDataset=ParamsRAgeFunc_48
+# --HierarchicalNetwork=HiGSFANetworkU11L_Overlap6x6L0_Sigmoids_GUO_3Labels_48x48 --SleepM=-1
 #####################################################################################################################
 
 
@@ -21,8 +33,6 @@ import scipy
 import scipy.misc
 
 import sklearn.svm as slsvm
-#print slsvm
-
 # mpl.style.use('classic')
 
 import PIL
@@ -33,8 +43,6 @@ import patch_mdp
 import object_cache as cache
 import os
 import sys
-import glob
-import random
 import sfa_libs
 from sfa_libs import (scale_to, distance_squared_Euclidean, str3, wider_1Darray, ndarray_to_string, cutoff)
 from exact_label_learning import (ConstructGammaFromLabels, RemoveNegativeEdgeWeights, MapGammaToEdgeWeights)
@@ -45,8 +53,6 @@ from image_loader import *
 import classifiers_regressions as classifiers
 import network_builder
 import time
-from matplotlib.ticker import MultipleLocator
-import copy
 import string
 
 import getopt
@@ -67,10 +73,8 @@ __version__ = "0.8.0"
 benchmark = None
 
 mkl.set_num_threads(18)  # Number of threads used by mlk to parallelize matrix operations of numpy.
-# Adjust according to the number of cores in your system.
+# Adjust this value according to the number of cores in your system.
 
-
-#
 random_seed = 123456  # Default seed used by hierarchical_networks
 numpy.random.seed(random_seed)
 
@@ -147,7 +151,7 @@ objective_label = 0
 # ELL options
 graph_exact_label_learning = False
 output_instead_of_SVM2 = False
-# The total number of labels is num_orig_labels * # number_of_target_labels_per_orig_label
+# The total number of labels is num_orig_labels *number_of_target_labels_per_orig_label
 number_of_target_labels_per_orig_label = 0
 coherent_seeds = False or True
 
@@ -201,37 +205,6 @@ name_default_network = "voidNetwork1L"
 
 DefaultExperimentalDataset = available_experiments[name_default_experiment]
 DefaultNetwork = available_networks[name_default_network]
-
-# See also: ParamsGender, ParamsAngle, ParamsIdentity,  ParamsTransX, ParamsAge,
-# ParamsRTransX, ParamsRTransY, ParamsRScale, ParamsRFace, ParamsRObject, ParamsNatural, ParamsRawNatural
-# ParamsRFaceCentering, ParamsREyeTransX, ParamsREyeTransY
-# Data Set based training data: ParamsRTransXFunc, ParamsRTransYFunc, ParamsRTransXY_YFunc
-# ParamsRGTSRBFunc, ParamsRAgeFunc, ParamsMNISTFunc
-# from experimental_datasets import ParamsMNISTFunc as DefaultExperimentalDataset #ParamsRAgeFunc, ParamsMNISTFunc
-# ParamsRTransXYScaleFunc
-
-# Networks available: voidNetwork1L, SFANetwork1L, PCANetwork1L, u08expoNetwork1L, quadraticNetwork1L
-# Test_Network, linearNetwork4L, u08expoNetwork4L, NL_Network5L, linearNetwork5L, linearNetworkT6L, TestNetworkT6L, 
-# linearNetworkU11L, TestNetworkU11L, nonlinearNetworkU11L, TestNetworkPCASFAU11L, linearPCANetworkU11L,
-# u08expoNetworkU11L
-# linearWhiteningNetwork11L, u08expo_m1p1_NetworkU11L, u08expoNetworkU11L, experimentalNetwork
-# u08expo_pcasfaexpo_NetworkU11L, u08expoA2NetworkU11L/A3/A4, u08expoA3_pcasfaexpo_NetworkU11L, IEMNetworkU11L,
-# SFANetwork1LOnlyTruncated
-# from hierarchical_networks import NLIPCANetwork1L as DefaultNetwork ### using A4 lately, u08expoNetworkU11L,
-# u08expo_pcasfaexpo_NetworkU11L, u08expoNetwork2T, GTSRBNetwork, u08expoNetworkU11L, u08expoS42NetworkU11L,
-# u08expoNetwork1L, HeuristicEvaluationExpansionsNetworkU11L, HeuristicPaperNetwork
-# HeuristicEvaluationExpansionsNetworkU11L, HardSFAPCA_u08expoNetworkU11L, HardSFAPCA_u08expoNetworkU11L
-# GTSRBNetwork, u08expoNetworkU11L, IEVMLRecNetworkU11L, linearPCANetworkU11L, SFAAdaptiveNLNetwork32x32U11L,
-# u08expoNetwork32x32U11L_NoTop
-# TT4 PCANetwork
-# u08expoS42NetworkU11L
-# 5x5L0 Networks: u08expoNetworkU11L_5x5L0, linearPCANetworkU11L_5x5L0, IEVMLRecNetworkU11L_5x5L0, PCANetwork1L
-# MNISTNetwork7L, SFANetwork1LOnlyTruncated, MNISTNetwork_24x24_7L, MNISTNetwork_24x24_7L_B, SFANetworkMNIST2L,
-# (MNIST 8C:) SFANetwork1L, SFADirectNetwork1L (MNIST: semi-supervised, Gender: exact label)
-# GENDER ELL: NetworkGender_8x8L0
-# AGE MORPH-II: IEVMLRecNetworkU11L_Overlap6x6L0_1Label, HeadNetwork1L, IEVMLRecNetworkU11L_Overlap6x6L0_GUO_3Labels,
-# IEVMLRecNetworkU11L_Overlap6x6L0_GUO_1Label, SFANetworkU11L_Overlap6x6L0_GUO_3Labels
-# IEVMLRecNetworkU11L_Overlap6x6L0_3Labels <-Article HiGSFA, IEVMLRecNetworkU11L_Overlap6x6L0_2Labels
 
 from experimental_datasets import experiment_seed
 from experimental_datasets import DAYS_IN_A_YEAR
@@ -339,7 +312,6 @@ if __name__ == "__main__":  # ############## Parse command line arguments ######
                     elif opt in ('--EnableSVM',):
                         enable_svm = int(arg)
                         print "Setting enable_svm to", enable_svm
-                    #TODO: ADD command line parameters for SVR
                     elif opt in ('--SVR_gamma',):
                         if arg == 'auto':
                             svr_gamma = 'auto'
@@ -441,8 +413,6 @@ if __name__ == "__main__":  # ############## Parse command line arguments ######
                         else:
                             classifier_cache_write_dir = arg
                         print "Setting classifier_cache_write_dir to", classifier_cache_write_dir
-                        # er = "ClassifierCacheWriteDir: Option not supported yet"
-                        # raise Exception(er)
                     elif opt in ('--SaveSubimagesTraining',):
                         save_subimages_training = bool(int(arg))
                         print "Setting save_subimages_training to", save_subimages_training
@@ -529,7 +499,7 @@ if __name__ == "__main__":  # ############## Parse command line arguments ######
                             lock = LockFile(cuicuilco_lock_file)
                             pid = os.getpid()
                             print "process pid is:", pid
-                            # Add this process to the queue
+                            # Add the current process to the queue
                             print "adding process to queue..."
                             lock.acquire()
                             q = open(cuicuilco_queue, "a")
@@ -550,7 +520,7 @@ if __name__ == "__main__":  # ############## Parse command line arguments ######
                                     served = True
                                 else:
                                     print "sleeping 60 seconds"
-                                    time.sleep(60)  # sleep for 10 seconds
+                                    time.sleep(60)  # sleep for 10 seconds before trying again
                             t_wb = time.time()
                             print "process is executing now. Total waiting time: %f min" % ((t_wb - t_wa) / 60.0)
                     elif opt in ('--DatasetForDisplayTrain',):
@@ -604,6 +574,7 @@ if __name__ == "__main__":  # ############## Parse command line arguments ######
         CUICUILCO_TUNING_PARAMETER        (value of the tuning parameter used by the datasets)
         CUICUILCO_EXPERIMENT_SEED         (seed used for the dataset radomizations)
         CUICUILCO_IMAGE_LOADING_NUM_PROC  (max number of processes used by MKL)
+        CUICUILCO_EXPERIMENT_BASEDIR      (base directory in which the datasets are stored)
     The options below may be used:
         **General options
             --EnableDisplay={1/0}. Enables the graphical interface
@@ -691,8 +662,8 @@ if __name__ == "__main__":  # ############## Parse command line arguments ######
                         print "Argument not handled: ", opt
                         quit()
             except getopt.GetoptError as err:
-                print "Error parsing the arguments: ", argv[1:]
-                print "Error: ", err
+                print "Error while parsing the following arguments: ", argv[1:]
+                print "Error: ", err, "use the --help option for a short guide on the available arguments"
                 # print "option:", getopt.GetoptError.opt, "message:", getopt.GetoptError.msg
                 sys.exit(2)
 
@@ -762,11 +733,7 @@ def main():
     enable_hack_image_size = Parameters.enable_hack_image_size
 
     if enable_reduced_image_sizes:
-        #    reduction_factor = 2.0 # (the inverse of a zoom factor)
         Parameters.name += "_Resized images"
-        # for iSeq in (Parameters.iTrain, Parameters.iSeenid, Parameters.iNewid):
-        #     # iSeq.trans = iSeq.trans / 2
-        #     pass
 
         for sSeq in (Parameters.sTrain, Parameters.sSeenid, Parameters.sNewid):
             print "sSeq", sSeq
@@ -792,10 +759,6 @@ def main():
     iTrain = take_0_k_th_from_2D_list(iTrain_set, k=dataset_for_display_train)
     sTrain = take_0_k_th_from_2D_list(sTrain_set, k=dataset_for_display_train)
 
-    # take k=1? or choose from command line? NOPE. Take always first label (k=0). sSeq must compute proper classes for
-    # chosen label anyway.
-    # TODO: let the user choose objective_label through a command line argument
-    # = 0, = 1, = 2, = 3
     if graph_exact_label_learning:
         if isinstance(iTrain_set, list):
             iTrain0 = iTrain_set[len(iTrain_set) - 1][0]
@@ -889,10 +852,6 @@ def main():
     seq_sets = sTrain_set
     seq = sTrain
 
-    hack_image_sizes = [135, 90, 64, 32, 16]
-
-    # hack_image_size = 64
-    # enable_hack_image_size = True
     if enable_hack_image_size:
         print "changing the native image size (width and height) to: ", hack_image_size
         sSeq_force_image_size(sTrain_set, hack_image_size, hack_image_size)
@@ -984,8 +943,6 @@ def main():
 
     network_filename = None
     if len(network_hashes_base_filenames) > 0 and (ask_network_loading or load_network_number is not None):
-        #    flow, layers, benchmark, Network, subimages_train, sl_seq_training =
-        # cache.unpickle_from_disk(network_filenames[-1])
         if ask_network_loading or load_network_number is None:
             selected_network = int(raw_input("Please select a network (-1=Train new network):"))
         else:
@@ -1020,13 +977,12 @@ def main():
         # use_hash=network_hash, verbose=True)
         # network_write.update_cache(sl_seq_training, None, network_base_dir, "SLSeqData", overwrite=True,
         # use_hash=network_hash, verbose=True)
-
         #    flow, layers, benchmark, Network = cache.unpickle_from_disk(network_filename)
+
         flow, layers, benchmark, Network = network_read.load_obj_from_cache(None, "", network_base_filename,
                                                                             verbose=True)
         print "Done loading network: " + Network.name
         print flow
-        #    quit()
 
         iTrain, sTrain = network_read.load_obj_from_cache(network_hash, network_cache_read_dir, "iTrainsTrainData",
                                                           verbose=True)
@@ -1046,7 +1002,7 @@ def main():
 
     else:
         print "Generating Network..."
-        # Usually true for voidNetwork1L, but might be also activated for other networks
+        # Usually the option below is true for voidNetwork1L, but might be also activated for other networks
         use_full_sl_output = False
 
         # Network.patch_network_for_RGB = True and False
@@ -1055,7 +1011,7 @@ def main():
             if sTrain.convert_format == "RGB":
                 #            factors = [3, 2, 1.5]
                 factors = [2, 1.7, 1.5]
-                print "Big Fail!", Network.patch_network_for_RGB
+                print "Unusual condition detected!", Network.patch_network_for_RGB
                 quit()
             elif sTrain.convert_format == "HOG02":
                 factors = [8, 4, 2]
@@ -1070,16 +1026,17 @@ def main():
                         layer.pca_out_dim = int(factor * layer.pca_out_dim)
                     if layer.red_out_dim is not None and layer.red_out_dim >= 1:
                         layer.red_out_dim = int(factor * layer.red_out_dim)
-                    # What about ord? usually it keeps dimension the same, thus it is not specified
+                    # What about ord? It usually keeps the same dimensionality, thus it is not specified here
                     if layer.sfa_out_dim is not None and layer.sfa_out_dim >= 1:
                         layer.sfa_out_dim = int(factor * layer.sfa_out_dim)
             print "testing..."
-            # quit()
 
+
+        # NOTE: trim_network_layers is obsolete, one must manually chose the proper network and data version
+        # WARNING: The code below is deprecated and will be removed soon
         # Possibly skip some of the last layers of the network if the data resolution has been artificially reduced
         skip_layers = 0
-        trim_network_layers = False  # trim_network_layers is obsolete, one must manually chose the proper network and
-        # data version
+        trim_network_layers = False
         if trim_network_layers:
             if (hack_image_size == 8) and enable_hack_image_size:
                 Network.L3 = None
@@ -1148,13 +1105,6 @@ def main():
 
         if skip_layers > 0:
             Network.layers = Network.layers[:-skip_layers]
-        # Network.layers = []
-        # for layer in [Network.L0, Network.L1, Network.L2, Network.L3, Network.L4, Network.L5, Network.L6, Network.L7,
-        # Network.L8, Network.L9, Network.L10 ]:
-        #    if layer is None:
-        #        break
-        #    else:
-        #        Network.layers.append(layer)
 
         print "sfa_expo and pca_expo across the network:"
         for i, layer in enumerate(Network.layers):
@@ -1389,7 +1339,7 @@ def main():
             subimage_shape = (subimage_shape[0], subimage_shape[1] * in_channel_dim)
 
 
-            #    add_normalization_node = True
+        # add_normalization_node = True
         if add_normalization_node:
             normalization_node = mdp.nodes.NormalizeNode()
             flow += normalization_node
@@ -1413,7 +1363,7 @@ def main():
         if special_training is True:
             ttrain0 = time.time()
             # Think: maybe training_signal cache can become unnecessary if flow.train is intelligent enough to look
-            # for the signal in the cache without loading it???
+            # for the signal in the cache without loading it?
             # Use same seed as before for data loading... hope the results are the same. Nothing should be done before
             # data generation to ensure this!!!
             if coherent_seeds:
@@ -1431,45 +1381,12 @@ def main():
                                                                                n_parallel=n_parallel,
                                                                                immediate_stop_training=True)
             print "sl_seq is", sl_seq
+            print "sl_seq.shape is", sl_seq.shape
 
             ttrain1 = time.time()
             print "Network trained (specialized way) in time %0.3f s" % (ttrain1 - ttrain0)
             if benchmark is not None:
                 benchmark.append(("Network training  (specialized way)", ttrain1 - ttrain0))
-        elif iterator_training is True:
-            ttrain0 = time.time()
-            # WARNING, introduce smart way of computing chunk_sizes
-            input_iter = cache.chunk_iterator(subimages_p, 4, block_size, continuous=False)
-
-            flow.iterator_train(input_iter, block_size, continuous=True)
-            sl_seq = sl_seq_training = flow.execute(subimages_p)
-
-            ttrain1 = time.time()
-            print "Network trained (iterator way) in time %0.3f s" % ((ttrain1 - ttrain0))
-            if benchmark is not None:
-               benchmark.append(("Network training (iterator way)", ttrain1 - ttrain0))
-        elif storage_iterator_training is True:
-            ttrain0 = time.time()
-            # Warning: introduce smart way of computing chunk_sizes
-            #    input_iter = chunk_iterator(subimages_p, 15 * 15 / block_size, block_size, continuous=False)
-            input_iter = cache.chunk_iterator(subimages_p, 4, block_size, continuous=False)
-
-            #    sl_seq = sl_seq_training = flow.iterator_train(input_iter)
-            # WARNING, continuous should not always be true
-            flow.storage_iterator_train(input_iter, "/local/tmp/escalafl/simulations/gender", "trainseq", block_size,
-                                        continuous=True)
-
-            output_iterator = cache.UnpickleLoader2(path="/local/tmp/escalafl/simulations/gender",
-                                                    basefilename="trainseq" + "_N%03d" % (len(flow) - 1))
-
-            sl_seq = sl_seq_training = cache.from_iter_to_array(output_iterator, continuous=False,
-                                                                block_size=block_size, verbose=0)
-            del output_iterator
-
-            ttrain1 = time.time()
-            print "Network trained (storage iterator way) in time %0.3f s" % ((ttrain1 - ttrain0))
-            if benchmark is not None:
-                benchmark.append(("Network training (storage iterator way)", ttrain1 - ttrain0))
         else:
             ttrain0 = time.time()
             flow.train(subimages_p)
@@ -1493,7 +1410,6 @@ def main():
                 start_negative = False
             sl_seq = sl_seq_training = more_nodes.sfa_pretty_coefficients(last_sfa_node, sl_seq_training,
                                                                           start_negative=start_negative)
-            # default start_negative=True #WARNING!
         else:
             print "SFA coefficients not made pretty, last node was not SFA!!!"
 
@@ -1503,13 +1419,13 @@ def main():
                 node.additive_noise_std = 0.0
 
         print "Executing for display purposes (subimages_train)..."
-        #    For display purposes ignore output of training, and concentrate on display signal:
+        #  This signal is computed for display purposes (it ignores the output of training, which might have noise)
         sl_seq = sl_seq_training = flow.execute(subimages_train)
         if feature_cut_off_level > 0.0:
             sl_seq = sl_seq_training = cutoff(sl_seq_training, min_cutoff, max_cutoff)
 
         network_hash = str(int(time.time()))
-        #    network_filename = "Network_" + network_hash + ".pckl"
+        # network_filename = "Network_" + network_hash + ".pckl"
 
         if network_write:
             print "Saving flow, layers, benchmark, Network ..."
@@ -1537,7 +1453,6 @@ def main():
                                        overwrite=True, use_hash=network_hash, verbose=True)
             network_write.update_cache(sl_seq_training, None, network_cache_write_dir, "SLSeqData" + "_" + network_hash,
                                        overwrite=True, use_hash=network_hash, verbose=True)
-            # obj, obj_data=None, base_dir = None, base_filename=None, overwrite=True, use_hash=None, verbose=True
 
         if signal_cache_write:
             print "Caching sl_seq_training  Signal... (however, it's never read!)"
@@ -1582,7 +1497,6 @@ def main():
     print "correct_objective_labels_newid", correct_objective_labels_newid
     print "correct_objective_classes_seenid=", correct_objective_classes_seenid
     print "correct_objective_labels_seenid=", correct_objective_labels_seenid
-    print "done"
 
     if coherent_seeds:
         numpy.random.seed(experiment_seed + 333333)
@@ -1626,9 +1540,9 @@ def main():
 
     print "Computing typical delta, eta values for Train SFA Signal"
     t_delta_eta0 = time.time()
-    results.typical_delta_train, results.typical_eta_train = sfa_libs.comp_typical_delta_eta(sl_seq_training,
-                                                                                             block_size, num_reps=200,
-                                                                                             training_mode=iTrain.train_mode)
+    (results.typical_delta_train,
+     results.typical_eta_train) = sfa_libs.comp_typical_delta_eta(sl_seq_training, block_size, num_reps=200,
+                                                                  training_mode=iTrain.train_mode)
     results.brute_delta_train = sfa_libs.comp_delta_normalized(sl_seq_training)
     results.brute_eta_train = sfa_libs.comp_eta(sl_seq_training)
     t_delta_eta1 = time.time()
@@ -1648,7 +1562,7 @@ def main():
         correct_labels_training = correct_labels_training / DAYS_IN_A_YEAR
         if integer_label_estimation:
             correct_labels_training = (correct_labels_training + 0.0006).astype(
-                int) * 1.0  # Otherwise MSE computation is erroneous!
+                int) * 1.0  # This must still have float type, otherwise the MSE computation is erroneous!
 
     print "Loading test images, seen ids..."
     t_load_images0 = time.time()
@@ -1668,7 +1582,6 @@ def main():
         subimages_seenid = load_raw_data(seq.data_base_dir, seq.base_filename, input_dim=seq.input_dim, dtype=seq.dtype,
                                          select_samples=seq.samples, verbose=False)
     else:
-        # subimages_seenid = experimental_datasets.load_data_from_sSeq(seq)
         subimages_seenid = seq.load_data(seq)
 
     if load_and_append_output_features_dir is not None:
@@ -1685,8 +1598,6 @@ def main():
         print additional_features_seenid.shape
         print subimages_seenid.shape
         subimages_seenid = numpy.concatenate((subimages_seenid, additional_features_seenid), axis=1)
-        # train_data_sets = system_parameters.expand_dataset_with_additional_features(train_data_sets,
-        # additional_features_training)
 
     t_load_images1 = time.time()
     print num_images_seenid, " Images loaded in %0.3f s" % (t_load_images1 - t_load_images0)
@@ -1731,10 +1642,9 @@ def main():
 
     print "Computing typical delta, eta values for Seen Id SFA Signal"
     t_delta_eta0 = time.time()
-    results.typical_delta_seenid, results.typical_eta_seenid = sfa_libs.comp_typical_delta_eta(sl_seq_seenid,
-                                                                                               iSeenid.block_size,
-                                                                                               num_reps=200,
-                                                                                               training_mode=iSeenid.train_mode)
+    (results.typical_delta_seenid,
+     results.typical_eta_seenid) = sfa_libs.comp_typical_delta_eta(sl_seq_seenid, iSeenid.block_size, num_reps=200,
+                                                                   training_mode=iSeenid.train_mode)
     print "sl_seq_seenid=", sl_seq_seenid
     results.brute_delta_seenid = sfa_libs.comp_delta_normalized(sl_seq_seenid)
     results.brute_eta_seenid = sfa_libs.comp_eta(sl_seq_seenid)
@@ -1754,7 +1664,7 @@ def main():
         correct_labels_seenid_real = correct_labels_seenid_real / DAYS_IN_A_YEAR
         correct_labels_seenid /= DAYS_IN_A_YEAR
         if integer_label_estimation:
-            correct_labels_seenid = (correct_labels_seenid + 0.0006).astype(int)
+            correct_labels_seenid = (correct_labels_seenid + 0.0006).astype(int)*1.0
 
     # t8 = time.time()
     t_classifier_train0 = time.time()
@@ -1828,11 +1738,6 @@ def main():
         print "cf_sl[4,:]=", cf_sl[4, :]
         print "cf_sl[5,:]=", cf_sl[5, :]
 
-        #    for c in numpy.unique(cf_correct_classes):
-        #        print "class %f appears %d times"%(c, (cf_correct_classes==c).sum())
-        #        print "mean(cf_sl[c=%d,:])="%c, cf_sl[cf_correct_classes==c, :].mean(axis=0)
-        #        print "std(cf_sl[c=%d,:])="%c, cf_sl[cf_correct_classes==c, :].std(axis=0)
-
         GC_node = mdp.nodes.SFA_GaussianClassifier(reduced_dim=sfa_gc_reduced_dim, verbose=True)
         GC_node.train(x=cf_sl[:, 0:reg_num_signals],
                       labels=cf_correct_classes)  # Functions for regression use class values!!!
@@ -1879,7 +1784,7 @@ def main():
     if enable_svr:
         print "Training SVR..."
         data_mins, data_maxs = svm_compute_range(cf_sl[:, 0:reg_num_signals])
-	svr = slsvm.SVR(C=svr_C, epsilon=svr_epsilon, gamma=svr_gamma)
+        svr = slsvm.SVR(C=svr_C, epsilon=svr_epsilon, gamma=svr_gamma)
         svr.fit(svm_scale(cf_sl[:, 0:reg_num_signals], data_mins, data_maxs, svm_min, svm_max), cf_correct_labels) #[:,0]
 
     if enable_lr_cfr:
@@ -1896,9 +1801,6 @@ def main():
                               network_hash + "_CFSlowH" + cf_sl_hash + "_NumSig%03d" % reg_num_signals + "_L" + \
                               str(objective_label)
         classifier_write.update_cache(GC_node, None, None, classifier_filename, overwrite=True, verbose=True)
-
-    ############################################################
-    # ###TODO: make classifier cache work!
 
     print "Executing/Executed over training set..."
     print "Input Signal: Training Data"
@@ -2185,7 +2087,7 @@ def main():
                 print "correct_labels_newid appears to be already integer, preserving its value"
             else:
                 print "correct_labels_newid seem to be real values, converting them to years"
-                correct_labels_newid = (correct_labels_newid + 0.0006).astype(int)
+                correct_labels_newid = (correct_labels_newid + 0.0006).astype(int) * 1.0
     print "correct_labels_newid=", correct_labels_newid
 
     if enable_ncc_cfr:
@@ -2224,9 +2126,9 @@ def main():
         regression2_svm_newid = more_nodes.map_class_numbers_to_avg_label(all_classes, avg_labels, classes_svm_newid)
         regression3_svm_newid = more_nodes.map_class_numbers_to_avg_label(all_classes, avg_labels, classes_svm_newid)
 
-        probs_training[0, 10] = 1.0
-        probs_newid[0, 10] = 1.0
-        probs_seenid[0, 10] = 1.0
+        # probs_training[0, 10] = 1.0
+        # probs_newid[0, 10] = 1.0
+        # probs_seenid[0, 10] = 1.0
     else:
         classes_svm_newid = regression_svm_newid = regression2_svm_newid = regression3_svm_newid = numpy.zeros(
             num_images_newid)
@@ -2256,9 +2158,9 @@ def main():
     print "Classification/Regression over New Id in %0.3f s" % ((t_class1 - t_class0))
 
     if integer_label_estimation:
-        #     print "WARNING, ADDING A BIAS OF -0.5 TO ESTIMATION OF NEWID ONLY!!!"
-        #     regression_Gauss_newid += -0.5
-        #     regressionMAE_Gauss_newid += -0.5
+        # print "WARNING, ADDING A BIAS OF -0.5 TO ESTIMATION OF NEWID ONLY!!!"
+        # regression_Gauss_newid += -0.5
+        # regressionMAE_Gauss_newid += -0.5
         print "Making all label estimations for newid data integer numbers"
         if convert_labels_days_to_years:  # 5.7 should be mapped to 5 years because age estimation is exact (days)
             labels_ncc_newid = labels_ncc_newid.astype(int)
@@ -2289,11 +2191,9 @@ def main():
     # ndarray_to_string(correct_labels_newid, "/local/tmp/escalafl/newid_labels.txt")
 
     print "Computing typical delta, eta values for Training SFA Signal"
-    # t_delta_eta0 = time.time()
-    results.typical_delta_train, results.typical_eta_newid = sfa_libs.comp_typical_delta_eta(sl_seq_training,
-                                                                                             iTrain.block_size,
-                                                                                             num_reps=200,
-                                                                                             training_mode=iTrain.train_mode)
+    (results.typical_delta_train,
+     results.typical_eta_newid) = sfa_libs.comp_typical_delta_eta(sl_seq_training, iTrain.block_size, num_reps=200,
+                                                                  training_mode=iTrain.train_mode)
     results.brute_delta_train = sfa_libs.comp_delta_normalized(sl_seq_training)
     results.brute_eta_train = sfa_libs.comp_eta(sl_seq_training)
     t_delta_eta1 = time.time()
@@ -2303,10 +2203,9 @@ def main():
 
     print "Computing typical delta, eta values for New Id SFA Signal"
     t_delta_eta0 = time.time()
-    results.typical_delta_newid, results.typical_eta_newid = sfa_libs.comp_typical_delta_eta(sl_seq_newid,
-                                                                                             iNewid.block_size,
-                                                                                             num_reps=200,
-                                                                                             training_mode=iNewid.train_mode)
+    (results.typical_delta_newid,
+     results.typical_eta_newid) = sfa_libs.comp_typical_delta_eta(sl_seq_newid, iNewid.block_size, num_reps=200,
+                                                                  training_mode=iNewid.train_mode)
     results.brute_delta_newid = sfa_libs.comp_delta_normalized(sl_seq_newid)
     results.brute_eta_newid = sfa_libs.comp_eta(sl_seq_newid)
     t_delta_eta1 = time.time()
@@ -2644,35 +2543,42 @@ def main():
         print "sl_seq_seenid.var(axis=0)=", sl_seq_seenid.var(axis=0)
         print "sl_seq_newid.var(axis=0)=", sl_seq_newid.var(axis=0)
 
-    print "Train: %0.3f CR_NCC, %0.3f CR_kNN, CR_Gauss %0.5f, softCR_Gauss=%0.5f, CR_SVM %0.3f, MSE_NCC %0.3f, MSE_kNN %0.3f, MSE_Gauss= %0.3f MSE3_SVM %0.3f, MSE2_SVM %0.3f, MSE_SVM %0.3f, MSE_LR %0.3f" % (
+    print ("Train: %0.3f CR_NCC, %0.3f CR_kNN, CR_Gauss %0.5f, softCR_Gauss=%0.5f, CR_SVM %0.3f, MSE_NCC %0.3f, " +
+           "MSE_kNN %0.3f, MSE_Gauss= %0.3f MSE3_SVM %0.3f, MSE2_SVM %0.3f, MSE_SVM %0.3f, MSE_LR %0.3f") % (
         results.class_ncc_rate_train, results.class_kNN_rate_train, results.class_Gauss_rate_train,
         softCR_Gauss_training, results.class_svm_rate_train, results.mse_ncc_train, results.mse_kNN_train,
         results.mse_gauss_train,
         results.mse3_svm_train, results.mse2_svm_train, results.mse_svm_train, results.mse_lr_train)
-    print "Seen Id: %0.3f CR_NCC, %0.3f CR_kNN, CR_Gauss %0.5f, softCR_Gauss=%0.5f, CR_SVM %0.3f, MSE_NCC %0.3f, MSE_kNN %0.3f, MSE_Gauss= %0.3f MSE3_SVM %0.3f, MSE2_SVM %0.3f, MSE_SVM %0.3f, MSE_LR %0.3f" % (
+    print ("Seen Id: %0.3f CR_NCC, %0.3f CR_kNN, CR_Gauss %0.5f, softCR_Gauss=%0.5f, CR_SVM %0.3f, MSE_NCC %0.3f, " +
+           "MSE_kNN %0.3f, MSE_Gauss= %0.3f MSE3_SVM %0.3f, MSE2_SVM %0.3f, MSE_SVM %0.3f, MSE_LR %0.3f") % (
         results.class_ncc_rate_seenid, results.class_kNN_rate_seenid, results.class_Gauss_rate_seenid,
         softCR_Gauss_seenid, results.class_svm_rate_seenid, results.mse_ncc_seenid, results.mse_kNN_seenid,
         results.mse_gauss_seenid,
         results.mse3_svm_seenid, results.mse2_svm_seenid, results.mse_svm_seenid, results.mse_lr_seenid)
-    print "New Id: %0.3f CR_NCC, %0.3f CR_kNN, CR_Gauss %0.5f, softCR_Gauss=%0.5f, CR_SVM %0.3f, MSE_NCC %0.3f, MSE_kNN %0.3f, MSE_Gauss= %0.3f MSE3_SVM %0.3f, MSE2_SVM %0.3f, MSE_SVM %0.3f, MSE_LR %0.3f" % (
+    print ("New Id: %0.3f CR_NCC, %0.3f CR_kNN, CR_Gauss %0.5f, softCR_Gauss=%0.5f, CR_SVM %0.3f, MSE_NCC %0.3f, " +
+           "MSE_kNN %0.3f, MSE_Gauss= %0.3f MSE3_SVM %0.3f, MSE2_SVM %0.3f, MSE_SVM %0.3f, MSE_LR %0.3f") % (
         results.class_ncc_rate_newid, results.class_kNN_rate_newid, results.class_Gauss_rate_newid, softCR_Gauss_newid,
         results.class_svm_rate_newid, results.mse_ncc_newid, results.mse_kNN_newid, results.mse_gauss_newid,
         results.mse3_svm_newid, results.mse2_svm_newid, results.mse_svm_newid, results.mse_lr_newid)
 
-    print "Train:   RMSE_NCC %0.3f, RMSE_kNN %0.3f, RMSE_Gauss= %0.5f RMSE3_SVM %0.3f, RMSE2_SVM %0.3f, RMSE_SVM %0.3f, RMSE_LR %0.3f, MAE= %0.5f MAE(Opt)= %0.3f, MAE_SVR= %0.5f" % (
+    print ("Train:   RMSE_NCC %0.3f, RMSE_kNN %0.3f, RMSE_Gauss= %0.5f RMSE3_SVM %0.3f, RMSE2_SVM %0.3f, RMSE_SVM " +
+          "%0.3f, RMSE_LR %0.3f, MAE= %0.5f MAE(Opt)= %0.3f, MAE_SVR= %0.5f") % (
         results.rmse_ncc_train, results.rmse_kNN_train, results.rmse_gauss_train,
         results.rmse3_svm_train, results.rmse2_svm_train, results.rmse_svm_train, results.rmse_lr_train,
         results.mae_gauss_train, results.maeOpt_gauss_train, results.mae_svr_train)
-    print "Seen Id: RMSE_NCC %0.3f, RMSE_kNN %0.3f, RMSE_Gauss= %0.5f RMSE3_SVM %0.3f, RMSE2_SVM %0.3f, RMSE_SVM %0.3f, RMSE_LR %0.3f, MAE= %0.5f MAE(Opt)= %0.3f, MAE_SVR= %0.5f" % (
+    print ("Seen Id: RMSE_NCC %0.3f, RMSE_kNN %0.3f, RMSE_Gauss= %0.5f RMSE3_SVM %0.3f, RMSE2_SVM %0.3f, RMSE_SVM " +
+           "%0.3f, RMSE_LR %0.3f, MAE= %0.5f MAE(Opt)= %0.3f, MAE_SVR= %0.5f") % (
         results.rmse_ncc_seenid, results.rmse_kNN_seenid, results.rmse_gauss_seenid,
         results.rmse3_svm_seenid, results.rmse2_svm_seenid, results.rmse_svm_seenid, results.rmse_lr_seenid,
         results.mae_gauss_seenid, results.maeOpt_gauss_seenid, results.mae_svr_seenid)
-    print "New Id:  RMSE_NCC %0.3f, RMSE_kNN %0.3f, RMSE_Gauss= %0.5f RMSE3_SVM %0.3f, RMSE2_SVM %0.3f, RMSE_SVM %0.3f, RMSE_LR %0.3f, MAE= %0.5f MAE(Opt)= %0.3f, MAE_SVR= %0.5f" % (
+    print ("New Id:  RMSE_NCC %0.3f, RMSE_kNN %0.3f, RMSE_Gauss= %0.5f RMSE3_SVM %0.3f, RMSE2_SVM %0.3f, RMSE_SVM " +
+           "%0.3f, RMSE_LR %0.3f, MAE= %0.5f MAE(Opt)= %0.3f, MAE_SVR= %0.5f") % (
         results.rmse_ncc_newid, results.rmse_kNN_newid, results.rmse_gauss_newid,
         results.rmse3_svm_newid, results.rmse2_svm_newid, results.rmse_svm_newid, results.rmse_lr_newid,
         results.mae_gauss_newid, results.maeOpt_gauss_newid, results.mae_svr_newid)
 
     if False:
+        print "Warning: this is deprecated code and will be deleted soon. Its use is strongly discouraged."
         starting_point = "Sigmoids"  # None, "Sigmoids", "Identity"
         print "Computations useful to determine information loss and feature obfuscation IL/FO... starting_point=",
         print starting_point
@@ -2767,8 +2673,8 @@ def main():
 
     print "%d Blocks used for averages" % num_blocks_train
 
-    # Function for gender label estimation. (-3 to -0.1) = Masculine, (0.0 to 2.9) = femenine. Midpoint between classes
-    # is -0.05 and not zero
+    # Function for gender label estimation. (-3 to -0.1) = Masculine, (0.0 to 2.9) = femenine. Thus, the midpoint
+    # between the male and female labels is -0.05 and not zero in the artificial faces dataset
     def binarize_array(arr):
         arr2 = arr.copy()
         arr2[arr2 < -0.05] = -1
@@ -3045,7 +2951,7 @@ def main():
                               'tanh')
         p11.imshow(sl_seqdisp.clip(0, 255), aspect='auto', interpolation='nearest', origin='upper',
                    cmap=mpl.pyplot.cm.gray)
-        plt.xlabel("min[0]=%.3f, max[0]=%.3f, scale=%.3f\n e[]=" % \
+        plt.xlabel("min[0]=%.3f, max[0]=%.3f, scale=%.3f\n e[]=" %
                    (sl_seq_training.min(axis=0)[0], sl_seq_training.max(axis=0)[0], scale_disp) + str3(
             sfa_libs.comp_eta(sl_seq_training)[0:5]))
         plt.ylabel("Training Images")
