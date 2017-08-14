@@ -24,7 +24,7 @@ Cuicuilco requires the following libraries:
 The pronunciation of Cuicuilco is available in [this link](http://es.forvo.com/word/cuicuilco/) and sounds similar to `ku:i-{\bf ku:il}-ko'.
 This name has been chosen in honor of the Cuicuilco pyramid (800 B.C.\ to 250 A.D.) located in the south of Mexico City. This pyramid is divided in a few stages, resembling hierarchical SFA networks to some extent.
 
-<img src="site_images/Cuiculco.jpg" width="400"/> Image Copyright by [TJ DeGroat](https://www.flickr.com/photos/tjdegroat/18800899800/)  under the Creative Commons Attribution 2.0 Generic licence [(CC BY 2.0)](https://creativecommons.org/licenses/by/2.0/). The image has been cropped and digitally processed for display purposes (saturation and color level adjustments)
+<img src="site_images/Cuicuilco.jpg" width="400"/> Image Copyright by [TJ DeGroat](https://www.flickr.com/photos/tjdegroat/18800899800/)  under the Creative Commons Attribution 2.0 Generic licence [(CC BY 2.0)](https://creativecommons.org/licenses/by/2.0/). The image has been cropped and digitally processed for display purposes (saturation and color level adjustments)
 
 
 ## Usage and further documentation
