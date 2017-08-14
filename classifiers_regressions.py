@@ -1,4 +1,4 @@
-# Contains basic metrics for classification and regression
+# This file is part of the Cuicuilco framework. It contains basic metrics for classification and regression
 # By Alberto Escalante: Alberto.Escalante@ini.rub.de First Version 3 August 2009
 # Ruhr-University-Bochum, Institute of Neurocomputation, Group of Prof. Dr. Wiskott
 
@@ -57,9 +57,11 @@ def correct_classif_rate(ground_truth, classified, verbose=False):
     return (d1 == d2).sum() * 1.0 / num
 
 
-# The next code is obsolete and can be deleted
+# The code below is obsolete and will be deleted soon
 define_obsolete_code = False
 if define_obsolete_code:
+    print "WARNING: use of this deprecated code is strongly discouraged!"
+
     class GaussianApprox(object):
         def __init__(self):
             self.n_classes = None
