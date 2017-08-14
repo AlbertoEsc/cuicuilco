@@ -540,34 +540,35 @@ layer.pca_out_dim = 35 #WARNING: 100 or None
 #layer.ord_node_class = mdp.nodes.iGSFANode
 #layer.ord_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, QT],"max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999, "output_dim":35} #output_dim":40
 #layer.ord_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity],"max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999, "output_dim":35} #output_dim":40
-#layer.exp_funcs = [identity,]
+layer.exp_funcs = [identity,]
 #layer.exp_funcs = [encode_signal_p9,] #For next experiment: [encode_signal_p9,]
 #layer.red_node_class = mdp.nodes.HeadNode
 #layer.red_out_dim = int(tuning_parameter)
-layer.sfa_node_class = mdp.nodes.iGSFANode #mdp.nodes.GSFANode
+layer.sfa_node_class = mdp.nodes.SFANode #mdp.nodes.iGSFANode
+layer.sfa_args = {}
 #layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":"RandomSigmoids", "expansion_starting_point":"08Exp", "max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999, "expansion_output_dim":4000} 
 #layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo],                       "max_lenght_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} 
 #QT10, CT10, QT15, CT15, QT20, CT20, QT25, CT25,
-terms_NL_expansion = int(tuning_parameter)
-if terms_NL_expansion == 15:
-    expansion = [identity, s15QT, s15CT]
-elif terms_NL_expansion == 20:
-    expansion = [identity, s20QT, s20CT]
-elif terms_NL_expansion == 25:
-    expansion = [identity, s25QT, s25CT]
-elif terms_NL_expansion == 30:
-    expansion = [identity, s30QT, s30CT]
-elif terms_NL_expansion == 35:
-    expansion = [identity, s35QT, s35CT]
-elif terms_NL_expansion == 40:
-    expansion = [identity, s40QT, s40CT]
-else:
-    er = "invalid size of NL expansion", terms_NL_expansion
-    raise Exception(er) 
+#terms_NL_expansion = int(tuning_parameter)
+#if terms_NL_expansion == 15:
+#    expansion = [identity, s15QT, s15CT]
+#elif terms_NL_expansion == 20:
+#    expansion = [identity, s20QT, s20CT]
+#elif terms_NL_expansion == 25:
+#    expansion = [identity, s25QT, s25CT]
+#elif terms_NL_expansion == 30:
+#    expansion = [identity, s30QT, s30CT]
+#elif terms_NL_expansion == 35:
+#    expansion = [identity, s35QT, s35CT]
+#elif terms_NL_expansion == 40:
+#    expansion = [identity, s40QT, s40CT]
+#else:
+#    er = "invalid size of NL expansion", terms_NL_expansion
+#    raise Exception(er)
 
-expansion = [identity, QT, s30CT] 
+#expansion = [identity, QT, s30CT]
 
-layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":expansion,"max_lenght_slow_part":None,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999} 
+#layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":expansion,"max_lenght_slow_part":None,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999}
 layer.sfa_out_dim = 9 #49*2 # *3 # None
 
 ####################################################################
@@ -577,11 +578,7 @@ layer.sfa_out_dim = 9 #49*2 # *3 # None
 network = SFANetwork1L = system_parameters.ParamsNetwork()
 network.name = "SFA 1 Layer Linear Network"
 network.L0 = pSFAOneLayer
-network.L1 = None
-network.L2 = None
-network.L3 = None
-network.L4 = None
-network.layers = [network.L0]
+network.layers = [network.L0,]
 
 
 

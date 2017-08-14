@@ -256,6 +256,7 @@ def create_layer(prev_layer, layer, num_layer, prev_layer_height=None, prev_laye
             print "layer.sfa_out_dim= ", layer.sfa_out_dim
 
             layer.sfa_node = layer.sfa_node_class(output_dim=layer.sfa_out_dim, **layer.sfa_args)
+            print "layer.sfa_node= ", layer.sfa_node
 
         layer.node_list = ([layer.pca_node, layer.ord_node, layer.exp_node, layer.red_node, layer.clip_node,
                             layer.sfa_node])

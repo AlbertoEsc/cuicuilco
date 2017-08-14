@@ -45,6 +45,18 @@ mdp.hinet.Layer.localized_inverse = inversion.layer_localized_inverse
 
 mdp.nodes.GeneralExpansionNode.localized_inverse = inversion.general_expansion_node_localized_inverse
 
+# The original version disregards output_dim if input_dim is None!!! Added: ... or self.input_dim is None...
+def SFANode__set_range(self):
+    if self.output_dim is not None and (self.output_dim <= self.input_dim or self.input_dim is None):
+        # (eigenvalues sorted in ascending order)
+        rng = (1, self.output_dim)
+    else:
+        # otherwise, keep all output components
+        rng = None
+        self.output_dim = self.input_dim
+    return rng
+
+mdp.nodes.SFANode._set_range = SFANode__set_range
 
 def SFANode_inverse(self, y):
     # pseudo-inverse is stored instead of computed everytime
@@ -561,7 +573,7 @@ def SFANode_stop_training(self, debug=False, verbose=False, pca_term=0.995, pca_
 # mdp.nodes.SFANode.list_train_params = ["scheduler", "n_parallel", "train_mode", "include_latest", "block_size"]
 # "scheduler", "n_parallel", "train_mode", "block_size", "node_weights", "edge_weights"] # "sfa_expo", "pca_expo",
 # "magnitude_sfa_biasing"
-mdp.nodes.SFANode.list_train_params = []
+mdp.nodes.SFANode.list_train_params = ["scheduler", "n_parallel"]
 mdp.nodes.SFAPCANode.list_train_params = ["scheduler", "n_parallel", "train_mode",
                                           "block_size"]  # "sfa_expo", "pca_expo", "magnitude_sfa_biasing"
 mdp.nodes.PCANode.list_train_params = ["scheduler", "n_parallel"]
@@ -584,7 +596,7 @@ def extract_params_relevant_for_node_train(node, params):
         return [extract_params_relevant_for_node_train(node, param) for param in params]
 
     if params is None:
-        return{}
+        return {}
 
     if isinstance(node, (mdp.hinet.Layer, mdp.hinet.CloneLayer)):
         add_list_train_params_to_layer_or_node(node)
@@ -636,9 +648,9 @@ def node_train_params(self, data, params=None, verbose=False):
         #        self._training = False
         if verbose or True:
             # quit()
-            print "params=", params
-            print "list_train_params=", self.list_train_params
-            print "all_params:", all_params
+            print "params=", params,
+            print "; list_train_params=", self.list_train_params,
+            print "; all_params:", all_params
         return self._train(data, **all_params)
     else:
         if isinstance(self, mdp.nodes.SFANode):
@@ -1307,6 +1319,8 @@ if patch_flow:
                             i].input_dim, "or unknown parallel method, thus I didn't go parallel"
                         self.flow[i].train(data)
                     self.flow[i].stop_training()
+                    if isinstance(self.flow[i], mdp.nodes.SFANode):
+                        print "trained SFANode.d is", self.flow[i].d
             ttrain1 = time.time()
 
             if node_cache_write or node_cache_read or signal_cache_write or signal_cache_read:
@@ -1581,6 +1595,8 @@ if patch_flow:
                     if self.flow[i].is_training():
                         self.flow[i].stop_training()
                     print "Post2 self.flow[%d].output_dim="%i, self.flow[i].output_dim
+                    if isinstance(self.flow[i], mdp.nodes.SFANode):
+                        print "SFANode.d is ", self.flow[i].d
 
             ttrain1 = time.time()
 
