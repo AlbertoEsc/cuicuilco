@@ -870,7 +870,7 @@ def GaussianSoftCR(self, data, true_classes):
     true classes (1D numpy array): 
     """
     probabilities = self.class_probabilities(data)
-    true_classes = true_classes.flatten()
+    true_classes = true_classes.flatten().astype(int)
 
     # ##??? WHYYY??? true_classes = true_classes[0:probabilities.shape[1]]
 
