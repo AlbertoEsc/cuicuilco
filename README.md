@@ -2,8 +2,8 @@
 
 Cuicuilco is a Python framework that allows the construction, training, and evaluation of hierarchical networks (e.g., hierarchical compositions of learning algorithms), particularly *Hierarchical Slow Feature Analysis* (HSFA) networks, to solve regression and classification problems on images and other high-dimensional data. 
 
-This framework was initially created to carry out most experiments of the PhD thesis entitled *Extensions of Hierarchical Slow Feature Analysis for Classification and Regression of High-Dimensional Data* by Alberto N. Escalante B. to the Faculty of Electrical Engineering and Information Technology at the Ruhr University Bochum, Germany. More precisely, this PhD was done at the Institute for Neural Computation at the same university. 
-Cuicuilco can be easily extended in the following ways: (1) By adding additional experiments on new datasets, and (2) by including new hierarchical networks or learning algorithms. 
+This framework was initially created to carry out most experiments of the PhD thesis entitled *Extensions of Hierarchical Slow Feature Analysis for Classification and Regression of High-Dimensional Data* submitted by Alberto N. Escalante B. to the Faculty of Electrical Engineering and Information Technology at the Ruhr University Bochum, Germany. More precisely, this PhD was done at the Institute for Neural Computation at the same university. 
+Cuicuilco can be easily extended in the following ways: (1) By adding additional experiments that encapsulate new datasets, and (2) by including new hierarchical networks or learning algorithms. 
 
 
 ## Who should use Cuicuilco?
@@ -33,10 +33,10 @@ This name has been chosen in honor of the Cuicuilco pyramid (800 B.C.\ to 250 A.
 Basic execution:
   > python -u cuicuilco_run.py [OPTION1] [OPTION2] ...
 
-Several command line options are accepted as well as additional parameters specified by environment variables (see the file 'set_environment_variables'). For details regarding these options and parameters, the inclusion of new experimental databases, and the creation of new hierarchical networks, please consult Appendix A of the first reference listed below, which contains the most extensive documentation of this framework up to date.
+Several command line options are accepted as well as additional parameters specified by environment variables (see the file 'set_environment_variables'). For details regarding these options and parameters, the inclusion of new experimental databases, and the creation of new hierarchical networks, **please consult Appendix A of the dissertation mentioned in the references below, which is the most extensive documentation of this framework currently**.
 
 ## A single run of Cuicuilco
-In rough terms, each run of Cuicuilco includes the following steps:
+In rough terms, each run of Cuicuilco executes the following steps:
 * File 'experimental_datasets.py' is imported and a list of all available datasets is extracted from it.
 * File 'hierarchical_networks.py' is imported and a list of all available network descriptions is extracted from it.
 * A particular network description and experimental dataset are selected. 
@@ -59,8 +59,8 @@ In rough terms, each run of Cuicuilco includes the following steps:
 Cuicuilco was originally developed by Alberto N. Escalante B. (alberto.escalante@ini.rub.de) as part of his PhD project at the Institute for Neural Computation, Ruhr-University Bochum, Germany, under the supervision of Prof. Dr. Laurenz Wiskott.
 
 ## References
-* Escalante-B, "Extensions of Hierarchical Slow Feature Analysis for Classification and Regression of High-Dimensional Data", PhD thesis, 2017
-* [Escalante-B, Wiskott, "How to Solve Classification and Regression Problems on High-Dimensional Data with a Supervised Extension of Slow Feature Analysis", Journal of Machine Learning Research 14 3683-3719, 2013](http://www.jmlr.org/papers/volume14/escalante13a/escalante13a.pdf)
+* [Escalante-B, "Extensions of Hierarchical Slow Feature Analysis for Classification and Regression of High-Dimensional Data", PhD thesis, 2017](https://www.ini.rub.de/upload/file/1504713481_43023be2075d6a483471/Escalante-2017-PhD-Thesis.pdf)
+* [Escalante-B, Wiskott, "How to Solve Classification and Regression Problems on High-Dimensional Data with a Supervised Extension of Slow Feature Analysis", Journal of Machine Learning Research 14:3683-3719, 2013](http://www.jmlr.org/papers/volume14/escalante13a/escalante13a.pdf)
 * [Escalante-B, Wiskott, "Improved graph-based SFA: Information preservation complements the slowness principle", arXiv:1601.03945, 2016](https://arxiv.org/abs/1601.03945)
 
 ## LICENSE
@@ -70,4 +70,4 @@ Licensed under the Apache License, Version 2.0: [http://www.apache.org/licenses/
 Cuicuilco is being improved continuously, thus make sure to use the latest version.
 
 Bugs/Suggestions/Comments/Questions: please send them to alberto.escalante@ini.rub.de or via github.
-I will be glad to help you
+I will be glad to help you.
