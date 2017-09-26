@@ -2424,9 +2424,10 @@ def main():
 
     print "N1=", classifiers.mean_average_error(correct_labels_newid, regressionMAE_Gauss_newid)
     print "N2=", classifiers.mean_average_error(correct_labels_newid, regression_Gauss_newid)
-    numpy.savetxt("regressionMAE_Gauss_newid", regressionMAE_Gauss_newid)
-    numpy.savetxt("regression_Gauss_newid", regression_Gauss_newid)
-    numpy.savetxt("correct_labels_newid", correct_labels_newid)
+    numpy.savetxt("regressionMAE_Gauss_newid.txt", regressionMAE_Gauss_newid)
+    numpy.savetxt("regression_Gauss_newid.txt", regression_Gauss_newid)
+    numpy.savetxt("regression_svr_newid.txt", regression_svr_newid)
+    numpy.savetxt("correct_labels_newid.txt", correct_labels_newid)
 
     cs_list = {}
     if cumulative_scores:
