@@ -3813,7 +3813,7 @@ HiGSFANetworkU11L_NoOverlap_4x4L0_PosXPosYScaleAngle_32x32.layers = HiGSFANetwor
 
 
 ####################### Network TO EMULATE u08expoNetworkU11L FOR POS X, POS Y, SCALE, ANGLE WITHOUT OVERLAP #######################
-delta_thresholds = [    4,     6,    10,    14,    20,    20,   20,   20,   20,   20,   20,   20]
+delta_thresholds = [    7,     8,    10,    14,    20,    20,   20,   20,   20,   20,   20,   20]
 output_dims =      [   13,    20,    35,    60,    60,    60,   60,   60,   60,   60,   60,   60]
 network = HiGSFANetworkU11L_NoOverlap_4x4L0_Basic_PosXPosYScaleAngle = copy.deepcopy(HiGSFANetworkU11L_NoOverlap_4x4L0)
 for i, layer in enumerate(network.layers):
