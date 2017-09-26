@@ -6221,13 +6221,13 @@ class ParamsRTransXYPAngScaleExperiment(system_parameters.ParamsSystem):
         
         iSeq_set = iSeenidRTransXYPAngScale = self.iSeqCreateRTransXYPAngScale(dx=dx, dy=dy, da=da, smin=smin, smax=smax, num_steps=50, slow_var=slow_var, continuous=True, num_images_used=55000, #20000
                                                               images_base_dir=alldbnormalized_base_dir, normalized_images = alldbnormalized_available_images, 
-                                                              first_image_index=0, pre_mirroring="none", repetition_factor=2, seed=-1)
+                                                              first_image_index=0, pre_mirroring="none", repetition_factor=2, seed=-1) #repetition factor is 2
         sSeenidRTransXYPAngScale = self.sSeqCreateRTransXYPAngScale(iSeq_set, seed=-1)
         
         #WARNING, here continuous=continuous was wrong!!! we should always use the same test data!!!
         iSeq_set = iNewidRTransXYPAngScale = [[self.iSeqCreateRTransXYPAngScale(dx=dx, dy=dy, da=da, smin=smin, smax=smax, num_steps=50, slow_var=slow_var, continuous=True, num_images_used=9000, #9000 
                                                               images_base_dir=alldbnormalized_base_dir, normalized_images = alldbnormalized_available_images, 
-                                                              first_image_index=55000, pre_mirroring="none", repetition_factor=2, seed=-1)]]      #repetition_factor=4
+                                                              first_image_index=55000, pre_mirroring="none", repetition_factor=4, seed=-1)]]      #repetition_factor=4
         #WARNING, code below is for display purposes only, it should be commented out!
         #iSeq_set = iNewidRTransXYPAngScale = [[iSeqCreateRTransXYPAngScale(dx=45, dy=2, da=da, smin=0.85, smax=0.95, num_steps=50, slow_var = "X", continuous=True, num_images_used=2000, #9000 
         #                                                      images_base_dir=alldbnormalized_base_dir, normalized_images = alldbnormalized_available_images, 
@@ -6276,9 +6276,9 @@ class ParamsRTransXYPAngScaleExperiment(system_parameters.ParamsSystem):
             iSeq = iTrainRTransXYPAngScale[0][0]
             sSeq = sTrainRTransXYPAngScale[0][0]
             sSeq.train_mode = [sSeq.train_mode, 
-                               ("serial_regression50", iSeq.correct_labels[:,1], 1.25),
-                               ("serial_regression50", iSeq.correct_labels[:,2], 1.5),
-                               ("serial_regression50", iSeq.correct_labels[:,3], 1.75)] # Using experimental weights, otherwise they should be 1.0
+                               ("serial_regression50", iSeq.correct_labels[:,1], 1.25), # 1.25, 1.5, 1.75
+                               ("serial_regression50", iSeq.correct_labels[:,2], 1.75),
+                               ("serial_regression50", iSeq.correct_labels[:,3], 2.25)] # Using experimental weights, otherwise they should be 1.0
         
         self.name = "Function Based Data Creation for RTransXYPAngScale"
         self.network = "linearNetwork4L" #Default Network, but ignored
@@ -6586,7 +6586,8 @@ ParamsRTransXYPAngScaleFunc_32x32.hack_image_size = 32
 #################                  AGE Extraction Experiments                             #############################
 #######################################################################################################################
 class ParamsRAgeExperiment(system_parameters.ParamsSystem):
-    def __init__(self, experiment_seed, experiment_basedir, subimage_width_height=96):
+    def __init__(self, experiment_seed, experiment_basedir, subimage_width_height=96,
+                 use_setup_Guo=True, training_set=1):
         super(ParamsRAgeExperiment, self).__init__()
         self.experiment_seed = experiment_seed
         self.experiment_basedir = experiment_basedir
@@ -6599,13 +6600,19 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
         self.hack_image_size = subimage_width_height #72 ## 96 # (article 80) # T=80 T=64 WARNING  96, 80, 128,  64,  32 , 16
         self.enable_hack_image_size = True
         self.patch_network_for_RGB = False #
-        
+        self.use_setup_Guo = use_setup_Guo
+        if training_set == 1 or training_set == 2:
+            self.training_set = training_set
+        else:
+            raise Exception("training_set should be either 1 or 2")
+
     def create(self):
         print "Age estimation. experiment_seed=", self.experiment_seed
         numpy.random.seed(self.experiment_seed) #seed|-5789
         print "experiment_seed=", self.experiment_seed
-        
-        #TODO: Repeat computation of blind levels for MORPH, FG_Net and MORPH+FGNet. (orig labels, no rep, all images)
+        print "use_setup_Guo= ", self.use_setup_Guo
+        print "training_set=", self.training_set
+        #TODO: Repeat computation of chance levels for MORPH, FG_Net and MORPH+FGNet. (orig labels, no rep, all images)
         #min_cluster_size_MORPH = 60000 # 1400 # 60000
         #max_cluster_size_MORPH = None  # 1400 # None
         #age_trim_number_MORPH = 1400 # 1400
@@ -6614,8 +6621,8 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
             select_k_images_newid = 8000
         #select_k_images_seenid = 1500 #16000 #4000 #3000 #3750
         
-        option_setup_CNN = 0 # 1=CNN setup, 0=my setup
-        if option_setup_CNN: 
+         # 1=CNN setup, 0=my setup
+        if self.use_setup_Guo:
             leave_k_out_MORPH = 0 #to speed on unnecessary computation 
             select_k_images_newid = 1000
             #select_k_images_seenid = 1000 #4000 #3000 #3750 
@@ -6673,7 +6680,7 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
         
         print "age_labeled_files_list_MORPH_seenid[0,1,2]=", age_labeled_files_list_MORPH_seenid[0], age_labeled_files_list_MORPH_seenid[1], age_labeled_files_list_MORPH_seenid[2]
         
-        # # if option_setup_CNN: #just to speed this up
+        # # if self.use_setup_Guo: #just to speed this up
         # #     pre_repetitions=1
         # #     age_trim_number_MORPH = (pre_repetitions*1075)
         # # else:
@@ -6687,11 +6694,13 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
          
         num_clusters_MORPH_serial = 32
         #age_trim_number_MORPH = None
-        
         #print "age_labeled_files_list_INIBilder", age_labeled_files_list_INIBilder
         #age_trim_number_MORPH = 200
         # TODO: repetition=3 or 5, changed it only for a fast exercise
-	age_clusters_MORPH = self.age_cluster_labeled_files(age_labeled_files_list_MORPH, repetition=2, num_clusters=num_clusters_MORPH_serial, trim_number=None, shuffle_each_cluster=False) #r=5, r=6, trim_number=None
+
+        age_clusters_MORPH = self.age_cluster_labeled_files(age_labeled_files_list_MORPH, repetition=1,
+                                                            num_clusters=num_clusters_MORPH_serial, trim_number=None,
+                                                            shuffle_each_cluster=False) #r=5, r=6, trim_number=None
         #age_clusters_MORPH = age_cluster_list(age_files_dict_MORPH, repetition=pre_repetitions, smallest_number_images=age_trim_number_MORPH, largest_number_images=age_trim_number_MORPH) #Cluster so that all clusters have size at least 1400 or 1270 for L1KPO
         print "len(age_clusters_MORPH)=", len(age_clusters_MORPH)
         num_images_per_cluster_used_MORPH = age_clusters_MORPH[0][0]
@@ -6810,11 +6819,11 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
         if self.age_use_RGB_images:
             age_eyes_normalized_base_dir_set1 = "/local/escalafl/Alberto/MORPH_splitted_GUO_2015_09_02/nonexistent"
         else:
-            age_eyes_normalized_base_dir_set1 = MORPH_base_dir + "Fs2" #F s 1 ot F s 2 #WARNING!
+            age_eyes_normalized_base_dir_set1 = MORPH_base_dir + "Fs" + str(self.training_set) #F s 1 ot F s 2 #WARNING!
         #age_files_dict_set1 = find_available_images(age_eyes_normalized_base_dir_set1, from_subdirs=None) #change from_subdirs to select a subset of all ages!
         age_files_list_set1 = self.list_available_images(age_eyes_normalized_base_dir_set1, from_subdirs=None, verbose=False)
         age_labeled_files_list_set1 = self.append_GT_labels_to_files(age_files_list_set1, age_all_labels_map_MORPH)
-        age_clusters_set1 = self.age_cluster_labeled_files(age_labeled_files_list_set1, repetition=11, num_clusters=32, trim_number=None, shuffle_each_cluster=False) #r=22
+        age_clusters_set1 = self.age_cluster_labeled_files(age_labeled_files_list_set1, repetition=22, num_clusters=32, trim_number=None, shuffle_each_cluster=False) #r=22
         #WARNING, should be: repetition=22
         #age_clusters_set1 = age_cluster_labeled_files(age_labeled_files_list_set1, repetition=16, num_clusters=33, trim_number=None, shuffle_each_cluster=False)
           
@@ -6831,7 +6840,7 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
         if self.age_use_RGB_images:
             age_eyes_normalized_base_dir_set1b = "/local/escalafl/Alberto/MORPH_setsS1S2S3_seed12345/nonexistent/s1_byAge_mcnn"
         else:
-            age_eyes_normalized_base_dir_set1b = MORPH_base_dir + "Fs2"
+            age_eyes_normalized_base_dir_set1b = MORPH_base_dir + "Fs" + str(self.training_set)
         #age_files_dict_set1b = find_available_images(age_eyes_normalized_base_dir_set1b, from_subdirs=None) #change from_subdirs to select a subset of all ages!
         age_files_list_set1b = self.list_available_images(age_eyes_normalized_base_dir_set1b, from_subdirs=None, verbose=False)
         age_labeled_files_list_set1b = self.append_GT_labels_to_files(age_files_list_set1b, age_all_labels_map_MORPH, select_races=[-2,-1,0,1,2], verbose=True)
@@ -6854,7 +6863,7 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
         if self.age_use_RGB_images:
             age_eyes_normalized_base_dir_set1test = "/local/escalafl/Alberto/MORPH_setsS1S2S3_seed12345/s1-test_byAge_mcnn/nonexistent"
         else:
-            age_eyes_normalized_base_dir_set1test = MORPH_base_dir + "Fs2-test" # s2-test_byAge_mcnn2
+            age_eyes_normalized_base_dir_set1test = MORPH_base_dir + "Fs" + str(self.training_set) + "-test" # s2-test_byAge_mcnn2
             #age_files_dict_set1test = find_available_images(age_eyes_normalized_base_dir_set1test, from_subdirs=None) #change from_subdirs to select a subset of all ages!
         age_files_list_set1test = self.list_available_images(age_eyes_normalized_base_dir_set1test, from_subdirs=None, verbose=False)
         age_labeled_files_list_set1test = self.append_GT_labels_to_files(age_files_list_set1test, age_all_labels_map_MORPH, select_races=[-2,-1,0,1,2], verbose=True)
@@ -6869,7 +6878,7 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
         print "num_images_per_cluster_used_set1test=", num_images_per_cluster_used_set1test
         
         numpy.random.seed(experiment_seed+987987987)
-        if option_setup_CNN==0: #MY MORPH SETUP
+        if not self.use_setup_Guo: #MY MORPH SETUP
             age_clusters = age_clusters_MORPH  #_MORPH #_FGNet
             age_clusters_seenid = age_clusters_MORPH_seenid
             age_clusters_newid = age_clusters_MORPH_out
@@ -6877,7 +6886,7 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
             age_eyes_normalized_base_dir_train = age_eyes_normalized_base_dir_MORPH
             age_eyes_normalized_base_dir_seenid = age_eyes_normalized_base_dir_MORPH
             age_eyes_normalized_base_dir_newid = age_eyes_normalized_base_dir_MORPH
-        elif option_setup_CNN==1: #CNN SETUP
+        else:  # Guo  SETUP
             age_clusters = age_clusters_set1  #_MORPH #_FGNet
             age_clusters_seenid = age_clusters_set1b
             age_clusters_newid = age_clusters_set1test
@@ -6889,9 +6898,9 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
             #age_clusters_newid = age_clusters_set1b #WARNING!!!
             #num_images_per_cluster_used_MORPH_out = 15000 #num_images_per_cluster_used_set1b #WARNING!!!
         
-            age_eyes_normalized_base_dir_train = MORPH_base_dir + "Fs2"
-            age_eyes_normalized_base_dir_seenid = MORPH_base_dir + "Fs2"
-            age_eyes_normalized_base_dir_newid = MORPH_base_dir + "Fs2-test" #s2-test_byAge_mcnn
+            age_eyes_normalized_base_dir_train = MORPH_base_dir + "Fs" + str(self.training_set)
+            age_eyes_normalized_base_dir_seenid = MORPH_base_dir + "Fs" + str(self.training_set)
+            age_eyes_normalized_base_dir_newid = MORPH_base_dir + "Fs" + str(self.training_set) + "-test" #s2-test_byAge_mcnn
                
             if num_images_per_cluster_used_set1 == 0:
                 ex = "error: num_images_per_cluster_used_set1 = 0"
@@ -6917,13 +6926,13 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
                 print "filenames[-1]=", age_cluster[2][-1],
                 print "orig_labels[0]=", age_cluster[3][-1]
         #quit()
-        if leave_k_out_MORPH > 0 and len(age_clusters) != 30 and len(age_clusters)!=0 and False: #WARNING! 33 clusters now!
+        if leave_k_out_MORPH > 0 and len(age_clusters) != 30 and len(age_clusters)!=0 and False:  # WARNING! 33 clusters now!
             er = "leave_k_out_MORPH is changing the number of clusters (%d clusters instead of 30)"%len(age_clusters)
             raise Exception(er)
         
         use_seenid_classes_to_generate_knownid_and_newid_classes = True #and False #WARNING
         
-        extra_distortions_for_out_of_database_test = True #Warning! default is False
+        extra_distortions_for_out_of_database_test = True and False #Warning! default is False
         if extra_distortions_for_out_of_database_test:
             print "using even more extensive distortions"
             base_scale = 1.14 #1.155 # 1.125 # 1.14 * (37.5/37.0) #1.14  #* 1.1 #*0.955 #*1.05 # 1.14 WARNING!!!
@@ -6939,7 +6948,7 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
         
             obj_std_min = obj_std_base - obj_std_dif # ** 0.16
             obj_std_max = obj_std_base + obj_std_dif # ** 0.16
-        elif option_setup_CNN==0: #WARNING!!!!!  ERROR!!! #MY MORPH SETUP, eventually use only one setup? why, nooo! # warning!!!
+        elif not self.use_setup_Guo:  # WARNING!!!!!  ERROR!!! #MY MORPH SETUP, eventually use only one setup? why, nooo! # warning!!!
             print "using distortions for my experimental setup"
             base_scale = 1.14 #1.155 # 1.125 # 1.14 * (37.5/37.0) #1.14  #* 1.1 #*0.955 #*1.05 # 1.14 WARNING!!!
             factor_scale_training = 1.03573 #1.04 #1.03573 (article) # 1.032157 #1.0393 # 1.03573
@@ -7037,7 +7046,7 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
         #smin=0.595, smax=0.605 (orig images)
         #128x128: iSeq_set = iSeenidRAge = iSeqCreateRAge(dx=0.0, dy=0.0, smin=1.3, smax=1.35, delta_rotation=1.5, pre_mirroring="none", contrast_enhance=True, 160x160: WARNING!!! WHY OBJ_STD_MIN/MAX is fixed???
         #WARNING! USED age_clusters instead of age_clusters_seenid
-        iSeq_set = iSeenidRAge = self.iSeqCreateRAge(dx=delta_pos * factor_pos_seenid, dy=delta_pos * factor_pos_seenid, smin=base_scale / factor_scale_seenid, smax=base_scale * factor_scale_seenid, delta_rotation=delta_rotation*factor_rotation_seenid, pre_mirroring="none", contrast_enhance=True, 
+        iSeq_set = iSeenidRAge = self.iSeqCreateRAge(dx=delta_pos * factor_pos_seenid, dy=delta_pos * factor_pos_seenid, smin=base_scale / factor_scale_seenid, smax=base_scale * factor_scale_seenid, delta_rotation=delta_rotation*factor_rotation_seenid, pre_mirroring="none", contrast_enhance=True,
         #192x192:iSeq_set = iSeenidRAge = iSeqCreateRAge(dx=0.0, dy=0.0, smin=0.86667, smax=0.9, delta_rotation=1.5, pre_mirroring="none", contrast_enhance=True, 
                                                 obj_avg_std=obj_avg_std_seenid, obj_std_min=obj_std_min_seenid, obj_std_max=obj_std_max_seenid,new_clusters=age_clusters_seenid, num_images_per_cluster_used=num_images_per_cluster_used_MORPH_seenid, #125+extra_images_LKO_third  #200 #300=>9000
                                                 images_base_dir=age_eyes_normalized_base_dir_seenid, first_image_index=0, repetition_factor=1, seed=-1,  #repetition_factor= 6 (article 6), 12,8,4
@@ -7052,14 +7061,14 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
         testing_INIBilder = (num_images_per_cluster_used_INIBilder > 0) and False
         testing_FGNet = True and False #Warning, should be False normally
         if (not testing_INIBilder) and (not testing_FGNet): 
-            if leave_k_out_MORPH==0 and option_setup_CNN==0:
+            if leave_k_out_MORPH==0 and not self.use_setup_Guo:
                 print "Selecting NewId without using leave_k_out_strategy" ###WARNING!!!! HERE 0.16 instead of 0.2 should be used???
                 iSeq_set = iNewidRAge = [[self.iSeqCreateRAge(dx=0, dy=0, smin=base_scale, smax=base_scale, delta_rotation=0.0, pre_mirroring="none", contrast_enhance=True, 
                                                          obj_avg_std=0.0, obj_std_min=obj_std_base, obj_std_max=obj_std_base, new_clusters=age_clusters, num_images_per_cluster_used=200,   #200=>6000 pre_mirroring="none"
                                                          images_base_dir=age_eyes_normalized_base_dir_newid, first_image_index=1200, repetition_factor=1, seed=-1, use_orig_label_as_class=False, use_orig_label=True,increasing_orig_label=True)]]
             else:
                 print "Selecting NewId data using leave_k_out_strategy, with k=", leave_k_out_MORPH
-                iSeq_set = iNewidRAge = [[self.iSeqCreateRAge(dx=0, dy=0, smin=base_scale, smax=base_scale, delta_rotation=0.0, pre_mirroring="none", contrast_enhance=True, 
+                iSeq_set = iNewidRAge = [[self.iSeqCreateRAge(dx=0, dy=0, smin=base_scale, smax=base_scale, delta_rotation=0.0, pre_mirroring="none", contrast_enhance=True,
                                                          obj_avg_std=0.0, obj_std_min=obj_std_base, obj_std_max=obj_std_base, new_clusters=age_clusters_newid, num_images_per_cluster_used=num_images_per_cluster_used_MORPH_out,   #200=>6000
                                                          images_base_dir=age_eyes_normalized_base_dir_newid, first_image_index=0, repetition_factor=1, seed=-1, use_orig_label_as_class=False, use_orig_label=True, increasing_orig_label=True)]]
             sNewidRAge = [[self.sSeqCreateRAge(iSeq_set[0][0], seed=-1, use_RGB_images=self.age_use_RGB_images)]]
@@ -8124,9 +8133,10 @@ else:
     ex = "CUICUILCO_EXPERIMENT_SEED unset"
     raise Exception(ex)
 
-ParamsRAgeFunc_96 = ParamsRAgeFunc = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 96)
-ParamsRAgeFunc_48 = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 48)
-ParamsRAgeFunc_24 = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 24)
+ParamsRAgeFunc_96x96 = ParamsRAgeFunc = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 96,
+                                                             use_setup_Guo=True, training_set=2)
+ParamsRAgeFunc_48x48 = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 48, use_setup_Guo=True, training_set=2)
+ParamsRAgeFunc_24x24 = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 24, use_setup_Guo=True, training_set=2)
 
 #######################################################################################################################
 #################                   MNIST Number Database Experiments                     #############################
