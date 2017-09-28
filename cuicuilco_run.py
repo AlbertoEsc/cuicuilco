@@ -44,7 +44,7 @@ import object_cache as cache
 import os
 import sys
 import sfa_libs
-from sfa_libs import (scale_to, distance_squared_Euclidean, str3, wider_1Darray, ndarray_to_string, cutoff)
+from sfa_libs import (scale_to, distance_squared_Euclidean, str3, wider_1Darray, ndarray_to_string)
 from exact_label_learning import (ConstructGammaFromLabels, RemoveNegativeEdgeWeights, MapGammaToEdgeWeights)
 import system_parameters
 from system_parameters import (scale_sSeq, take_first_02D, take_0_k_th_from_2D_list, sSeq_force_image_size,
@@ -722,9 +722,7 @@ def main():
             er = "wrong number of Samples %d, 5000 were assumed" % numSamples
             raise Exception(er)
 
-    # Cutoff for final network output
-    min_cutoff = -1.0e200  # -10 # -30.0
-    max_cutoff = 1.0e200  # 10 # 30.0
+
 
     enable_reduced_image_sizes = Parameters.enable_reduced_image_sizes
     reduction_factor = Parameters.reduction_factor
@@ -1421,8 +1419,6 @@ def main():
         print "Executing for display purposes (subimages_train)..."
         #  This signal is computed for display purposes (it ignores the output of training, which might have noise)
         sl_seq = sl_seq_training = flow.execute(subimages_train)
-        if feature_cut_off_level > 0.0:
-            sl_seq = sl_seq_training = cutoff(sl_seq_training, min_cutoff, max_cutoff)
 
         network_hash = str(int(time.time()))
         # network_filename = "Network_" + network_hash + ".pckl"
@@ -1470,6 +1466,26 @@ def main():
             cache.pickle_array(sl_seq_training, base_dir=save_output_features_dir,
                                base_filename="output_features_training_TrainingD" + training_data_hash, overwrite=True,
                                verbose=True)
+
+
+    print "min val: ", sl_seq_training.min(axis=0), "max val: ", sl_seq_training.max(axis=0)
+    # Cutoff for final network output
+    if feature_cut_off_level > 0.0:
+        min_cutoff = -feature_cut_off_level
+        max_cutoff = feature_cut_off_level
+    elif feature_cut_off_level == 0.0:
+        min_cutoff = -1.0e300  # usually large enough for all datasets
+        max_cutoff = 1.0e300  # usually small enough for all datasets
+    else:  # Adaptive cutoff computed from training data
+        print "using adaptive cutoffs from the training data"
+        min_cutoff = sl_seq_training.min(axis=0)
+        max_cutoff = sl_seq_training.max(axis=0)
+    print "cutoff levels:", min_cutoff, max_cutoff
+
+    if feature_cut_off_level != 0.0:
+        sl_seq = sl_seq_training = numpy.clip(sl_seq_training, min_cutoff, max_cutoff)
+    print "After cutoff: min val: ", sl_seq_training.min(axis=0), "max val: ", sl_seq_training.max(axis=0)
+
 
     num_pixels_per_image = numpy.ones(subimage_shape, dtype=int).sum()
     print "taking into account objective_label=%d" % objective_label
@@ -1608,9 +1624,14 @@ def main():
     sl_seq_seenid = flow.execute(subimages_seenid)
     sl_seq_seenid = sl_seq_seenid[:, skip_num_signals:]
 
-    if feature_cut_off_level > 0.0:
+    print "min value: ", sl_seq_seenid.min(axis=0), "max value: ", sl_seq_seenid.max(axis=0)
+    sl_seq_seenid = numpy.nan_to_num(sl_seq_seenid)
+
+    if feature_cut_off_level != 0.0:
         print "before cutoff sl_seq_seenid= ", sl_seq_seenid
-        sl_seq_seenid = cutoff(sl_seq_seenid, min_cutoff, max_cutoff)
+        sl_seq_seenid = numpy.clip(sl_seq_seenid, min_cutoff, max_cutoff)
+    print "After cutoff, min value: ", sl_seq_seenid.min(axis=0), "max value: ", sl_seq_seenid.max(axis=0)
+
 
     sl_seq_training_min = sl_seq_training.min(axis=0)
     sl_seq_training_max = sl_seq_training.max(axis=0)
@@ -1872,8 +1893,8 @@ def main():
     if output_instead_of_SVM2:
         regression2_svm_training = (sl_seq_training[:, 0] * orig_train_label_std) + orig_train_label_mean
         print "Applying cutoff to the label estimations for LR and Linear Scaling (SVM2)"
-        regression2_svm_training = cutoff(regression2_svm_training, orig_train_label_min, orig_train_label_max)
-        regression_lr_training = cutoff(regression_lr_training, orig_train_label_min, orig_train_label_max)
+        regression2_svm_training = numpy.clip(regression2_svm_training, orig_train_label_min, orig_train_label_max)
+        regression_lr_training = numpy.clip(regression_lr_training, orig_train_label_min, orig_train_label_max)
 
     if svr_instead_of_SVM2:
         print "replacing regression estimation for svm2 by svr estimation"
@@ -1965,8 +1986,8 @@ def main():
     if output_instead_of_SVM2:
         regression2_svm_seenid = (sl_seq_seenid[:, 0] * orig_train_label_std) + orig_train_label_mean
         print "Applying cutoff to the label estimations for LR and Linear Scaling (SVM2)"
-        regression2_svm_seenid = cutoff(regression2_svm_seenid, orig_train_label_min, orig_train_label_max)
-        regression_lr_seenid = cutoff(regression_lr_seenid, orig_train_label_min, orig_train_label_max)
+        regression2_svm_seenid = numpy.clip(regression2_svm_seenid, orig_train_label_min, orig_train_label_max)
+        regression_lr_seenid = numpy.clip(regression_lr_seenid, orig_train_label_min, orig_train_label_max)
 
     if svr_instead_of_SVM2:
         print "replacing regression estimation for svm2 by svr estimation"
@@ -2043,10 +2064,12 @@ def main():
     print "Input Signal: New Id test images"
     sl_seq_newid = flow.execute(subimages_newid)
     sl_seq_newid = sl_seq_newid[:, skip_num_signals:]
-    if feature_cut_off_level > 0.0:
-        sl_seq_newid = cutoff(sl_seq_newid, min_cutoff, max_cutoff)
+    sl_seq_newid = numpy.nan_to_num(sl_seq_newid)
 
-    if clip_seenid_newid_to_training:
+    if feature_cut_off_level != 0.0:
+        sl_seq_newid = numpy.clip(sl_seq_newid, min_cutoff, max_cutoff)
+
+    if clip_seenid_newid_to_training:  # This is obsolete and has been repaced by negative feature_cut_off_level
         print "clipping sl_seq_newid"
         sl_seq_newid_min = sl_seq_newid.min(axis=0)
         sl_seq_newid_max = sl_seq_newid.max(axis=0)
@@ -2146,8 +2169,8 @@ def main():
     if output_instead_of_SVM2:
         regression2_svm_newid = (sl_seq_newid[:, 0] * orig_train_label_std) + orig_train_label_mean
         print "Applying cutoff to the label estimations for LR and Linear Scaling (SVM2)"
-        regression2_svm_newid = cutoff(regression2_svm_newid, orig_train_label_min, orig_train_label_max)
-        regression_lr_newid = cutoff(regression_lr_newid, orig_train_label_min, orig_train_label_max)
+        regression2_svm_newid = numpy.clip(regression2_svm_newid, orig_train_label_min, orig_train_label_max)
+        regression_lr_newid = numpy.clip(regression_lr_newid, orig_train_label_min, orig_train_label_max)
 
     if svr_instead_of_SVM2:
         print "replacing regression estimation for svm2 by svr estimation"
