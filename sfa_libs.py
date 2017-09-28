@@ -322,15 +322,15 @@ def ndarray_to_string(x, prefix="", col_sep=", ", row_sep="\n", out_filename = N
 # x = numpy.linspace(1.0, 10.0, 1000)
 # x = x.reshape((4,250))
 # ndarray_to_string(x, "/local/tmp/escalafl/test_write.txt")
- 
-def cutoff(x, min_val, max_val):
-    print "Cutoff v 2.0"
-    y1 = x
-    if not (min_val is None):
-        y1 = numpy.where(x >= min_val, x, min_val)
-    if not (max_val is None):
-        y1 = numpy.where(y1 <= max_val, y1, max_val)
-    return y1 
+#
+# def cutoff(x, min_val, max_val):
+#    print "Cutoff v 2.0"
+#    y1 = x
+#    if not (min_val is None):
+#        y1 = numpy.where(x >= min_val, x, min_val)
+#    if not (max_val is None):
+#        y1 = numpy.where(y1 <= max_val, y1, max_val)
+#    return y1
 
 #Experiment that shows unexpected speed problem with indexing 2d arrays by column!!!
 test_select_rows_from_matrix_speed = False
