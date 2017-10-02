@@ -1225,7 +1225,7 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
                                                                           GTSRB_constant_block_size)
 
         count = self.count_annotation_classes(GTSRB_annotationsTrain_Train)
-        print ("number of samples per each class A (GTSRB_annotationsTrain_Train): %d" % count)
+        print ("number of samples per each class A (GTSRB_annotationsTrain_Train): ", count)
 
         # Correct class indices, so that only consecutive classes appear
         consequtive_classes = True
@@ -2041,43 +2041,43 @@ class ParamsRTransXYPAngScaleExperiment(system_parameters.ParamsSystem):
 
         pipeline_fd = self.pipeline_fd
         if self.slow_var == "X" or self.slow_var == "All":
-            if iteration == 0:
+            if self.iteration == 0:
                 dx, dy, da, smin, smax = (pipeline_fd['dx0'], pipeline_fd['dy0'], pipeline_fd['da0'],
                                           pipeline_fd['smin0'], pipeline_fd['smax0'])
-            elif iteration == 1:
+            elif self.iteration == 1:
                 dx, dy, da, smin, smax = (pipeline_fd['dx1'], pipeline_fd['dy1'], pipeline_fd['da1'],
                                           pipeline_fd['smin1'], pipeline_fd['smax1'])
-            elif iteration == 2 and slow_var == "All":
+            elif self.iteration == 2 and slow_var == "All":
                 dx, dy, da, smin, smax = (pipeline_fd['dx2'], pipeline_fd['dy2'], pipeline_fd['da2'],
                                           pipeline_fd['smin2'], pipeline_fd['smax2'])
             else:
                 er = "incorrect iteration" + str(iteration)
                 raise Exception(er)
         elif self.slow_var == "Y":
-            if iteration == 0:
+            if self.iteration == 0:
                 dx, dy, da, smin, smax = (pipeline_fd['dx1'], pipeline_fd['dy0'], pipeline_fd['da0'],
                                           pipeline_fd['smin0'], pipeline_fd['smax0'])
-            elif iteration == 1:
+            elif self.iteration == 1:
                 dx, dy, da, smin, smax = (pipeline_fd['dx1'], pipeline_fd['dy1'], pipeline_fd['da1'],
                                           pipeline_fd['smin1'], pipeline_fd['smax1'])
             else:
                 er = "incorrect iteration" + str(iteration)
                 raise Exception(er)
         elif self.slow_var == "PAng":
-            if iteration == 0:
+            if self.iteration == 0:
                 dx, dy, da, smin, smax = (pipeline_fd['dx1'], pipeline_fd['dy1'], pipeline_fd['da0'],
                                           pipeline_fd['smin0'], pipeline_fd['smax0'])
-            elif iteration == 1:
+            elif self.iteration == 1:
                 dx, dy, da, smin, smax = (pipeline_fd['dx1'], pipeline_fd['dy1'], pipeline_fd['da1'],
                                           pipeline_fd['smin1'], pipeline_fd['smax1'])
             else:
                 er = "incorrect iteration" + str(iteration)
                 raise Exception(er)
         elif self.slow_var == "Scale":
-            if iteration == 0:
+            if self.iteration == 0:
                 dx, dy, da, smin, smax = (pipeline_fd['dx1'], pipeline_fd['dy1'], pipeline_fd['da1'],
                                           pipeline_fd['smin0'], pipeline_fd['smax0'])
-            elif iteration == 1:
+            elif self.iteration == 1:
                 dx, dy, da, smin, smax = (pipeline_fd['dx1'], pipeline_fd['dy1'], pipeline_fd['da1'],
                                           pipeline_fd['smin1'], pipeline_fd['smax1'])
             else:
@@ -2096,7 +2096,7 @@ class ParamsRTransXYPAngScaleExperiment(system_parameters.ParamsSystem):
         print ("dx=%g" % dx + "dy=%g" % dy + "da=%g" % da + "smin=%g" % smin + "smax=%g" % smax)
         iSeq_set = iTrainRTransXYPAngScale = \
             [[self.iSeqCreateRTransXYPAngScale(dx=dx, dy=dy, da=da, smin=smin, smax=smax, num_steps=50,
-                                               slow_var=self.slow_var, continuous=continuous,
+                                               slow_var=self.slow_var, continuous=self.continuous,
                                                num_images_used=55000,  # 30000
                                                images_base_dir=alldbnormalized_base_dir,
                                                normalized_images=alldbnormalized_available_images,
@@ -2166,12 +2166,12 @@ class ParamsRTransXYPAngScaleExperiment(system_parameters.ParamsSystem):
 
         # This fixes classes of Newid data
 
-        print ("Orig iSeenidRTransXYPAngScale.correct_labels=%d" % iSeenidRTransXYPAngScale.correct_labels)
+        print ("Orig iSeenidRTransXYPAngScale.correct_labels=", iSeenidRTransXYPAngScale.correct_labels)
         print ("Orig len(iSeenidRTransXYPAngScale.correct_labels)=%d" % len(iSeenidRTransXYPAngScale.correct_labels))
         print ("Orig len(iSeenidRTransXYPAngScale.correct_classes)=%d" % len(iSeenidRTransXYPAngScale.correct_classes))
 
         print ("iNewidRTransXYPAngScale[0][0].correct_labels=", iNewidRTransXYPAngScale[0][0].correct_labels)
-        print ("Before correction: iNewidRTransXYPAngScale[0][0].correct_classes=" + \
+        print ("Before correction: iNewidRTransXYPAngScale[0][0].correct_classes=" +
                str(iNewidRTransXYPAngScale[0][0].correct_classes))
 
         if len(iSeenidRTransXYPAngScale.correct_classes.shape) == 1:
@@ -2283,7 +2283,7 @@ class ParamsRTransXYPAngScaleExperiment(system_parameters.ParamsSystem):
             er = "Wrong slow_variable: " + str(slow_var)
             raise Exception(er)
 
-        if len(iSeq.ids) % len(iSeq.trans_pangs_scales) != 0 and not continuous:
+        if len(iSeq.ids) % len(iSeq.trans_pangs_scales) != 0 and not self.continuous:
             ex = "Here the number of translations/scalings must be a divisor of the number of identities"
             raise Exception(ex)
 
@@ -2350,7 +2350,7 @@ class ParamsRTransXYPAngScaleExperiment(system_parameters.ParamsSystem):
 
         iSeq.block_size = iSeq.num_images / num_steps
 
-        if not continuous:
+        if not self.continuous:
             print ("before len(iSeq.trans_pangs_scales)= %d" % len(iSeq.trans_pangs_scales))
             iSeq.trans_pangs_scales = sfa_libs.wider_1Darray(iSeq.trans_pangs_scales, iSeq.block_size)
             print ("after len(iSeq.trans_pangs_scales)= %d" % len(iSeq.trans_pangs_scales))
@@ -2510,7 +2510,7 @@ pipeline_fd_4Labels = dict(dx0=40.0, dy0=20.0, da0=22.5, smin0=0.694, smax0=0.98
 # iteration = 0  # 0, 1, 2 (only 4Labels)
 ParamsRTransXYPAngScaleFunc_128x128 = ParamsRTransXYPAngScaleExperiment(experiment_seed, experiment_basedir,
                                                                         continuous=True,
-                                                                        slow_var="all", iteration=0,
+                                                                        slow_var="All", iteration=0,
                                                                         pipeline_fd_1Label=pipeline_fd_1Label,
                                                                         pipeline_fd_4Labels=pipeline_fd_4Labels)
 
