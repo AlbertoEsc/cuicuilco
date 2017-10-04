@@ -40,6 +40,118 @@ frgc_eyeL_normalized_base_dir = experiment_basedir + "/FRGC_EyeL"
 alldb_eyeLR_normalized_base_dir = experiment_basedir + "/faces/AllDB_EyeLR"
 
 
+
+############################################################################################
+# ####################          RandomData experiment!!!!      #############################
+############################################################################################
+class ParamsRandomDataExperiment(system_parameters.ParamsSystem):
+    """ Experiment for learning unsupervised or supervised features from artificial data. """
+    def __init__(self, experiment_seed, num_latent_variables=10, regression=True, data_dimension=(32, 32),
+                 num_images_training=20000, num_images_supervised=10000, num_images_test=10000):
+        super(ParamsRandomDataExperiment, self).__init__()
+        self.experiment_seed = experiment_seed
+        self.num_latent_variables = num_latent_variables
+        self.regression = regression
+        self.data_dimension = data_dimension
+        self.flattened_data_dimension = numpy.array(self.data_dimension).prod()
+        self.num_images_training = num_images_training
+        self.num_images_supervised = num_images_supervised
+        self.num_images_test = num_images_test
+        self.enable_reduced_image_sizes = False
+        self.reduction_factor = 1.0
+        self.hack_image_size = self.data_dimension[0]
+        self.enable_hack_image_size = False
+        self.patch_network_for_RGB = False
+        self.mixing_matrix = numpy.random.normal(size=(self.num_latent_variables, self.flattened_data_dimension))
+
+    def create(self):
+        print("RandomData: starting with experiment_seed= %d" % self.experiment_seed)
+        numpy.random.seed(self.experiment_seed)
+
+        self.iTrain = [[self.iSeqCreateRandomData(self.num_images_training)]]
+        self.sTrain = [[self.sSeqCreateRandomData(self.iTrain[0][0], seed=-1, use_RGB_images=False)]]
+
+        self.iSeenid = self.iSeqCreateRandomData(self.num_images_supervised)
+        self.sSeenid = self.sSeqCreateRandomData(self.iSeenid, seed=-1, use_RGB_images=False)
+
+        self.iNewid = [[self.iSeqCreateRandomData(self.num_images_training)]]
+        self.sNewid = [[self.sSeqCreateRandomData(self.iNewid[0][0], seed=-1, use_RGB_images=False)]]
+
+        print("len(self.iTrain[0][0].input_files)= %d" % len(self.iTrain[0][0].input_files))
+        print("len(self.sTrain[0][0].input_files)= %d" % len(self.sTrain[0][0].input_files))
+
+        self.name = "Function Based Data Creation for RandomData"
+        self.network = "linearNetwork4L"  # Default Network, but ignored
+
+    def iSeqCreateRandomData(self, num_images):
+        print("***** Setting Information Parameters for RandomData ******")
+        iSeq = system_parameters.ParamsInput()
+        iSeq.data_base_dir = ""
+        iSeq.ids = list(range(num_images))
+
+        iSeq.input_files = []
+        iSeq.num_images = num_images
+        iSeq.params = []
+
+        iSeq.block_size = 1
+        iSeq.train_mode = "regular"
+        iSeq.correct_labels = numpy.random.uniform(size=(num_images, self.num_latent_variables))
+        iSeq.correct_labels[:-1,:] += iSeq.correct_labels[1:, :]
+        # low-pass filtering is applied to the labels so that SFA can find them
+        iSeq.correct_labels[:-1,:] += iSeq.correct_labels[1:, :]  # Again for extra slowness
+        iSeq.correct_labels[:-1,:] += iSeq.correct_labels[1:, :]  # Again for extra slowness
+        iSeq.correct_labels -= iSeq.correct_labels.min()
+        iSeq.correct_labels /= iSeq.correct_labels.max()  # Normalize labels to range 0 to 1
+
+        iSeq.correct_classes = (iSeq.correct_labels*10).clip(0, 9.9).astype(int)
+        return iSeq
+
+    def sSeqCreateRandomData(self, iSeq, seed=-1, use_RGB_images=False):
+        if seed >= 0 or seed is None:
+            numpy.random.seed(seed)
+
+        print("******** Setting Data Parameters for RandomData  ****************")
+        sSeq = system_parameters.ParamsDataLoading()
+        sSeq.num_images = iSeq.num_images
+        sSeq.block_size = iSeq.block_size
+        sSeq.train_mode = iSeq.train_mode
+        sSeq.image_width = self.data_dimension[1]
+        sSeq.image_height = self.data_dimension[0]
+        sSeq.subimage_width = sSeq.image_width
+        sSeq.subimage_height = sSeq.image_height
+
+        if use_RGB_images:
+            sSeq.convert_format = "RGB"  # "RGB", "L"
+        else:
+            sSeq.convert_format = "L"
+
+        sSeq.name = "RandomData"
+        sSeq.num_images = iSeq.num_images
+        sSeq.block_size = iSeq.block_size
+        sSeq.train_mode = iSeq.train_mode
+        sSeq.image_width = self.data_dimension[1]
+        sSeq.image_height = self.data_dimension[0]
+        sSeq.subimage_width = sSeq.image_width
+        sSeq.subimage_height = sSeq.image_height
+
+        sSeq.correct_labels = iSeq.correct_labels
+        sSeq.mixing_matrix = self.mixing_matrix
+
+        def create_arrays(newSeq):
+            noise_data = 0.1 * numpy.random.normal(size=(newSeq.num_images, newSeq.image_width * newSeq.image_height))
+            label_data = 0.1 * numpy.matmul(newSeq.correct_labels, newSeq.mixing_matrix)
+            final_data = label_data + noise_data + 0.5
+            return final_data.clip(0.0, 1.0) * 255.0
+
+        sSeq.load_data = create_arrays
+        return sSeq
+
+
+ParamsRandomDataFunc_32x32 = ParamsRandomDataExperiment(experiment_seed, num_latent_variables=1, regression=True,
+                                                        data_dimension=(32, 32), num_images_training=20000,
+                                                        num_images_supervised=10000, num_images_test=10000)
+
+
 def repeat_list_elements(a_list, rep):
     """ Creates a list where each element is repeated rep times. """
     return [element for _ in range(rep) for element in a_list]
