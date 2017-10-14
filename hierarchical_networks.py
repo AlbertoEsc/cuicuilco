@@ -222,6 +222,15 @@ layer.pca_node_class = mdp.nodes.PCANode  # None  #None
 layer.pca_args = {}
 layer.pca_out_dim = 100  # 40 # 35 #WARNING: 100 or None
 layer.exp_funcs = [identity]
+layer.sfa_node_class = mdp.nodes.SFANode  # mdp.nodes.GSFANode #mdp.nodes.GSFANode
+layer.sfa_out_dim = 35  # 3 #49*2 # *3 # None
+
+layer = pGSFADirectLayer = system_parameters.ParamsSFASuperNode()
+layer.name = "Direct GSFA Layer for MNIST"
+layer.pca_node_class = mdp.nodes.PCANode  # None  #None
+layer.pca_args = {}
+layer.pca_out_dim = 100  # 40 # 35 #WARNING: 100 or None
+layer.exp_funcs = [identity]
 layer.sfa_node_class = mdp.nodes.GSFANode  # mdp.nodes.GSFANode #mdp.nodes.GSFANode
 layer.sfa_out_dim = 35  # 3 #49*2 # *3 # None
 
@@ -2809,6 +2818,12 @@ my_DT = 1.96  # =1.96, 3 Labels
 for i in range(2, 9):
     network.layers[i].sfa_args["max_preserved_sfa"] = my_DT
 network.layers[8].pca_args["max_preserved_sfa"] = my_DT
+
+# WARNING. Experiment that attempts to increase robustness to new data
+for i in range(1,8):
+    network.layers[i].pca_node_class = mdp.nodes.AdaptiveCutoffNode
+    network.layers[i].pca_node_args = {'lower_cutoff_fraction':0.0001, 'upper_cutoff_fraction':0.0001}
+    network.layers[i].pca_out_dim = None
 
 HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96 = copy.deepcopy(HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels)
 HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96.layers = HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96.layers[0:9]
