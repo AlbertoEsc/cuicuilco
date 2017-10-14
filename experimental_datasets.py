@@ -3230,7 +3230,7 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
                                 # contrast_enhance=True,
                                 obj_avg_std=obj_avg_std_seenid, obj_std_min=obj_std_min_seenid,
                                 obj_std_max=obj_std_max_seenid, new_clusters=age_clusters_seenid,
-                                um_images_per_cluster_used=num_images_per_cluster_used_MORPH_seenid,
+                                num_images_per_cluster_used=num_images_per_cluster_used_MORPH_seenid,
                                 # 125+extra_images_LKO_third  #200 #300=>9000
                                 images_base_dir=age_eyes_normalized_base_dir_seenid,
                                 first_image_index=0, repetition_factor=1, seed=-1,
@@ -4415,9 +4415,9 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
 
 
 ParamsRAgeFunc_96x96 = ParamsRAgeFunc = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 96,
-                                                             use_setup_Guo=True, training_set=2)
-ParamsRAgeFunc_48x48 = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 48, use_setup_Guo=True, training_set=2)
-ParamsRAgeFunc_24x24 = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 24, use_setup_Guo=True, training_set=2)
+                                                             use_setup_Guo=True, training_set=1)
+ParamsRAgeFunc_48x48 = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 48, use_setup_Guo=True, training_set=1)
+ParamsRAgeFunc_24x24 = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 24, use_setup_Guo=True, training_set=1)
 
 
 #####################################################################################################################
