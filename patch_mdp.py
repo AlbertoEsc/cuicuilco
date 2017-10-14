@@ -32,6 +32,7 @@ mdp.nodes.NLIPCANode = histogram_equalization.NLIPCANode
 mdp.nodes.NormalizeABNode = histogram_equalization.NormalizeABNode
 mdp.nodes.HistogramEqualizationNode = histogram_equalization.HistogramEqualizationNode
 mdp.nodes.SFA_GaussianClassifier = more_nodes.SFA_GaussianClassifier
+mdp.nodes.BasicAdaptiveCutoffNode = more_nodes.BasicAdaptiveCutoffNode
 
 # print "Adding localized inverse support..."
 mdp.Flow.localized_inverse = inversion.localized_inverse

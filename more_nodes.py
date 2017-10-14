@@ -3258,3 +3258,54 @@ class SFA_GaussianClassifier(mdp.ClassifierNode):
 
     def is_trainable(self):
         return True
+
+
+
+class BasicAdaptiveCutoffNode(mdp.PreserveDimNode):
+    """Node to cut off values at data-derived bounds.
+
+    Similar to CutoffNode, but the bounds are computed based on the training data. 
+    Also similar to AdaptiveCutoffNode, but no histograms are stored and the limits are hard.
+    
+    This node should have no effect on training data, only on test data.
+    """
+
+    def __init__(self, input_dim=None, output_dim=None, dtype=None):
+        """Initialize node. """
+        super(BasicAdaptiveCutoffNode, self).__init__(input_dim=input_dim,
+                                         output_dim=output_dim,
+                                         dtype=dtype)
+        self.lower_bound = None
+        self.upper_bound = None
+
+    @staticmethod
+    def is_trainable():
+        return True
+
+    @staticmethod
+    def is_invertible():
+        return True
+
+    def _get_supported_dtypes(self):
+        return (mdp.utils.get_dtypes('Float') +
+                mdp.utils.get_dtypes('AllInteger'))
+
+    def _train(self, x):
+        """Training method updates the lower and upper bounds. """
+        if self.lower_bound is None:
+            self.lower_bound = x.min(axis=0)
+        else:
+            self.lower_bound = numpy.minimum(self.lower_bound, x)
+
+        if self.upper_bound is None:
+            self.upper_bound = x.max(axis=0)
+        else:
+            self.upper_bound = numpy.maxium(self.upper_bound, x)
+
+    def _execute(self, x):
+        """Return the clipped data."""
+        return numpy.clip(x, self.lower_bound, self.upper_bound)
+
+    def _inverse(self, x):
+        """An approximate inverse. """
+        return x
