@@ -127,10 +127,10 @@ class ParamsSystem(object):
         self.block_size = None
         self.train_mode = None
         # Warning: just guessing common values here
-        self.enable_reduced_image_sizes = True
-        self.reduction_factor = 2.0
-        self.hack_image_size = 64
-        self.enable_hack_image_size = True
+        self.enable_reduced_image_sizes = False  # True
+        self.reduction_factor = 1.0  # 2.0
+        self.hack_image_size = 64  # 64
+        self.enable_hack_image_size = False  # True
         self.patch_network_for_RGB = False
 
     def __values__(self):
