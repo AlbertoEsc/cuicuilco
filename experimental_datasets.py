@@ -189,16 +189,26 @@ class ParamsCIFAR10Experiment(system_parameters.ParamsSystem):
         self.training_data = self.unpickle2(self.experiment_basedir + '/data_batch_1')
         # keys are: 'data', 'labels', 'batch_label', 'filenames'
 
-        for batch_filename in ['data_batch_2', 'data_batch_3', 'data_batch_4', 'data_batch_5']:
-            batch = self.unpickle2(self.experiment_basedir + '/' + batch_filename)
-            self.training_data['data'] = numpy.append(self.training_data['data'], batch['data'], axis=0)
-            self.training_data['labels'] = self.training_data['labels'] + batch['labels']
-            self.training_data['filenames'] = self.training_data['filenames'] + batch['filenames']
+        # for batch_filename in ['data_batch_2', 'data_batch_3', 'data_batch_4', 'data_batch_5']:
+        #    batch = self.unpickle2(self.experiment_basedir + '/' + batch_filename)
+        #    self.training_data['data'] = numpy.append(self.training_data['data'], batch['data'], axis=0)
+        #    self.training_data['labels'] = self.training_data['labels'] + batch['labels']
+        #    self.training_data['filenames'] = self.training_data['filenames'] + batch['filenames']
+        self.training_data['data'] = self.training_data['data'].reshape(-1, 3, 32, 32).transpose(0,2,3,1).astype("uint8").reshape(-1,3072)
         self.training_data['batch_label'] = "All batches together"
         self.training_data['labels'] = numpy.array(self.training_data['labels'])
+	ordering = numpy.argsort(self.training_data['labels'])
+	self.training_data['data'] = self.training_data['data'][ordering]
+	self.training_data['labels'] = self.training_data['labels'][ordering]
+	self.training_data['filenames'] = [self.training_data['filenames'][i] for i in ordering]
 
         self.test_data = self.unpickle2(self.experiment_basedir + '/test_batch')
+        self.test_data['data'] = self.test_data['data'].reshape(-1, 3, 32, 32).transpose(0,2,3,1).astype("uint8").reshape(-1,3072)
         self.test_data['labels'] = numpy.array(self.test_data['labels'])
+        ordering = numpy.argsort(self.test_data['labels'])
+        self.test_data['data'] = self.test_data['data'][ordering]
+        self.test_data['labels'] = self.test_data['labels'][ordering]
+        self.test_data['filenames'] = [self.test_data['filenames'][i] for i in ordering]
 
         self.training_data_size = self.training_data['data'].shape[0]
         self.test_data_size = self.test_data['data'].shape[0]
@@ -252,7 +262,7 @@ class ParamsCIFAR10Experiment(system_parameters.ParamsSystem):
 
         iSeq.correct_classes = dataset['labels'][used_indices]
         iSeq.correct_labels = iSeq.correct_classes.astype('float')
-        iSeq.block_size = 1
+        iSeq.block_size = 10
         iSeq.train_mode = ("classification", iSeq.correct_labels, 1.0)
         return iSeq
 
@@ -280,7 +290,7 @@ class ParamsCIFAR10Experiment(system_parameters.ParamsSystem):
 
 
         def create_arrays(newSeq):
-            return newSeq.dataset['data'][newSeq.ids]
+            return newSeq.dataset['data'][newSeq.ids] * 1.0 / 255.0
 
         sSeq.load_data = create_arrays
         return sSeq
