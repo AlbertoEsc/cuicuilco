@@ -2946,7 +2946,7 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
         age_files_list_set1 = self.list_available_images(age_eyes_normalized_base_dir_set1, from_subdirs=None,
                                                          verbose=False)
         age_labeled_files_list_set1 = self.append_GT_labels_to_files(age_files_list_set1, age_all_labels_map_MORPH)
-        age_clusters_set1 = self.age_cluster_labeled_files(age_labeled_files_list_set1, repetition=22, num_clusters=32,
+        age_clusters_set1 = self.age_cluster_labeled_files(age_labeled_files_list_set1, repetition=4, num_clusters=32,
                                                            trim_number=None, shuffle_each_cluster=False)  # r=22
         # WARNING, should be: repetition=22
         # age_clusters_set1 = age_cluster_labeled_files(age_labeled_files_list_set1, repetition=16,
@@ -2975,9 +2975,10 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
         age_files_list_set1b = self.list_available_images(age_eyes_normalized_base_dir_set1b, from_subdirs=None,
                                                           verbose=False)
         age_labeled_files_list_set1b = self.append_GT_labels_to_files(age_files_list_set1b, age_all_labels_map_MORPH,
-                                                                      select_races=[-2, -1, 0, 1, 2], verbose=True)
+                                                                      select_races=[-2, -1, 0, 1, 2], verbose=True)  # [-2, 2] for only black and white (redundant)
         age_clusters_set1b = self.age_cluster_labeled_files(age_labeled_files_list_set1b, repetition=3, num_clusters=1,
                                                             trim_number=None, shuffle_each_cluster=False)  # r=3
+        # WARNING, should be: repetition=3
         # age_clusters_set1b = age_cluster_labeled_files(age_labeled_files_list_set1b, repetition=2, num_clusters=1,
         # trim_number=None, shuffle_each_cluster=False)
 
@@ -3008,7 +3009,7 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
                                                              verbose=False)
         age_labeled_files_list_set1test = self.append_GT_labels_to_files(age_files_list_set1test,
                                                                          age_all_labels_map_MORPH,
-                                                                         select_races=[-2, -1, 0, 1, 2], verbose=True)
+                                                                         select_races=[-2, -1, 0, 1, 2], verbose=True) # [-2, 2] for only black and white
         age_clusters_set1test = self.age_cluster_labeled_files(age_labeled_files_list_set1test, repetition=1,
                                                                num_clusters=1, trim_number=None,
                                                                shuffle_each_cluster=False)
@@ -3224,7 +3225,7 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
                                 smin=base_scale / factor_scale_seenid,
                                 smax=base_scale * factor_scale_seenid,
                                 delta_rotation=delta_rotation * factor_rotation_seenid,
-                                pre_mirroring="all", contrast_enhance=True,
+                                pre_mirroring="none", contrast_enhance=True,  # Activate for mirroring experiments
                                 # 192x192:iSeq_set = iSeenidRAge = iSeqCreateRAge(dx=0.0, dy=0.0,
                                 # smin=0.86667, smax=0.9, delta_rotation=1.5, pre_mirroring="none",
                                 # contrast_enhance=True,
@@ -3268,7 +3269,7 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
             else:
                 print ("Selecting NewId data using leave_k_out_strategy, with k=%d" % leave_k_out_MORPH)
                 iSeq_set = iNewidRAge = [[self.iSeqCreateRAge(dx=0, dy=0, smin=base_scale, smax=base_scale,
-                                                              delta_rotation=0.0, pre_mirroring="all",
+                                                              delta_rotation=0.0, pre_mirroring="none",   # Activate for mirroring experiments
                                                               contrast_enhance=True,
                                                               obj_avg_std=0.0, obj_std_min=obj_std_base,
                                                               obj_std_max=obj_std_base, new_clusters=age_clusters_newid,
@@ -3414,7 +3415,7 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
                 print ("Unique classes for Newid: %d" % len(numpy.unique(iNewidRAge[0][0].correct_classes)))
 
                 for classnr in all_classes:
-                    print ("|class %d| = %d, \n" % (classnr, (iSeenidRAge.correct_classes == classnr).sum()))
+                    print ("|class %d| = %d," % (classnr, (iSeenidRAge.correct_classes == classnr).sum()))
             # quit()
 
             print ("Verifying that train and test image filenames are disjoint (not verifying leave-k-out here)")

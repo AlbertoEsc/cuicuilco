@@ -2821,8 +2821,8 @@ network.layers[8].pca_args["max_preserved_sfa"] = my_DT
 
 # WARNING. Experiment that attempts to increase robustness to new data
 for i in range(1,8):
-    network.layers[i].pca_node_class = mdp.nodes.AdaptiveCutoffNode
-    network.layers[i].pca_node_args = {'lower_cutoff_fraction':0.0001, 'upper_cutoff_fraction':0.0001}
+    network.layers[i].pca_node_class = mdp.nodes.BasicAdaptiveCutoffNode
+    network.layers[i].pca_node_args = {}
     network.layers[i].pca_out_dim = None
 
 HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96 = copy.deepcopy(HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels)
