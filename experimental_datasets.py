@@ -14,6 +14,9 @@ import string
 
 DAYS_IN_A_YEAR = 365.242
 
+#############################################################################################
+# ################# Read environment variables and setup directories ########################
+#############################################################################################
 experiment_seed = os.getenv("CUICUILCO_EXPERIMENT_SEED")  # 1112223339 #1112223339
 if experiment_seed:
     experiment_seed = int(experiment_seed)
@@ -39,6 +42,161 @@ alldbnormalized_base_dir = experiment_basedir + "/faces/AllDBNormalized"
 frgc_eyeL_normalized_base_dir = experiment_basedir + "/FRGC_EyeL"
 alldb_eyeLR_normalized_base_dir = experiment_basedir + "/faces/AllDB_EyeLR"
 
+
+############################################################################################
+# ####################   Experiment that loads CIFAR-10 data   #############################
+############################################################################################
+class ParamsCIFAR10Experiment(system_parameters.ParamsSystem):
+    """ Experiment that loads the CIFAR-10 data (about 60k 32x32 images and 10 classes). """
+    def __init__(self, experiment_seed, experiment_basedir, num_hold_out_images=0):
+        super(ParamsCIFAR10Experiment, self).__init__()
+        self.experiment_seed = experiment_seed
+        self.experiment_basedir = experiment_basedir
+        self.num_hold_out_images = num_hold_out_images
+        self.batches_meta = None
+        # self.enable_reduced_image_sizes = False
+        # self.reduction_factor = 1.0
+        # self.hack_image_size = self.data_dimension[0]
+        # self.enable_hack_image_size = False
+        # self.patch_network_for_RGB = False
+
+    # Python 2 version.
+    @staticmethod
+    def unpickle2(file):
+        import cPickle
+        with open(file, 'rb') as fo:
+            dict = cPickle.load(fo)
+        return dict
+
+    # Python 2 version.
+    @staticmethod
+    def unpickle3(file):
+        import pickle
+        with open(file, 'rb') as fo:
+            dict = pickle.load(fo, encoding='bytes')
+        return dict
+
+    def create(self):
+        print("CIFR10: starting with experiment_seed= %d" % self.experiment_seed)
+        numpy.random.seed(self.experiment_seed)
+
+        self.batches_meta = self.unpickle2(self.experiment_basedir + '/batches.meta')
+        # {'label_names': ['airplane', 'automobile', 'bird', 'cat', 'deer',
+        # 'dog', 'frog', 'horse', 'ship', 'truck'], 'num_cases_per_batch': 10000, 'num_vis': 3072}
+
+        self.training_data = self.unpickle2(self.experiment_basedir + '/data_batch_1')
+        # keys are: 'data', 'labels', 'batch_label', 'filenames'
+
+        for batch_filename in ['data_batch_2', 'data_batch_3', 'data_batch_4', 'data_batch_5']:
+            batch = self.unpickle2(self.experiment_basedir + '/' + batch_filename)
+            self.training_data['data'] = numpy.append(self.training_data['data'], batch['data'], axis=0)
+            self.training_data['labels'] = self.training_data['labels'] + batch['labels']
+            self.training_data['filenames'] = self.training_data['filenames'] + batch['filenames']
+        self.training_data['data'] = self.training_data['data'].reshape(-1, 3, 32, 32).transpose(0,2,3,1).astype("uint8").reshape(-1,3072)
+        self.training_data['batch_label'] = "All batches together"
+        self.training_data['labels'] = numpy.array(self.training_data['labels'])
+        ordering = numpy.argsort(self.training_data['labels'])
+        self.training_data['data'] = self.training_data['data'][ordering]
+        self.training_data['labels'] = self.training_data['labels'][ordering]
+        self.training_data['filenames'] = [self.training_data['filenames'][i] for i in ordering]
+
+        self.test_data = self.unpickle2(self.experiment_basedir + '/test_batch')
+        self.test_data['data'] = self.test_data['data'].reshape(-1, 3, 32, 32).transpose(0,2,3,1).astype("uint8").reshape(-1,3072)
+        self.test_data['labels'] = numpy.array(self.test_data['labels'])
+        ordering = numpy.argsort(self.test_data['labels'])
+        self.test_data['data'] = self.test_data['data'][ordering]
+        self.test_data['labels'] = self.test_data['labels'][ordering]
+        self.test_data['filenames'] = [self.test_data['filenames'][i] for i in ordering]
+
+        self.training_data_size = self.training_data['data'].shape[0]
+        self.test_data_size = self.test_data['data'].shape[0]
+
+        if self.num_hold_out_images == 0:
+            self.num_images_training = self.training_data_size
+            # self.num_images_supervised = self.traning_data_size
+            self.num_images_test = self.test_data['data'].shape[0]
+            self.indices_training = numpy.arange(self.training_data_size)
+            # self.indices_supervised = all_subimages_training
+            self.indices_test = numpy.arange(self.test_data_size)
+            self.effective_test_data = self.test_data
+        elif self.num_hold_out_images < self.traning_data_size:
+            all_subimages_training = numpy.arange(self.traning_data_size)
+            numpy.random.shuffle(all_subimages_training)
+            self.num_images_training = self.training_data_size - self.num_hold_out_images
+            # self.num_images_supervised = self.traning_data_size - self.num_hold_out_images
+            self.num_images_test = self.num_hold_out_images
+            self.indices_training = all_subimages_training[0:self.num_images_training]
+            # self.indices_supervised = all_subimages_training
+            self.indices_test = all_subimages_training[self.num_images_training:]
+            self.effective_test_data = self.training_data
+        else:
+            ex = "Invalid size of hold out set:" + str(self.num_hold_out_images)
+            raise Exception(ex)
+
+        self.iTrain = [[self.iSeqCreate(self.training_data, self.indices_training)]]
+        self.sTrain = [[self.sSeqCreate(self.iTrain[0][0], seed=-1, use_RGB_images=True)]]
+
+        self.iSeenid = self.iSeqCreate(self.training_data, self.indices_training)
+        self.sSeenid = self.sSeqCreate(self.iSeenid, seed=-1, use_RGB_images=True)
+
+        self.iNewid = [[self.iSeqCreate(self.effective_test_data, self.indices_test)]]
+        self.sNewid = [[self.sSeqCreate(self.iNewid[0][0], seed=-1, use_RGB_images=True)]]
+
+        print("len(self.iTrain[0][0].input_files)= %d" % len(self.iTrain[0][0].input_files))
+        print("len(self.sTrain[0][0].input_files)= %d" % len(self.sTrain[0][0].input_files))
+
+        self.name = "Function Based Data Creation for CIFAR10"
+
+    @staticmethod
+    def iSeqCreate(dataset, used_indices):
+        print("***** Setting Information Parameters for CIFAR10 ******")
+        iSeq = system_parameters.ParamsInput()
+        iSeq.data_base_dir = ""
+        iSeq.ids = used_indices
+        iSeq.dataset = dataset
+
+        iSeq.input_files = []
+        iSeq.num_images = len(used_indices)
+        iSeq.params = []
+
+        iSeq.correct_classes = dataset['labels'][used_indices]
+        iSeq.correct_labels = iSeq.correct_classes.astype('float')
+        iSeq.block_size = 10
+        iSeq.train_mode = ("classification", iSeq.correct_labels, 1.0)
+        return iSeq
+
+    @staticmethod
+    def sSeqCreate(iSeq, seed=-1, use_RGB_images=True):
+        if seed >= 0 or seed is None:
+            numpy.random.seed(seed)
+
+        print("******** Setting Data Parameters for CIFAR10  ****************")
+        sSeq = system_parameters.ParamsDataLoading()
+        sSeq.name = "CIFAR10"
+        sSeq.num_images = iSeq.num_images
+        sSeq.dataset = iSeq.dataset
+        sSeq.ids = iSeq.ids
+        sSeq.block_size = iSeq.block_size
+        sSeq.train_mode = iSeq.train_mode
+        # sSeq.image_width = 32
+        # sSeq.image_height = 32
+        sSeq.subimage_width = 32
+        sSeq.subimage_height = 32
+
+        if use_RGB_images:
+            sSeq.convert_format = "RGB"  # "RGB", "L"
+        else:
+            sSeq.convert_format = "L"
+
+
+        def create_arrays(newSeq):
+            return newSeq.dataset['data'][newSeq.ids] * 1.0 / 255.0
+
+        sSeq.load_data = create_arrays
+        return sSeq
+
+ParamsCIFAR10Func_32x32 = ParamsCIFAR10Experiment(experiment_seed, experiment_basedir + '/cifar-10-batches-py',
+                                                  num_hold_out_images=0)
 
 
 ############################################################################################
@@ -141,162 +299,6 @@ class ParamsRandomDataExperiment(system_parameters.ParamsSystem):
 ParamsRandomDataFunc_32x32 = ParamsRandomDataExperiment(experiment_seed, num_latent_variables=1, regression=True,
                                                         data_dimension=(32, 32), num_images_training=20000,
                                                         num_images_supervised=10000, num_images_test=10000)
-
-
-
-
-############################################################################################
-# ####################   Experiment that loads CIFAR-10 data   #############################
-############################################################################################
-class ParamsCIFAR10Experiment(system_parameters.ParamsSystem):
-    """ Experiment that loads the CIFAR-10 data (about 60k 32x32 images and 10 classes). """
-    def __init__(self, experiment_seed, experiment_basedir, num_hold_out_images=0):
-        super(ParamsCIFAR10Experiment, self).__init__()
-        self.experiment_seed = experiment_seed
-        self.experiment_basedir = experiment_basedir
-        self.num_hold_out_images = num_hold_out_images
-        self.batches_meta = None
-        # self.enable_reduced_image_sizes = False
-        # self.reduction_factor = 1.0
-        # self.hack_image_size = self.data_dimension[0]
-        # self.enable_hack_image_size = False
-        # self.patch_network_for_RGB = False
-
-    # Python 2 version.
-    @staticmethod
-    def unpickle2(file):
-        import cPickle
-        with open(file, 'rb') as fo:
-            dict = cPickle.load(fo)
-        return dict
-
-    # Python 2 version.
-    @staticmethod
-    def unpickle3(file):
-        import pickle
-        with open(file, 'rb') as fo:
-            dict = pickle.load(fo, encoding='bytes')
-        return dict
-
-    def create(self):
-        print("CIFR10: starting with experiment_seed= %d" % self.experiment_seed)
-        numpy.random.seed(self.experiment_seed)
-
-        self.batches_meta = self.unpickle2(self.experiment_basedir + '/batches.meta')
-        # {'label_names': ['airplane', 'automobile', 'bird', 'cat', 'deer',
-        # 'dog', 'frog', 'horse', 'ship', 'truck'], 'num_cases_per_batch': 10000, 'num_vis': 3072}
-
-        self.training_data = self.unpickle2(self.experiment_basedir + '/data_batch_1')
-        # keys are: 'data', 'labels', 'batch_label', 'filenames'
-
-        # for batch_filename in ['data_batch_2', 'data_batch_3', 'data_batch_4', 'data_batch_5']:
-        #    batch = self.unpickle2(self.experiment_basedir + '/' + batch_filename)
-        #    self.training_data['data'] = numpy.append(self.training_data['data'], batch['data'], axis=0)
-        #    self.training_data['labels'] = self.training_data['labels'] + batch['labels']
-        #    self.training_data['filenames'] = self.training_data['filenames'] + batch['filenames']
-        self.training_data['data'] = self.training_data['data'].reshape(-1, 3, 32, 32).transpose(0,2,3,1).astype("uint8").reshape(-1,3072)
-        self.training_data['batch_label'] = "All batches together"
-        self.training_data['labels'] = numpy.array(self.training_data['labels'])
-	ordering = numpy.argsort(self.training_data['labels'])
-	self.training_data['data'] = self.training_data['data'][ordering]
-	self.training_data['labels'] = self.training_data['labels'][ordering]
-	self.training_data['filenames'] = [self.training_data['filenames'][i] for i in ordering]
-
-        self.test_data = self.unpickle2(self.experiment_basedir + '/test_batch')
-        self.test_data['data'] = self.test_data['data'].reshape(-1, 3, 32, 32).transpose(0,2,3,1).astype("uint8").reshape(-1,3072)
-        self.test_data['labels'] = numpy.array(self.test_data['labels'])
-        ordering = numpy.argsort(self.test_data['labels'])
-        self.test_data['data'] = self.test_data['data'][ordering]
-        self.test_data['labels'] = self.test_data['labels'][ordering]
-        self.test_data['filenames'] = [self.test_data['filenames'][i] for i in ordering]
-
-        self.training_data_size = self.training_data['data'].shape[0]
-        self.test_data_size = self.test_data['data'].shape[0]
-
-        if self.num_hold_out_images == 0:
-            self.num_images_training = self.training_data_size
-            # self.num_images_supervised = self.traning_data_size
-            self.num_images_test = self.test_data['data'].shape[0]
-            self.indices_training = numpy.arange(self.training_data_size)
-            # self.indices_supervised = all_subimages_training
-            self.indices_test = numpy.arange(self.test_data_size)
-            self.effective_test_data = self.test_data
-        elif self.num_hold_out_images < self.traning_data_size:
-            all_subimages_training = numpy.arange(self.traning_data_size)
-            numpy.random.shuffle(all_subimages_training)
-            self.num_images_training = self.training_data_size - self.num_hold_out_images
-            # self.num_images_supervised = self.traning_data_size - self.num_hold_out_images
-            self.num_images_test = self.num_hold_out_images
-            self.indices_training = all_subimages_training[0:self.num_images_training]
-            # self.indices_supervised = all_subimages_training
-            self.indices_test = all_subimages_training[self.num_images_training:]
-            self.effective_test_data = self.training_data
-        else:
-            ex = "Invalid size of hold out set:" + str(self.num_hold_out_images)
-            raise Exception(ex)
-
-        self.iTrain = [[self.iSeqCreate(self.training_data, self.indices_training)]]
-        self.sTrain = [[self.sSeqCreate(self.iTrain[0][0], seed=-1, use_RGB_images=True)]]
-
-        self.iSeenid = self.iSeqCreate(self.training_data, self.indices_training)
-        self.sSeenid = self.sSeqCreate(self.iSeenid, seed=-1, use_RGB_images=True)
-
-        self.iNewid = [[self.iSeqCreate(self.effective_test_data, self.indices_test)]]
-        self.sNewid = [[self.sSeqCreate(self.iNewid[0][0], seed=-1, use_RGB_images=True)]]
-
-        print("len(self.iTrain[0][0].input_files)= %d" % len(self.iTrain[0][0].input_files))
-        print("len(self.sTrain[0][0].input_files)= %d" % len(self.sTrain[0][0].input_files))
-
-        self.name = "Function Based Data Creation for CIFAR10"
-
-    def iSeqCreate(self, dataset, used_indices):
-        print("***** Setting Information Parameters for CIFAR10 ******")
-        iSeq = system_parameters.ParamsInput()
-        iSeq.data_base_dir = ""
-        iSeq.ids = used_indices
-        iSeq.dataset = dataset
-
-        iSeq.input_files = []
-        iSeq.num_images = len(used_indices)
-        iSeq.params = []
-
-        iSeq.correct_classes = dataset['labels'][used_indices]
-        iSeq.correct_labels = iSeq.correct_classes.astype('float')
-        iSeq.block_size = 10
-        iSeq.train_mode = ("classification", iSeq.correct_labels, 1.0)
-        return iSeq
-
-    def sSeqCreate(self, iSeq, seed=-1, use_RGB_images=True):
-        if seed >= 0 or seed is None:
-            numpy.random.seed(seed)
-
-        print("******** Setting Data Parameters for CIFAR10  ****************")
-        sSeq = system_parameters.ParamsDataLoading()
-        sSeq.name = "CIFAR10"
-        sSeq.num_images = iSeq.num_images
-        sSeq.dataset = iSeq.dataset
-        sSeq.ids = iSeq.ids
-        sSeq.block_size = iSeq.block_size
-        sSeq.train_mode = iSeq.train_mode
-        # sSeq.image_width = 32
-        # sSeq.image_height = 32
-        sSeq.subimage_width = 32
-        sSeq.subimage_height = 32
-
-        if use_RGB_images:
-            sSeq.convert_format = "RGB"  # "RGB", "L"
-        else:
-            sSeq.convert_format = "L"
-
-
-        def create_arrays(newSeq):
-            return newSeq.dataset['data'][newSeq.ids] * 1.0 / 255.0
-
-        sSeq.load_data = create_arrays
-        return sSeq
-
-ParamsCIFAR10Func_32x32 = ParamsCIFAR10Experiment(experiment_seed, experiment_basedir + '/cifar-10-batches-py',
-                                                  num_hold_out_images=0)
 
 
 def repeat_list_elements(a_list, rep):

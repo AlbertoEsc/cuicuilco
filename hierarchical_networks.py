@@ -1535,7 +1535,7 @@ network.L4.sfa_args = {"pre_expansion_node_class": None,
 
 network.layers = [network.L0, network.L1, network.L2, network.L3, network.L4]  # ,network.L5,network.L6]
 network.L0.pca_out_dim = 30
-HiGSFANet_out_dims = [39, 50, 60, 75, 75]  # = [30, 45, 60, 75, 75]
+HiGSFANet_out_dims = [30, 45, 60, 75, 75]  # [39, 50, 60, 75, 75]
 
 max_preserved_sfas = [3, 4, 6, 9, 9]
 for i in range(len(network.layers)):
@@ -1587,6 +1587,10 @@ L4.sfa_args["expansion_funcs"] = [identity, unsigned_08expo]  # DEBUG ch3o9s32QT
 # ch3o4s9QT, ch3o0s4QT
 # ch3o6s16QT, ch3o0s4QT]
 # ch3o9s24QT, ch3o9s13CT
+
+HiGSFANet_out_dims = [39, 50, 60, 75, 75]
+for i in range(len(network.layers)):
+    network.layers[i].sfa_out_dim = HiGSFANet_out_dims[i]
 
 
 print("*******************************************************************")
