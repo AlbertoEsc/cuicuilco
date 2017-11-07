@@ -5,7 +5,7 @@ import numpy
 import sfa_libs
 import more_nodes
 import image_loader
-from nonlinear_expansion import sgn_expo
+from nonlinear_expansion import signed_expo
 import PIL
 from PIL import Image
 import copy
@@ -437,11 +437,11 @@ class ParamsGenderExperiment(system_parameters.ParamsSystem):
                 iSeenidGender.correct_labels = iSeenidGender.correct_labels ** power
                 iNewidGender.correct_labels = iNewidGender.correct_labels ** power
             elif power == 3 or power == 1:
-                iTrainGender0.correct_labels = sgn_expo(iTrainGender0.correct_labels + offset, power)
-                iTrainGender1.correct_labels = sgn_expo(iTrainGender1.correct_labels + offset, power)
-                # iTrainGender2.correct_labels = sgn_expo(iTrainGender2.correct_labels, 1.0)
-                iSeenidGender.correct_labels = sgn_expo(iSeenidGender.correct_labels + offset, power)
-                iNewidGender.correct_labels = sgn_expo(iNewidGender.correct_labels + offset, power)
+                iTrainGender0.correct_labels = signed_expo(iTrainGender0.correct_labels + offset, power)
+                iTrainGender1.correct_labels = signed_expo(iTrainGender1.correct_labels + offset, power)
+                # iTrainGender2.correct_labels = signed_expo(iTrainGender2.correct_labels, 1.0)
+                iSeenidGender.correct_labels = signed_expo(iSeenidGender.correct_labels + offset, power)
+                iNewidGender.correct_labels = signed_expo(iNewidGender.correct_labels + offset, power)
             else:
                 er = "Dont know how to handle power properly, power=", power
                 raise Exception(er)
