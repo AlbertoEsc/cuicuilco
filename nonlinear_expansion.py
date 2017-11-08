@@ -530,9 +530,17 @@ def QT_AP(x, d=0.4):
     return QT(xx)
 
 
+def QT_90_AP08(x):
+    return QT_AP(x[:, 0:90], d=0.8)
+
+
 def CT_AP(x, d=0.3):
     xx = signed_expo(x, d)
     return CT(xx)
+
+
+def CT_30_AP08(x):
+    return CT_AP(x[:, 0:30], d=0.8)
 
 
 def pairwise_adjacent_expansion_subset(x, adj, func, reflexive=True, k=10):
@@ -634,6 +642,15 @@ def divN_selK_unsigned_08expo(x, num_parts, max_feats_per_part):
         y[:, split_size * part:split_size * (part + 1)] = unsigned_08expo(
             x[:, orig_part_size * part:orig_part_size * part + split_size])
     return y
+
+
+
+def unsigned_08expo_p15(x):
+    return unsigned_08expo(x + 1.5)
+
+
+def unsigned_08expo_m15(x):
+    return unsigned_08expo(x - 1.5)
 
 
 def sel14_QT(x):
