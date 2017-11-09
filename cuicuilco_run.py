@@ -28,6 +28,7 @@
 #####################################################################################################################
 
 
+from __future__ import print_function
 import numpy
 import scipy
 import scipy.misc
@@ -68,12 +69,16 @@ import matplotlib.pyplot as plt
 
 __version__ = "0.8.0"
 
+# For Python 2 and 3 compatibility
+from builtins import input
+cmp = lambda(x, y): (x > y) - (x < y)
+
 # benchmark is a list that contains benchmark information (running times) with entries: ("description", time as float
-#  in seconds)
+#  in seconds). This will be upgraded to a Benchmark object.
 benchmark = None
 
 mkl.set_num_threads(18)  # Number of threads used by mlk to parallelize matrix operations of numpy.
-# Adjust this value according to the number of cores in your system.
+# Adjust this value according to the number of cores in your system. MKL might decide to ignore this.
 
 random_seed = 123456  # Default seed used by hierarchical_networks
 numpy.random.seed(random_seed)
@@ -160,43 +165,43 @@ cuicuilco_lock_file = "queue_cuicuilco"
 minutes_sleep = 0
 
 t0 = time.time()
-print "LOADING INPUT/SETUP INFORMATION"
+print("LOADING INPUT/SETUP INFORMATION")
 
 import hierarchical_networks
 import experimental_datasets
 
-print "Using mdp version:", mdp.__version__, "file:", mdp.__file__
-print hierarchical_networks.__file__
-print experimental_datasets.__file__
+print("Using mdp version:", mdp.__version__, "file:", mdp.__file__)
+print(hierarchical_networks.__file__)
+print(experimental_datasets.__file__)
 
-print "Attempting to retrieve hash of current git commit"
+print("Attempting to retrieve hash of current git commit")
 try:
-    print "output of \"$git describe --tags\":", subprocess.check_output(["git", "describe", "--tags"]).strip()
-    print "output of \"$git rev-parse HEAD\":", subprocess.check_output(["git", "rev-parse", "HEAD"]).strip()
+    print ("output of \"$git describe --tags\":", subprocess.check_output(["git", "describe", "--tags"]).strip())
+    print ("output of \"$git rev-parse HEAD\":", subprocess.check_output(["git", "rev-parse", "HEAD"]).strip())
 except subprocess.CalledProcessError as e:
-    print "\nFailed to determine current git commit:", str(e), "\n"
+    print ("\nFailed to determine current git commit:", str(e), "\n")
 
-print "List of modules and their versions:"
+print ("List of modules and their versions:")
 obj_names = sys.modules.keys()
 for obj_name in obj_names:
     obj_value = sys.modules[obj_name]
     obj_members = dir(obj_value)  # getmembers(obj_value)
     if "__version__" in obj_members:
-        print "   using ", obj_name, " version: ", obj_value.__version__
+        print ("   using ", obj_name, " version: ", obj_value.__version__)
 
 available_experiments = {}
-print "Creating list of available experiments:"
+print ("Creating list of available experiments:")
 for (obj_name, obj_value) in getmembers(experimental_datasets):
     if isinstance(obj_value, system_parameters.ParamsSystem):
-        print "   ", obj_name
+        print ("   ", obj_name)
         available_experiments[obj_name] = obj_value
 # print "object", obj.__name__
 
 available_networks = {}
-print "Creating list of available networks:"
+print ("Creating list of available networks:")
 for (obj_name, obj_value) in getmembers(hierarchical_networks):
     if isinstance(obj_value, system_parameters.ParamsNetwork) and obj_name != "network":
-        print "   ", obj_name
+        print ("   ", obj_name)
         available_networks[obj_name] = obj_value
 # print "object", obj.__name__
 
@@ -225,7 +230,7 @@ def svm_scale(data, mins, maxs, svm_min, svm_max):
 
 
 if coherent_seeds:
-    print "experimental_datasets.experiment_seed=", experiment_seed
+    print ("experimental_datasets.experiment_seed=", experiment_seed)
     numpy.random.seed(experiment_seed + 111111)
 
 if __name__ == "__main__":  # ############## Parse command line arguments ####################
@@ -233,7 +238,7 @@ if __name__ == "__main__":  # ############## Parse command line arguments ######
         argv = None
         if argv is None:
             argv = sys.argv
-        print "Apparent command line arguments: \n", " ".join(argv)
+        print ("Apparent command line arguments: \n", " ".join(argv))
         if len(argv) >= 2:
             try:
                 opts, args = getopt.getopt(argv[1:], "", ["InputFilename=", "OutputFilename=", "EnableDisplay=",
@@ -271,140 +276,140 @@ if __name__ == "__main__":  # ############## Parse command line arguments ######
                                                           "MapDaysToYears=", "AddNoiseToSeenid=", "ClipSeenidNewid=",
                                                           "HierarchicalNetwork=", "ExperimentalDataset=",
                                                           "SFAGCReducedDim=", "ObjectiveLabel=", "help"])
-                print "opts=", opts
-                print "args=", args
+                print ("opts=", opts)
+                print ("args=", args)
 
                 if len(args) > 0:
-                    print "Arguments not understood:", args
+                    print ("Arguments not understood:", args)
                     sys.exit(2)
 
                 for opt, arg in opts:
                     if opt in ('--InputFilename',):
                         input_filename = arg
-                        print "Using the following input file:", input_filename
+                        print ("Using the following input file:", input_filename)
                     elif opt in ('--OutputFilename',):
                         output_filename = arg
-                        print "Using the following output file:", output_filename
+                        print ("Using the following output file:", output_filename)
                     elif opt in ('--EnableDisplay',):
                         if arg == '1':
                             enable_display = True
                         else:
                             enable_display = False
-                        print "Setting enable_display to", enable_display
+                        print ("Setting enable_display to", enable_display)
                     elif opt in ('--CacheAvailable',):
                         if arg == '1':
                             cache_available = True
                         else:
                             cache_available = False
-                        print "Setting cache_available to", cache_available
+                        print ("Setting cache_available to", cache_available)
                     elif opt in ('--NumFeaturesSup',):
                         reg_num_signals = int(arg)
-                        print "Setting reg_num_signals to", reg_num_signals
+                        print ("Setting reg_num_signals to", reg_num_signals)
                     elif opt in ('--SkipFeaturesSup',):
                         skip_num_signals = int(arg)
-                        print "Setting skip_num_signals to", skip_num_signals
+                        print ("Setting skip_num_signals to", skip_num_signals)
                     elif opt in ('--SVM_gamma',):
                         svm_gamma = float(arg)
-                        print "Setting svm_gamma to", svm_gamma
+                        print ("Setting svm_gamma to", svm_gamma)
                     elif opt in ('--SVM_C',):
                         svm_C = float(arg)
-                        print "Setting svm_C to", svm_C
+                        print ("Setting svm_C to", svm_C)
                     elif opt in ('--EnableSVM',):
                         enable_svm = int(arg)
-                        print "Setting enable_svm to", enable_svm
+                        print ("Setting enable_svm to", enable_svm)
                     elif opt in ('--SVR_gamma',):
                         if arg == 'auto':
                             svr_gamma = 'auto'
                         else:
                             svr_gamma = float(arg)
-                        print "Setting svr_gamma to", svr_gamma
+                        print ("Setting svr_gamma to", svr_gamma)
                     elif opt in ('--SVR_epsilon',):
                         svr_epsilon = float(arg)
-                        print "Setting svr_epsilon to", svr_epsilon
+                        print ("Setting svr_epsilon to", svr_epsilon)
                     elif opt in ('--SVR_C',):
                         svr_C = float(arg)
-                        print "Setting svr_C to", svr_C
+                        print ("Setting svr_C to", svr_C)
                     elif opt in ('--EnableSVR',):
                         enable_svr = int(arg)
-                        print "Setting enable_svr to", enable_svr
+                        print ("Setting enable_svr to", enable_svr)
                     elif opt in ('--SVRInsteadOfSVM2',):
                         svr_instead_of_SVM2 = bool(int(arg))
-                        print "Setting svr_instead_of_SVM2 to", svr_instead_of_SVM2
+                        print ("Setting svr_instead_of_SVM2 to", svr_instead_of_SVM2)
                     elif opt in ('--LoadNetworkNumber',):
                         load_network_number = int(arg)
-                        print "Setting load_network_number to", load_network_number
+                        print ("Setting load_network_number to", load_network_number)
                     elif opt in ('--AskNetworkLoading',):
                         ask_network_loading = int(arg)
-                        print "Setting ask_network_loading to", ask_network_loading
+                        print ("Setting ask_network_loading to", ask_network_loading)
                     elif opt in ('--EnableLR',):
                         enable_lr = int(arg)
-                        print "Setting enable_lr to", enable_lr
+                        print ("Setting enable_lr to", enable_lr)
                     elif opt in ('--NParallel',):
                         n_parallel = int(arg)
-                        print "Setting n_parallel to", n_parallel
+                        print ("Setting n_parallel to", n_parallel)
                     elif opt in ('--EnableScheduler',):
                         enable_scheduler = int(arg)
-                        print "Setting enable_scheduler to", enable_scheduler
+                        print ("Setting enable_scheduler to", enable_scheduler)
                     elif opt in ('--SaveOutputFeaturesDir',):
                         if arg == "None":
                             save_output_features_dir = None
                         else:
                             save_output_features_dir = arg
-                        print "Setting save_output_features_dir to", save_output_features_dir
+                        print ("Setting save_output_features_dir to", save_output_features_dir)
                     elif opt in ('--LoadAndAppendOutputFeaturesDir',):
                         if arg == "None":
                             load_and_append_output_features_dir = None
                         else:
                             load_and_append_output_features_dir = arg
-                        print "Setting load_and_append_output_features_dir to", load_and_append_output_features_dir
+                        print ("Setting load_and_append_output_features_dir to", load_and_append_output_features_dir)
                     elif opt in ('--NumFeaturesToAppendToInput',):
                         if arg == "None":
                             num_features_to_append_to_input = None
                         else:
                             num_features_to_append_to_input = int(arg)
-                        print "Setting num_features_to_append_to_input to", num_features_to_append_to_input
+                        print ("Setting num_features_to_append_to_input to", num_features_to_append_to_input)
                     elif opt in ('--NetworkCacheReadDir',):
                         if arg == "None":
                             network_cache_read_dir = None
                         else:
                             network_cache_read_dir = arg
-                        print "Setting network_cache_read_dir to", network_cache_read_dir
+                        print ("Setting network_cache_read_dir to", network_cache_read_dir)
                     elif opt in ('--NetworkCacheWriteDir',):
                         if arg == "None":
                             network_cache_write_dir = None
                         else:
                             network_cache_write_dir = arg
-                        print "Setting network_cache_write_dir to", network_cache_write_dir
+                        print ("Setting network_cache_write_dir to", network_cache_write_dir)
                     elif opt in ('--NodeCacheReadDir',):
                         if arg == "None":
                             node_cache_read_dir = None
                         else:
                             node_cache_read_dir = arg
-                        print "Setting node_cache_read_dir to", node_cache_read_dir
+                        print ("Setting node_cache_read_dir to", node_cache_read_dir)
                     elif opt in ('--NodeCacheWriteDir',):
                         if arg == "None":
                             node_cache_write_dir = None
                         else:
                             node_cache_write_dir = arg
-                        print "Setting node_cache_write_dir to", node_cache_write_dir
+                        print ("Setting node_cache_write_dir to", node_cache_write_dir)
                     elif opt in ('--SignalCacheReadDir',):
                         if arg == "None":
                             signal_cache_read_dir = None
                         else:
                             signal_cache_read_dir = arg
-                        print "Setting signal_cache_read_dir to", signal_cache_read_dir
+                        print ("Setting signal_cache_read_dir to", signal_cache_read_dir)
                     elif opt in ('--SignalCacheWriteDir',):
                         if arg == "None":
                             signal_cache_write_dir = None
                         else:
                             signal_cache_write_dir = arg
-                        print "Setting signal_cache_write_dir to", signal_cache_write_dir
+                        print ("Setting signal_cache_write_dir to", signal_cache_write_dir)
                     elif opt in ('--ClassifierCacheReadDir',):
                         if arg == "None":
                             classifier_cache_read_dir = None
                         else:
                             classifier_cache_read_dir = arg
-                        print "Setting classifier_cache_read_dir to", classifier_cache_read_dir
+                        print ("Setting classifier_cache_read_dir to", classifier_cache_read_dir)
                         er = "ClassifierCacheReadDir: Option not supported yet"
                         raise Exception(er)
                     elif opt in ('--ClassifierCacheWriteDir',):
@@ -412,95 +417,95 @@ if __name__ == "__main__":  # ############## Parse command line arguments ######
                             classifier_cache_write_dir = None
                         else:
                             classifier_cache_write_dir = arg
-                        print "Setting classifier_cache_write_dir to", classifier_cache_write_dir
+                        print ("Setting classifier_cache_write_dir to", classifier_cache_write_dir)
                     elif opt in ('--SaveSubimagesTraining',):
                         save_subimages_training = bool(int(arg))
-                        print "Setting save_subimages_training to", save_subimages_training
+                        print ("Setting save_subimages_training to", save_subimages_training)
                     elif opt in ('--SaveAverageSubimageTraining',):
                         save_average_subimage_training = bool(int(arg))
-                        print "Setting save_average_subimage_training to", save_average_subimage_training
+                        print ("Setting save_average_subimage_training to", save_average_subimage_training)
                     elif opt in ('--SaveSorted_AE_GaussNewid',):
                         save_sorted_AE_Gauss_newid = bool(int(arg))
-                        print "Setting save_sorted_AE_Gauss_newid to", save_sorted_AE_Gauss_newid
+                        print ("Setting save_sorted_AE_Gauss_newid to", save_sorted_AE_Gauss_newid)
                     elif opt in ('--SaveSortedIncorrectClassGaussNewid',):
                         save_sorted_incorrect_class_Gauss_newid = bool(int(arg))
-                        print "Setting save_sorted_incorrect_class_Gauss_newid to %d" % \
-                              save_sorted_incorrect_class_Gauss_newid
+                        print ("Setting save_sorted_incorrect_class_Gauss_newid to %d" %
+                               save_sorted_incorrect_class_Gauss_newid)
                     elif opt in ('--ComputeSlowFeaturesNewidAcrossNet',):
                         compute_slow_features_newid_across_net = int(arg)
-                        print "Setting compute_slow_features_newid_across_net to %d" % \
-                              compute_slow_features_newid_across_net
+                        print ("Setting compute_slow_features_newid_across_net to %d" %
+                               compute_slow_features_newid_across_net)
                     elif opt in ('--UseFilter',):
                         use_filter = arg
-                        print "Setting use_filter to", use_filter
+                        print ("Setting use_filter to", use_filter)
                     elif opt in ('--kNN_k',):
                         kNN_k = int(arg)
-                        print "Setting kNN_k to", kNN_k
+                        print ("Setting kNN_k to", kNN_k)
                     elif opt in ('--EnableKNN',):
                         enable_kNN = bool(int(arg))
-                        print "Setting enable_kNN to", enable_kNN
+                        print ("Setting enable_kNN to", enable_kNN)
                     elif opt in ('--EnableNCC',):
                         enable_NCC = bool(int(arg))
-                        print "Setting enable_NCC to", enable_NCC
+                        print ("Setting enable_NCC to", enable_NCC)
                     elif opt in ('--EnableGC',):
                         enable_GC = bool(int(arg))
-                        print "Setting enable_GC to", enable_GC
+                        print ("Setting enable_GC to", enable_GC)
                     elif opt in ('--SaveSubimagesTrainingSupplementaryInfo',):
                         save_images_training_supplementary_info = arg
-                        print "Setting save_images_training_supplementary_info to",
-                        print save_images_training_supplementary_info
+                        print ("Setting save_images_training_supplementary_info to",
+                               save_images_training_supplementary_info)
                     elif opt in ('--EstimateExplainedVarWithInverse',):
                         estimate_explained_var_with_inverse = bool(int(arg))
-                        print "Setting estimate_explained_var_with_inverse to", estimate_explained_var_with_inverse
+                        print ("Setting estimate_explained_var_with_inverse to", estimate_explained_var_with_inverse)
                     elif opt in ('--EstimateExplainedVarWithKNN_k',):
                         estimate_explained_var_with_kNN_k = int(arg)
-                        print "Setting estimate_explained_var_with_kNN_k to", estimate_explained_var_with_kNN_k
+                        print ("Setting estimate_explained_var_with_kNN_k to", estimate_explained_var_with_kNN_k)
                     elif opt in ('--EstimateExplainedVarWithKNNLinApp_k',):
                         estimate_explained_var_with_kNN_lin_app_k = int(arg)
-                        print "Setting estimate_explained_var_with_kNN_lin_app_k to %d" % \
-                              estimate_explained_var_with_kNN_lin_app_k
+                        print ("Setting estimate_explained_var_with_kNN_lin_app_k to %d" %
+                               estimate_explained_var_with_kNN_lin_app_k)
                     elif opt in ('--EstimateExplainedVarLinGlobal_N',):
                         estimate_explained_var_linear_global_N = int(arg)
-                        print "Setting estimate_explained_var_linear_global_N to %d" % \
-                              estimate_explained_var_linear_global_N
+                        print ("Setting estimate_explained_var_linear_global_N to %d" %
+                               estimate_explained_var_linear_global_N)
                     elif opt in ('--AddNormalizationNode',):
                         add_normalization_node = bool(int(arg))
-                        print "Setting add_normalization_node to", add_normalization_node
+                        print ("Setting add_normalization_node to", add_normalization_node)
                     elif opt in ('--MakeLastPCANodeWhithening',):
                         make_last_PCA_node_whithening = bool(int(arg))
-                        print "Setting make_last_PCA_node_whithening to", make_last_PCA_node_whithening
+                        print ("Setting make_last_PCA_node_whithening to", make_last_PCA_node_whithening)
                     elif opt in ('--FeatureCutOffLevel',):
                         feature_cut_off_level = float(arg)
-                        print "Setting feature_cut_off_level to", feature_cut_off_level
+                        print ("Setting feature_cut_off_level to", feature_cut_off_level)
                     elif opt in ('--ExportDataToLibsvm',):
                         export_data_to_libsvm = bool(int(arg))
-                        print "Setting export_data_to_libsvm to", export_data_to_libsvm
+                        print ("Setting export_data_to_libsvm to", export_data_to_libsvm)
                     elif opt in ('--IntegerLabelEstimation',):
                         integer_label_estimation = bool(int(arg))
-                        print "Setting integer_label_estimation to", integer_label_estimation
+                        print ("Setting integer_label_estimation to", integer_label_estimation)
                     elif opt in ('--CumulativeScores',):
                         cumulative_scores = bool(int(arg))
-                        print "Setting cumulative_scores to", cumulative_scores
+                        print ("Setting cumulative_scores to", cumulative_scores)
                     elif opt in ('--FeaturesResidualInformation',):
                         features_residual_information = int(arg)
-                        print "Setting features_residual_information to", features_residual_information
+                        print ("Setting features_residual_information to", features_residual_information)
                     elif opt in ('--ComputeInputInformation',):
                         compute_input_information = bool(int(arg))
-                        print "Setting compute_input_information to", compute_input_information
+                        print ("Setting compute_input_information to", compute_input_information)
                     elif opt in ('--SleepM',):
                         minutes_sleep = float(arg)
                         if minutes_sleep >= 0:
-                            print "Sleeping for %f minutes..." % minutes_sleep
+                            print ("Sleeping for %f minutes..." % minutes_sleep)
                             time.sleep(minutes_sleep * 60)
-                            print "... and awoke"
+                            print ("... and awoke")
                         else:
-                            print "Sleeping until execution in cuicuilco queue"
+                            print ("Sleeping until execution in cuicuilco queue")
                             t_wa = time.time()
                             lock = LockFile(cuicuilco_lock_file)
                             pid = os.getpid()
-                            print "process pid is:", pid
+                            print ("process pid is:", pid)
                             # Add the current process to the queue
-                            print "adding process to queue..."
+                            print ("adding process to queue...")
                             lock.acquire()
                             q = open(cuicuilco_queue, "a")
                             q.write("%d\n" % pid)
@@ -511,60 +516,60 @@ if __name__ == "__main__":  # ############## Parse command line arguments ######
                                 lock.acquire()
                                 q = open(cuicuilco_queue, "r")
                                 next_pid = int(q.readline())
-                                print "top of queue:", next_pid,
+                                print ("top of queue:", next_pid)
                                 q.close()
                                 lock.release()
 
                                 if next_pid == pid:
-                                    print "our turn in queue"
+                                    print ("our turn in queue")
                                     served = True
                                 else:
-                                    print "sleeping 60 seconds"
+                                    print ("sleeping 60 seconds")
                                     time.sleep(60)  # sleep for 10 seconds before trying again
                             t_wb = time.time()
-                            print "process is executing now. Total waiting time: %f min" % ((t_wb - t_wa) / 60.0)
+                            print ("process is executing now. Total waiting time: %f min" % ((t_wb - t_wa) / 60.0))
                     elif opt in ('--DatasetForDisplayTrain',):
                         dataset_for_display_train = int(arg)
-                        print "Setting dataset_for_display_train to", dataset_for_display_train
+                        print ("Setting dataset_for_display_train to", dataset_for_display_train)
                     elif opt in ('--DatasetForDisplayNewid',):
                         dataset_for_display_newid = int(arg)
-                        print "Setting dataset_for_display_newid to", dataset_for_display_newid
+                        print ("Setting dataset_for_display_newid to", dataset_for_display_newid)
                     elif opt in ('--GraphExactLabelLearning',):
                         graph_exact_label_learning = bool(int(arg))
-                        print "Setting graph_exact_label_learning to", graph_exact_label_learning
+                        print ("Setting graph_exact_label_learning to", graph_exact_label_learning)
                     elif opt in ('--OutputInsteadOfSVM2',):
                         output_instead_of_SVM2 = bool(int(arg))
-                        print "Setting output_instead_of_SVM2 to", output_instead_of_SVM2
+                        print ("Setting output_instead_of_SVM2 to", output_instead_of_SVM2)
                     elif opt in ('--NumberTargetLabels',):
                         number_of_target_labels_per_orig_label = int(arg)
-                        print "Setting number_of_target_labels_per_orig_label to %d" % \
-                              number_of_target_labels_per_orig_label
+                        print ("Setting number_of_target_labels_per_orig_label to %d" %
+                               number_of_target_labels_per_orig_label)
                     elif opt in ('--ConfusionMatrix',):
                         confusion_matrix = bool(int(arg))
-                        print "Setting confusion_matrix to", confusion_matrix
+                        print ("Setting confusion_matrix to", confusion_matrix)
                     elif opt in ('--MapDaysToYears',):
                         convert_labels_days_to_years = bool(int(arg))
-                        print "Setting convert_labels_days_to_years to", convert_labels_days_to_years
+                        print ("Setting convert_labels_days_to_years to", convert_labels_days_to_years)
                     elif opt in ('--AddNoiseToSeenid',):
                         add_noise_to_seenid = bool(int(arg))
-                        print "Setting add_noise_to_seenid to", add_noise_to_seenid
+                        print ("Setting add_noise_to_seenid to", add_noise_to_seenid)
                     elif opt in ('--ClipSeenidNewid',):
                         clip_seenid_newid_to_training = bool(int(arg))
-                        print "Setting clip_seenid_newid_to_training to", clip_seenid_newid_to_training
+                        print ("Setting clip_seenid_newid_to_training to", clip_seenid_newid_to_training)
                     elif opt in ('--HierarchicalNetwork',):
                         name_default_network = arg
-                        print "Setting default_network to", name_default_network
+                        print ("Setting default_network to", name_default_network)
                         DefaultNetwork = available_networks[name_default_network]
                     elif opt in ('--ExperimentalDataset',):
                         name_default_experiment = arg
-                        print "Setting name_default_experiment to", name_default_experiment
+                        print ("Setting name_default_experiment to", name_default_experiment)
                         DefaultExperimentalDataset = available_experiments[name_default_experiment]
                     elif opt in ('--SFAGCReducedDim',):
                         sfa_gc_reduced_dim = int(arg)
-                        print "Setting sfa_gc_reduced_dim to", sfa_gc_reduced_dim
+                        print ("Setting sfa_gc_reduced_dim to", sfa_gc_reduced_dim)
                     elif opt in ('--ObjectiveLabel',):
                         objective_label = int(arg)
-                        print "Setting objective_label to", objective_label
+                        print ("Setting objective_label to", objective_label)
                     elif opt in ('--help',):
                         txt = \
                             """Cuicuilco: displaying help information
@@ -656,14 +661,14 @@ if __name__ == "__main__":  # ############## Parse command line arguments ######
         **Other options
             --help Displays this help information
     """
-                        print txt
+                        print (txt)
                         quit()
                     else:
-                        print "Argument not handled: ", opt
+                        print ("Argument not handled: ", opt)
                         quit()
             except getopt.GetoptError as err:
-                print "Error while parsing the following arguments: ", argv[1:]
-                print "Error: ", err, "use the --help option for a short guide on the available arguments"
+                print ("Error while parsing the following arguments: ", argv[1:])
+                print ("Error: ", err, "use the --help option for a short guide on the available arguments")
                 # print "option:", getopt.GetoptError.opt, "message:", getopt.GetoptError.msg
                 sys.exit(2)
 
@@ -679,7 +684,7 @@ def main():
         num_features_to_append_to_input = 0
 
     if coherent_seeds:
-        print "experimental_datasets.experiment_seed=", experiment_seed
+        print ("experimental_datasets.experiment_seed=", experiment_seed)
         numpy.random.seed(experiment_seed + 12121212)
 
     if enable_scheduler and n_parallel > 1:
@@ -688,8 +693,8 @@ def main():
         scheduler = None
 
     if features_residual_information <= 0 and compute_input_information:
-        print "ignoring flag compute_input_information=%d because  features_residual_information=%d <= 0" % \
-              (compute_input_information, features_residual_information)
+        print ("ignoring flag compute_input_information=%d because  features_residual_information=%d <= 0" %
+               (compute_input_information, features_residual_information))
         compute_input_information = False
 
     Parameters = DefaultExperimentalDataset
@@ -699,7 +704,7 @@ def main():
     # Specific code for setting up the ParamsNatural experiment (requires run-time computations)
     if Parameters == experimental_datasets.ParamsNatural and input_filename is not None:
         (magic_num, iteration, numSamples, rbm_sfa_numHid, sampleSpan) = read_binary_header("", input_filename)
-        print "Iteration Number=%d," % iteration, "numSamples=%d" % numSamples, "rbm_sfa_numHid=%d," % rbm_sfa_numHid
+        print ("Iteration Number=%d," % iteration, "numSamples=%d" % numSamples, "rbm_sfa_numHid=%d," % rbm_sfa_numHid)
 
         Parameters.sTrain.subimage_width = rbm_sfa_numHid / 8
         Parameters.sTrain.subimage_height = rbm_sfa_numHid / Parameters.sTrain.subimage_width
@@ -722,11 +727,9 @@ def main():
             er = "wrong number of Samples %d, 5000 were assumed" % numSamples
             raise Exception(er)
 
-
-
     enable_reduced_image_sizes = Parameters.enable_reduced_image_sizes
     reduction_factor = Parameters.reduction_factor
-    print "reduction_factor=", reduction_factor
+    print ("reduction_factor=", reduction_factor)
     hack_image_size = Parameters.hack_image_size
     enable_hack_image_size = Parameters.enable_hack_image_size
 
@@ -734,10 +737,10 @@ def main():
         Parameters.name += "_Resized images"
 
         for sSeq in (Parameters.sTrain, Parameters.sSeenid, Parameters.sNewid):
-            print "sSeq", sSeq
+            print ("sSeq", sSeq)
             if isinstance(sSeq, list):
                 for i, sSeq_vect in enumerate(sSeq):
-                    print "sSeq_vect", sSeq_vect
+                    print ("sSeq_vect", sSeq_vect)
                     if sSeq_vect is not None:  # is not None:
                         for j, sSeq_entry in enumerate(sSeq_vect):
                             if isinstance(sSeq_entry, system_parameters.ParamsDataLoading):
@@ -781,11 +784,11 @@ def main():
             for i in range(1, number_of_target_labels_per_orig_label):
                 auxiliary_labels[:, i * num_orig_labels:(i + 1) * num_orig_labels] = numpy.cos(
                     (plain_labels - min_label) * (1.0 + i) * numpy.pi / (max_label - min_label))
-            print auxiliary_labels
+            print (auxiliary_labels)
         else:
             auxiliary_labels = iTrain0.correct_labels.reshape((-1, num_orig_labels))
 
-        print "iTrain0.correct_labels.shape", iTrain0.correct_labels.shape
+        print ("iTrain0.correct_labels.shape", iTrain0.correct_labels.shape)
         orig_train_label_min = auxiliary_labels[:, objective_label].min()
         orig_train_label_max = auxiliary_labels[:, objective_label].max()
 
@@ -798,24 +801,24 @@ def main():
         orig_train_labels_mean = numpy.array(orig_train_labels).mean(axis=0)
         orig_train_labels_std = numpy.array(orig_train_labels).std(axis=0)
         train_feasible_labels = (orig_train_labels - orig_train_labels_mean) / orig_train_labels_std
-        print "original feasible (perhaps correlated) label.T: ", train_feasible_labels.T
+        print ("original feasible (perhaps correlated) label.T: ", train_feasible_labels.T)
 
         if len(iTrain0.correct_labels.shape) == 2:
             iTrain0.correct_labels = iTrain0.correct_labels[:, objective_label].flatten()
             Parameters.iSeenid.correct_labels = Parameters.iSeenid.correct_labels[:, objective_label].flatten()
-            Parameters.iNewid[0][0].correct_labels = Parameters.iNewid[0][0].correct_labels[:,
-                                                     objective_label].flatten()
+            Parameters.iNewid[0][0].correct_labels = \
+                Parameters.iNewid[0][0].correct_labels[:, objective_label].flatten()
 
             iTrain0.correct_classes = iTrain0.correct_classes[:, objective_label].flatten()
             Parameters.iSeenid.correct_classes = Parameters.iSeenid.correct_classes[:, objective_label].flatten()
-            Parameters.iNewid[0][0].correct_classes = Parameters.iNewid[0][0].correct_classes[:,
-                                                      objective_label].flatten()
+            Parameters.iNewid[0][0].correct_classes = \
+                Parameters.iNewid[0][0].correct_classes[:, objective_label].flatten()
 
         node_weights = numpy.ones(Q)
         Gamma = ConstructGammaFromLabels(train_feasible_labels, node_weights, constant_deltas=False)
-        print "Resulting Gamma is", Gamma
+        print ("Resulting Gamma is", Gamma)
         Gamma = RemoveNegativeEdgeWeights(node_weights, Gamma)
-        print "Removed negative weighs. Gamma=", Gamma
+        print ("Removed negative weighs. Gamma=", Gamma)
         edge_weights = Gamma
 
         if isinstance(sTrain_set, list):
@@ -827,18 +830,18 @@ def main():
         sTrain0.node_weights = node_weights
         sTrain0.edge_weights = edge_weights
 
-    print "sTrain=", sTrain
+    print ("sTrain=", sTrain)
 
     iSeenid = Parameters.iSeenid
     sSeenid = Parameters.sSeenid
 
     if coherent_seeds:
-        print "Setting coherent seed"
+        print ("Setting coherent seed")
         numpy.random.seed(experiment_seed + 56565656)
 
     iNewid_set = Parameters.iNewid
     sNewid_set = Parameters.sNewid
-    print "dataset_for_display_newid=", dataset_for_display_newid
+    print ("dataset_for_display_newid=", dataset_for_display_newid)
     iNewid = take_0_k_th_from_2D_list(iNewid_set, k=dataset_for_display_newid)
     sNewid = take_0_k_th_from_2D_list(sNewid_set, k=dataset_for_display_newid)
 
@@ -851,7 +854,7 @@ def main():
     seq = sTrain
 
     if enable_hack_image_size:
-        print "changing the native image size (width and height) to: ", hack_image_size
+        print ("changing the native image size (width and height) to: ", hack_image_size)
         sSeq_force_image_size(sTrain_set, hack_image_size, hack_image_size)
         sSeq_force_image_size(sSeenid, hack_image_size, hack_image_size)
         sSeq_force_image_size(sNewid_set, hack_image_size, hack_image_size)
@@ -868,7 +871,7 @@ def main():
     elif use_filter == "None" or (use_filter is None) or (use_filter == "0"):
         my_filter = None
     else:
-        print "Unknown filter: ", use_filter
+        print ("Unknown filter: ", use_filter)
         quit()
     sTrain.filter = my_filter
     sSeenid.filter = my_filter
@@ -935,37 +938,37 @@ def main():
 
     network_hashes_base_filenames.sort(lambda x, y: cmp(x[1], y[1]))
 
-    print "%d networks found:" % len(network_hashes_base_filenames)
+    print ("%d networks found:" % len(network_hashes_base_filenames))
     for i, (network_filename, network_hash) in enumerate(network_hashes_base_filenames):
-        print "[%d]" % i, network_filename
+        print ("[%d]" % i, network_filename)
 
     network_filename = None
     if len(network_hashes_base_filenames) > 0 and (ask_network_loading or load_network_number is not None):
         if ask_network_loading or load_network_number is None:
-            selected_network = int(raw_input("Please select a network (-1=Train new network):"))
+            selected_network = int(input("Please select a network (-1=Train new network):"))
         else:
-            print "Network selected from program parameters: ", load_network_number
+            print ("Network selected from program parameters: ", load_network_number)
             selected_network = load_network_number
 
         if selected_network == -1:
-            print "Selected: Train new network"
+            print ("Selected: Train new network")
         else:
-            print "Selected: Load Network", selected_network
+            print ("Selected: Load Network", selected_network)
             network_filename = network_hashes_base_filenames[selected_network][0]
 
     if network_filename is not None:
         network_base_filename = string.split(network_filename, sep=".")[0]
         network_hash = string.split(network_base_filename, sep="_")[-1]
 
-        print "******************************************"
-        print "Loading Trained Network and Display Data from Disk         "
-        print "******************************************"
+        print ("******************************************")
+        print ("Loading Trained Network and Display Data from Disk         ")
+        print ("******************************************")
 
-        print "network_cach_read_dir", network_cache_read_dir
-        print "network_cach_write_dir", network_cache_write_dir
-        print "network_filename:", network_filename
-        print "network_basefilename:", network_base_filename
-        print "network_hash:", network_hash
+        print ("network_cach_read_dir", network_cache_read_dir)
+        print ("network_cach_write_dir", network_cache_write_dir)
+        print ("network_filename:", network_filename)
+        print ("network_basefilename:", network_base_filename)
+        print ("network_hash:", network_hash)
 
         # network_write.update_cache([flow, layers, benchmark, Network], None, network_base_dir, "Network"+
         # Network.name+"_ParName"+Parameters.name+"_"+network_hash, overwrite=True, use_hash=network_hash, verbose=True)
@@ -979,27 +982,27 @@ def main():
 
         flow, layers, benchmark, Network = network_read.load_obj_from_cache(None, "", network_base_filename,
                                                                             verbose=True)
-        print "Done loading network: " + Network.name
-        print flow
+        print ("Done loading network: " + Network.name)
+        print (flow)
 
         iTrain, sTrain = network_read.load_obj_from_cache(network_hash, network_cache_read_dir, "iTrainsTrainData",
                                                           verbose=True)
-        print "Done loading iTrain sTrain data: " + sTrain.name
+        print ("Done loading iTrain sTrain data: " + sTrain.name)
 
         block_size = sTrain.block_size
         train_mode = iTrain.train_mode
-        print "Train mode is:", train_mode
+        print ("Train mode is:", train_mode)
 
         subimages_train = network_read.load_array_from_cache(network_hash, network_cache_read_dir, "TrainData",
                                                              verbose=True)
-        print "Done loading subimages_train: ", subimages_train.shape
+        print ("Done loading subimages_train: ", subimages_train.shape)
 
         sl_seq_training = network_read.load_array_from_cache(network_hash, network_cache_read_dir, "SLSeqData",
                                                              verbose=True)
-        print "Done loading sl_seq_training: ", sl_seq_training.shape
+        print ("Done loading sl_seq_training: ", sl_seq_training.shape)
 
     else:
-        print "Generating Network..."
+        print ("Generating Network...")
         # Usually the option below is true for voidNetwork1L, but might be also activated for other networks
         use_full_sl_output = False
 
@@ -1009,7 +1012,7 @@ def main():
             if sTrain.convert_format == "RGB":
                 #            factors = [3, 2, 1.5]
                 factors = [2, 1.7, 1.5]
-                print "Unusual condition detected!", Network.patch_network_for_RGB
+                print ("Unusual condition detected!", Network.patch_network_for_RGB)
                 quit()
             elif sTrain.convert_format == "HOG02":
                 factors = [8, 4, 2]
@@ -1027,8 +1030,7 @@ def main():
                     # What about ord? It usually keeps the same dimensionality, thus it is not specified here
                     if layer.sfa_out_dim is not None and layer.sfa_out_dim >= 1:
                         layer.sfa_out_dim = int(factor * layer.sfa_out_dim)
-            print "testing..."
-
+            print ("testing...")
 
         # NOTE: trim_network_layers is obsolete, one must manually chose the proper network and data version
         # WARNING: The code below is deprecated and will be removed soon
@@ -1067,15 +1069,15 @@ def main():
                 skip_layers = 2
 
         for l in Network.layers:
-            print l
-        print "SL=", skip_layers
+            print (l)
+        print ("SL=", skip_layers)
 
         if skip_layers > 0:
             for i, layer in enumerate(Network.layers):
                 if i + skip_layers < len(Network.layers) and (layer is not None) and (Network.layers[i +
                         skip_layers] is not None):
                     if layer.pca_node_class == mdp.nodes.SFANode:
-                        print "FIX PCA%d" % i
+                        print ("FIX PCA%d" % i)
                         if Network.layers[i + skip_layers].pca_node_class == mdp.nodes.SFANode:
                             if "sfa_expo" in Network.layers[i + skip_layers].pca_args:
                                 layer.pca_args["sfa_expo"] = Network.layers[i + skip_layers].pca_args["sfa_expo"]
@@ -1095,7 +1097,7 @@ def main():
                         layer.red_args["sfa_expo"] = Network.layers[i + skip_layers].red_args["sfa_expo"]
                         layer.red_args["pca_expo"] = Network.layers[i + skip_layers].red_args["pca_expo"]
                     if layer.sfa_node_class == mdp.nodes.SFANode:
-                        print "FixSFA %d" % i
+                        print ("FixSFA %d" % i)
                         if "sfa_expo" in Network.layers[i + skip_layers].sfa_args:
                             layer.sfa_args["sfa_expo"] = Network.layers[i + skip_layers].sfa_args["sfa_expo"]
                         if "pca_expo" in Network.layers[i + skip_layers].sfa_args:
@@ -1104,16 +1106,16 @@ def main():
         if skip_layers > 0:
             Network.layers = Network.layers[:-skip_layers]
 
-        print "sfa_expo and pca_expo across the network:"
+        print ("sfa_expo and pca_expo across the network:")
         for i, layer in enumerate(Network.layers):
             if "sfa_expo" in Network.layers[i].pca_args:
-                print "pca_args[%d].sfa_expo=" % i, Network.layers[i].pca_args["sfa_expo"]
+                print ("pca_args[%d].sfa_expo=" % i, Network.layers[i].pca_args["sfa_expo"])
             if "pca_expo" in Network.layers[i].pca_args:
-                print "pca_args[%d].pca_expo=" % i, Network.layers[i].pca_args["pca_expo"]
+                print ("pca_args[%d].pca_expo=" % i, Network.layers[i].pca_args["pca_expo"])
             if "sfa_expo" in Network.layers[i].sfa_args:
-                print "sfa_args[%d].sfa_expo=" % i, Network.layers[i].sfa_args["sfa_expo"]
+                print ("sfa_args[%d].sfa_expo=" % i, Network.layers[i].sfa_args["sfa_expo"])
             if "pca_expo" in Network.layers[i].sfa_args:
-                print "sfa_args[%d].pca_expo=" % i, Network.layers[i].sfa_args["pca_expo"]
+                print ("sfa_args[%d].pca_expo=" % i, Network.layers[i].sfa_args["pca_expo"])
 
         if make_last_PCA_node_whithening and (hack_image_size == 16) and enable_hack_image_size and (Network.L4 is not
                                                                                                              None):
@@ -1136,27 +1138,27 @@ def main():
         subimages_train_signal_in_cache = False
 
         if signal_cache_read and load_subimages_train_signal_from_cache and False:
-            print "Looking for subimages_train in cache..."
+            print ("Looking for subimages_train in cache...")
 
             info_beginning_filename = "subimages_info"
             subimages_info_filenames = cache.find_filenames_beginning_with(network_cache_read_dir,
                                                                            info_beginning_filename, recursion=False,
                                                                            extension=".pckl")
-            print "The following possible training sequences were found:"
+            print ("The following possible training sequences were found:")
             if len(subimages_info_filenames) > 0:
                 for i, info_filename in enumerate(subimages_info_filenames):
                     info_base_filename = string.split(info_filename, sep=".")[0]  # Remove extension
                     (iTrainInfo, sTrainInfo) = subimages_info = signal_cache_read.load_obj_from_cache(base_dir="/",
                                                                         base_filename=info_base_filename, verbose=True)
-                    print "%d: %s, with %d images of width=%d, height=%d" % (i, iTrainInfo.name, iTrainInfo.num_images,
-                                                                             sTrainInfo.subimage_width,
-                                                                             sTrainInfo.subimage_height)
+                    print ("%d: %s, with %d images of width=%d, height=%d" % (i, iTrainInfo.name, iTrainInfo.num_images,
+                                                                              sTrainInfo.subimage_width,
+                                                                              sTrainInfo.subimage_height))
 
                 if enable_select_train_signal:
-                    selected_train_sequence = int(raw_input("Please select a training sequence (-1=Reload new data):"))
+                    selected_train_sequence = int(input("Please select a training sequence (-1=Reload new data):"))
                 else:
                     selected_train_sequence = 0
-                print "Training sequence %d was selected" % selected_train_sequence
+                print ("Training sequence %d was selected" % selected_train_sequence)
 
                 if selected_train_sequence >= 0:
                     info_filename = subimages_info_filenames[selected_train_sequence]
@@ -1172,17 +1174,17 @@ def main():
 
                     if signal_cache_read.is_splitted_file_in_filesystem(base_dir="/",
                                                                         base_filename=signal_base_filename):
-                        print "Subimages train signal found in cache..."
+                        print ("Subimages train signal found in cache...")
                         subimages_train = signal_cache_read.load_array_from_cache(base_dir="/",
                                                                                   base_filename=signal_base_filename,
                                                                                   verbose=True)
                         subimages_train_signal_in_cache = True
-                        print "Subimages train signal loaded from cache with shape: ",
-                        print subimages_train.shape
+                        print ("Subimages train signal loaded from cache with shape: ",
+                               subimages_train.shape)
                         if signal_cache_write:
                             subimages_train_hash = cache.hash_object(subimages_train).hexdigest()
                     else:
-                        print "Subimages training signal UNEXPECTEDLY NOT FOUND in cache:", signal_base_filename
+                        print ("Subimages training signal UNEXPECTEDLY NOT FOUND in cache:", signal_base_filename)
                         quit()
 
                         # Conversion from sSeq to data_sets (array or function), param_sets
@@ -1191,8 +1193,8 @@ def main():
         if load_and_append_output_features_dir is not None:
             training_data_hash = cache.hash_object((iTrain, sTrain)).hexdigest()
             training_data_hash = "0"
-            print "loading output features (training data) from dir: ", load_and_append_output_features_dir, \
-                "and hash:", training_data_hash
+            print ("loading output features (training data) from dir: ", load_and_append_output_features_dir,
+                   "and hash:", training_data_hash)
             additional_features_training = cache.unpickle_array(base_dir=load_and_append_output_features_dir,
                                                                 base_filename="output_features_training_TrainingD" +
                                                                               training_data_hash)
@@ -1203,46 +1205,46 @@ def main():
             train_data_sets = system_parameters.expand_dataset_with_additional_features(train_data_sets,
                                                                                         additional_features_training)
 
-        print "now building network"
+        print ("now building network")
         train_data_sets, train_params_sets = network_builder.expand_iSeq_sSeq_Layer_to_Network(train_data_sets,
                                                                                                train_params_sets,
                                                                                                Network)
 
-        print "train_params_sets=", train_params_sets
-        print "dataset_for_display_train=", dataset_for_display_train
-        print "calling take_first_02D"
+        print ("train_params_sets=", train_params_sets)
+        print ("dataset_for_display_train=", dataset_for_display_train)
+        print ("calling take_first_02D")
         params_node = take_0_k_th_from_2D_list(train_params_sets, k=dataset_for_display_train)
 
         block_size = params_node["block_size"]
         train_mode = params_node["train_mode"]
 
-        print "calling take_first_02D again"
+        print ("calling take_first_02D again")
         train_func = take_0_k_th_from_2D_list(train_data_sets, k=dataset_for_display_train)
-        print "train_func=", train_func
+        print ("train_func=", train_func)
         if coherent_seeds:
             numpy.random.seed(experiment_seed + 222222)
         subimages_train = train_func()
         # TODO: Here add pre computed features!!!??? Or do this during experiment definition???
 
-        print "subimages_train[0,0]=%0.40f" % subimages_train[0, 0]
+        print ("subimages_train[0,0]=%0.40f" % subimages_train[0, 0])
 
         # Avoid double extraction of data from files
         if isinstance(train_data_sets, list) and len(train_data_sets) >= 1:
             if isinstance(train_data_sets[0], list) and len(train_data_sets[0]) >= 1 and len(
                     train_data_sets[0]) > dataset_for_display_train:
-                print "Correcting double loading"
+                print ("Correcting double loading")
                 func = train_data_sets[0][dataset_for_display_train]
-                print "substituting func=", func, "for loaded data"
+                print ("substituting func=", func, "for loaded data")
                 for i in range(len(train_data_sets)):
                     for j in range(len(train_data_sets[i])):
-                        print "train_data_sets[%d][%d]=" % (i, j), train_data_sets[i][j]
+                        print ("train_data_sets[%d][%d]=" % (i, j), train_data_sets[i][j])
                         if train_data_sets[i][j] is func:
-                            print "Correction done"  # fdssf
+                            print ("Correction done")  # fdssf
                             train_data_sets[i][j] = subimages_train
 
         # TODO: Support train signal chache for generalized training
         if signal_cache_write and (subimages_train_signal_in_cache is False) and False:
-            print "Caching Train Signal..."
+            print ("Caching Train Signal...")
             subimages_ndim = subimages_train.shape[1]
             subimages_time = str(int(time.time()))
             iTrain_hash = cache.hash_object(iTrain_sets).hexdigest()
@@ -1259,12 +1261,12 @@ def main():
                                                                   overwrite=True, verbose=True)
 
         t1 = time.time()
-        print seq.num_images, "Training Images loaded in %0.3f s" % ((t1 - t0))
+        print (seq.num_images, "Training Images loaded in %0.3f s" % ((t1 - t0)))
         # benchmark.append(("Load Info and Training Images", t1-t0))
 
         save_images_training_base_dir = "/local/tmp/escalafl/Alberto/saved_images_training"
         if save_subimages_training:
-            print "saving images to directory:", save_images_training_base_dir
+            print ("saving images to directory:", save_images_training_base_dir)
             decimate = 1  # 10
             for i, x in enumerate(subimages_train):
                 if i % decimate == 0:
@@ -1306,16 +1308,16 @@ def main():
             else:
                 average_subimage_training = average_subimage_training.reshape(sTrain.subimage_height,
                                                                               sTrain.subimage_width)
-            print "average_subimage_training.shape=", average_subimage_training.shape,
-            print "seq.convert_format=", seq.convert_format
+            print ("average_subimage_training.shape=", average_subimage_training.shape,
+                   "seq.convert_format=", seq.convert_format)
             average_subimage_training_I = scipy.misc.toimage(average_subimage_training, mode=seq.convert_format)
             average_subimage_training_I.save("average_image_trainingRGB.jpg", mode=seq.convert_format)
             # print "done, finishing"
             # quit()
 
-        print "******************************************"
-        print "Creating hierarchy through network_builder"
-        print "******************************************"
+        print ("******************************************")
+        print ("Creating hierarchy through network_builder")
+        print ("******************************************")
         # TODO: more primitive but potentially powerful flow specification here should be possible
         flow, layers, benchmark = network_builder.create_network(Network, sTrain.subimage_width, sTrain.subimage_height,
                                                                 benchmark=benchmark,
@@ -1323,17 +1325,17 @@ def main():
                                                                 num_features_appended_to_input = \
                                                                     num_features_to_append_to_input)
 
-        print "Making sure the first switchboard does not add any noise (noise added during image loading)"
+        print ("Making sure the first switchboard does not add any noise (noise added during image loading)")
         if isinstance(flow[0], mdp.nodes.PInvSwitchboard):
             flow[0].additive_noise_std = 0.0
 
         # For display purposes we alter here the image shape artificially...
         # TODO: Improve this logic overall... shape should be really the shape, and in_channel_dim should be used
-        print subimage_shape
+        print (subimage_shape)
         if in_channel_dim in [1, 3]:
             subimage_shape = subimage_shape
         else:
-            print "Patching subimage_shape for display purposes"
+            print ("Patching subimage_shape for display purposes")
             subimage_shape = (subimage_shape[0], subimage_shape[1] * in_channel_dim)
 
 
@@ -1342,14 +1344,14 @@ def main():
             normalization_node = mdp.nodes.NormalizeNode()
             flow += normalization_node
 
-        print "flow=", flow
-        print len(flow)
+        print ("flow=", flow)
+        print (len(flow))
         for node in flow:
-            print "Node: ", node, "out_dim=", node.output_dim, "input_dim", node.input_dim
+            print ("Node: ", node, "out_dim=", node.output_dim, "input_dim", node.input_dim)
         # quit()
-        print "*****************************"
-        print "Training hierarchy ..."
-        print "*****************************"
+        print ("*****************************")
+        print ("Training hierarchy ...")
+        print ("*****************************")
 
         subimages_p = subimages = subimages_train
         # DEFINE TRAINING TYPE. SET ONE OF THE FOLLOWING VARIABLES TO TRUE
@@ -1378,11 +1380,11 @@ def main():
                                                                                scheduler=scheduler,
                                                                                n_parallel=n_parallel,
                                                                                immediate_stop_training=True)
-            print "sl_seq is", sl_seq
-            print "sl_seq.shape is", sl_seq.shape
+            print ("sl_seq is", sl_seq)
+            print ("sl_seq.shape is", sl_seq.shape)
 
             ttrain1 = time.time()
-            print "Network trained (specialized way) in time %0.3f s" % (ttrain1 - ttrain0)
+            print ("Network trained (specialized way) in time %0.3f s" % (ttrain1 - ttrain0))
             if benchmark is not None:
                 benchmark.append(("Network training  (specialized way)", ttrain1 - ttrain0))
         else:
@@ -1391,7 +1393,7 @@ def main():
             y = flow.execute(subimages_p[0:1])  # stop training
             sl_seq = sl_seq_training = flow.execute(subimages_p)
             ttrain1 = time.time()
-            print "Network trained (MDP way) in time %0.3f s" % (ttrain1 - ttrain0)
+            print ("Network trained (MDP way) in time %0.3f s" % (ttrain1 - ttrain0))
             if benchmark is not None:
                 benchmark.append(("Network training (MDP way)", ttrain1 - ttrain0))
 
@@ -1409,14 +1411,14 @@ def main():
             sl_seq = sl_seq_training = more_nodes.sfa_pretty_coefficients(last_sfa_node, sl_seq_training,
                                                                           start_negative=start_negative)
         else:
-            print "SFA coefficients not made pretty, last node was not SFA!!!"
+            print ("SFA coefficients not made pretty, last node was not SFA!!!")
 
-        print "Since training is finished, making sure the switchboards do not add any noise from now on"
+        print ("Since training is finished, making sure the switchboards do not add any noise from now on")
         for node in flow:
             if isinstance(node, mdp.nodes.PInvSwitchboard):
                 node.additive_noise_std = 0.0
 
-        print "Executing for display purposes (subimages_train)..."
+        print ("Executing for display purposes (subimages_train)...")
         #  This signal is computed for display purposes (it ignores the output of training, which might have noise)
         sl_seq = sl_seq_training = flow.execute(subimages_train)
 
@@ -1424,7 +1426,7 @@ def main():
         # network_filename = "Network_" + network_hash + ".pckl"
 
         if network_write:
-            print "Saving flow, layers, benchmark, Network ..."
+            print ("Saving flow, layers, benchmark, Network ...")
             # update cache is not adding the hash to the filename,so we add it manually
             network_write.update_cache(flow, None, network_cache_write_dir,
                                        "JustFlow" + sTrain.name + "_" + network_hash, overwrite=True,
@@ -1451,7 +1453,7 @@ def main():
                                        overwrite=True, use_hash=network_hash, verbose=True)
 
         if signal_cache_write:
-            print "Caching sl_seq_training  Signal... (however, it's never read!)"
+            print ("Caching sl_seq_training  Signal... (however, it's never read!)")
             signal_ndim = sl_seq_training.shape[1]
             signal_time = str(int(time.time()))
             flow_hash = cache.hash_object(flow).hexdigest()
@@ -1461,14 +1463,13 @@ def main():
                                             verbose=True)
 
         if save_output_features_dir is not None:
-            print "saving output features (training data)"
+            print ("saving output features (training data)")
             training_data_hash = cache.hash_object((iTrain, sTrain)).hexdigest()
             cache.pickle_array(sl_seq_training, base_dir=save_output_features_dir,
                                base_filename="output_features_training_TrainingD" + training_data_hash, overwrite=True,
                                verbose=True)
 
-
-    print "min val: ", sl_seq_training.min(axis=0), "max val: ", sl_seq_training.max(axis=0)
+    print ("min val: ", sl_seq_training.min(axis=0), "max val: ", sl_seq_training.max(axis=0))
     # Cutoff for final network output
     if feature_cut_off_level > 0.0:
         min_cutoff = -feature_cut_off_level
@@ -1477,20 +1478,19 @@ def main():
         min_cutoff = -1.0e300  # usually large enough for all datasets
         max_cutoff = 1.0e300  # usually small enough for all datasets
     else:  # Adaptive cutoff computed from training data
-        print "using adaptive cutoffs from the training data"
+        print ("using adaptive cutoffs from the training data")
         min_cutoff = sl_seq_training.min(axis=0)
         max_cutoff = sl_seq_training.max(axis=0)
-    print "cutoff levels:", min_cutoff, max_cutoff
+    print ("cutoff levels:", min_cutoff, max_cutoff)
 
     if feature_cut_off_level != 0.0:
         sl_seq = sl_seq_training = numpy.clip(sl_seq_training, min_cutoff, max_cutoff)
-    print "After cutoff: min val: ", sl_seq_training.min(axis=0), "max val: ", sl_seq_training.max(axis=0)
-
+    print ("After cutoff: min val: ", sl_seq_training.min(axis=0), "max val: ", sl_seq_training.max(axis=0))
 
     num_pixels_per_image = numpy.ones(subimage_shape, dtype=int).sum()
-    print "taking into account objective_label=%d" % objective_label
+    print ("taking into account objective_label=%d" % objective_label)
     if len(iTrain.correct_labels.shape) == 2:
-        print "correction..."
+        print ("correction...")
         correct_objective_labels_training = iTrain.correct_labels[:, objective_label].flatten()
         correct_objective_labels_seenid = Parameters.iSeenid.correct_labels[:, objective_label].flatten()
         correct_objective_labels_newid = Parameters.iNewid[0][0].correct_labels[:, objective_label].flatten()
@@ -1506,13 +1506,13 @@ def main():
         correct_objective_classes_training = iTrain.correct_classes
         correct_objective_classes_seenid = Parameters.iSeenid.correct_classes
         correct_objective_classes_newid = Parameters.iNewid[0][0].correct_classes
-        
-    print "correct_objective_classes_training=", correct_objective_classes_training
-    print "correct_objective_labels_training=", correct_objective_labels_training
-    print "correct_objective_classes_newid", correct_objective_classes_newid
-    print "correct_objective_labels_newid", correct_objective_labels_newid
-    print "correct_objective_classes_seenid=", correct_objective_classes_seenid
-    print "correct_objective_labels_seenid=", correct_objective_labels_seenid
+
+    print ("correct_objective_classes_training=", correct_objective_classes_training)
+    print ("correct_objective_labels_training=", correct_objective_labels_training)
+    print ("correct_objective_classes_newid", correct_objective_classes_newid)
+    print ("correct_objective_labels_newid", correct_objective_labels_newid)
+    print ("correct_objective_classes_seenid=", correct_objective_classes_seenid)
+    print ("correct_objective_labels_seenid=", correct_objective_labels_seenid)
 
     if coherent_seeds:
         numpy.random.seed(experiment_seed + 333333)
@@ -1521,24 +1521,24 @@ def main():
     sl_seq_training = sl_seq_training[:, skip_num_signals:]
     sl_seq = sl_seq_training
 
-    print "subimages_train[0,0]=%0.40f" % subimages_train[0, 0]
+    print ("subimages_train[0,0]=%0.40f" % subimages_train[0, 0])
 
-    print "Done creating / training / loading network"
+    print ("Done creating / training / loading network")
     y = flow.execute(subimages_p[0:1])
-    print y.shape
+    print (y.shape)
     more_nodes.describe_flow(flow)
     more_nodes.display_eigenvalues(flow, mode="Average")  # mode="FirstNodeInLayer", "Average", "All"
 
     hierarchy_out_dim = y.shape[1] - skip_num_signals
 
-    print "hierarchy_out_dim (real output data) =", hierarchy_out_dim
-    print "last_node_out_dim=", flow[-1].output_dim
+    print ("hierarchy_out_dim (real output data) =", hierarchy_out_dim)
+    print ("last_node_out_dim=", flow[-1].output_dim)
     if isinstance(flow[-1], (mdp.hinet.Layer, mdp.hinet.CloneLayer)):
-        print "last_Layer_node_out_dim=", flow[-1][0].output_dim
-        print "last node of network is a layer! is this a mistake?"
+        print ("last_Layer_node_out_dim=", flow[-1][0].output_dim)
+        print ("last node of network is a layer! is this a mistake?")
     if hierarchy_out_dim != flow[-1].output_dim:
-        print "error!!! hierarchy_out_dim != flow[-1].output_dim"
-        print "Perhaps caused by enable_reduced_image_sizes=True or enable_hack_image_size=True?"
+        print ("error!!! hierarchy_out_dim != flow[-1].output_dim")
+        print ("Perhaps caused by enable_reduced_image_sizes=True or enable_hack_image_size=True?")
         quit()
 
     results = system_parameters.ExperimentResult()
@@ -1554,7 +1554,7 @@ def main():
     results.iNewid = iNewid
     results.sNewid = sNewid
 
-    print "Computing typical delta, eta values for Train SFA Signal"
+    print ("Computing typical delta, eta values for Train SFA Signal")
     t_delta_eta0 = time.time()
     (results.typical_delta_train,
      results.typical_eta_train) = sfa_libs.comp_typical_delta_eta(sl_seq_training, block_size, num_reps=200,
@@ -1562,16 +1562,16 @@ def main():
     results.brute_delta_train = sfa_libs.comp_delta_normalized(sl_seq_training)
     results.brute_eta_train = sfa_libs.comp_eta(sl_seq_training)
     t_delta_eta1 = time.time()
-    print "typical_delta_train=", results.typical_delta_train
-    print "typical_delta_train[0:31].sum()=", results.typical_delta_train[0:31].sum()
+    print ("typical_delta_train=", results.typical_delta_train)
+    print ("typical_delta_train[0:31].sum()=", results.typical_delta_train[0:31].sum())
 
-    print "computed delta/eta in %0.3f ms" % ((t_delta_eta1 - t_delta_eta0) * 1000.0)
+    print ("computed delta/eta in %0.3f ms" % ((t_delta_eta1 - t_delta_eta0) * 1000.0))
     if benchmark is not None:
         benchmark.append(("Computation of delta, eta values for Train SFA Signal", t_delta_eta1 - t_delta_eta0))
 
-    print "Setting correct classes and labels for the Classifier/Regression, Train SFA Signal"
+    print ("Setting correct classes and labels for the Classifier/Regression, Train SFA Signal")
     correct_classes_training = correct_objective_classes_training
-    print "correct_classes_training=", correct_classes_training
+    print ("correct_classes_training=", correct_classes_training)
     correct_labels_training = correct_objective_labels_training
 
     if convert_labels_days_to_years:
@@ -1580,10 +1580,10 @@ def main():
             correct_labels_training = (correct_labels_training + 0.0006).astype(
                 int) * 1.0  # This must still have float type, otherwise the MSE computation is erroneous!
 
-    print "Loading test images, seen ids..."
+    print ("Loading test images, seen ids...")
     t_load_images0 = time.time()
 
-    print "LOADING KNOWNID TEST INFORMATION"
+    print ("LOADING KNOWNID TEST INFORMATION")
     image_files_seenid = iSeenid.input_files
     num_images_seenid = iSeenid.num_images
     block_size_seenid = iSeenid.block_size
@@ -1603,80 +1603,79 @@ def main():
     if load_and_append_output_features_dir is not None:
         seenid_data_hash = cache.hash_object((iSeenid, sSeenid)).hexdigest()
         seenid_data_hash = "0"
-        print "loading output features (seenid data) from dir: ", load_and_append_output_features_dir,
-        print "and hash:", seenid_data_hash
+        print ("loading output features (seenid data) from dir: ", load_and_append_output_features_dir,
+               "and hash:", seenid_data_hash)
         additional_features_seenid = cache.unpickle_array(base_dir=load_and_append_output_features_dir,
                                                           base_filename="output_features_training_SeenidD" +
                                                                         seenid_data_hash)
         additional_features_seenid = 100000 * additional_features_seenid[:, 0:num_features_to_append_to_input] + \
                                      0.0 * numpy.random.normal(size=(iSeenid.num_images,
                                                                      num_features_to_append_to_input))
-        print additional_features_seenid.shape
-        print subimages_seenid.shape
+        print (additional_features_seenid.shape)
+        print (subimages_seenid.shape)
         subimages_seenid = numpy.concatenate((subimages_seenid, additional_features_seenid), axis=1)
 
     t_load_images1 = time.time()
-    print num_images_seenid, " Images loaded in %0.3f s" % (t_load_images1 - t_load_images0)
+    print (num_images_seenid, " Images loaded in %0.3f s" % (t_load_images1 - t_load_images0))
 
     t_exec0 = time.time()
-    print "Execution over known id testing set..."
-    print "Input Signal: Known Id test images"
+    print ("Execution over known id testing set...")
+    print ("Input Signal: Known Id test images")
     sl_seq_seenid = flow.execute(subimages_seenid)
     sl_seq_seenid = sl_seq_seenid[:, skip_num_signals:]
 
-    print "min value: ", sl_seq_seenid.min(axis=0), "max value: ", sl_seq_seenid.max(axis=0)
+    print ("min value: ", sl_seq_seenid.min(axis=0), "max value: ", sl_seq_seenid.max(axis=0))
     sl_seq_seenid = numpy.nan_to_num(sl_seq_seenid)
 
     if feature_cut_off_level != 0.0:
-        print "before cutoff sl_seq_seenid= ", sl_seq_seenid
+        print ("before cutoff sl_seq_seenid= ", sl_seq_seenid)
         sl_seq_seenid = numpy.clip(sl_seq_seenid, min_cutoff, max_cutoff)
-    print "After cutoff, min value: ", sl_seq_seenid.min(axis=0), "max value: ", sl_seq_seenid.max(axis=0)
-
+    print ("After cutoff, min value: ", sl_seq_seenid.min(axis=0), "max value: ", sl_seq_seenid.max(axis=0))
 
     sl_seq_training_min = sl_seq_training.min(axis=0)
     sl_seq_training_max = sl_seq_training.max(axis=0)
 
     if clip_seenid_newid_to_training:
-        print "clipping sl_seq_seenid"
+        print ("clipping sl_seq_seenid")
         sl_seq_seenid_min = sl_seq_seenid.min(axis=0)
         sl_seq_seenid_max = sl_seq_seenid.max(axis=0)
-        print "sl_seq_training_min=", sl_seq_training_min
-        print "sl_seq_training_max=", sl_seq_training_max
-        print "sl_seq_seenid_min=", sl_seq_seenid_min
-        print "sl_seq_seenid_max=", sl_seq_seenid_max
+        print ("sl_seq_training_min=", sl_seq_training_min)
+        print ("sl_seq_training_max=", sl_seq_training_max)
+        print ("sl_seq_seenid_min=", sl_seq_seenid_min)
+        print ("sl_seq_seenid_max=", sl_seq_seenid_max)
         sl_seq_seenid = numpy.clip(sl_seq_seenid, sl_seq_training_min, sl_seq_training_max)
 
     if add_noise_to_seenid:  # Using uniform noise due to its speed over normal noise
         noise_amplitude = (3 ** 0.5) * 0.5  # standard deviation 0.00005
-        print "adding noise to sl_seq_seenid, with noise_amplitude:", noise_amplitude
+        print ("adding noise to sl_seq_seenid, with noise_amplitude:", noise_amplitude)
         sl_seq_seenid += noise_amplitude * numpy.random.uniform(-1.0, 1.0, size=sl_seq_seenid.shape)
 
     t_exec1 = time.time()
-    print "Execution over Known Id in %0.3f s" % (t_exec1 - t_exec0)
+    print ("Execution over Known Id in %0.3f s" % (t_exec1 - t_exec0))
 
     if save_output_features_dir is not None:
-        print "saving output features (seenid data)"
+        print ("saving output features (seenid data)")
         seenid_data_hash = cache.hash_object((iSeenid, sSeenid)).hexdigest()
         cache.pickle_array(sl_seq_seenid, base_dir=save_output_features_dir,
                            base_filename="output_features_training_SeenidD" + seenid_data_hash, overwrite=True,
                            verbose=True)
 
-    print "Computing typical delta, eta values for Seen Id SFA Signal"
+    print ("Computing typical delta, eta values for Seen Id SFA Signal")
     t_delta_eta0 = time.time()
     (results.typical_delta_seenid,
      results.typical_eta_seenid) = sfa_libs.comp_typical_delta_eta(sl_seq_seenid, iSeenid.block_size, num_reps=200,
                                                                    training_mode=iSeenid.train_mode)
-    print "sl_seq_seenid=", sl_seq_seenid
+    print ("sl_seq_seenid=", sl_seq_seenid)
     results.brute_delta_seenid = sfa_libs.comp_delta_normalized(sl_seq_seenid)
     results.brute_eta_seenid = sfa_libs.comp_eta(sl_seq_seenid)
     t_delta_eta1 = time.time()
-    print "typical_delta_seenid=", results.typical_delta_seenid
-    print "typical_delta_seenid[0:31].sum()=", results.typical_delta_seenid[0:31].sum()
-    print "typical_eta_seenid=", results.typical_eta_seenid
-    print "brute_delta_seenid=", results.brute_delta_seenid
-    print "computed delta/eta in %0.3f ms" % ((t_delta_eta1 - t_delta_eta0) * 1000.0)
+    print ("typical_delta_seenid=", results.typical_delta_seenid)
+    print ("typical_delta_seenid[0:31].sum()=", results.typical_delta_seenid[0:31].sum())
+    print ("typical_eta_seenid=", results.typical_eta_seenid)
+    print ("brute_delta_seenid=", results.brute_delta_seenid)
+    print ("computed delta/eta in %0.3f ms" % ((t_delta_eta1 - t_delta_eta0) * 1000.0))
 
-    print "Setting correct labels/classes data for seenid"
+    print ("Setting correct labels/classes data for seenid")
     correct_classes_seenid = correct_objective_classes_seenid
     correct_labels_seenid = correct_objective_labels_seenid
     correct_labels_seenid_real = correct_labels_seenid.copy()
@@ -1689,7 +1688,7 @@ def main():
 
     # t8 = time.time()
     t_classifier_train0 = time.time()
-    print "*** Training Classifier/Regression"
+    print ("*** Training Classifier/Regression")
 
     # W
     if use_full_sl_output or reg_num_signals == 0:
@@ -1743,21 +1742,21 @@ def main():
         enable_lr_cfr = False
 
     if enable_ncc_cfr:
-        print "Training Classifier/Regression NCC"
+        print ("Training Classifier/Regression NCC")
         ncc_node = mdp.nodes.NearestMeanClassifier()
         ncc_node.train(x=cf_sl[:, 0:reg_num_signals], labels=cf_correct_classes)
         ncc_node.stop_training()
 
     if enable_ccc_Gauss_cfr:
-        print "Training Classifier/Regression GC..."
-        print "unique labels =", numpy.unique(cf_correct_classes)
-        print "len(unique_labels)=", len(numpy.unique(cf_correct_classes))
-        print "cf_sl[0,:]=", cf_sl[0, :]
-        print "cf_sl[1,:]=", cf_sl[1, :]
-        print "cf_sl[2,:]=", cf_sl[2, :]
-        print "cf_sl[3,:]=", cf_sl[3, :]
-        print "cf_sl[4,:]=", cf_sl[4, :]
-        print "cf_sl[5,:]=", cf_sl[5, :]
+        print ("Training Classifier/Regression GC...")
+        print ("unique labels =", numpy.unique(cf_correct_classes))
+        print ("len(unique_labels)=", len(numpy.unique(cf_correct_classes)))
+        print ("cf_sl[0,:]=", cf_sl[0, :])
+        print ("cf_sl[1,:]=", cf_sl[1, :])
+        print ("cf_sl[2,:]=", cf_sl[2, :])
+        print ("cf_sl[3,:]=", cf_sl[3, :])
+        print ("cf_sl[4,:]=", cf_sl[4, :])
+        print ("cf_sl[5,:]=", cf_sl[5, :])
 
         GC_node = mdp.nodes.SFA_GaussianClassifier(reduced_dim=sfa_gc_reduced_dim, verbose=True)
         GC_node.train(x=cf_sl[:, 0:reg_num_signals],
@@ -1772,7 +1771,7 @@ def main():
     t_classifier_train1 = time.time()
 
     if enable_kNN_cfr:
-        print "Training Classifier/Regression kNN, for k=%d..." % kNN_k
+        print ("Training Classifier/Regression kNN, for k=%d..." % kNN_k)
         kNN_node = mdp.nodes.KNNClassifier(k=kNN_k)
         kNN_node.train(x=cf_sl[:, 0:reg_num_signals], labels=cf_correct_classes)
         kNN_node.stop_training()
@@ -1792,7 +1791,7 @@ def main():
         num_blocks = cf_sl.shape[0]
 
     if enable_svm_cfr:
-        print "Training SVM..."
+        print ("Training SVM...")
         params = {"C": svm_C, "gamma": svm_gamma, "nu": 0.6, "eps": 0.0001}
         svm_node = mdp.nodes.LibSVMClassifier(kernel="RBF", classifier="C_SVC", params=params, probability=True)
         data_mins, data_maxs = svm_compute_range(cf_sl[:, 0:reg_num_signals])
@@ -1803,19 +1802,19 @@ def main():
         svm_node.stop_training()
 
     if enable_svr:
-        print "Training SVR..."
+        print ("Training SVR...")
         data_mins, data_maxs = svm_compute_range(cf_sl[:, 0:reg_num_signals])
         svr = slsvm.SVR(C=svr_C, epsilon=svr_epsilon, gamma=svr_gamma)
-        svr.fit(svm_scale(cf_sl[:, 0:reg_num_signals], data_mins, data_maxs, svm_min, svm_max), cf_correct_labels) #[:,0]
+        svr.fit(svm_scale(cf_sl[:, 0:reg_num_signals], data_mins, data_maxs, svm_min, svm_max), cf_correct_labels)
 
     if enable_lr_cfr:
-        print "Training LR..."
+        print ("Training LR...")
         lr_node = mdp.nodes.LinearRegressionNode(with_bias=True, use_pinv=False)
         lr_node.train(cf_sl[:, 0:reg_num_signals], cf_correct_labels.reshape((cf_sl.shape[0], 1)))
         lr_node.stop_training()
 
     if classifier_write and enable_ccc_Gauss_cfr:
-        print "Saving Gaussian Classifier"
+        print ("Saving Gaussian Classifier")
         cf_sl_hash = cache.hash_array(cf_sl).hexdigest()
         # update cache is not adding the hash to the filename,so we add it manually
         classifier_filename = "GaussianClassifier_NetName" + Network.name + "iTrainName" + iTrain.name + "_NetH" + \
@@ -1823,24 +1822,24 @@ def main():
                               str(objective_label)
         classifier_write.update_cache(GC_node, None, None, classifier_filename, overwrite=True, verbose=True)
 
-    print "Executing/Executed over training set..."
-    print "Input Signal: Training Data"
+    print ("Executing/Executed over training set...")
+    print ("Input Signal: Training Data")
     subimages_training = subimages
     num_images_training = num_images
 
-    print "Classification/Regression over training set..."
+    print ("Classification/Regression over training set...")
     t_class0 = time.time()
 
     if enable_ncc_cfr:
-        print "ncc classify..."
+        print ("ncc classify...")
         classes_ncc_training = numpy.array(ncc_node.label(sl_seq_training[:, 0:reg_num_signals]))
         labels_ncc_training = more_nodes.map_class_numbers_to_avg_label(all_classes, avg_labels, classes_ncc_training)
-        print classes_ncc_training
+        print (classes_ncc_training)
     else:
         classes_ncc_training = labels_ncc_training = numpy.zeros(num_images_training)
 
     if enable_ccc_Gauss_cfr:
-        print "GC classify..."
+        print ("GC classify...")
         classes_Gauss_training = numpy.array(GC_node.label(sl_seq_training[:, 0:reg_num_signals]))
         labels_Gauss_training = more_nodes.map_class_numbers_to_avg_label(all_classes, avg_labels,
                                                                           classes_Gauss_training)
@@ -1851,13 +1850,13 @@ def main():
 
         softCR_Gauss_training = GC_node.softCR(sl_seq_training[:, 0:reg_num_signals], correct_classes_training)
     else:
-        classes_Gauss_training = labels_Gauss_training = regression_Gauss_training = regressionMAE_Gauss_training = numpy.zeros(
-            num_images_training)
+        classes_Gauss_training = labels_Gauss_training = regression_Gauss_training = \
+            regressionMAE_Gauss_training = numpy.zeros(num_images_training)
         probs_training = numpy.zeros((num_images_training, 2))
         softCR_Gauss_training = 0.0
 
     if enable_kNN_cfr:
-        print "kNN classify... (k=%d)" % kNN_k
+        print ("kNN classify... (k=%d)" % kNN_k)
         classes_kNN_training = numpy.array(kNN_node.label(sl_seq_training[:, 0:reg_num_signals]))
         labels_kNN_training = more_nodes.map_class_numbers_to_avg_label(all_classes, avg_labels, classes_kNN_training)
     else:
@@ -1865,7 +1864,7 @@ def main():
 
     skip_svm_training = False
     if enable_svm_cfr and skip_svm_training is False:
-        print "SVM classify..."
+        print ("SVM classify...")
         classes_svm_training = svm_node.label(
             svm_scale(sl_seq_training[:, 0:reg_num_signals], data_mins, data_maxs, svm_min, svm_max))
         regression_svm_training = more_nodes.map_class_numbers_to_avg_label(all_classes, avg_labels,
@@ -1879,40 +1878,41 @@ def main():
             numpy.zeros(num_images_training)
 
     if enable_svr:
-        print "SVR regression..."
-        regression_svr_training = svr.predict(svm_scale(sl_seq_training[:, 0:reg_num_signals], data_mins, data_maxs, svm_min, svm_max))
+        print ("SVR regression...")
+        regression_svr_training = svr.predict(svm_scale(sl_seq_training[:, 0:reg_num_signals], data_mins, data_maxs,
+                                                        svm_min, svm_max))
     else:
         regression_svr_training = numpy.zeros(num_images_training)
 
     if enable_lr_cfr:
-        print "LR execute..."
+        print ("LR execute...")
         regression_lr_training = lr_node.execute(sl_seq_training[:, 0:reg_num_signals]).flatten()
     else:
         regression_lr_training = numpy.zeros(num_images_training)
 
     if output_instead_of_SVM2:
         regression2_svm_training = (sl_seq_training[:, 0] * orig_train_label_std) + orig_train_label_mean
-        print "Applying cutoff to the label estimations for LR and Linear Scaling (SVM2)"
+        print ("Applying cutoff to the label estimations for LR and Linear Scaling (SVM2)")
         regression2_svm_training = numpy.clip(regression2_svm_training, orig_train_label_min, orig_train_label_max)
         regression_lr_training = numpy.clip(regression_lr_training, orig_train_label_min, orig_train_label_max)
 
     if svr_instead_of_SVM2:
-        print "replacing regression estimation for svm2 by svr estimation"
+        print ("replacing regression estimation for svm2 by svr estimation")
         regression2_svm_training = regression_svr_training
 
-    print "Classification of training data: ", labels_kNN_training
+    print ("Classification of training data: ", labels_kNN_training)
     t_classifier_train2 = time.time()
 
-    print "Classifier trained in time %0.3f s" % (t_classifier_train1 - t_classifier_train0)
-    print "Training Images Classified in time %0.3f s" % (t_classifier_train2 - t_classifier_train1)
+    print ("Classifier trained in time %0.3f s" % (t_classifier_train1 - t_classifier_train0))
+    print ("Training Images Classified in time %0.3f s" % (t_classifier_train2 - t_classifier_train1))
     if benchmark is not None:
         benchmark.append("Classification of Training Images", (t_classifier_train2 - t_classifier_train1) )
 
     t_class1 = time.time()
-    print "Classification/Regression over Training Set in %0.3f s" % (t_class1 - t_class0)
+    print ("Classification/Regression over Training Set in %0.3f s" % (t_class1 - t_class0))
 
     if integer_label_estimation:
-        print "Making all label estimations for training data integer numbers"
+        print ("Making all label estimations for training data integer numbers")
         if convert_labels_days_to_years:
             labels_ncc_training = labels_ncc_training.astype(int)
             regression_Gauss_training = regression_Gauss_training.astype(int)
@@ -1931,14 +1931,14 @@ def main():
             regression2_svm_training = numpy.rint(regression2_svm_training)
             regression3_svm_training = numpy.rint(regression3_svm_training)
             regression_lr_training = numpy.rint(regression_lr_training)
-        print "regressionMAE_Gauss_training[0:5]=", regressionMAE_Gauss_training[0:5]
+        print ("regressionMAE_Gauss_training[0:5]=", regressionMAE_Gauss_training[0:5])
 
     t_class0 = time.time()
     if enable_ncc_cfr:
-        print "NCC classify..."
+        print ("NCC classify...")
         classes_ncc_seenid = numpy.array(ncc_node.label(sl_seq_seenid[:, 0:reg_num_signals]))
         labels_ncc_seenid = more_nodes.map_class_numbers_to_avg_label(all_classes, avg_labels, classes_ncc_seenid)
-        print classes_ncc_seenid
+        print (classes_ncc_seenid)
     else:
         classes_ncc_seenid = labels_ncc_seenid = numpy.zeros(num_images_seenid)
 
@@ -1957,7 +1957,7 @@ def main():
         softCR_Gauss_seenid = 0.0
 
     if enable_kNN_cfr:
-        print "kNN classify... (k=%d)" % kNN_k
+        print ("kNN classify... (k=%d)" % kNN_k)
         classes_kNN_seenid = numpy.array(kNN_node.label(sl_seq_seenid[:, 0:reg_num_signals]))
         labels_kNN_seenid = more_nodes.map_class_numbers_to_avg_label(all_classes, avg_labels, classes_kNN_seenid)
     else:
@@ -1974,7 +1974,8 @@ def main():
             num_images_seenid)
 
     if enable_svr:
-        regression_svr_seenid = svr.predict(svm_scale(sl_seq_seenid[:, 0:reg_num_signals], data_mins, data_maxs, svm_min, svm_max))
+        regression_svr_seenid = svr.predict(svm_scale(sl_seq_seenid[:, 0:reg_num_signals], data_mins, data_maxs,
+                                                      svm_min, svm_max))
     else:
         regression_svr_seenid = numpy.zeros(num_images_seenid)
 
@@ -1985,25 +1986,25 @@ def main():
 
     if output_instead_of_SVM2:
         regression2_svm_seenid = (sl_seq_seenid[:, 0] * orig_train_label_std) + orig_train_label_mean
-        print "Applying cutoff to the label estimations for LR and Linear Scaling (SVM2)"
+        print ("Applying cutoff to the label estimations for LR and Linear Scaling (SVM2)")
         regression2_svm_seenid = numpy.clip(regression2_svm_seenid, orig_train_label_min, orig_train_label_max)
         regression_lr_seenid = numpy.clip(regression_lr_seenid, orig_train_label_min, orig_train_label_max)
 
     if svr_instead_of_SVM2:
-        print "replacing regression estimation for svm2 by svr estimation"
+        print ("replacing regression estimation for svm2 by svr estimation")
         regression2_svm_seenid = regression_svr_seenid
 
-    print "labels_kNN_seenid.shape=", labels_kNN_seenid.shape
+    print ("labels_kNN_seenid.shape=", labels_kNN_seenid.shape)
 
     # correct_labels_seenid = wider_1Darray(numpy.arange(iSeenid.MIN_GENDER, iSeenid.MAX_GENDER, iSeenid.GENDER_STEP),
     # iSeenid.block_size)
-    print "correct_labels_seenid.shape=", correct_labels_seenid.shape
+    print ("correct_labels_seenid.shape=", correct_labels_seenid.shape)
 
     t_class1 = time.time()
-    print "Classification/Regression over Seen Id in %0.3f s" % (t_class1 - t_class0)
+    print ("Classification/Regression over Seen Id in %0.3f s" % (t_class1 - t_class0))
 
     if integer_label_estimation:
-        print "Making all label estimations for seenid data integer numbers"
+        print ("Making all label estimations for seenid data integer numbers")
         if convert_labels_days_to_years:
             labels_ncc_seenid = labels_ncc_seenid.astype(int)
             regression_Gauss_seenid = regression_Gauss_seenid.astype(int)
@@ -2022,11 +2023,11 @@ def main():
             regression2_svm_seenid = numpy.rint(regression2_svm_seenid)
             regression3_svm_seenid = numpy.rint(regression3_svm_seenid)
             regression_lr_seenid = numpy.rint(regression_lr_seenid)
-        print "regressionMAE_Gauss_seenid[0:5]=", regressionMAE_Gauss_seenid[0:5]
+        print ("regressionMAE_Gauss_seenid[0:5]=", regressionMAE_Gauss_seenid[0:5])
 
     # t10 = time.time()
     t_load_images0 = time.time()
-    print "Loading test images, new ids..."
+    print ("Loading test images, new ids...")
 
     if coherent_seeds:
         numpy.random.seed(experiment_seed + 555555)
@@ -2047,8 +2048,8 @@ def main():
     if load_and_append_output_features_dir is not None:
         newid_data_hash = cache.hash_object((iNewid, sNewid)).hexdigest()
         newid_data_hash = "0"
-        print "loading output features (newid data) from dir: ", load_and_append_output_features_dir,
-        print "and hash:", newid_data_hash
+        print ("loading output features (newid data) from dir: ", load_and_append_output_features_dir,
+               "and hash:", newid_data_hash)
         additional_features_newid = cache.unpickle_array(base_dir=load_and_append_output_features_dir,
                                                          base_filename="output_features_training_TestD" +
                                                                        newid_data_hash)
@@ -2056,12 +2057,11 @@ def main():
         subimages_newid = numpy.concatenate((subimages_newid, additional_features_newid), axis=1)
 
     t_load_images1 = time.time()
-    t11 = time.time()
-    print num_images_newid, " Images loaded in %0.3f s" % (t_load_images1 - t_load_images0)
+    print (num_images_newid, " Images loaded in %0.3f s" % (t_load_images1 - t_load_images0))
 
     t_exec0 = time.time()
-    print "Execution over New Id testing set..."
-    print "Input Signal: New Id test images"
+    print ("Execution over New Id testing set...")
+    print ("Input Signal: New Id test images")
     sl_seq_newid = flow.execute(subimages_newid)
     sl_seq_newid = sl_seq_newid[:, skip_num_signals:]
     sl_seq_newid = numpy.nan_to_num(sl_seq_newid)
@@ -2070,24 +2070,24 @@ def main():
         sl_seq_newid = numpy.clip(sl_seq_newid, min_cutoff, max_cutoff)
 
     if clip_seenid_newid_to_training:  # This is obsolete and has been repaced by negative feature_cut_off_level
-        print "clipping sl_seq_newid"
+        print ("clipping sl_seq_newid")
         sl_seq_newid_min = sl_seq_newid.min(axis=0)
         sl_seq_newid_max = sl_seq_newid.max(axis=0)
-        print "sl_seq_training_min=", sl_seq_training_min
-        print "sl_seq_training_max=", sl_seq_training_max
-        print "sl_seq_newid_min=", sl_seq_newid_min
-        print "sl_seq_newid_max=", sl_seq_newid_max
+        print ("sl_seq_training_min=", sl_seq_training_min)
+        print ("sl_seq_training_max=", sl_seq_training_max)
+        print ("sl_seq_newid_min=", sl_seq_newid_min)
+        print ("sl_seq_newid_max=", sl_seq_newid_max)
         sl_seq_newid = numpy.clip(sl_seq_newid, sl_seq_training_min, sl_seq_training_max)
 
     corr_factor = 1.0
-    print corr_factor
+    print (corr_factor)
     sl_seq_newid[:, 0:reg_num_signals] = sl_seq_newid[:, 0:reg_num_signals] * corr_factor
 
     t_exec1 = time.time()
-    print "Execution over New Id in %0.3f s" % ((t_exec1 - t_exec0))
+    print ("Execution over New Id in %0.3f s" % (t_exec1 - t_exec0))
 
     if save_output_features_dir is not None:
-        print "saving output features (test data)"
+        print ("saving output features (test data)")
         testing_data_hash = cache.hash_object((iNewid, sNewid)).hexdigest()
         cache.pickle_array(sl_seq_newid, base_dir=save_output_features_dir,
                            base_filename="output_features_training_TestD" + testing_data_hash, overwrite=True,
@@ -2100,24 +2100,24 @@ def main():
 
     if convert_labels_days_to_years:
         if correct_labels_newid.mean() < 200:
-            print "correct_labels_newid appears to be already year values (mean %f)" % correct_labels_newid.mean()
+            print ("correct_labels_newid appears to be already year values (mean %f)" % correct_labels_newid.mean())
         else:
-            print "converting correct_labels_newid from days to years"
+            print ("converting correct_labels_newid from days to years")
             correct_labels_newid = correct_labels_newid / DAYS_IN_A_YEAR
 
         if integer_label_estimation:
             if (correct_labels_newid - correct_labels_newid.astype(int)).mean() < 0.01:
-                print "correct_labels_newid appears to be already integer, preserving its value"
+                print ("correct_labels_newid appears to be already integer, preserving its value")
             else:
-                print "correct_labels_newid seem to be real values, converting them to years"
+                print ("correct_labels_newid seem to be real values, converting them to years")
                 correct_labels_newid = (correct_labels_newid + 0.0006).astype(int) * 1.0
-    print "correct_labels_newid=", correct_labels_newid
+    print ("correct_labels_newid=", correct_labels_newid)
 
     if enable_ncc_cfr:
-        print "NCC classify..."
+        print ("NCC classify...")
         classes_ncc_newid = numpy.array(ncc_node.label(sl_seq_newid[:, 0:reg_num_signals]))
         labels_ncc_newid = more_nodes.map_class_numbers_to_avg_label(all_classes, avg_labels, classes_ncc_newid)
-        print classes_ncc_newid
+        print (classes_ncc_newid)
     else:
         classes_ncc_newid = labels_ncc_newid = numpy.zeros(num_images_newid)
 
@@ -2130,13 +2130,13 @@ def main():
         probs_newid = GC_node.class_probabilities(sl_seq_newid[:, 0:reg_num_signals])
         softCR_Gauss_newid = GC_node.softCR(sl_seq_newid[:, 0:reg_num_signals], correct_classes_newid)
     else:
-        classes_Gauss_newid = labels_Gauss_newid = regression_Gauss_newid = regressionMAE_Gauss_newid = numpy.zeros(
-            num_images_newid)
+        classes_Gauss_newid = labels_Gauss_newid = regression_Gauss_newid = regressionMAE_Gauss_newid = \
+            numpy.zeros(num_images_newid)
         probs_newid = numpy.zeros((num_images_newid, 2))
         softCR_Gauss_newid = 0.0
 
     if enable_kNN_cfr:
-        print "kNN classify... (k=%d)" % kNN_k
+        print ("kNN classify... (k=%d)" % kNN_k)
         classes_kNN_newid = numpy.array(kNN_node.label(sl_seq_newid[:, 0:reg_num_signals]))
         labels_kNN_newid = more_nodes.map_class_numbers_to_avg_label(all_classes, avg_labels, classes_kNN_newid)
     else:
@@ -2153,11 +2153,12 @@ def main():
         # probs_newid[0, 10] = 1.0
         # probs_seenid[0, 10] = 1.0
     else:
-        classes_svm_newid = regression_svm_newid = regression2_svm_newid = regression3_svm_newid = numpy.zeros(
-            num_images_newid)
+        classes_svm_newid = regression_svm_newid = regression2_svm_newid = \
+            regression3_svm_newid = numpy.zeros(num_images_newid)
 
     if enable_svr:
-        regression_svr_newid = svr.predict(svm_scale(sl_seq_newid[:, 0:reg_num_signals], data_mins, data_maxs, svm_min, svm_max))
+        regression_svr_newid = svr.predict(svm_scale(sl_seq_newid[:, 0:reg_num_signals], data_mins, data_maxs,
+                                                     svm_min, svm_max))
     else:
         regression_svr_newid = numpy.zeros(num_images_newid)
 
@@ -2168,23 +2169,22 @@ def main():
 
     if output_instead_of_SVM2:
         regression2_svm_newid = (sl_seq_newid[:, 0] * orig_train_label_std) + orig_train_label_mean
-        print "Applying cutoff to the label estimations for LR and Linear Scaling (SVM2)"
+        print ("Applying cutoff to the label estimations for LR and Linear Scaling (SVM2)")
         regression2_svm_newid = numpy.clip(regression2_svm_newid, orig_train_label_min, orig_train_label_max)
         regression_lr_newid = numpy.clip(regression_lr_newid, orig_train_label_min, orig_train_label_max)
 
     if svr_instead_of_SVM2:
-        print "replacing regression estimation for svm2 by svr estimation"
+        print ("replacing regression estimation for svm2 by svr estimation")
         regression2_svm_newid = regression_svr_newid
 
-
     t_class1 = time.time()
-    print "Classification/Regression over New Id in %0.3f s" % ((t_class1 - t_class0))
+    print ("Classification/Regression over New Id in %0.3f s" % ((t_class1 - t_class0)))
 
     if integer_label_estimation:
         # print "WARNING, ADDING A BIAS OF -0.5 TO ESTIMATION OF NEWID ONLY!!!"
         # regression_Gauss_newid += -0.5
         # regressionMAE_Gauss_newid += -0.5
-        print "Making all label estimations for newid data integer numbers"
+        print ("Making all label estimations for newid data integer numbers")
         if convert_labels_days_to_years:  # 5.7 should be mapped to 5 years because age estimation is exact (days)
             labels_ncc_newid = labels_ncc_newid.astype(int)
             regression_Gauss_newid = regression_Gauss_newid.astype(int)
@@ -2203,7 +2203,7 @@ def main():
             regression2_svm_newid = numpy.rint(regression2_svm_newid)
             regression3_svm_newid = numpy.rint(regression3_svm_newid)
             regression_lr_newid = numpy.rint(regression_lr_newid)
-        print "regressionMAE_Gauss_newid[0:5]=", regressionMAE_Gauss_newid[0:5]
+        print ("regressionMAE_Gauss_newid[0:5]=", regressionMAE_Gauss_newid[0:5])
 
     # print "Saving train/test_data for external analysis"
     # ndarray_to_string(sl_seq_training, "/local/tmp/escalafl/training_samples.txt")
@@ -2213,18 +2213,18 @@ def main():
     # ndarray_to_string(sl_seq_newid, "/local/tmp/escalafl/newid_samples.txt")
     # ndarray_to_string(correct_labels_newid, "/local/tmp/escalafl/newid_labels.txt")
 
-    print "Computing typical delta, eta values for Training SFA Signal"
+    print ("Computing typical delta, eta values for Training SFA Signal")
     (results.typical_delta_train,
      results.typical_eta_newid) = sfa_libs.comp_typical_delta_eta(sl_seq_training, iTrain.block_size, num_reps=200,
                                                                   training_mode=iTrain.train_mode)
     results.brute_delta_train = sfa_libs.comp_delta_normalized(sl_seq_training)
     results.brute_eta_train = sfa_libs.comp_eta(sl_seq_training)
     t_delta_eta1 = time.time()
-    print "delta_train=", results.typical_delta_train
-    print "eta_train=", results.typical_eta_train
-    print "brute_delta_train=", results.brute_delta_train
+    print ("delta_train=", results.typical_delta_train)
+    print ("eta_train=", results.typical_eta_train)
+    print ("brute_delta_train=", results.brute_delta_train)
 
-    print "Computing typical delta, eta values for New Id SFA Signal"
+    print ("Computing typical delta, eta values for New Id SFA Signal")
     t_delta_eta0 = time.time()
     (results.typical_delta_newid,
      results.typical_eta_newid) = sfa_libs.comp_typical_delta_eta(sl_seq_newid, iNewid.block_size, num_reps=200,
@@ -2232,26 +2232,26 @@ def main():
     results.brute_delta_newid = sfa_libs.comp_delta_normalized(sl_seq_newid)
     results.brute_eta_newid = sfa_libs.comp_eta(sl_seq_newid)
     t_delta_eta1 = time.time()
-    print "typical_delta_newid=", results.typical_delta_newid
-    print "typical_delta_newid[0:31].sum()=", results.typical_delta_newid[0:31].sum()
-    print "typical_eta_newid=", results.typical_eta_newid
-    print "brute_delta_newid=", results.brute_delta_newid
+    print ("typical_delta_newid=", results.typical_delta_newid)
+    print ("typical_delta_newid[0:31].sum()=", results.typical_delta_newid[0:31].sum())
+    print ("typical_eta_newid=", results.typical_eta_newid)
+    print ("brute_delta_newid=", results.brute_delta_newid)
     # print "brute_eta_newid=", results.brute_eta_newid
-    print "computed delta/eta in %0.3f ms" % ((t_delta_eta1 - t_delta_eta0) * 1000.0)
+    print ("computed delta/eta in %0.3f ms" % ((t_delta_eta1 - t_delta_eta0) * 1000.0))
 
     if isinstance(block_size, int):
-        print "virtual sequence length complete = ", num_images_training * (block_size - 1) / 2
-        print "virtual sequence length sequence = ", (num_images_training - block_size) * block_size
-        print "virtual sequence length mixed = ", num_images_training * (block_size - 1) / 2 + \
-                                                  (num_images_training - block_size) * block_size
+        print ("virtual sequence length complete = ", num_images_training * (block_size - 1) / 2)
+        print ("virtual sequence length sequence = ", (num_images_training - block_size) * block_size)
+        print ("virtual sequence length mixed = ", num_images_training * (block_size - 1) / 2 +
+               (num_images_training - block_size) * block_size)
     else:
-        print "length of virtual sequence not computed = "
+        print ("length of virtual sequence not computed = ")
 
     save_train_data = True and False  # This fails for large datasets :( TODO: Make this an option
     if save_train_data:
         uniqueness = numpy.random.randint(32000)
         save_dir_subimages_features_training = "/local/tmp/escalafl/Alberto/saved_images_features_training"
-        print "Using uniqueness %d for saving subimage and feature data" % uniqueness
+        print ("Using uniqueness %d for saving subimage and feature data" % uniqueness)
         cache.pickle_array(subimages_train, base_dir=save_dir_subimages_features_training,
                            base_filename="subimages_train%5d" % uniqueness, chunk_size=5000, block_size=1,
                            continuous=False, overwrite=True, verbose=True)
@@ -2260,36 +2260,35 @@ def main():
                            continuous=False, overwrite=True, verbose=True)
     # Then unpicke with unpickle_array(base_dir="", base_filename="subimages_train%5d"%uniqueness):
 
-
-    print "Estimating explained variance for Train SFA Signal"
+    print ("Estimating explained variance for Train SFA Signal")
     number_samples_explained_variance = 9000  # 1000 #4000 #2000
     # fast_inverse_available = True and False
 
     if estimate_explained_var_with_inverse:
-        print "Estimated explained variance with inverse (train) is: ", more_nodes.estimate_explained_variance(
-            subimages_train, flow, sl_seq_training, number_samples_explained_variance)
-        print "Estimated explained variance with inverse (newid) is: ", more_nodes.estimate_explained_variance(
-            subimages_newid, flow, sl_seq_newid, number_samples_explained_variance)
+        print ("Estimated explained variance with inverse (train) is: ", more_nodes.estimate_explained_variance(
+            subimages_train, flow, sl_seq_training, number_samples_explained_variance))
+        print ("Estimated explained variance with inverse (newid) is: ", more_nodes.estimate_explained_variance(
+            subimages_newid, flow, sl_seq_newid, number_samples_explained_variance))
     else:
-        print "Fast inverse not available, not estimating explained variance"
+        print ("Fast inverse not available, not estimating explained variance")
 
     if estimate_explained_var_with_kNN_k:
         k = estimate_explained_var_with_kNN_k  # k=64
-        print "Estimated explained variance with kNN (train, %d features) is: " % reg_num_signals,
-        print more_nodes.estimate_explained_var_with_kNN(subimages_train, sl_seq_training[:, 0:reg_num_signals],
-                                                         max_num_samples_for_ev=10000, max_test_samples_for_ev=10000,
-                                                         k=k, ignore_closest_match=True, operation="average")
+        print ("Estimated explained variance with kNN (train, %d features) is: " % reg_num_signals,
+               more_nodes.estimate_explained_var_with_kNN(subimages_train, sl_seq_training[:, 0:reg_num_signals],
+                                                          max_num_samples_for_ev=10000, max_test_samples_for_ev=10000,
+                                                          k=k, ignore_closest_match=True, operation="average"))
     else:
-        print "Not estimating explained variance with kNN"
+        print ("Not estimating explained variance with kNN")
 
     if estimate_explained_var_with_kNN_lin_app_k:
         k = estimate_explained_var_with_kNN_lin_app_k  # k=64
-        print "Estimated explained variance with kNN_lin_app (train, %d features) is: " % reg_num_signals, \
-            more_nodes.estimate_explained_var_with_kNN(subimages_train, sl_seq_training[:, 0:reg_num_signals],
-                                                       max_num_samples_for_ev=10000, max_test_samples_for_ev=10000,
-                                                       k=k, ignore_closest_match=True, operation="lin_app")
+        print ("Estimated explained variance with kNN_lin_app (train, %d features) is: " % reg_num_signals,
+               more_nodes.estimate_explained_var_with_kNN(subimages_train, sl_seq_training[:, 0:reg_num_signals],
+                                                          max_num_samples_for_ev=10000, max_test_samples_for_ev=10000,
+                                                          k=k, ignore_closest_match=True, operation="lin_app"))
     else:
-        print "Not estimating explained variance with kNN_lin_app"
+        print ("Not estimating explained variance with kNN_lin_app")
 
     if estimate_explained_var_linear_global_N:
         if estimate_explained_var_linear_global_N > 0:
@@ -2302,37 +2301,37 @@ def main():
             subimages_seenid, sl_seq_seenid[:, 0:num_features_linear_model], subimages_newid,
             sl_seq_newid[:, 0:num_features_linear_model], num_features_linear_model, number_samples_EV_linear_global)
 
-        print "Explained Variance Linear Global for training data (%d features, subset of size %d) is: " % (
-        num_features_linear_model, number_samples_EV_linear_global), EVLinGlobal_train1,
-        print "for training data (new random subset) is: ", EVLinGlobal_train2
-        print "for newid (all_samples FORCED %d) is: " % num_features_linear_model, EVLinGlobal_newid
+        print ("Explained Variance Linear Global for training data (%d features, subset of size %d) is: " % (
+            num_features_linear_model, number_samples_EV_linear_global), EVLinGlobal_train1)
+        print ("for training data (new random subset) is: ", EVLinGlobal_train2)
+        print ("for newid (all_samples FORCED %d) is: " % num_features_linear_model, EVLinGlobal_newid)
     else:
-        print "Not estimating explained variance with global linear reconstruction"
+        print ("Not estimating explained variance with global linear reconstruction")
         num_features_linear_model = 75
 
-    print "Computing chance levels for newid data"
+    print ("Computing chance levels for newid data")
     chance_level_RMSE_newid = correct_labels_newid.std()
     correct_labels_newid_sorted = correct_labels_newid + 0.0
     correct_labels_newid_sorted.sort()
     median_estimation = numpy.ones(len(correct_labels_newid)) * correct_labels_newid_sorted[
         len(correct_labels_newid) / 2]
     chance_level_MAE_newid = classifiers.mean_average_error(correct_labels_newid, median_estimation)
-    print "chance_level_RMSE_newid=", chance_level_RMSE_newid, "chance_level_MAE_newid=", chance_level_MAE_newid
-    print "correct_labels_newid.mean()=", correct_labels_newid.mean(),
-    print "correct_labels_newid median() ", median_estimation
-    print "correct_labels_newid.min()=", correct_labels_newid.min(),
-    print "correct_labels_newid.max() ", correct_labels_newid.max()
-    print "Computations Finished!"
+    print ("chance_level_RMSE_newid=", chance_level_RMSE_newid, "chance_level_MAE_newid=", chance_level_MAE_newid)
+    print ("correct_labels_newid.mean()=", correct_labels_newid.mean(),
+           "correct_labels_newid median() ", median_estimation)
+    print ("correct_labels_newid.min()=", correct_labels_newid.min(),
+           "correct_labels_newid.max() ", correct_labels_newid.max())
+    print ("Computations Finished!")
 
-    print "** Displaying Benchmark data: **"
+    print ("** Displaying Benchmark data: **")
     if benchmark is not None:
         for task_name, task_time in benchmark:
-            print "     ", task_name, " done in %0.3f s" % task_time
+            print ("     ", task_name, " done in %0.3f s" % task_time)
 
-    print "Classification/Regression Performance: "
+    print ("Classification/Regression Performance: ")
     if Parameters.analysis or True:
-        print correct_classes_training
-        print classes_kNN_training
+        print (correct_classes_training)
+        print (classes_kNN_training)
         # MSE
         results.class_ncc_rate_train = classifiers.correct_classif_rate(correct_classes_training, classes_ncc_training)
         results.class_kNN_rate_train = classifiers.correct_classif_rate(correct_classes_training, classes_kNN_training)
@@ -2400,7 +2399,7 @@ def main():
         results.rmse3_svm_seenid = results.mse3_svm_seenid ** 0.5
         results.rmse_lr_seenid = results.mse_lr_seenid ** 0.5
 
-        print correct_classes_newid.shape, classes_kNN_newid.shape
+        print (correct_classes_newid.shape, classes_kNN_newid.shape)
         results.class_ncc_rate_newid = classifiers.correct_classif_rate(correct_classes_newid, classes_ncc_newid)
         results.class_kNN_rate_newid = classifiers.correct_classif_rate(correct_classes_newid, classes_kNN_newid)
         results.class_Gauss_rate_newid = classifiers.correct_classif_rate(correct_classes_newid, classes_Gauss_newid)
@@ -2432,21 +2431,21 @@ def main():
         results.rmse3_svm_newid = results.mse3_svm_newid ** 0.5
         results.rmse_lr_newid = results.mse_lr_newid ** 0.5
 
-    print "Comparisson of MAE for RMSE estimation and MAE estimation"
-    print "regression_Gauss_newid[100:150] =", regression_Gauss_newid[100:150]
-    print "regressionMAE_Gauss_newid[100:150] =", regressionMAE_Gauss_newid[100:150]
-    print "diff MAE-RMSE= ", regressionMAE_Gauss_newid[100:150] - regression_Gauss_newid[100:150]
+    print ("Comparisson of MAE for RMSE estimation and MAE estimation")
+    print ("regression_Gauss_newid[100:150] =", regression_Gauss_newid[100:150])
+    print ("regressionMAE_Gauss_newid[100:150] =", regressionMAE_Gauss_newid[100:150])
+    print ("diff MAE-RMSE= ", regressionMAE_Gauss_newid[100:150] - regression_Gauss_newid[100:150])
     worst = numpy.argsort(numpy.abs(regressionMAE_Gauss_newid - regression_Gauss_newid))
-    print "worst[-50:] diff MAE-RMSE= ", worst[-50:]
-    print "regression_Gauss_newid[worst[-50:]]=", regression_Gauss_newid[worst[-50:]]
-    print "regressionMAE_Gauss_newid[worst[-50:]]=", regressionMAE_Gauss_newid[worst[-50:]]
-    print "correct_labels_newid[worst[-50:]]=", correct_labels_newid[worst[-50:]]
+    print ("worst[-50:] diff MAE-RMSE= ", worst[-50:])
+    print ("regression_Gauss_newid[worst[-50:]]=", regression_Gauss_newid[worst[-50:]])
+    print ("regressionMAE_Gauss_newid[worst[-50:]]=", regressionMAE_Gauss_newid[worst[-50:]])
+    print ("correct_labels_newid[worst[-50:]]=", correct_labels_newid[worst[-50:]])
 
     results.maeOpt_gauss_newid = classifiers.mean_average_error(correct_labels_newid, regressionMAE_Gauss_newid)
     results.mae_gauss_newid = classifiers.mean_average_error(correct_labels_newid, regression_Gauss_newid)
 
-    print "N1=", classifiers.mean_average_error(correct_labels_newid, regressionMAE_Gauss_newid)
-    print "N2=", classifiers.mean_average_error(correct_labels_newid, regression_Gauss_newid)
+    print ("N1=", classifiers.mean_average_error(correct_labels_newid, regressionMAE_Gauss_newid))
+    print ("N2=", classifiers.mean_average_error(correct_labels_newid, regression_Gauss_newid))
     numpy.savetxt("regressionMAE_Gauss_newid.txt", regressionMAE_Gauss_newid)
     numpy.savetxt("regression_Gauss_newid.txt", regression_Gauss_newid)
     numpy.savetxt("regression_svr_newid.txt", regression_svr_newid)
@@ -2455,19 +2454,19 @@ def main():
     cs_list = {}
     if cumulative_scores:
         largest_errors = numpy.arange(0, 31)
-        print "Computing cumulative errors cs()= {",
+        print ("Computing cumulative errors cs()= {", end='')
         for largest_error in largest_errors:
             cs = more_nodes.cumulative_score(ground_truth=correct_labels_newid, estimation=regression_Gauss_newid,
                                              largest_error=largest_error, integer_rounding=True)
             cs_list[largest_error] = cs
-            print "%d:%0.7f, " % (largest_error, cs),
-        print "}"
+            print ("%d:%0.7f, " % (largest_error, cs), end='')
+        print ("}")
     results.cs_list = cs_list
 
     error_table = {}
     maes = {}
     estimation_means = {}
-    print "Error table:"
+    print ("Error table:")
     if cumulative_scores:
         different_labels = numpy.unique(correct_labels_newid)
         for label in different_labels:
@@ -2483,13 +2482,13 @@ def main():
 
             maes[label] = abs_errors.mean()
 
-            print ""
-            print "label=", label,
+            print ("")
+            print ("label=", label, end='')
             for error in errors:
                 error_table[label][error] += 1
 
             for error in numpy.unique(errors):
-                print "e[%d]=%d " % (error, error_table[label][error]),
+                print ("e[%d]=%d " % (error, error_table[label][error]), end='')
 
         # Now compute error frequencies for all labels simultaneuous
         signed_errors = {}
@@ -2499,29 +2498,29 @@ def main():
             for error in error_table[label].keys():
                 signed_errors[error] += error_table[label][error]
 
-        print "\n Global signed errors:"
+        print ("\n Global signed errors:")
         signed_error_keys = numpy.array(signed_errors.keys())
         signed_error_keys.sort()
         for error in signed_error_keys:
-            print "e[%d]=%d " % (error, signed_errors[error]),
-        print "."
+            print ("e[%d]=%d " % (error, signed_errors[error]), end='')
+        print (".")
 
-        print "\n MAES for each GT year. maes(%d) to maes(%d)" % (different_labels[0], different_labels[-1])
+        print ("\n MAES for each GT year. maes(%d) to maes(%d)" % (different_labels[0], different_labels[-1]))
         for label in different_labels:
-            print "%f, " % maes[label],
+            print ("%f, " % maes[label], end='')
 
-        print "\n estimation means for each GT year. estim_means(%d) to estim_means(%d)" % (
-        different_labels[0], different_labels[-1])
+        print ("\n estimation means for each GT year. estim_means(%d) to estim_means(%d)" % (
+            different_labels[0], different_labels[-1]))
         for label in different_labels:
-            print "%f, " % estimation_means[label],
+            print ("%f, " % estimation_means[label], end='')
 
     if confusion_matrix and integer_label_estimation:
-        print "Computing confusion matrix"
+        print ("Computing confusion matrix")
         min_label = numpy.min(
             (correct_labels_training.min(), correct_labels_seenid.min(), correct_labels_newid.min())).astype(int)
         max_label = numpy.max(
             (correct_labels_training.max(), correct_labels_seenid.max(), correct_labels_newid.max())).astype(int)
-        print "overriding min/max label from data (%d, %d) to (16,77)" % (min_label, max_label)
+        print ("overriding min/max label from data (%d, %d) to (16,77)" % (min_label, max_label))
         min_label = 16
         max_label = 77
 
@@ -2539,73 +2538,74 @@ def main():
             for jj, l_est in enumerate(different_labels):
                 confusion[ii, jj] = (mask_gt[ii] * mask_est[jj]).sum()
 
-        print "confusion:=", confusion
+        print ("confusion:=", confusion)
 
         # Output confusion matrix to standard output
         for label in different_labels:
-            print "%f, " % label,
-        print ""
+            print ("%f, " % label, end='')
+        print ("")
         for ii in range(num_diff_labels):
-            print "[",
+            print ("[", end='')
             for jj in range(num_diff_labels):
-                print "%d, " % confusion[ii, jj],
-            print "]"
+                print ("%d, " % confusion[ii, jj], end='')
+            print ("]")
 
-        print "sums:",
+        print ("sums:", end='')
         for ii in range(num_diff_labels):
-            print "%d, " % mask_gt[ii].sum(),
-        print "]"
+            print ("%d, " % mask_gt[ii].sum(), end='')
+        print ("]")
     save_results = False
     if save_results:
         cache.pickle_to_disk(results, "results_" + str(int(time.time())) + ".pckl")
 
     if False:
-        print "sl_seq_training.mean(axis=0)=", sl_seq_training.mean(axis=0)
-        print "sl_seq_seenid.mean(axis=0)=", sl_seq_seenid.mean(axis=0)
-        print "sl_seq_newid.mean(axis=0)=", sl_seq_newid.mean(axis=0)
-        print "sl_seq_training.var(axis=0)=", sl_seq_training.var(axis=0)
-        print "sl_seq_seenid.var(axis=0)=", sl_seq_seenid.var(axis=0)
-        print "sl_seq_newid.var(axis=0)=", sl_seq_newid.var(axis=0)
+        print ("sl_seq_training.mean(axis=0)=", sl_seq_training.mean(axis=0))
+        print ("sl_seq_seenid.mean(axis=0)=", sl_seq_seenid.mean(axis=0))
+        print ("sl_seq_newid.mean(axis=0)=", sl_seq_newid.mean(axis=0))
+        print ("sl_seq_training.var(axis=0)=", sl_seq_training.var(axis=0))
+        print ("sl_seq_seenid.var(axis=0)=", sl_seq_seenid.var(axis=0))
+        print ("sl_seq_newid.var(axis=0)=", sl_seq_newid.var(axis=0))
 
-    print ("Train: %0.3f CR_NCC, %0.3f CR_kNN, CR_Gauss %0.5f, softCR_Gauss=%0.5f, CR_SVM %0.3f, MSE_NCC %0.3f, " +
+    print (("Train: %0.3f CR_NCC, %0.3f CR_kNN, CR_Gauss %0.5f, softCR_Gauss=%0.5f, CR_SVM %0.3f, MSE_NCC %0.3f, " +
            "MSE_kNN %0.3f, MSE_Gauss= %0.3f MSE3_SVM %0.3f, MSE2_SVM %0.3f, MSE_SVM %0.3f, MSE_LR %0.3f") % (
         results.class_ncc_rate_train, results.class_kNN_rate_train, results.class_Gauss_rate_train,
-        softCR_Gauss_training, results.class_svm_rate_train, results.mse_ncc_train, results.mse_kNN_train,
-        results.mse_gauss_train,
-        results.mse3_svm_train, results.mse2_svm_train, results.mse_svm_train, results.mse_lr_train)
-    print ("Seen Id: %0.3f CR_NCC, %0.3f CR_kNN, CR_Gauss %0.5f, softCR_Gauss=%0.5f, CR_SVM %0.3f, MSE_NCC %0.3f, " +
+        softCR_Gauss_training, results.class_svm_rate_train, results.mse_ncc_train,
+        results.mse_kNN_train, results.mse_gauss_train, results.mse3_svm_train, results.mse2_svm_train,
+        results.mse_svm_train, results.mse_lr_train))
+    print (("Seen Id: %0.3f CR_NCC, %0.3f CR_kNN, CR_Gauss %0.5f, softCR_Gauss=%0.5f, CR_SVM %0.3f, MSE_NCC %0.3f, " +
            "MSE_kNN %0.3f, MSE_Gauss= %0.3f MSE3_SVM %0.3f, MSE2_SVM %0.3f, MSE_SVM %0.3f, MSE_LR %0.3f") % (
         results.class_ncc_rate_seenid, results.class_kNN_rate_seenid, results.class_Gauss_rate_seenid,
         softCR_Gauss_seenid, results.class_svm_rate_seenid, results.mse_ncc_seenid, results.mse_kNN_seenid,
-        results.mse_gauss_seenid,
-        results.mse3_svm_seenid, results.mse2_svm_seenid, results.mse_svm_seenid, results.mse_lr_seenid)
-    print ("New Id: %0.3f CR_NCC, %0.3f CR_kNN, CR_Gauss %0.5f, softCR_Gauss=%0.5f, CR_SVM %0.3f, MSE_NCC %0.3f, " +
+        results.mse_gauss_seenid, results.mse3_svm_seenid, results.mse2_svm_seenid, results.mse_svm_seenid,
+        results.mse_lr_seenid))
+    print (("New Id: %0.3f CR_NCC, %0.3f CR_kNN, CR_Gauss %0.5f, softCR_Gauss=%0.5f, CR_SVM %0.3f, MSE_NCC %0.3f, " +
            "MSE_kNN %0.3f, MSE_Gauss= %0.3f MSE3_SVM %0.3f, MSE2_SVM %0.3f, MSE_SVM %0.3f, MSE_LR %0.3f") % (
         results.class_ncc_rate_newid, results.class_kNN_rate_newid, results.class_Gauss_rate_newid, softCR_Gauss_newid,
         results.class_svm_rate_newid, results.mse_ncc_newid, results.mse_kNN_newid, results.mse_gauss_newid,
-        results.mse3_svm_newid, results.mse2_svm_newid, results.mse_svm_newid, results.mse_lr_newid)
+        results.mse3_svm_newid, results.mse2_svm_newid, results.mse_svm_newid, results.mse_lr_newid))
 
-    print ("Train:   RMSE_NCC %0.3f, RMSE_kNN %0.3f, RMSE_Gauss= %0.5f RMSE3_SVM %0.3f, RMSE2_SVM %0.3f, RMSE_SVM " +
-          "%0.3f, RMSE_LR %0.3f, MAE= %0.5f MAE(Opt)= %0.3f, MAE_SVR= %0.5f") % (
+    print (("Train:   RMSE_NCC %0.3f, RMSE_kNN %0.3f, RMSE_Gauss= %0.5f RMSE3_SVM %0.3f, RMSE2_SVM %0.3f, RMSE_SVM " +
+           "%0.3f, RMSE_LR %0.3f, MAE= %0.5f MAE(Opt)= %0.3f, MAE_SVR= %0.5f") % (
         results.rmse_ncc_train, results.rmse_kNN_train, results.rmse_gauss_train,
         results.rmse3_svm_train, results.rmse2_svm_train, results.rmse_svm_train, results.rmse_lr_train,
-        results.mae_gauss_train, results.maeOpt_gauss_train, results.mae_svr_train)
-    print ("Seen Id: RMSE_NCC %0.3f, RMSE_kNN %0.3f, RMSE_Gauss= %0.5f RMSE3_SVM %0.3f, RMSE2_SVM %0.3f, RMSE_SVM " +
+        results.mae_gauss_train, results.maeOpt_gauss_train, results.mae_svr_train))
+    print (("Seen Id: RMSE_NCC %0.3f, RMSE_kNN %0.3f, RMSE_Gauss= %0.5f RMSE3_SVM %0.3f, RMSE2_SVM %0.3f, RMSE_SVM " +
            "%0.3f, RMSE_LR %0.3f, MAE= %0.5f MAE(Opt)= %0.3f, MAE_SVR= %0.5f") % (
         results.rmse_ncc_seenid, results.rmse_kNN_seenid, results.rmse_gauss_seenid,
         results.rmse3_svm_seenid, results.rmse2_svm_seenid, results.rmse_svm_seenid, results.rmse_lr_seenid,
-        results.mae_gauss_seenid, results.maeOpt_gauss_seenid, results.mae_svr_seenid)
-    print ("New Id:  RMSE_NCC %0.3f, RMSE_kNN %0.3f, RMSE_Gauss= %0.5f RMSE3_SVM %0.3f, RMSE2_SVM %0.3f, RMSE_SVM " +
+        results.mae_gauss_seenid, results.maeOpt_gauss_seenid, results.mae_svr_seenid))
+    print (("New Id:  RMSE_NCC %0.3f, RMSE_kNN %0.3f, RMSE_Gauss= %0.5f RMSE3_SVM %0.3f, RMSE2_SVM %0.3f, RMSE_SVM " +
            "%0.3f, RMSE_LR %0.3f, MAE= %0.5f MAE(Opt)= %0.3f, MAE_SVR= %0.5f") % (
         results.rmse_ncc_newid, results.rmse_kNN_newid, results.rmse_gauss_newid,
         results.rmse3_svm_newid, results.rmse2_svm_newid, results.rmse_svm_newid, results.rmse_lr_newid,
-        results.mae_gauss_newid, results.maeOpt_gauss_newid, results.mae_svr_newid)
+        results.mae_gauss_newid, results.maeOpt_gauss_newid, results.mae_svr_newid))
 
     if False:
-        print "Warning: this is deprecated code and will be deleted soon. Its use is strongly discouraged."
+        print ("Warning: this is deprecated code and will be deleted soon. Its use is strongly discouraged.")
         starting_point = "Sigmoids"  # None, "Sigmoids", "Identity"
-        print "Computations useful to determine information loss and feature obfuscation IL/FO... starting_point=",
-        print starting_point
+        print ("Computations useful to determine information loss and feature obfuscation IL/FO... starting_point=",
+               end='')
+        print (starting_point)
         if iTrain.train_mode == "clustered":
             if features_residual_information > 0:
                 results_e1_e2_from_feats = []
@@ -2617,15 +2617,15 @@ def main():
                     # print "Classification rates on expanded slow features with dimensionality %d are %f for training
                     # and %f for test"%(num_feats_residual_information, e1, e2)
                     results_e1_e2_from_feats.append((num_feats_residual_information, e1, e2))
-                print "\n num_feats_residual_information =",
+                print ("\n num_feats_residual_information =", end='')
                 for (num_feats_residual_information, e1, e2) in results_e1_e2_from_feats:
-                    print num_feats_residual_information, ", ",
-                print "\n classification rate on seenid(feats) =",
+                    print (num_feats_residual_information, ", ", end='')
+                print ("\n classification rate on seenid(feats) =", end='')
                 for (num_feats_residual_information, e1, e2) in results_e1_e2_from_feats:
-                    print "%f, " % e1,
-                print "\n classification rate on newid(feats) =",
+                    print ("%f, " % e1, end='')
+                print ("\n classification rate on newid(feats) =", end='')
                 for (num_feats_residual_information, e1, e2) in results_e1_e2_from_feats:
-                    print "%f, " % e2,
+                    print ("%f, " % e2, end='')
 
             if compute_input_information:
                 results_e1_e2_from_pca = []
@@ -2634,7 +2634,7 @@ def main():
                 pca_node.stop_training()
                 subimages_seenid_pca = pca_node.execute(subimages_seenid)
                 subimages_newid_pca = pca_node.execute(subimages_newid)
-                print "\n *****subimages_newid_pca.shape", subimages_newid_pca.shape
+                print ("\n *****subimages_newid_pca.shape", subimages_newid_pca.shape)
                 for num_feats_residual_information in numpy.arange(40, 150, 5):  # (40,150,5):
                     e1, e2 = more_nodes.compute_classification_performance(subimages_seenid_pca, correct_classes_seenid,
                                                                            subimages_newid_pca, correct_classes_newid,
@@ -2643,16 +2643,16 @@ def main():
                     # print "Classification rates on expanded input data with dimensionality %d are %f for training
                     # and %f for test"%(num_feats_residual_information, e1, e2)
                     results_e1_e2_from_pca.append((num_feats_residual_information, e1, e2))
-                print "\n num_feats_residual_information =",
+                print ("\n num_feats_residual_information =", end='')
                 for (num_feats_residual_information, e1, e2) in results_e1_e2_from_pca:
-                    print num_feats_residual_information, ", ",
-                print "\n classification rate on seenid(input) =",
+                    print (num_feats_residual_information, ", ", end='')
+                print ("\n classification rate on seenid(input) =", end='')
                 for (num_feats_residual_information, e1, e2) in results_e1_e2_from_pca:
-                    print "%f, " % e1,
-                print "\n classification rate on newid(input) =",
+                    print ("%f, " % e1, end='')
+                print ("\n classification rate on newid(input) =", end='')
                 for (num_feats_residual_information, e1, e2) in results_e1_e2_from_pca:
-                    print "%f, " % e2,
-                print "\n max CR on newid(input) = ", numpy.max([e2 for (nf, e1, e2) in results_e1_e2_from_pca])
+                    print ("%f, " % e2, end='')
+                print ("\n max CR on newid(input) = ", numpy.max([e2 for (nf, e1, e2) in results_e1_e2_from_pca]))
         else:
             if features_residual_information > 0:
                 for num_feats_residual_information in numpy.linspace(60, features_residual_information, 11):
@@ -2660,8 +2660,8 @@ def main():
                                                                        sl_seq_newid, correct_labels_newid,
                                                                        num_feats_residual_information,
                                                                        starting_point=starting_point)
-                    print "RMSE on expanded slow features with dimens. %d are %f for training and %f for test" % \
-                          (num_feats_residual_information, e1, e2)
+                    print ("RMSE on expanded slow features with dimens. %d are %f for training and %f for test" %
+                           (num_feats_residual_information, e1, e2))
 
             if compute_input_information:
                 for num_feats_residual_information in numpy.linspace(144, features_residual_information, 11):
@@ -2669,12 +2669,12 @@ def main():
                                                                        subimages_newid, correct_labels_newid,
                                                                        num_feats_residual_information,
                                                                        starting_point=starting_point)
-                    print "RMSE on expanded input data with dimensionality %d are %f for training and %f for test" % \
-                          (num_feats_residual_information, e1, e2)
+                    print ("RMSE on expanded input data with dimensionality %d are %f for training and %f for test" %
+                           (num_feats_residual_information, e1, e2))
 
     scale_disp = 1
 
-    print "Computing average SFA..."
+    print ("Computing average SFA...")
     if isinstance(iTrain.block_size, int):
         num_blocks_train = iTrain.num_images / iTrain.block_size
     elif iTrain.block_size is not None:
@@ -2682,7 +2682,7 @@ def main():
     else:
         num_blocks_train = iTrain.num_images
 
-    print num_blocks_train, hierarchy_out_dim, sl_seq_training.shape, block_size, iTrain.block_size
+    print (num_blocks_train, hierarchy_out_dim, sl_seq_training.shape, block_size, iTrain.block_size)
 
     sl_seq_training_mean = numpy.zeros((num_blocks_train, hierarchy_out_dim))
     if isinstance(iTrain.block_size, int):
@@ -2695,7 +2695,7 @@ def main():
                 axis=0)
             counter_sl += iTrain.block_size[block]
 
-    print "%d Blocks used for averages" % num_blocks_train
+    print ("%d Blocks used for averages" % num_blocks_train)
 
     # Function for gender label estimation. (-3 to -0.1) = Masculine, (0.0 to 2.9) = femenine. Thus, the midpoint
     # between the male and female labels is -0.05 and not zero in the artificial faces dataset
@@ -2706,25 +2706,25 @@ def main():
         return arr2
 
     if Parameters == experimental_datasets.ParamsGenderFunc or experimental_datasets.ParamsRAgeFunc:
-        print "Computing effective gender recognition:"
+        print ("Computing effective gender recognition:")
         binary_gender_estimation_training = binarize_array(regression_Gauss_training)
         binary_correct_labels_training = binarize_array(correct_labels_training)
         binary_gender_estimation_rate_training = classifiers.correct_classif_rate(binary_correct_labels_training,
                                                                                   binary_gender_estimation_training)
-        print "Binary gender classification rate (training) from continuous labels is %f" % \
-              binary_gender_estimation_rate_training
+        print ("Binary gender classification rate (training) from continuous labels is %f" %
+               binary_gender_estimation_rate_training)
         binary_gender_estimation_seenid = binarize_array(regression_Gauss_seenid)
         binary_correct_labels_seenid = binarize_array(correct_labels_seenid)
         binary_gender_estimation_rate_seenid = classifiers.correct_classif_rate(binary_correct_labels_seenid,
                                                                                 binary_gender_estimation_seenid)
-        print "Binary gender classification rate (seenid) from continuous labels is %f" % \
-              binary_gender_estimation_rate_seenid
+        print ("Binary gender classification rate (seenid) from continuous labels is %f" %
+               binary_gender_estimation_rate_seenid)
         binary_gender_estimation_newid = binarize_array(regression_Gauss_newid)
         binary_correct_labels_newid = binarize_array(correct_labels_newid)
         binary_gender_estimation_rate_newid = classifiers.correct_classif_rate(binary_correct_labels_newid,
                                                                                binary_gender_estimation_newid)
-        print "Binary gender classification rate (newid) from continuous labels is %f" % \
-              binary_gender_estimation_rate_newid
+        print ("Binary gender classification rate (newid) from continuous labels is %f" %
+               binary_gender_estimation_rate_newid)
 
     if Parameters == experimental_datasets.ParamsRGTSRBFunc and output_filename is not None:
         fd = open("G" + output_filename, "w")
@@ -2779,7 +2779,7 @@ def main():
                         sfa_filename = GTSRB_SFA_dir_training + "/SFA_" + fset + "/" + image_filename[-len(
                             sample_img_filename):-3] + "txt"
                     if ii == 0:
-                        print sfa_filename
+                        print (sfa_filename)
                     filed = open(sfa_filename, "wb")
                     for i, xx in enumerate(sl[ii, 0:number_SFA_features]):
                         if i == 0:
@@ -2796,7 +2796,7 @@ def main():
                 txt = "%f" % results.typical_delta_newid[i]
             else:
                 txt += " %f" % results.typical_delta_newid[i]
-        print "writing \"%s\" to; %s" % (txt, output_filename)
+        print ("writing \"%s\" to; %s" % (txt, output_filename))
         fd.write(txt)
         fd.close()
 
@@ -2805,7 +2805,7 @@ def main():
         sorting_error_Gauss_newid = error_Gauss_newid.argsort()
 
         save_images_sorted_error_Gauss_newid_base_dir = "/local/tmp/escalafl/Alberto/saved_images_sorted_AE_Gauss_newid"
-        print "saving images to directory:", save_images_sorted_error_Gauss_newid_base_dir
+        print ("saving images to directory:", save_images_sorted_error_Gauss_newid_base_dir)
         decimate = 1  # 100
         for i, i_x in enumerate(sorting_error_Gauss_newid):
             x = subimages_newid[i_x]
@@ -2818,8 +2818,8 @@ def main():
                     im = scipy.misc.toimage(im_raw, mode="L")
 
                 fullname = os.path.join(save_images_sorted_error_Gauss_newid_base_dir,
-                                        "image%05d_gt%+05f_e%+05f.png" % (
-                                        i / decimate, correct_labels_newid[i_x], regression_Gauss_newid[i_x]))
+                                        "image%05d_gt%+05f_e%+05f.png" % (i / decimate, correct_labels_newid[i_x],
+                                                                          regression_Gauss_newid[i_x]))
                 im.save(fullname)
         total_samples = len(sorting_error_Gauss_newid)
         worst_samples_nr = min(150, total_samples)
@@ -2849,7 +2849,7 @@ def main():
 
         save_images_sorted_incorrect_class_Gauss_newid_base_dir = \
             "/local/tmp/escalafl/Alberto/saved_images_sorted_incorrect_class_Gauss_newid"
-        print "saving images to directory:", save_images_sorted_incorrect_class_Gauss_newid_base_dir
+        print ("saving images to directory:", save_images_sorted_incorrect_class_Gauss_newid_base_dir)
         decimate = 1
         num_signals_per_image = subimage_shape[0] * subimage_shape[1] * in_channel_dim
         for i, i_x in enumerate(sorting_incorrect_Gauss_newid):
@@ -2865,14 +2865,14 @@ def main():
                     im = scipy.misc.toimage(im_raw, mode="L")
 
                 fullname = os.path.join(save_images_sorted_incorrect_class_Gauss_newid_base_dir,
-                                        "image%05d_gt%03d_c%03d.png" % (
-                                        i / decimate, correct_classes_newid[i_x], classes_Gauss_newid[i_x]))
+                                        "image%05d_gt%03d_c%03d.png" % (i / decimate, correct_classes_newid[i_x],
+                                                                        classes_Gauss_newid[i_x]))
                 im.save(fullname)
 
     # Save training, known_id, and new_id data in the format of libsvm
     if export_data_to_libsvm:
         this_time = int(time.time())
-        print "Saving output features in the format of libsvm (all components included). Timestamp:", this_time
+        print ("Saving output features in the format of libsvm (all components included). Timestamp:", this_time)
         more_nodes.export_to_libsvm(correct_classes_training, sl_seq_training, "libsvm_data/training2%011d" % this_time)
         more_nodes.export_to_libsvm(correct_classes_seenid, sl_seq_seenid, "libsvm_data/seenid2%011d" % this_time)
         more_nodes.export_to_libsvm(correct_classes_newid, sl_seq_newid, "libsvm_data/newid2%011d" % this_time)
@@ -2880,41 +2880,44 @@ def main():
     compute_background_detection = True  # and False
     cutoff_backgrounds = [0.975, 0.98, 0.985, 0.99, 0.995, 0.998, 0.999, 0.9995, 0.99995]
     if compute_background_detection and Parameters == experimental_datasets.ParamsRFaceCentering2Func:
-        print "false_background should be as small as possible <= 0.01, correct_background should be large >= 0.8"
+        print ("false_background should be as small as possible <= 0.01, correct_background should be large >= 0.8")
         for cutoff_background in cutoff_backgrounds:
-            print "for cutoff_background = %f" % cutoff_background
+            print ("for cutoff_background = %f" % cutoff_background)
             for seq, regression in [(iTrain, regression_Gauss_training), (iSeenid, regression_Gauss_seenid),
                                     (iNewid, regression_Gauss_newid)]:
                 bs = seq.block_size
                 correct_background = (regression[-bs:] > cutoff_background).sum() * 1.0 / bs
                 false_background = (regression[0:-bs] > cutoff_background).sum() * 1.0 / len(regression[0:-bs])
-                print "correct_background = ", correct_background, "false_background =", false_background
+                print ("correct_background = ", correct_background, "false_background =", false_background)
 
     # Display brute delta values for labels besides the main one
     if len(iTrain.correct_labels.shape) == 2:
-        print "Displaying brute (ordered and scale normalized) delta values for all labels"
+        print ("Displaying brute (ordered and scale normalized) delta values for all labels")
         num_labels = iTrain.correct_labels.shape[1]
         for j in range(0, num_labels):
             ordering = numpy.argsort(iTrain.correct_labels[:,j].flatten()) # flatten() might be unnecessary
-            print "brute (ordering label %d) delta training="%j, sfa_libs.comp_delta_normalized(sl_seq_training[ordering,:])
-            
+            print ("brute (ordering label %d) delta training=" % j,
+                   sfa_libs.comp_delta_normalized(sl_seq_training[ordering, :]))
+
             ordering = numpy.argsort(iSeenid.correct_labels[:,j].flatten()) # flatten() might be unnecessary
-            print "brute (ordering label %d) delta seenid="%j, sfa_libs.comp_delta_normalized(sl_seq_seenid[ordering,:])
+            print (
+            "brute (ordering label %d) delta seenid=" % j, sfa_libs.comp_delta_normalized(sl_seq_seenid[ordering, :]))
 
             ordering = numpy.argsort(iNewid.correct_labels[:,j].flatten()) # flatten() might be unnecessary
-            print "brute (ordering label %d) delta newid="%j, sfa_libs.comp_delta_normalized(sl_seq_newid[ordering,:])
+            print(
+            "brute (ordering label %d) delta newid=" % j, sfa_libs.comp_delta_normalized(sl_seq_newid[ordering, :]))
 
     if minutes_sleep < 0:
         lock.acquire()
         q = open(cuicuilco_queue, "r")
         next_pid = q.readline()
-        print "queue_top was: ", next_pid, "we are:", pid,
+        print("queue_top was: ", next_pid, "we are:", pid)
         queue_rest = q.readlines()
-        print "queue_rest=", queue_rest
+        print("queue_rest=", queue_rest)
         # served = True
         q.close()
 
-        print "removing us from the queue"
+        print("removing us from the queue")
         q2 = open(cuicuilco_queue, "w")
         for line in queue_rest:
             q2.write(line)
@@ -2927,12 +2930,12 @@ def main():
 
 
     if enable_display:
-        print "Creating GUI..."
+        print("Creating GUI...")
 
         ###############################################################################################################
         ############################## Plot for (examples of) the training, supervised, and test images ###############
         ###############################################################################################################
-        print "****** Displaying Typical Images used for Training and Testing **********"
+        print("****** Displaying Typical Images used for Training and Testing **********")
         tmp_fig = plt.figure()
         plt.suptitle(Parameters.name + ". Image Datasets")
 
@@ -2961,7 +2964,7 @@ def main():
         #############################################################################################################
         # ############### Plot of all extracted features from the training, supervised, and test images #############
         #############################################################################################################
-        print "************ Displaying SFA Output Signals **************"
+        print("************ Displaying SFA Output Signals **************")
         # Create Figure
         f0 = plt.figure()
         plt.suptitle(Parameters.name + ". Slow Signals")
@@ -3008,10 +3011,10 @@ def main():
             sfa_libs.comp_eta(sl_seq_newid)[0:5]))
         plt.ylabel("New Id Images")
 
-        ###############################################################################################################
-        ########### Plot of the first 3 extracted features from the training, supervised, and test images #############
-        ###############################################################################################################
-        print "************ Plotting Relevant SFA Output Signals **************"
+        #############################################################################################################
+        # ######## Plot of the first 3 extracted features from the training, supervised, and test images ############
+        #############################################################################################################
+        print("************ Plotting Relevant SFA Output Signals **************")
         relevant_out_dim = 3
         if hierarchy_out_dim < relevant_out_dim:
             relevant_out_dim = hierarchy_out_dim
@@ -3039,7 +3042,7 @@ def main():
 
         sfa_text_labels = ["Slowest Signal", "2nd Slowest Signal", "3rd Slowest Signal"]
 
-        print num_images_training, sl_seq_training.shape
+        print(num_images_training, sl_seq_training.shape)
         for sig in reversed_sfa_indices:
             plt.plot(numpy.arange(num_images_training), sl_seq_training[:, sig], ".",
                      color=(r_color[sig], g_color[sig], b_color[sig]), label=sfa_text_labels[sig], markersize=6,
@@ -3112,7 +3115,7 @@ def main():
         #############################################################################################################
         # ##### Interactive plot that allows the user to perform network inverse for a given output vector ##########
         #############################################################################################################
-        print "************ Displaying Training Set SFA and Inverses **************"
+        print("************ Displaying Training Set SFA and Inverses **************")
         # Create Figure
         f1 = plt.figure()
         ax_5.subplots_adjust(hspace=0.5)
@@ -3158,8 +3161,10 @@ def main():
                                       max_clip, error_scale_disp, 'tanh')
             #    pinv_zero_disp = scale_to(pinv_zero/256.0, pinv_zero.mean()/256.0, pinv_zero.max()/256.0 -
             # pinv_zero.min()/256.0, 0.5, 1.0, error_scale_disp, 'tanh')
-            f1a23.set_xlabel("min=%.2f, max=%.2f, std=%.2f, scale=%.2f, zero" % (
-            pinv_zero_disp.min(), pinv_zero_disp.max(), pinv_zero_disp.std(), error_scale_disp))
+            f1a23.set_xlabel("min=%.2f, max=%.2f, std=%.2f, scale=%.2f, zero" % (pinv_zero_disp.min(),
+                                                                                 pinv_zero_disp.max(),
+                                                                                 pinv_zero_disp.std(),
+                                                                                 error_scale_disp))
             # WARNING L and RGB
             #    f1a23.imshow(pinv_zero_disp.clip(0,255), aspect='auto', interpolation='nearest', origin='upper',
             # cmap=mpl.pyplot.cm.gray)
@@ -3170,16 +3175,16 @@ def main():
 
         # Retrieve Image in Sequence
         def on_press_inv(event):
-            #### global plt, f1, f1a12, f1a13, f1a21, f1a22, fla23, L2, sTrain, sl_seq, pinv_zero, flow,
+            # ### global plt, f1, f1a12, f1a13, f1a21, f1a22, fla23, L2, sTrain, sl_seq, pinv_zero, flow,
             # error_scale_disp #subimages
-            print 'you pressed', event.button, event.xdata, event.ydata
+            print('you pressed', event.button, event.xdata, event.ydata)
             y = int(event.ydata)
             if y < 0:
                 y = 0
             if y >= num_images:
                 y = num_images - 1
-            print "y=" + str(y)
-            print "num_pixels_per_image=", num_pixels_per_image
+            print("y=" + str(y))
+            print("num_pixels_per_image=", num_pixels_per_image)
             # Display Original Image
             # WARNING L and RGB
             #    subimage_im = subimages[y].reshape((sTrain.subimage_height, sTrain.subimage_width)) + 0.0
@@ -3225,7 +3230,7 @@ def main():
                 y_next = 0
             else:
                 y_next = y + 1
-            print "y_next=" + str(y_next)
+            print("y_next=" + str(y_next))
             data_out2 = sl_seq[y_next].reshape((1, hierarchy_out_dim))
             inverted_im2 = flow.inverse(data_out2)[0, 0:num_pixels_per_image].reshape(subimage_shape)
             diff_im = inverted_im2 - inverted_im
@@ -3254,7 +3259,7 @@ def main():
         ###############################################################################################################
         # ##### Interactive plot that allows the user to approximate an inverse using kNN and a global linear model ###
         ###############################################################################################################
-        print "************ Displaying Test Set SFA and Inverses through kNN from Seen Id data **************"
+        print("************ Displaying Test Set SFA and Inverses through kNN from Seen Id data **************")
         # TODO:Make this a parameter!
         kNN_k = 30
         # Create Figure
@@ -3326,13 +3331,13 @@ def main():
             # global plt, f_kNNinv_a12, f_kNNinv_a13, f_kNNinv_a14, f_kNNinv_a21, f_kNNinv_a22, f_kNNinv_a23,
             # f_kNNinv_a24, subimages_seenid, subimages_newid, sl_seq_seenid, sl_seq_newid, subimages_newid_app,
             # error_scale_disp
-            print 'you pressed', event.button, event.xdata, event.ydata
+            print('you pressed', event.button, event.xdata, event.ydata)
             y = int(event.ydata)
             if y < 0:
                 y = 0
             if y >= num_images_newid:
                 y = num_images_newid - 1
-            print "y=" + str(y)
+            print("y=" + str(y))
 
             # Display Original Image
             # WARNING L and RGB
@@ -3373,7 +3378,7 @@ def main():
             f_kNNinv_a21.imshow(error_im_disp.clip(0, max_clip), aspect='auto', interpolation='nearest', origin='upper',
                                 cmap=mpl.pyplot.cm.gray)
             plt.axis = f_kNNinv_a21
-            f_kNNinv_a21.set_xlabel("min=%.2f, max=%.2f, std=%.2f, scale=%.2f" % \
+            f_kNNinv_a21.set_xlabel("min=%.2f, max=%.2f, std=%.2f, scale=%.2f" %
                                     (error_im.min(), error_im.max(), error_im.std(), error_scale_disp))
 
             # Display Reconstruction Error, kNN average
@@ -3406,7 +3411,7 @@ def main():
         # ##### Plot that shows the classification of the training, supervised, and test datasets ####################
         ##############################################################################################################
 
-        print "************ Displaying Classification Results **************"
+        print("************ Displaying Classification Results **************")
         f2 = plt.figure()
         plt.suptitle("Classification Results (Class Numbers)  using %d Slow Signals" % reg_num_signals)
         # plt.title("Training Set")
@@ -3436,7 +3441,7 @@ def main():
         # majorLocator_x   = MultipleLocator(block_size)
         # majorLocator_y   = MultipleLocator(1)
         # p11.xaxis.set_major_locator(majorLocator_x)
-        ##p11.yaxis.set_major_locator(majorLocator_y)
+        # #p11.yaxis.set_major_locator(majorLocator_y)
         # plt.xticks(numpy.arange(0, len(labels_kNN_training), block_size))
         # plt.yticks(numpy.arange(0, len(labels_kNN_training), block_size))
         # print "Block_size is: ", block_size
@@ -3466,7 +3471,7 @@ def main():
         # p12.plot(numpy.arange(len(labels_ccc_seenid)), correct_classes_seenid, 'mo', markersize=3,
         # markerfacecolor='magenta')
         # majorLocator_y   = MultipleLocator(block_size)
-        ##majorLocator_x   = MultipleLocator(block_size_seenid)
+        # #majorLocator_x   = MultipleLocator(block_size_seenid)
         # majorLocator_x   = MultipleLocator(block_size_seenid)
         # p12.xaxis.set_major_locator(majorLocator_x)
         # p12.yaxis.set_major_locator(majorLocator_y)
@@ -3495,16 +3500,16 @@ def main():
         plt.ylabel("Class Number")
         p13.grid(True)
         # majorLocator_y = MultipleLocator(block_size)
-        ##majorLocator_x   = MultipleLocator(block_size_seenid)
+        # #majorLocator_x   = MultipleLocator(block_size_seenid)
         # majorLocator_x   = MultipleLocator(block_size_newid)
         # p13.xaxis.set_major_locator(majorLocator_x)
-        ##p13.yaxis.set_major_locator(majorLocator_y)
+        # #p13.yaxis.set_major_locator(majorLocator_y)
 
 
         ################################################################################################################
         # ##### Plot that shows the label estimations for the training, supervised, and test datasets ##################
         ################################################################################################################
-        print "************ Displaying Regression Results **************"
+        print("************ Displaying Regression Results **************")
         f3 = plt.figure()
 
         plt.suptitle("Regression Results (Labels) using %d Slow Signals" % reg_num_signals)
@@ -3538,7 +3543,7 @@ def main():
             # markerfacecolor='blue')
             p11.plot(numpy.arange(len(correct_labels_training)), regression_lr_training, 'c.', markersize=3,
                      markerfacecolor='cyan')
-            xlabel += " MSE_lr=%f," % (results.mse_lr_train)
+            xlabel += " MSE_lr=%f," % results.mse_lr_train
             regression_text_labels.append("LR")
 
         p11.plot(numpy.arange(len(correct_labels_training)), correct_labels_training, 'k.', markersize=3,
@@ -3641,7 +3646,7 @@ def main():
         ###############################################################################################################
         # ##### Plot that displays the class probabilities estimated by a gaussian classifier #########################
         ###############################################################################################################
-        print "************** Displaying Probability Profiles ***********"
+        print("************** Displaying Probability Profiles ***********")
         f4 = plt.figure()
         plt.suptitle(
             "Probability Profiles of Gaussian Classifier Using %d Signals for Classification" % reg_num_signals)
@@ -3675,7 +3680,7 @@ def main():
         ###############################################################################################################
         # ##### Plot that displays  #################################
         ###############################################################################################################
-        print "************ Displaying Linear (or Non-Linear) Morphs and Masks Learned by SFA **********"
+        print("************ Displaying Linear (or Non-Linear) Morphs and Masks Learned by SFA **********")
         # Create Figure
         ax6 = plt.figure()
         ax6.subplots_adjust(hspace=0.3, wspace=0.03, top=0.93, right=0.96, bottom=0.05, left=0.05)
@@ -3785,7 +3790,7 @@ def main():
         plt.title("x-x'+H-1(SFA_train[4/4]-S)")
         ax6_45.axis('off')
 
-        print "************ Displaying Linear (or Non-Linear) Masks Learned by SFA **********"
+        print("************ Displaying Linear (or Non-Linear) Masks Learned by SFA **********")
         # Create Figure
         ax7 = plt.figure()
         ax7.subplots_adjust(hspace=0.3, wspace=0.03, top=0.93, right=0.96, bottom=0.05, left=0.05)
@@ -3853,11 +3858,11 @@ def main():
             # ###global ax9, ax9_11, ax9_12, ax9_13, ax9_14, ax9_21, ax9_22, ax9_23, ax9_24, ax9_25
             # ##global subimages, sTrain, sl_seq, pinv_zero, flow, error_scale_disp
 
-            print 'you pressed', event.button, event.xdata, event.ydata
+            print('you pressed', event.button, event.xdata, event.ydata)
 
             if event.xdata is None or event.ydata is None:
                 mask_normalize = not mask_normalize
-                print "mask_normalize is: ", mask_normalize
+                print("mask_normalize is: ", mask_normalize)
                 return
 
             y = int(event.ydata)
@@ -3870,9 +3875,9 @@ def main():
                 x = 0
             if x >= hierarchy_out_dim:
                 x = hierarchy_out_dim - 1
-            print "Image Selected=" + str(y) + " , Slow Component Selected=" + str(x)
+            print("Image Selected=" + str(y) + " , Slow Component Selected=" + str(x))
 
-            print "Displaying Original and Reconstructions"
+            print("Displaying Original and Reconstructions")
             # Display Original Image
             subimage_im = subimages[y][0:num_pixels_per_image].reshape(subimage_shape)
             ax6_12.imshow(subimage_im.clip(0, max_clip), vmin=0, vmax=max_clip, aspect='equal', interpolation='nearest',
@@ -3896,7 +3901,7 @@ def main():
                               interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)
 
             if show_linear_morphs:
-                print "Displaying Morphs, Original Version, no localized inverses"
+                print("Displaying Morphs, Original Version, no localized inverses")
                 # Display: Altered Reconstructions
                 # each tuple has the form: (val of slow_signal, remove, axes for display)
                 # where remove is None, "avg" or "ori"
@@ -3945,12 +3950,12 @@ def main():
             ax6.canvas.draw()
 
             if show_linear_masks:
-                print "Displaying Masks [0-3]"
+                print("Displaying Masks [0-3]")
                 for ma in range(num_masks):
                     for sl, slow_value in enumerate(slow_values):
                         tmp_ax = axes[ma][sl]
 
-                        print "Computing mask %d, slow_value %d" % (ma, slow_value)
+                        print("Computing mask %d, slow_value %d" % (ma, slow_value))
                         work_sfa = data_out.copy()
                         work_sfa[0][ma] = work_sfa[0][ma] + slow_value * lim_delta_sfa
                         mask_im = flow.inverse(work_sfa)
@@ -3965,7 +3970,7 @@ def main():
                 ax7.canvas.draw()
 
             if show_linear_masks_ext:
-                print "Displaying Masks [4-15]"
+                print("Displaying Masks [4-15]")
                 for ma, mask in enumerate(masks2):
                     for sl, slow_value in enumerate(slow_values2):
                         tmp_ax = axes2[ma][sl]
@@ -4351,30 +4356,30 @@ def main():
         ###############################################################################################################
         if compute_slow_features_newid_across_net:
             if compute_slow_features_newid_across_net == 2:
-                print "Displaying slowest component across network"
+                print("Displaying slowest component across network")
                 relevant_out_dim = 1
                 first_feature = 0
                 transpose_plot = False
                 two_feats = False
             elif compute_slow_features_newid_across_net == 3:
-                print "Displaying second slowest component across network, vertically"
+                print("Displaying second slowest component across network, vertically")
                 relevant_out_dim = 1
                 first_feature = 1
                 transpose_plot = True
                 two_feats = False
             elif compute_slow_features_newid_across_net == 4:
-                print "Displaying second against first slowest component across network"
+                print("Displaying second against first slowest component across network")
                 relevant_out_dim = 2
                 first_feature = 0
                 transpose_plot = False
                 two_feats = True
             else:
-                print "Displaying first %d slowest components across network" % relevant_out_dim
+                print("Displaying first %d slowest components across network" % relevant_out_dim)
                 transpose_plot = False
                 first_feature = 0
                 two_feats = False
 
-            print "************ Displaying Slow Features Across Network (Newid) **********"
+            print("************ Displaying Slow Features Across Network (Newid) **********")
             ax = plt.figure()
             # ax13.subplots_adjust(hspace=0.3, wspace=0.03, top=0.93, right=0.96, bottom=0.05, left=0.05)
 
@@ -4387,7 +4392,7 @@ def main():
                     sfa_nodes_or_layers_indices.append(i)
 
             num_sfa_nodes_or_layers = len(sfa_nodes_or_layers_indices)
-            print "num_sfa_nodes_or_layers=", num_sfa_nodes_or_layers
+            print("num_sfa_nodes_or_layers=", num_sfa_nodes_or_layers)
             for plot_nr, node_i in enumerate(sfa_nodes_or_layers_indices):
                 flow_partial = flow[0:node_i + 1]
                 sl_partial = flow_partial.execute(subimages_newid)
@@ -4403,11 +4408,11 @@ def main():
                     central_node_nr = num_nodes / 2 + int((num_nodes ** 0.5)) / 2
                     z = sl_partial.shape[1] / num_nodes
                     sl_partial = sl_partial[:, z * central_node_nr:z * (central_node_nr + 1)]
-                    print "num_nodes=", num_nodes, "central_node_nr=", central_node_nr,
-                    print "sl_partial.shape=", sl_partial.shape
+                    print("num_nodes=", num_nodes, "central_node_nr=", central_node_nr)
+                    print("sl_partial.shape=", sl_partial.shape)
                     plt.title("SFA Outputs. Node %d, subnode %d " % (node_i, central_node_nr))
                 else:
-                    plt.title("SFA Outputs. Node %d" % (node_i))
+                    plt.title("SFA Outputs. Node %d" % node_i)
 
                 if two_feats is False:
                     # TODO: Notice conflict between (relevant_sfa_indices deprecated) and reversed_sfa_indices
@@ -4463,11 +4468,11 @@ def main():
                     # plt.xlabel("Input Image, Training Set (red=slowest signal, light green=fastest signal)")
                     # plt.ylabel("Slow Signals")
 
-        print "GUI Created, showing!!!!"
+        print("GUI Created, showing!!!!")
         plt.show()
-        print "GUI Finished!"
+        print("GUI Finished!")
 
-    print "Program successfully finished"
+    print("Program successfully finished")
 
 
 if __name__ == "__main__":
