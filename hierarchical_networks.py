@@ -39,9 +39,9 @@ pSFALayerL0.y_field_channels = 4
 pSFALayerL0.x_field_spacing = 2
 pSFALayerL0.y_field_spacing = 2
 pSFALayerL0.pca_node_class = mdp.nodes.PCANode
-pSFALayerL0.pca_out_dim = 16
+pSFALayerL0.pca_out_dim = 32  # images are RGB, thus the original patch dimensionality is 4*4*3=48
 pSFALayerL0.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
-pSFALayerL0.sfa_out_dim = 9 + 16
+pSFALayerL0.sfa_out_dim = 9 + 32
 pSFALayerL0.sfa_args = {"expansion_funcs": [identity, unsigned_08expo],
                         "max_lenght_slow_part": 9,
                         "offsetting_mode": None,
@@ -56,7 +56,7 @@ pSFALayerL1H.y_field_channels = 1
 pSFALayerL1H.x_field_spacing = 2
 pSFALayerL1H.y_field_spacing = 1
 pSFALayerL1H.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
-pSFALayerL1H.sfa_out_dim = 9 + 16 + 8 * 2
+pSFALayerL1H.sfa_out_dim = 9 + 48
 pSFALayerL1H.sfa_args = {"expansion_funcs": [identity, unsigned_08expo],
                          "max_lenght_slow_part": 9,
                          "offsetting_mode": None,
@@ -71,7 +71,7 @@ pSFALayerL1V.y_field_channels = 3
 pSFALayerL1V.x_field_spacing = 1
 pSFALayerL1V.y_field_spacing = 2
 pSFALayerL1V.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
-pSFALayerL1V.sfa_out_dim = 9 + 64
+pSFALayerL1V.sfa_out_dim = 9 + 96
 pSFALayerL1V.sfa_args = {"expansion_funcs": [identity, unsigned_08expo],
                          "max_lenght_slow_part": 9,
                          "offsetting_mode": None,
@@ -86,7 +86,7 @@ pSFALayerL2H.y_field_channels = 1
 pSFALayerL2H.x_field_spacing = 2
 pSFALayerL2H.y_field_spacing = 1
 pSFALayerL2H.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
-pSFALayerL2H.sfa_out_dim = 9 + 96
+pSFALayerL2H.sfa_out_dim = 9 + 128
 pSFALayerL2H.sfa_args = {"expansion_funcs": [identity, unsigned_08expo],
                          "max_lenght_slow_part": 9,
                          "offsetting_mode": None,
