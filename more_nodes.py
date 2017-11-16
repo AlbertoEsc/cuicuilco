@@ -599,10 +599,12 @@ def display_node_eigenvalues(node, i, mode="All"):
                 print "and d=", node.nodes[0].sfa_node.d
         elif isinstance(node.nodes[0], mdp.nodes.iGSFANode):
             print "Node %d is a CloneLayer that contains an iGSFANode containing an SFA node with" % i,
-            print "num_sfa_features_preserved=%d" % node.nodes[0].num_sfa_features_preserved
-            print "and d=", node.nodes[0].sfa_node.d
+            print "num_sfa_features_preserved=%d" % node.nodes[0].num_sfa_features_preserved,
+            print "and d=", node.nodes[0].sfa_node.d,
+            print "and evar=", node.nodes[0].evar
         elif isinstance(node.nodes[0], mdp.nodes.PCANode):
-            print "Node %d is a CloneLayer that contains a PCANode with d=" % i, node.nodes[0].d
+            print "Node %d is a CloneLayer that contains a PCANode with d=" % i, node.nodes[0].d,
+            print "and evar=", node.nodes[0].explained_variance
 
     elif isinstance(node, mdp.hinet.Layer):
         if isinstance(node.nodes[0], mdp.nodes.SFANode):
