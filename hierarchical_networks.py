@@ -33,15 +33,15 @@ print("tuning_parameter=", tuning_parameter)
 # AN HiGSFA NETWORK FOR CIFAR-10                                                          #
 ###########################################################################################
 pSFALayerL0 = system_parameters.ParamsSFALayer()
-pSFALayerL0.name = "Homogeneous HiGSFA Layer L0 6x6, 27x27 nodes"
-pSFALayerL0.x_field_channels = 6
-pSFALayerL0.y_field_channels = 6
-pSFALayerL0.x_field_spacing = 1
-pSFALayerL0.y_field_spacing = 1
+pSFALayerL0.name = "Homogeneous HiGSFA Layer L0 4x4, 15x15 nodes"
+pSFALayerL0.x_field_channels = 4
+pSFALayerL0.y_field_channels = 4
+pSFALayerL0.x_field_spacing = 2
+pSFALayerL0.y_field_spacing = 2
 pSFALayerL0.pca_node_class = mdp.nodes.PCANode
-pSFALayerL0.pca_out_dim = 36
+pSFALayerL0.pca_out_dim = 16
 pSFALayerL0.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
-pSFALayerL0.sfa_out_dim = 9 + 36
+pSFALayerL0.sfa_out_dim = 9 + 16
 pSFALayerL0.sfa_args = {"expansion_funcs": [identity, unsigned_08expo],
                         "max_lenght_slow_part": 9,
                         "offsetting_mode": None,
@@ -50,13 +50,13 @@ pSFALayerL0.sfa_args = {"expansion_funcs": [identity, unsigned_08expo],
 pSFALayerL0.cloneLayer = True
 
 pSFALayerL1H = system_parameters.ParamsSFALayer()
-pSFALayerL1H.name = "Homogeneous HiGSFA Layer L1H 6x8, 13x27"
+pSFALayerL1H.name = "Homogeneous HiGSFA Layer L1H 8x4, 7x15"
 pSFALayerL1H.x_field_channels = 3
 pSFALayerL1H.y_field_channels = 1
 pSFALayerL1H.x_field_spacing = 2
 pSFALayerL1H.y_field_spacing = 1
 pSFALayerL1H.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
-pSFALayerL1H.sfa_out_dim = 9 + 48
+pSFALayerL1H.sfa_out_dim = 9 + 16 + 8 * 2
 pSFALayerL1H.sfa_args = {"expansion_funcs": [identity, unsigned_08expo],
                          "max_lenght_slow_part": 9,
                          "offsetting_mode": None,
@@ -65,7 +65,7 @@ pSFALayerL1H.sfa_args = {"expansion_funcs": [identity, unsigned_08expo],
 pSFALayerL1H.cloneLayer = True
 
 pSFALayerL1V = system_parameters.ParamsSFALayer()
-pSFALayerL1V.name = "Homogeneous HiGSFA Layer L1V 8x8, 13x13"
+pSFALayerL1V.name = "Homogeneous HiGSFA Layer L1V 8x8, 7x7"
 pSFALayerL1V.x_field_channels = 1
 pSFALayerL1V.y_field_channels = 3
 pSFALayerL1V.x_field_spacing = 1
@@ -80,7 +80,7 @@ pSFALayerL1V.sfa_args = {"expansion_funcs": [identity, unsigned_08expo],
 pSFALayerL1V.cloneLayer = True
 
 pSFALayerL2H = system_parameters.ParamsSFALayer()
-pSFALayerL2H.name = "Homogeneous HiGSFA Layer L2H 12x8, 6x13"
+pSFALayerL2H.name = "Homogeneous HiGSFA Layer L2H 12x8, 3x7"
 pSFALayerL2H.x_field_channels = 3
 pSFALayerL2H.y_field_channels = 1
 pSFALayerL2H.x_field_spacing = 2
@@ -95,7 +95,7 @@ pSFALayerL2H.sfa_args = {"expansion_funcs": [identity, unsigned_08expo],
 pSFALayerL2H.cloneLayer = True
 
 pSFALayerL2V = system_parameters.ParamsSFALayer()
-pSFALayerL2V.name = "Homogeneous HiGSFA Layer L2V 12x12, 6x6"
+pSFALayerL2V.name = "Homogeneous HiGSFA Layer L2V 12x12, 3x3"
 pSFALayerL2V.x_field_channels = 1
 pSFALayerL2V.y_field_channels = 3
 pSFALayerL2V.x_field_spacing = 1
@@ -110,8 +110,8 @@ pSFALayerL2V.sfa_args = {"expansion_funcs": [identity, unsigned_08expo],
 pSFALayerL2V.cloneLayer = True
 
 pSFALayerL3H = system_parameters.ParamsSFALayer()
-pSFALayerL3H.name = "Homogeneous HiGSFA Layer L3H 20x12, 4x6"
-pSFALayerL3H.x_field_channels = 3
+pSFALayerL3H.name = "Homogeneous HiGSFA Layer L3H 20x12, 2x3"
+pSFALayerL3H.x_field_channels = 2
 pSFALayerL3H.y_field_channels = 1
 pSFALayerL3H.x_field_spacing = 1
 pSFALayerL3H.y_field_spacing = 1
@@ -125,9 +125,9 @@ pSFALayerL3H.sfa_args = {"expansion_funcs": [identity, unsigned_08expo],
 pSFALayerL3H.cloneLayer = True
 
 pSFALayerL3V = system_parameters.ParamsSFALayer()
-pSFALayerL3V.name = "Homogeneous HiGSFA Layer L3V 20x20, 4x4"
+pSFALayerL3V.name = "Homogeneous HiGSFA Layer L3V 20x20, 2x2"
 pSFALayerL3V.x_field_channels = 1
-pSFALayerL3V.y_field_channels = 3
+pSFALayerL3V.y_field_channels = 2
 pSFALayerL3V.x_field_spacing = 1
 pSFALayerL3V.y_field_spacing = 1
 pSFALayerL3V.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
@@ -139,35 +139,35 @@ pSFALayerL3V.sfa_args = {"expansion_funcs": [identity, unsigned_08expo],
                          "max_preserved_sfa": 9}
 pSFALayerL3V.cloneLayer = True
 
-pSFALayerL4H = system_parameters.ParamsSFALayer()
-pSFALayerL4H.name = "Homogeneous HiGSFA Layer L4H 28x20, 2x4"
-pSFALayerL4H.x_field_channels = 3
-pSFALayerL4H.y_field_channels = 1
-pSFALayerL4H.x_field_spacing = 1
-pSFALayerL4H.y_field_spacing = 1
-pSFALayerL4H.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
-pSFALayerL4H.sfa_out_dim = 9 + 560
-pSFALayerL4H.sfa_args = {"expansion_funcs": [identity, unsigned_08expo],
-                         "max_lenght_slow_part": 9,
-                         "offsetting_mode": None,
-                         "reconstruct_with_sfa": False,
-                         "max_preserved_sfa": 9}
-pSFALayerL4H.cloneLayer = True
-
-pSFALayerL4V = system_parameters.ParamsSFALayer()
-pSFALayerL4V.name = "Homogeneous HiGSFA Layer L4H 28x28, 2x2"
-pSFALayerL4V.x_field_channels = 1
-pSFALayerL4V.y_field_channels = 3
-pSFALayerL4V.x_field_spacing = 1
-pSFALayerL4V.y_field_spacing = 1
-pSFALayerL4V.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
-pSFALayerL4V.sfa_out_dim = 9 + 784
-pSFALayerL4V.sfa_args = {"expansion_funcs": [identity, unsigned_08expo],
-                         "max_lenght_slow_part": 9,
-                         "offsetting_mode": None,
-                         "reconstruct_with_sfa": False,
-                         "max_preserved_sfa": 9}
-pSFALayerL4V.cloneLayer = True
+# pSFALayerL4H = system_parameters.ParamsSFALayer()
+# pSFALayerL4H.name = "Homogeneous HiGSFA Layer L4H 28x20, 2x4"
+# pSFALayerL4H.x_field_channels = 3
+# pSFALayerL4H.y_field_channels = 1
+# pSFALayerL4H.x_field_spacing = 1
+# pSFALayerL4H.y_field_spacing = 1
+# pSFALayerL4H.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
+# pSFALayerL4H.sfa_out_dim = 9 + 560
+# pSFALayerL4H.sfa_args = {"expansion_funcs": [identity, unsigned_08expo],
+#                          "max_lenght_slow_part": 9,
+#                          "offsetting_mode": None,
+#                          "reconstruct_with_sfa": False,
+#                          "max_preserved_sfa": 9}
+# pSFALayerL4H.cloneLayer = True
+#
+# pSFALayerL4V = system_parameters.ParamsSFALayer()
+# pSFALayerL4V.name = "Homogeneous HiGSFA Layer L4H 28x28, 2x2"
+# pSFALayerL4V.x_field_channels = 1
+# pSFALayerL4V.y_field_channels = 3
+# pSFALayerL4V.x_field_spacing = 1
+# pSFALayerL4V.y_field_spacing = 1
+# pSFALayerL4V.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
+# pSFALayerL4V.sfa_out_dim = 9 + 784
+# pSFALayerL4V.sfa_args = {"expansion_funcs": [identity, unsigned_08expo],
+#                          "max_lenght_slow_part": 9,
+#                          "offsetting_mode": None,
+#                          "reconstruct_with_sfa": False,
+#                          "max_preserved_sfa": 9}
+# pSFALayerL4V.cloneLayer = True
 
 pSFALayerL5 = system_parameters.ParamsSFALayer()
 pSFALayerL5.name = "Homogeneous HiGSFA Layer L5 232x32, 1x1"
@@ -187,7 +187,8 @@ pSFALayerL5.cloneLayer = False
 network = HiGSFA_CIFAR10_Network_11L = system_parameters.ParamsNetwork()
 network.name = "HiGSFA network for CIFAR-10"
 network.layers = [pSFALayerL0, pSFALayerL1H, pSFALayerL1V, pSFALayerL2H, pSFALayerL2V, pSFALayerL3H, pSFALayerL3V,
-                  pSFALayerL4H, pSFALayerL4V, pSFALayerL5]
+                  pSFALayerL5]  # pSFALayerL4H, pSFALayerL4V,
+                  
 
 ###########################################################################################
 # HELPER FUNCTIONS                                                                        #
