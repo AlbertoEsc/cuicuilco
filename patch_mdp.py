@@ -1142,7 +1142,7 @@ if patch_layer:
 
     def Layer_new_train_params(self, x, immediate_stop_training=False, params=None, verbose=False):
         """Perform single training step by training the internal nodes."""
-        if self.homogeneous is True:
+        if self.homogeneous:
             layer_input_dim = x.shape[1]
             self.set_input_dim(layer_input_dim)
             num_nodes = len(self.nodes)
@@ -1165,7 +1165,7 @@ if patch_layer:
                     print "Layer_new_train_params. params=", params
                     print "Here computation is fine!!!"
                 node.train_params(x[:, start_index: stop_index], params)
-                if node.is_training() and immediate_stop_training:
+                if node.is_training() and immediate_stop_training and not self.homogeneous:
                     node.stop_training()
                 #                if isinstance(node, (mdp.nodes.SFANode, mdp.nodes.PCANode, mdp.nodes.WhiteningNode,
                 # mdp.hinet.CloneLayer, mdp.hinet.Layer)) and node.input_dim >= 45:
@@ -1174,6 +1174,8 @@ if patch_layer:
                 # n_parallel=n_parallel, *args, **kwargs)
                 #                else:
                 #                    node.train(x[:, start_index : stop_index], *args, **kwargs)
+        if self.homogeneous and immediate_stop_training:
+            self.nodes[0].stop_training()
 
 
     def Layer_new_pre_execution_checks(self, x):
