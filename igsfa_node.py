@@ -220,9 +220,10 @@ class iGSFANode(mdp.Node):
             s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x
             print "method: constant amplitude for all slow features"
         elif self.offsetting_mode == "data_dependent":
-            self.magn_n_sfa_x = 0.01 * numpy.min(
-                x_zm.var(axis=0))  # SFA components have a variance 1/10000 times the smallest data variance
-            s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x ** self.exponent_variance  # Scale according to ranking
+            self.magn_n_sfa_x = 0.01 * numpy.min(x_zm.std(axis=0)) + 1e-1  # SFA components have the variance of the weakest PCA feature
+            # self.magn_n_sfa_x = 0.01 * numpy.min(
+            #     x_zm.var(axis=0))  # SFA components have a variance 1/10000 times the smallest data variance
+            s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x # Scale according to ranking
             print "method: data dependent (setting magn_n_fa_x later)"
         else:
             er = "unknown feature offsetting mode=" + str(self.offsetting_mode) + "for reconstruct_with_sfa=" + \
@@ -354,8 +355,8 @@ class iGSFANode(mdp.Node):
             self.magn_n_sfa_x = 1.0
             print "method: constant amplitude for all slow features"
         elif self.offsetting_mode == "data_dependent":
-            # SFA components have a var 1/10000 compared to  the least significant principal component
-            self.magn_n_sfa_x = 0.0001 * self.pca_node.d[-1]
+            # SFA components have an std equal to that of the least significant principal component
+            self.magn_n_sfa_x = 1.0 * self.pca_node.d[-1] ** 0.5 + 0.125 # 10.0 * numpy.median(self.pca_node.d)  # 100.0 * self.pca_node.d[-1] ** 0.5 + 0.0
             print "method: data dependent"
         else:
             er = "unknown feature scaling method"
@@ -414,10 +415,10 @@ class iGSFANode(mdp.Node):
         elif self.reconstruct_with_sfa and self.offsetting_mode == "sensitivity_based_normalized":
             s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x ** self.exponent_variance
         elif self.offsetting_mode is None:
-            s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x ** self.exponent_variance
+            s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x 
         # Scale according to ranking
         elif self.offsetting_mode == "data_dependent":
-            s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x ** self.exponent_variance
+            s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x 
         else:
             er = "unknown feature scaling method"
             raise Exception(er)
