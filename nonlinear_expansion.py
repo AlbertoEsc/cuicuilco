@@ -2438,6 +2438,51 @@ def s25Max(x):
 
 
 #######################################################################################################
+# Functions that compute the 08expo terms of the first k features of each channel, 2 channels assumed #
+#######################################################################################################
+
+
+def ch2_sF_u08(x, F):
+    ch = 2
+    ns, dim = x.shape
+    if 2 * F >= dim:
+        return unsigned_08expo(x)
+    else:
+        xs = numpy.zeros((ns, ch * F))
+        xs[:, 0:F] = x[:, 0:F]
+        xs[:, F:2 * F] = x[:, dim / 2:dim / 2 + F]
+        return unsigned_08expo(xs)
+
+
+def ch2s100u08(x):
+    return ch2_sF_u08(x, 100)
+
+
+def ch2s150u08(x):
+    return ch2_sF_u08(x, 150)
+
+
+def ch2s200u08(x):
+    return ch2_sF_u08(x, 200)
+
+
+def ch2s250u08(x):
+    return ch2_sF_u08(x, 250)
+
+
+def ch2s300u08(x):
+    return ch2_sF_u08(x, 300)
+
+
+def ch2s350u08(x):
+    return ch2_sF_u08(x, 350)
+
+
+def ch2s400u08(x):
+    return ch2_sF_u08(x, 400)
+
+
+#######################################################################################################
 # Functions that compute the 08expo terms of the first k features of each channel, 3 channels assumed #
 #######################################################################################################
 
@@ -2742,6 +2787,49 @@ def ch3s84u08(x):
 
 def ch3s86u08(x):
     return ch3_sF_u08(x, 86)
+
+
+def ch3s90u08(x):
+    return ch3_sF_u08(x, 90)
+
+
+#######################################################################################################
+# Functions that compute the 08expo terms of the first k features of each channel, 4 channels assumed #
+#######################################################################################################
+
+
+def ch4_sF_u08(x, F):
+    ch = 4
+    ns, dim = x.shape
+    if 4 * F >= dim:
+        return unsigned_08expo(x)
+    else:
+        xs = numpy.zeros((ns, ch * F))
+        xs[:, 0:F] = x[:, 0:F]
+        xs[:, F:2 * F] = x[:, dim / 4:dim / 4 + F]
+        xs[:, 2*F:3 * F] = x[:, 2 * dim / 4: 2 * dim / 4 + F]
+        xs[:, 3*F:] = x[:, 3 * dim / 4: 3 * dim / 4 + F]
+        return unsigned_08expo(xs)
+
+
+def ch4s100u08(x):
+    return ch4_sF_u08(x, 100)
+
+
+def ch4s150u08(x):
+    return ch4_sF_u08(x, 150)
+
+
+def ch4s200u08(x):
+    return ch4_sF_u08(x, 200)
+
+
+def ch4s250u08(x):
+    return ch4_sF_u08(x, 250)
+
+
+def ch4s300u08(x):
+    return ch4_sF_u08(x, 300)
 
 
 ######################################################################################################
