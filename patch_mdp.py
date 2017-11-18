@@ -574,7 +574,7 @@ def SFANode_stop_training(self, debug=False, verbose=False, pca_term=0.995, pca_
 # mdp.nodes.SFANode.list_train_params = ["scheduler", "n_parallel", "train_mode", "include_latest", "block_size"]
 # "scheduler", "n_parallel", "train_mode", "block_size", "node_weights", "edge_weights"] # "sfa_expo", "pca_expo",
 # "magnitude_sfa_biasing"
-mdp.nodes.SFANode.list_train_params = ["scheduler", "n_parallel"]
+# mdp.nodes.SFANode.list_train_params = ["scheduler", "n_parallel"] # Now strictly using original version of SFA
 mdp.nodes.SFAPCANode.list_train_params = ["scheduler", "n_parallel", "train_mode",
                                           "block_size"]  # "sfa_expo", "pca_expo", "magnitude_sfa_biasing"
 mdp.nodes.PCANode.list_train_params = ["scheduler", "n_parallel"]
