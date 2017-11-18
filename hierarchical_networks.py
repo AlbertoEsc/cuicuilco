@@ -44,7 +44,7 @@ pSFALayerL0.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
 pSFALayerL0.sfa_out_dim = 9 + 35
 pSFALayerL0.sfa_args = {"expansion_funcs": [identity, unsigned_08expo],
                         "max_lenght_slow_part": 9,
-                        "offsetting_mode": None,
+                        "offsetting_mode": "data_dependent",
                         "reconstruct_with_sfa": False,
                         "max_preserved_sfa": 9}
 pSFALayerL0.cloneLayer = True
@@ -59,7 +59,7 @@ pSFALayerL1H.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
 pSFALayerL1H.sfa_out_dim = 9 + 65
 pSFALayerL1H.sfa_args = {"expansion_funcs": [identity, ch3s30u08],
                          "max_lenght_slow_part": 9,
-                         "offsetting_mode": None,
+                         "offsetting_mode": "data_dependent",
                          "reconstruct_with_sfa": False,
                          "max_preserved_sfa": 9}
 pSFALayerL1H.cloneLayer = True
@@ -74,7 +74,7 @@ pSFALayerL1V.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
 pSFALayerL1V.sfa_out_dim = 9 + 120
 pSFALayerL1V.sfa_args = {"expansion_funcs": [identity, ch3s50u08],
                          "max_lenght_slow_part": 9,
-                         "offsetting_mode": None,
+                         "offsetting_mode": "data_dependent",
                          "reconstruct_with_sfa": False,
                          "max_preserved_sfa": 9}
 pSFALayerL1V.cloneLayer = True
@@ -86,10 +86,10 @@ pSFALayerL2H.y_field_channels = 1
 pSFALayerL2H.x_field_spacing = 2
 pSFALayerL2H.y_field_spacing = 1
 pSFALayerL2H.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
-pSFALayerL2H.sfa_out_dim = 9 + 200
+pSFALayerL2H.sfa_out_dim = 9 + 300  # 200
 pSFALayerL2H.sfa_args = {"expansion_funcs": [identity, ch3s60u08],
                          "max_lenght_slow_part": 9,
-                         "offsetting_mode": None,
+                         "offsetting_mode": "data_dependent",
                          "reconstruct_with_sfa": False,
                          "max_preserved_sfa": 9}
 pSFALayerL2H.cloneLayer = True
@@ -101,10 +101,10 @@ pSFALayerL2V.y_field_channels = 3
 pSFALayerL2V.x_field_spacing = 1
 pSFALayerL2V.y_field_spacing = 2
 pSFALayerL2V.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
-pSFALayerL2V.sfa_out_dim = 9 + 300
+pSFALayerL2V.sfa_out_dim = 9 + 550  # 300
 pSFALayerL2V.sfa_args = {"expansion_funcs": [identity, ch3s70u08],
                          "max_lenght_slow_part": 9,
-                         "offsetting_mode": None,
+                         "offsetting_mode": "data_dependent",
                          "reconstruct_with_sfa": False,
                          "max_preserved_sfa": 9}
 pSFALayerL2V.cloneLayer = True
@@ -116,10 +116,10 @@ pSFALayerL3H.y_field_channels = 1
 pSFALayerL3H.x_field_spacing = 1
 pSFALayerL3H.y_field_spacing = 1
 pSFALayerL3H.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
-pSFALayerL3H.sfa_out_dim = 9 + 400
-pSFALayerL3H.sfa_args = {"expansion_funcs": [identity, unsigned_08expo],
+pSFALayerL3H.sfa_out_dim = 9 + 700 # 400
+pSFALayerL3H.sfa_args = {"expansion_funcs": [identity, ch2s300u08],
                          "max_lenght_slow_part": 9,
-                         "offsetting_mode": None,
+                         "offsetting_mode": "data_dependent",
                          "reconstruct_with_sfa": False,
                          "max_preserved_sfa": 9}
 pSFALayerL3H.cloneLayer = True
@@ -131,10 +131,10 @@ pSFALayerL3V.y_field_channels = 2
 pSFALayerL3V.x_field_spacing = 1
 pSFALayerL3V.y_field_spacing = 1
 pSFALayerL3V.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
-pSFALayerL3V.sfa_out_dim = 9 + 450
-pSFALayerL3V.sfa_args = {"expansion_funcs": [identity, unsigned_08expo],
+pSFALayerL3V.sfa_out_dim = 9 + 850  # 450
+pSFALayerL3V.sfa_args = {"expansion_funcs": [identity, ch2s300u08],
                          "max_lenght_slow_part": 9,
-                         "offsetting_mode": None,
+                         "offsetting_mode": "data_dependent",
                          "reconstruct_with_sfa": False,
                          "max_preserved_sfa": 9}
 pSFALayerL3V.cloneLayer = True
@@ -152,7 +152,7 @@ pSFALayerL3V.cloneLayer = True
 #                          "offsetting_mode": None,
 #                          "reconstruct_with_sfa": False,
 #                          "max_preserved_sfa": 9}
-# pSFALayerL4H.cloneLayer = True
+# pSFALayerL4H.cloneLayer = Tru1e
 #
 # pSFALayerL4V = system_parameters.ParamsSFALayer()
 # pSFALayerL4V.name = "Homogeneous HiGSFA Layer L4H 28x28, 2x2"
@@ -176,8 +176,8 @@ pSFALayerL5.y_field_channels = 2
 pSFALayerL5.x_field_spacing = 1
 pSFALayerL5.y_field_spacing = 1
 pSFALayerL5.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
-pSFALayerL5.sfa_out_dim = 9 + 850
-pSFALayerL5.sfa_args = {"expansion_funcs": [identity, unsigned_08expo],
+pSFALayerL5.sfa_out_dim = 9 + 1200
+pSFALayerL5.sfa_args = {"expansion_funcs": [identity, ch4s300u08],
                          "max_lenght_slow_part": 9,
                          "offsetting_mode": None,
                          "reconstruct_with_sfa": False,
