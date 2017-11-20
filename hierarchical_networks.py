@@ -3751,16 +3751,16 @@ network.layers = [network.L0, network.L1, network.L2]
 
 for i, layer in enumerate(network.layers):
     # layer.sfa_node_class = mdp.nodes.SFANode
-    layer.pca_args["offsetting_mode"] = None
+    layer.pca_args["offsetting_mode"] = "data_dependent"  # None
     layer.pca_args["reconstruct_with_sfa"] = False
     layer.pca_args["expansion_funcs"] = None
-    layer.pca_args["max_preserved_sfa"] = 3  # 4.0 #4.0 => preserves only SFA components; 16 => half of the computed
+    layer.pca_args["max_preserved_sfa"] = 6  # 4.0 #4.0 => preserves only SFA components; 16 => half of the computed
     # features are slow, and the remaining reconstructive
 
-    layer.sfa_args["offsetting_mode"] = None
+    layer.sfa_args["offsetting_mode"] = "data_dependent"  # None
     layer.sfa_args["reconstruct_with_sfa"] = False
     layer.sfa_args["expansion_funcs"] = [identity, QT]
-    layer.sfa_args["max_preserved_sfa"] = 3  # 4.0 #4.0 => preserves only SFA components; 16 => half of the computed
+    layer.sfa_args["max_preserved_sfa"] = 6  # 4.0 #4.0 => preserves only SFA components; 16 => half of the computed
     # features are slow, and the remaining reconstructive
 
 
