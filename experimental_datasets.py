@@ -5185,3 +5185,8 @@ ParamsRatlabFunc_320x40_training_80k = ParamsRatlabExperiment(experiment_seed, e
 ParamsRatlabFunc_320x40_training_40k = ParamsRatlabExperiment(experiment_seed, experiment_basedir, 40000, 40000)
 ParamsRatlabFunc_320x40_training_20k = ParamsRatlabExperiment(experiment_seed, experiment_basedir, 20000, 40000)
 ParamsRatlabFunc_320x40_training_10k = ParamsRatlabExperiment(experiment_seed, experiment_basedir, 10000, 40000)
+ParamsRatlabFunc_320x40_training_5k = ParamsRatlabExperiment(experiment_seed, experiment_basedir, 5000, 40000)
+ParamsRatlabFunc_320x40_training_2500 = ParamsRatlabExperiment(experiment_seed, experiment_basedir, 2500, 40000)
+ParamsRatlabFunc_320x40_training_1250 = ParamsRatlabExperiment(experiment_seed, experiment_basedir, 1250, 40000)
+
+
