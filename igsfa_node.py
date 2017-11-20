@@ -356,7 +356,7 @@ class iGSFANode(mdp.Node):
             print "method: constant amplitude for all slow features"
         elif self.offsetting_mode == "data_dependent":
             # SFA components have an std equal to that of the least significant principal component
-            self.magn_n_sfa_x = 1.0 * self.pca_node.d[-1] ** 0.5 + 0.125 # 10.0 * numpy.median(self.pca_node.d)  # 100.0 * self.pca_node.d[-1] ** 0.5 + 0.0
+            self.magn_n_sfa_x = 1.0 * numpy.median(self.pca_node.d) ** 0.5  # 100.0 * self.pca_node.d[-1] ** 0.5 + 0.0
             print "method: data dependent"
         else:
             er = "unknown feature scaling method"
