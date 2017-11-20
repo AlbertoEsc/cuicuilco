@@ -66,6 +66,7 @@ import matplotlib as mpl
 
 mpl.use('Qt4Agg')
 import matplotlib.pyplot as plt
+import socket
 
 __version__ = "0.8.0"
 
@@ -79,6 +80,8 @@ benchmark = None
 
 mkl.set_num_threads(18)  # Number of threads used by mlk to parallelize matrix operations of numpy.
 # Adjust this value according to the number of cores in your system. MKL might decide to ignore this.
+
+print("Running on hostname= " + socket.gethostname())
 
 random_seed = 123456  # Default seed used by hierarchical_networks
 numpy.random.seed(random_seed)
@@ -2296,7 +2299,7 @@ def main():
         else:
             number_samples_EV_linear_global = sl_seq_training.shape[0]
         number_samples_EV_linear_global = sl_seq_seenid.shape[0]
-        num_features_linear_model = 75
+        num_features_linear_model = 1209  # 75
         EVLinGlobal_train1, EVLinGlobal_train2, EVLinGlobal_newid = more_nodes.estimate_explained_var_linear_global(
             subimages_seenid, sl_seq_seenid[:, 0:num_features_linear_model], subimages_newid,
             sl_seq_newid[:, 0:num_features_linear_model], num_features_linear_model, number_samples_EV_linear_global)
