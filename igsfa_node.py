@@ -41,6 +41,7 @@ class iGSFANode(mdp.Node):
 
         self.sfa_node = None
         self.pca_node = None
+        self.lr_node = None
         self.max_lenght_slow_part = max_lenght_slow_part  # upper limit to the size of the slow part
 
         self.useless_var = 5  # Warning! Used only to fool the cache mechanism when this class is modified
