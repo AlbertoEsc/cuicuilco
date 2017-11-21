@@ -750,23 +750,18 @@ def display_eigenvalues(flow, mode="All"):
         display_node_eigenvalues(node, i, mode)
 
 
-def compute_node_size(node):
-    """ Computes the number of weights learned by node after training.
-    Note: Means are not counted, only weights.
-    The following nodes are supported up to now:
-    SFANode,PCANode,WhitheningNode,CloneLayer,Layer
+def compute_node_size(node, verbose=False):
+    """ Computes the number of parameters (weights) that have been learned by node.
+
+    Note: Means and offsets are not counted, only (multiplicative) weights. The node must have been already trained.
+    The following nodes are supported currently:
+    SFANode, PCANode, WhitheningNode, CloneLayer, Layer, GSFANode, iGSFANode, LinearRegressionNode
     """
-    if isinstance(node, (mdp.nodes.SFANode, mdp.nodes.PCANode,
-                         mdp.nodes.WhiteningNode)) and node.input_dim is not None and node.output_dim is not None:
-        if isinstance(node, mdp.nodes.SFANode):
-            return node.input_dim * node.output_dim
-        elif isinstance(node, mdp.nodes.PCANode):
-            return node.input_dim * node.output_dim
-        elif isinstance(node, mdp.nodes.WhiteningNode):
-            return node.input_dim * node.output_dim
-        else:
-            er = "Unknown Node class"
-            raise Exception(er)
+    if isinstance(node, (mdp.nodes.iGSFANode)):
+        return compute_node_size(node.sfa_node) + compute_node_size(node.pca_node) + compute_node_size(node.lr_node)
+    elif isinstance(node, (mdp.nodes.SFANode, mdp.nodes.PCANode, mdp.nodes.GSFANode, mdp.nodes.LinearRegressionNode,
+                    mdp.nodes.WhiteningNode)) and node.input_dim is not None and node.output_dim is not None:
+        return node.input_dim * node.output_dim
     elif isinstance(node, mdp.hinet.CloneLayer):
         return compute_node_size(node.nodes[0])
     elif isinstance(node, mdp.hinet.Layer):
@@ -775,6 +770,8 @@ def compute_node_size(node):
             size += compute_node_size(nodechild)
         return size
     else:
+        if verbose:
+            print "compute_node_size has not been yet implemented for nodes of type:", type(node)
         return 0
 
 
