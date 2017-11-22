@@ -939,7 +939,7 @@ def main():
     else:
         network_hashes_base_filenames = []
 
-    network_hashes_base_filenames.sort(lambda x, y: cmp(x[1], y[1]))
+    network_hashes_base_filenames.sort(lambda x, y: cmp((x[1], y[1])))
 
     print ("%d networks found:" % len(network_hashes_base_filenames))
     for i, (network_filename, network_hash) in enumerate(network_hashes_base_filenames):
@@ -1656,6 +1656,15 @@ def main():
     t_exec1 = time.time()
     print ("Execution over Known Id in %0.3f s" % (t_exec1 - t_exec0))
 
+    if network_write:
+        network_write.update_cache([iSeenid, sSeenid], None, network_cache_write_dir,
+                                   "iSeenidsSeenidData" + "_" + network_hash, overwrite=True, use_hash=network_hash,
+                                   verbose=True)
+        network_write.update_cache(subimages_seenid, None, network_cache_write_dir, "SeenidData" + "_" + network_hash,
+                                   overwrite=True, use_hash=network_hash, verbose=True)
+        network_write.update_cache(sl_seq_seenid, None, network_cache_write_dir, "SLSeenid" + "_" + network_hash,
+                                   overwrite=True, use_hash=network_hash, verbose=True)
+
     if save_output_features_dir is not None:
         print ("saving output features (seenid data)")
         seenid_data_hash = cache.hash_object((iSeenid, sSeenid)).hexdigest()
@@ -1767,6 +1776,19 @@ def main():
         GC_node.stop_training()
         GC_node.avg_labels = avg_labels
 
+        # # Experimental post-processing of the estimations computed using soft Gaussian classifier
+        # regression_Gauss_cf = GC_node.regression(cf_sl[:, 0:reg_num_signals], avg_labels)
+        # print ("regression_Gauss_cf[0:5]=", regression_Gauss_cf[0:5])
+        # expanded_regression = numpy.zeros((regression_Gauss_cf.shape[0], 3))
+        # for i in range(3):
+        #     expanded_regression[:, i] = (regression_Gauss_cf) ** (i + 1)
+        # print ("expanded_regression[0:5]=", expanded_regression[0:5])
+        #
+        # GC_post_processing_node = mdp.nodes.LinearRegressionNode(with_bias=True, use_pinv=True)
+        # GC_post_processing_node.train(expanded_regression, cf_correct_labels.reshape((cf_sl.shape[0], 1)))
+        # GC_post_processing_node.stop_training()
+        # print ("Expansion coefficients for post processing", GC_post_processing_node.beta)
+
         t_classifier_train1 = time.time()
         if benchmark is not None:
             benchmark.append(("Training Classifier/Regression GC", t_classifier_train1 - t_classifier_train0))
@@ -1841,6 +1863,7 @@ def main():
     else:
         classes_ncc_training = labels_ncc_training = numpy.zeros(num_images_training)
 
+    # correct_post_processing_bias = True  # False   # WARNING!
     if enable_ccc_Gauss_cfr:
         print ("GC classify...")
         classes_Gauss_training = numpy.array(GC_node.label(sl_seq_training[:, 0:reg_num_signals]))
@@ -1852,6 +1875,15 @@ def main():
         probs_training = GC_node.class_probabilities(sl_seq_training[:, 0:reg_num_signals])
 
         softCR_Gauss_training = GC_node.softCR(sl_seq_training[:, 0:reg_num_signals], correct_classes_training)
+
+        # if correct_post_processing_bias:
+        #     # Experimental post-processing. WARNING!
+        #     expanded_regression = numpy.zeros((regression_Gauss_training.shape[0], 3))
+        #     for i in range(3):
+        #         expanded_regression[:, i] = (regression_Gauss_training) ** (i + 1)
+        #     print("expanded_regression[0:5]=", expanded_regression[0:5])
+        #     regressionMAE_Gauss_training = GC_post_processing_node.execute(expanded_regression).flatten()
+        #     print("regressionMAE_Gauss_training[0:5]=", regressionMAE_Gauss_training[0:5])
     else:
         classes_Gauss_training = labels_Gauss_training = regression_Gauss_training = \
             regressionMAE_Gauss_training = numpy.zeros(num_images_training)
@@ -1953,6 +1985,15 @@ def main():
         regressionMAE_Gauss_seenid = GC_node.regressionMAE(sl_seq_seenid[:, 0:reg_num_signals], avg_labels)
         probs_seenid = GC_node.class_probabilities(sl_seq_seenid[:, 0:reg_num_signals])
         softCR_Gauss_seenid = GC_node.softCR(sl_seq_seenid[:, 0:reg_num_signals], correct_classes_seenid)
+
+        # if correct_post_processing_bias:
+        #     # Experimental post-processing. WARNING!
+        #     expanded_regression = numpy.zeros((regression_Gauss_seenid.shape[0], 3))
+        #     for i in range(3):
+        #         expanded_regression[:, i] = (regression_Gauss_seenid) ** (i + 1)
+        #     print("expanded_regression[0:5]=", expanded_regression[0:5])
+        #     regressionMAE_Gauss_seenid = GC_post_processing_node.execute(expanded_regression).flatten()
+        #     print("regressionMAE_Gauss_seenid[0:5]=", regressionMAE_Gauss_seenid[0:5])
     else:
         classes_Gauss_seenid = labels_Gauss_seenid = regression_Gauss_seenid = regressionMAE_Gauss_seenid = numpy.zeros(
             num_images_seenid)
@@ -2089,6 +2130,15 @@ def main():
     t_exec1 = time.time()
     print ("Execution over New Id in %0.3f s" % (t_exec1 - t_exec0))
 
+    if network_write:
+        network_write.update_cache([iNewid, sNewid], None, network_cache_write_dir,
+                                   "iNewidsNewidData" + "_" + network_hash, overwrite=True, use_hash=network_hash,
+                                   verbose=True)
+        network_write.update_cache(subimages_newid, None, network_cache_write_dir, "NewidData" + "_" + network_hash,
+                                   overwrite=True, use_hash=network_hash, verbose=True)
+        network_write.update_cache(sl_seq_newid, None, network_cache_write_dir, "SLNewid" + "_" + network_hash,
+                                   overwrite=True, use_hash=network_hash, verbose=True)
+
     if save_output_features_dir is not None:
         print ("saving output features (test data)")
         testing_data_hash = cache.hash_object((iNewid, sNewid)).hexdigest()
@@ -2132,6 +2182,15 @@ def main():
         regressionMAE_Gauss_newid = GC_node.regressionMAE(sl_seq_newid[:, 0:reg_num_signals], avg_labels)
         probs_newid = GC_node.class_probabilities(sl_seq_newid[:, 0:reg_num_signals])
         softCR_Gauss_newid = GC_node.softCR(sl_seq_newid[:, 0:reg_num_signals], correct_classes_newid)
+
+        # if correct_post_processing_bias:
+        #     # Experimental post-processing. WARNING!
+        #     expanded_regression = numpy.zeros((regression_Gauss_newid.shape[0], 3))
+        #     for i in range(3):
+        #         expanded_regression[:, i] = (regression_Gauss_newid) ** (i + 1)
+        #     print("expanded_regression[0:5]=", expanded_regression[0:5])
+        #     regressionMAE_Gauss_newid = GC_post_processing_node.execute(expanded_regression).flatten()
+        #     print("regressionMAE_Gauss_newid[0:5]=", regressionMAE_Gauss_newid[0:5])
     else:
         classes_Gauss_newid = labels_Gauss_newid = regression_Gauss_newid = regressionMAE_Gauss_newid = \
             numpy.zeros(num_images_newid)
