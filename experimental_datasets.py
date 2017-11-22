@@ -2800,7 +2800,7 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
     This experiment also supports gender and 'race' estimation.
     """
     def __init__(self, experiment_seed, experiment_basedir, subimage_width_height=96,
-                 use_setup_Guo=True, training_set=1):
+                 use_setup_Guo=True, training_set=1, pre_mirroring_supervised_test=False):
         super(ParamsRAgeExperiment, self).__init__()
         self.experiment_seed = experiment_seed
         self.experiment_basedir = experiment_basedir
@@ -2814,6 +2814,7 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
         self.enable_hack_image_size = True
         self.patch_network_for_RGB = False  #
         self.use_setup_Guo = use_setup_Guo
+        self.pre_mirroring_supervised_test = pre_mirroring_supervised_test
         if training_set == 1 or training_set == 2:
             self.training_set = training_set
         else:
@@ -3359,6 +3360,12 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
         # least 4 #T: dx=2, dy=2, smin=1.25, smax=1.40, repetition_factor=5
         sTrainRAge = [[self.sSeqCreateRAge(iSeq_set[0][0], seed=-1, use_RGB_images=self.age_use_RGB_images)]]
 
+        if self.pre_mirroring_supervised_test:
+            pre_mirroring_supervised_test = "all"
+        else:
+            pre_mirroring_supervised_test = "none"
+        print ("pre_mirroring_supervised_test = ", pre_mirroring_supervised_test)
+
         # MORPH+FGNet
         # iSeq_set = iTrainRAge = [[iSeqCreateRAge(dx=2, dy=2, smin=1.25, smax=1.40, clusters=age_clusters,
         # num_images_per_cluster_used=num_images_per_cluster_used_MORPH_FGNet,  #1000 =>30000, 900=>27000
@@ -3374,7 +3381,7 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
                                 smin=base_scale / factor_scale_seenid,
                                 smax=base_scale * factor_scale_seenid,
                                 delta_rotation=delta_rotation * factor_rotation_seenid,
-                                pre_mirroring="none", contrast_enhance=True,  # Activate for mirroring experiments
+                                pre_mirroring=pre_mirroring_supervised_test, contrast_enhance=True,  # Activate for mirroring experiments
                                 # 192x192:iSeq_set = iSeenidRAge = iSeqCreateRAge(dx=0.0, dy=0.0,
                                 # smin=0.86667, smax=0.9, delta_rotation=1.5, pre_mirroring="none",
                                 # contrast_enhance=True,
@@ -3418,7 +3425,7 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
             else:
                 print ("Selecting NewId data using leave_k_out_strategy, with k=%d" % leave_k_out_MORPH)
                 iSeq_set = iNewidRAge = [[self.iSeqCreateRAge(dx=0, dy=0, smin=base_scale, smax=base_scale,
-                                                              delta_rotation=0.0, pre_mirroring="none",   # Activate for mirroring experiments
+                                                              delta_rotation=0.0, pre_mirroring=pre_mirroring_supervised_test,   # Activate for mirroring experiments
                                                               contrast_enhance=True,
                                                               obj_avg_std=0.0, obj_std_min=obj_std_base,
                                                               obj_std_max=obj_std_base, new_clusters=age_clusters_newid,
@@ -4564,10 +4571,23 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
         return sSeq
 
 
-ParamsRAgeFunc_96x96 = ParamsRAgeFunc = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 96,
-                                                             use_setup_Guo=True, training_set=1)
-ParamsRAgeFunc_48x48 = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 48, use_setup_Guo=True, training_set=1)
-ParamsRAgeFunc_24x24 = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 24, use_setup_Guo=True, training_set=1)
+ParamsRAgeFunc_set1_96x96 = ParamsRAgeFunc = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 96,
+                                                             use_setup_Guo=True, training_set=1, pre_mirroring_supervised_test=False)
+ParamsRAgeFunc_set1_48x48 = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 48, use_setup_Guo=True, training_set=1, pre_mirroring_supervised_test=False)
+ParamsRAgeFunc_set1_24x24 = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 24, use_setup_Guo=True, training_set=1, pre_mirroring_supervised_test=False)
+ParamsRAgeFunc_mirror_set1_96x96 = ParamsRAgeFunc = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 96,
+                                                             use_setup_Guo=True, training_set=1, pre_mirroring_supervised_test=True)
+ParamsRAgeFunc_mirror_set1_48x48 = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 48, use_setup_Guo=True, training_set=1, pre_mirroring_supervised_test=True)
+ParamsRAgeFunc_mirror_set1_24x24 = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 24, use_setup_Guo=True, training_set=1, pre_mirroring_supervised_test=True)
+
+ParamsRAgeFunc_set2_96x96 = ParamsRAgeFunc = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 96,
+                                                             use_setup_Guo=True, training_set=2, pre_mirroring_supervised_test=False)
+ParamsRAgeFunc_set2_48x48 = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 48, use_setup_Guo=True, training_set=2, pre_mirroring_supervised_test=False)
+ParamsRAgeFunc_set2_24x24 = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 24, use_setup_Guo=True, training_set=2, pre_mirroring_supervised_test=False)
+ParamsRAgeFunc_mirror_set2_96x96 = ParamsRAgeFunc = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 96,
+                                                             use_setup_Guo=True, training_set=2, pre_mirroring_supervised_test=True)
+ParamsRAgeFunc_mirror_set2_48x48 = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 48, use_setup_Guo=True, training_set=2, pre_mirroring_supervised_test=True)
+ParamsRAgeFunc_mirror_set2_24x24 = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 24, use_setup_Guo=True, training_set=2, pre_mirroring_supervised_test=True)
 
 
 #####################################################################################################################
