@@ -2160,12 +2160,16 @@ else:
 
 print("HiGSFANetworkU11L_Overlap6x6L0 L0-10_SFA_out_dim = ", HiGSFANet_out_dims)
 
+# WARNING, experimental values
+offsetting_mode = "data_dependent"  # "sensitivity_based_pure"
+reconstruct_with_sfa = False
 for i, layer in enumerate(network.layers):
     layer.sfa_node_class = mdp.nodes.iGSFANode
     layer.sfa_out_dim = HiGSFANet_out_dims[i]
     layer.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": [identity, unsigned_08expo],
-                      "max_lenght_slow_part": None, "offsetting_mode": "sensitivity_based_pure",
-                      "max_preserved_sfa": 1.91}  # 1.85, 1.91 #only for tuning/experimentation, official is below
+                      "max_lenght_slow_part": None, "offsetting_mode": offsetting_mode,
+                      "reconstruct_with_sfa": reconstruct_with_sfa, "max_preserved_sfa": 1.91}
+                      # 1.85, 1.91 #only for tuning/experimentation, official is below
 
 network.layers[0].sfa_args["expansion_funcs"] = [s18, s15u08ex, s17Max, s10QT]  # ** s18, s15u08ex, s17Max, s10QT]
 # #identity, s14u08ex, s14Max, s1QT, QT, s14u08ex, unsigned_08expo, s14QT, maximum_mix1_ex, s16QT, s10Max
@@ -2236,6 +2240,11 @@ for i in range(1, 8):
 
 HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96 = copy.deepcopy(HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels)
 HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96.layers = HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96.layers[0:9]
+
+HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_48x48 = copy.deepcopy(HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96)
+HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_48x48.layers = \
+    HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96.layers[0:6] + \
+    HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96.layers[8:9]  # layers 0, 1, 2, 3, 4, 5, 8
 
 # ################## HiGSFA Network for FGNet generalization ##############
 network = HiGSFANetworkU11L_Overlap6x6L0_Generalization_3Labels_96x96 = copy.deepcopy(
@@ -2957,13 +2966,16 @@ expanded_dims = [180, 350, 423, 492, 552, 582, 435, 400, 400, 350, 1, 1]  # TEST
 # expanded_dims = [ 50, 150, 200, 250, 250, 300, 250, 150, 200, 200, 1, 1]  # Test
 # expanded_dims = [ 25,  70, 100, 125, 130, 140, 110,  75, 110, 100, 1, 1]  # Test
 
+offsetting_mode = "data_dependent"
+reconstruct_with_sfa = False
 for i, layer in enumerate(network.layers):
     layer.sfa_node_class = mdp.nodes.iGSFANode
     layer.sfa_out_dim = HiGSFANet_out_dims[i]
     layer.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": "RandomSigmoids",
-                      "max_lenght_slow_part": None, "offsetting_mode": "sensitivity_based_pure",
+                      "max_lenght_slow_part": None, "offsetting_mode": offsetting_mode,
                       "max_preserved_sfa": 1.91, "expansion_output_dim": expanded_dims[i],
-                      "expansion_starting_point": "Pseudo-Identity", }  # 1.85, 1.91
+                      "expansion_starting_point": "Pseudo-Identity", 
+                      "reconstruct_with_sfa": reconstruct_with_sfa}  # 1.85, 1.91
     # #only for tuning/experimentation, official is below
 
 network.layers[0].sfa_args["max_preserved_sfa"] = 3
