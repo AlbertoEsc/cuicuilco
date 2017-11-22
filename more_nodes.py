@@ -771,7 +771,7 @@ def compute_node_size(node, verbose=False):
         return size
     else:
         if verbose:
-            print "compute_node_size has not been yet implemented for nodes of type:", type(node)
+            print "compute_node_size not implemented for nodes of type:", type(node), "or training has not finished"
         return 0
 
 

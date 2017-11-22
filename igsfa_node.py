@@ -221,11 +221,13 @@ class iGSFANode(mdp.Node):
             s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x
             print "method: constant amplitude for all slow features"
         elif self.offsetting_mode == "data_dependent":
-            self.magn_n_sfa_x = 0.01 * numpy.min(x_zm.std(axis=0)) + 1e-1  # SFA components have the variance of the weakest PCA feature
-            # self.magn_n_sfa_x = 0.01 * numpy.min(
-            #     x_zm.var(axis=0))  # SFA components have a variance 1/10000 times the smallest data variance
-            s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x # Scale according to ranking
-            print "method: data dependent (setting magn_n_fa_x later)"
+            print "skiped data_dependent"
+            # self.magn_n_sfa_x = 1.0 * numpy.median(self.pca_node.d) ** 0.5
+            # # 0.01 * numpy.min(x_zm.std(axis=0)) + 1e-1  # SFA components have the variance of the weakest PCA feature
+            # # self.magn_n_sfa_x = 0.01 * numpy.min(
+            # #     x_zm.var(axis=0))  # SFA components have a variance 1/10000 times the smallest data variance
+            # s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x # Scale according to ranking
+            # print "method: data dependent (setting magn_n_fa_x later)"
         else:
             er = "unknown feature offsetting mode=" + str(self.offsetting_mode) + "for reconstruct_with_sfa=" + \
                  str(self.reconstruct_with_sfa)
@@ -246,6 +248,11 @@ class iGSFANode(mdp.Node):
         print "executing PCA..."
 
         pca_x = self.pca_node.execute(sfa_removed_x)
+
+        if self.offsetting_mode == "data_dependent":
+            self.magn_n_sfa_x = 1.0 * numpy.median(self.pca_node.d) ** 0.5
+            s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x # Scale according to ranking
+            print "method: data dependent"
 
         if self.pca_node.output_dim + self.num_sfa_features_preserved < self.output_dim:
             er = "Error, the number of features computed is SMALLER than the output dimensionality of the node: " + \
