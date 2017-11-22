@@ -1165,7 +1165,7 @@ if patch_layer:
                     print "Layer_new_train_params. params=", params
                     print "Here computation is fine!!!"
                 node.train_params(x[:, start_index: stop_index], params)
-                if node.is_training() and immediate_stop_training and not self.homogeneous:
+                if node.is_training() and immediate_stop_training and not isinstance(self, mdp.hinet.CloneLayer):
                     node.stop_training()
                 #                if isinstance(node, (mdp.nodes.SFANode, mdp.nodes.PCANode, mdp.nodes.WhiteningNode,
                 # mdp.hinet.CloneLayer, mdp.hinet.Layer)) and node.input_dim >= 45:
@@ -1174,7 +1174,8 @@ if patch_layer:
                 # n_parallel=n_parallel, *args, **kwargs)
                 #                else:
                 #                    node.train(x[:, start_index : stop_index], *args, **kwargs)
-        if self.homogeneous and immediate_stop_training:
+        if isinstance(self, mdp.hinet.CloneLayer) and immediate_stop_training:
+            print("layer=", self, "type=", type(self), "layer.homogeneous=", self.homogeneous)
             self.nodes[0].stop_training()
 
 
