@@ -1,3 +1,15 @@
+#####################################################################################################################
+# igsfa_node: This module implements the Information-Preserving Graph-Based SFA Node                                #
+#                                                                                                                   #
+# See the following publication for details:                                                                        #
+# Escalante-B., A.-N. and Wiskott, L., "Improved graph-based {SFA}: Information preservation complements the        #
+# slowness principle", e-print arXiv:1601.03945, http://arxiv.org/abs/1601.03945, 2017                              #
+#                                                                                                                   #
+# By Alberto Escalante. Alberto.Escalante@neuroinformatik.ruhr-uni-bochum.de                                        #
+# Ruhr-University-Bochum, Institute for Neural Computation, Group of Prof. Dr. Wiskott                                #
+#####################################################################################################################
+
+from __future__ import print_function
 import numpy
 import scipy
 import scipy.optimize
@@ -17,13 +29,36 @@ class iGSFANode(mdp.Node):
     """This node implements "information-preserving graph-based SFA (iGSFA)", which is the main component of
     hierarchical iGSFA (HiGSFA). 
     
-    For further information, see: A. N. Escalante-B. and L. Wiskott. Improved graph-based SFA: Information preservation 
-    complements the slowness principle. e-print arXiv:1601.03945, 1 2016a    
+    For further information, see: Escalante-B., A.-N. and Wiskott, L., "Improved graph-based {SFA}: Information
+    preservation complements the slowness principle", e-print arXiv:1601.03945, http://arxiv.org/abs/1601.03945, 2017
     """
     def __init__(self, input_dim=None, output_dim=None, pre_expansion_node_class=None, pre_expansion_out_dim=None,
                  expansion_funcs=None, expansion_output_dim=None, expansion_starting_point=None,
                  max_lenght_slow_part=None, offsetting_mode="sensitivity_based_pure", max_preserved_sfa=1.9999,
                  reconstruct_with_sfa=True, **argv):
+        """Initializes the iGSFA node.
+
+        pre_expansion_node_class: a node class. An instance of this class is used to filter the data before the
+                                  expansion.
+        pre_expansion_out_dim: the output dimensionality of the above-mentioned node.
+        expansion_funcs: a list of expansion functions to be applied before GSFA.
+        expansion_output_dim: this parameter is used to specify an output dimensionality for some expansion functions.
+        expansion_starting_point: this parameter is also used by some specific expansion functions.
+        max_lenght_slow_part: fixes an upper bound to the size of the slow part, which is convenient for
+                              computational reasons.
+        offsetting_mode: the method used to scale the slow features. Valid entries are: None, "sensitivity_based_pure"
+                         (default), "data_dependent", and "QR_decomposition".
+        max_preserved_sfa: this parameter has two different meanings depending on its type. If it is integer, it
+                           specifies the exact size of the slow part. If it is real valued, it determines the
+                           parameter \Delta_threshold, which is used to decide how many slow features are preserved,
+                           depending on their delta values.
+        reconstruct_with_sfa: this Boolean parameter indicates whether the slow part is removed from the input before
+                              PCA is applied.
+
+        Note: Training is finished after a single call to the train method, unless multi-train is enabled, which
+              is done by using reconstruct_with_sfa=False and offsetting_mode in [None, "data_dependent"]. This
+              is necessary to support weight sharing in iGSFA layers (convolutional iGSFA layers).
+        """
         super(iGSFANode, self).__init__(input_dim=input_dim, output_dim=output_dim, **argv)
         self.pre_expansion_node_class = pre_expansion_node_class  # Type of node used to expand the data
         self.pre_expansion_node = None  # Node that expands the input data
@@ -44,7 +79,7 @@ class iGSFANode(mdp.Node):
         self.lr_node = None
         self.max_lenght_slow_part = max_lenght_slow_part  # upper limit to the size of the slow part
 
-        self.useless_var = 5  # Warning! Used only to fool the cache mechanism when this class is modified
+        self.useless_var = 5  # Warning! Used only to fool the cache mechanism when a class method is modified
 
         # Factor that prevents the amplitude of the features from growing too much through the layers of the network
         self.feature_scaling_factor = 0.5
@@ -53,11 +88,10 @@ class iGSFANode(mdp.Node):
         self.max_preserved_sfa = max_preserved_sfa
         # Indicates whether (nonlinear) SFA components are used for reconstruction
         self.reconstruct_with_sfa = reconstruct_with_sfa
-        # ##self.out_sfa_filter = out_sfa_filter
         # Indicates whether a PCA pre-processing step is applied to the input data
         self.compress_input_with_pca = False  # True
-        # #This indicates how much variance is preserved in case compress_input_with_pca is enabled.
-        self.compression_out_dim = 0.99  # 0.99 # 0.95 # 0.98
+        # Indicates how much variance is preserved in case compress_input_with_pca is enabled.
+        self.compression_out_dim = 0.99
         self.offsetting_mode = offsetting_mode  # Indicates how to scale the slow part
 
         self.x_mean = None
@@ -65,21 +99,26 @@ class iGSFANode(mdp.Node):
         self.sfa_x_std = None
         self.expanded_dim = None
 
-    def is_trainable(self):
+    @staticmethod
+    def is_trainable():
         return True
 
-    # scheduler = None, n_parallel=None
     def _train(self, x, block_size=None, train_mode=None, node_weights=None, edge_weights=None, **argv):
+        """Trains an iGSFA node on data 'x'
+
+        The parameters:  block_size, train_mode, node_weights, and edge_weights are passed to the training function of
+        the corresponding gsfa node inside iGSFA (node.gsfa_node).
+        """
         self.input_dim = x.shape[1]
 
         if self.output_dim is None:
             self.output_dim = self.input_dim
 
-        print "Training iGSFANode..."
+        print("Training iGSFANode...")
 
         if (not self.reconstruct_with_sfa) and (self.offsetting_mode in [None, "data_dependent"]):
             self.multiple_train(x, block_size=block_size, train_mode=train_mode, node_weights=node_weights,
-                                edge_weights=edge_weights)  # scheduler = None, n_parallel=None
+                                edge_weights=edge_weights)
             return
 
         if (not self.reconstruct_with_sfa) and (self.offsetting_mode not in [None, "data_dependent"]):
@@ -105,7 +144,7 @@ class iGSFANode(mdp.Node):
 
         # Expand data
         if self.exp_node:
-            print "expanding x..."
+            print("expanding x...")
             exp_x = self.exp_node.execute(x_pre_exp)  # x_zm
         else:
             exp_x = x_pre_exp
@@ -124,7 +163,7 @@ class iGSFANode(mdp.Node):
                                                   "edge_weights": edge_weights})
         # , node_weights=None, edge_weights=None, scheduler = None, n_parallel=None)
         self.sfa_node.stop_training()
-        print "self.sfa_node.d", self.sfa_node.d
+        print("self.sfa_node.d", self.sfa_node.d)
 
         # Decide how many slow features are preserved (either use Delta_T=max_preserved_sfa when
         # max_preserved_sfa is a float, or preserve max_preserved_sfa features when max_preserved_sfa is an integer)
@@ -136,14 +175,14 @@ class iGSFANode(mdp.Node):
             self.num_sfa_features_preserved = self.max_preserved_sfa
         else:
             ex = "Cannot handle type of self.max_preserved_sfa"
-            print ex
+            print(ex)
             raise Exception(ex)
 
         if self.num_sfa_features_preserved > self.output_dim:
             self.num_sfa_features_preserved = self.output_dim
 
         SFANode_reduce_output_dim(self.sfa_node, self.num_sfa_features_preserved)
-        print "sfa execute..."
+        print("sfa execute...")
         sfa_x = self.sfa_node.execute(exp_x)
 
         # Truncate leaving only slowest features (this might be redundant)
@@ -152,8 +191,8 @@ class iGSFANode(mdp.Node):
         # normalize sfa_x
         self.sfa_x_mean = sfa_x.mean(axis=0)
         self.sfa_x_std = sfa_x.std(axis=0)
-        print "self.sfa_x_mean=", self.sfa_x_mean
-        print "self.sfa_x_std=", self.sfa_x_std
+        print("self.sfa_x_mean=", self.sfa_x_mean)
+        print("self.sfa_x_std=", self.sfa_x_std)
         if (self.sfa_x_std == 0).any():
             er = "zero-component detected"
             raise Exception(er)
@@ -165,13 +204,13 @@ class iGSFANode(mdp.Node):
                 self.compress_node = mdp.nodes.PCANode(output_dim=self.compression_out_dim)
                 self.compress_node.train(x_zm)
                 x_pca = self.compress_node.execute(x_zm)
-                print "compress: %d components out of %d sufficed for the desired compression_out_dim" % \
-                      (x_pca.shape[1], x_zm.shape[1]), self.compression_out_dim
+                print("compress: %d components out of %d sufficed for the desired compression_out_dim" %
+                      (x_pca.shape[1], x_zm.shape[1]), self.compression_out_dim)
             else:
                 x_pca = x_zm
 
             # approximate input linearly, done inline to preserve node for future use
-            print "training linear regression..."
+            print("training linear regression...")
             self.lr_node = mdp.nodes.LinearRegressionNode()
             self.lr_node.train(n_sfa_x,
                                x_pca)  # Notice that the input "x"=n_sfa_x and the output to learn is "y" = x_pca
@@ -188,12 +227,8 @@ class iGSFANode(mdp.Node):
         # Remove linear approximation
         sfa_removed_x = x_zm - x_app
 
-        # print "Data_variance(x_zm)=", data_variance(x_zm)
-        # print "Data_variance(x_app)=", data_variance(x_app)
-        # print "Data_variance(sfa_removed_x)=", data_variance(sfa_removed_x)
-        # print "x_app.mean(axis=0)=", x_app
         # TODO:Compute variance removed by linear approximation
-        print "ranking method..."
+        print("ranking method...")
         # AKA Laurenz method for feature scaling( +rotation)
         if self.reconstruct_with_sfa and self.offsetting_mode == "QR_decomposition":
             M = self.lr_node.beta[1:, :].T  # bias is used by default, we do not need to consider it
@@ -208,20 +243,20 @@ class iGSFANode(mdp.Node):
             sens = (beta ** 2).sum(axis=1)
             self.magn_n_sfa_x = sens
             s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x ** self.exponent_variance
-            print "method: sensitivity_based_pure enforced"
+            print("method: sensitivity_based_pure enforced")
         # AKA alternative method for feature scaling (no rotation)
         elif self.reconstruct_with_sfa and self.offsetting_mode == "sensitivity_based_normalized":
             beta = self.lr_node.beta[1:, :]  # bias is used by default, we do not need to consider it
             sens = (beta ** 2).sum(axis=1)
             self.magn_n_sfa_x = sens * ((x_pca_app ** 2).sum(axis=1).mean() / sens.sum())
             s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x ** self.exponent_variance
-            print "method: sensitivity_based_normalized enforced"
+            print("method: sensitivity_based_normalized enforced")
         elif self.offsetting_mode is None:
             self.magn_n_sfa_x = 1.0
             s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x
-            print "method: constant amplitude for all slow features"
+            print("method: constant amplitude for all slow features")
         elif self.offsetting_mode == "data_dependent":
-            print "skiped data_dependent"
+            print("skiped data_dependent")
             # self.magn_n_sfa_x = 1.0 * numpy.median(self.pca_node.d) ** 0.5
             # # 0.01 * numpy.min(x_zm.std(axis=0)) + 1e-1  # SFA components have the variance of the weakest PCA feature
             # # self.magn_n_sfa_x = 0.01 * numpy.min(
@@ -233,7 +268,7 @@ class iGSFANode(mdp.Node):
                  str(self.reconstruct_with_sfa)
             raise Exception(er)
 
-        print "training PCA..."
+        print("training PCA...")
         pca_output_dim = self.output_dim - self.num_sfa_features_preserved
         # if pca_output_dim == 0:
         #    self.pca_node = mdp.nodes.IdentityNode()
@@ -245,14 +280,14 @@ class iGSFANode(mdp.Node):
         self.pca_node.stop_training()
 
         # TODO:check that pca_out_dim > 0
-        print "executing PCA..."
+        print("executing PCA...")
 
         pca_x = self.pca_node.execute(sfa_removed_x)
 
         if self.offsetting_mode == "data_dependent":
             self.magn_n_sfa_x = 1.0 * numpy.median(self.pca_node.d) ** 0.5
-            s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x # Scale according to ranking
-            print "method: data dependent"
+            s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x  # Scale according to ranking
+            print("method: data dependent")
 
         if self.pca_node.output_dim + self.num_sfa_features_preserved < self.output_dim:
             er = "Error, the number of features computed is SMALLER than the output dimensionality of the node: " + \
@@ -260,7 +295,7 @@ class iGSFANode(mdp.Node):
                  str(self.num_sfa_features_preserved) + ", self.output_dim=" + str(self.output_dim)
             raise Exception(er)
 
-        # Finally output is the concatenation of scaled slow features and remaining pca components
+        # Finally, the output is the concatenation of scaled slow features and remaining pca components
         sfa_pca_x = numpy.concatenate((s_n_sfa_x, pca_x), axis=1)
 
         sfa_pca_x_truncated = sfa_pca_x[:, 0:self.output_dim]
@@ -269,14 +304,17 @@ class iGSFANode(mdp.Node):
         # Only works because amplitudes of SFA are scaled to be equal to explained variance, because PCA is
         # a rotation, and because data has zero mean
         self.evar = (sfa_pca_x_truncated ** 2).sum() / (x_zm ** 2).sum()
-        print "Variance(output) / Variance(input) is ", self.evar
+        print("Variance(output) / Variance(input) is ", self.evar)
         self.stop_training()
 
     def multiple_train(self, x, block_size=None, train_mode=None, node_weights=None,
                        edge_weights=None):  # scheduler = None, n_parallel=None
+        """This function should not be called directly. Use instead the train method, which will decide whether
+        multiple-training is enabled, and call this function if needed. """
+        # TODO: is the following line needed? or also self.set_input_dim? or self._input_dim?
         self.input_dim = x.shape[1]
 
-        print "Training iGSFANode (multiple train method)..."
+        print("Training iGSFANode (multiple train method)...")
 
         # Data mean is ignored
         self.x_mean = numpy.zeros(self.input_dim)
@@ -291,7 +329,7 @@ class iGSFANode(mdp.Node):
             x_pre_exp = x_zm
 
         if self.exp_node:
-            print "expanding x..."
+            print("expanding x...")
             exp_x = self.exp_node.execute(x_pre_exp)  # x_zm
         else:
             exp_x = x_pre_exp
@@ -309,15 +347,14 @@ class iGSFANode(mdp.Node):
         self.sfa_x_mean = 0
         self.sfa_x_std = 1.0
 
-        # , node_weights=None, edge_weights=None, scheduler = None, n_parallel=None)
         self.sfa_node.train_params(exp_x, params={"block_size": block_size, "train_mode": train_mode,
                                                   "node_weights": node_weights,
                                                   "edge_weights": edge_weights})
 
-        print "training PCA..."
+        print("training PCA...")
         pca_output_dim = self.output_dim
         if self.pca_node is None:
-            # #WARNING; WHY WAS I EXTRACTING ALL PCA COMPONENTS!!?? INEFFICIENT!!!!
+            # WARNING: WHY WAS I EXTRACTING ALL PCA COMPONENTS!!?? INEFFICIENT!!!!
             self.pca_node = mdp.nodes.PCANode(output_dim=pca_output_dim)  # reduce=True) #output_dim = pca_out_dim)
         sfa_removed_x = x
         self.pca_node.train(sfa_removed_x)
@@ -328,9 +365,9 @@ class iGSFANode(mdp.Node):
         # else, special case multi-training:
 
         self.sfa_node.stop_training()
-        print "self.sfa_node.d", self.sfa_node.d
+        print("self.sfa_node.d", self.sfa_node.d)
         self.pca_node.stop_training()
-        print "self.pca_node.d", self.pca_node.d
+        # print "self.pca_node.d", self.pca_node.d
 
         # Decide how many slow features are preserved (either use Delta_T=max_preserved_sfa when
         # max_preserved_sfa is a float, or preserve max_preserved_sfa features when max_preserved_sfa is an integer)
@@ -342,13 +379,14 @@ class iGSFANode(mdp.Node):
             self.num_sfa_features_preserved = self.max_preserved_sfa
         else:
             ex = "Cannot handle type of self.max_preserved_sfa"
-            print ex
+            print(ex)
             raise Exception(ex)
 
         if self.num_sfa_features_preserved > self.output_dim:
             self.num_sfa_features_preserved = self.output_dim
 
         SFANode_reduce_output_dim(self.sfa_node, self.num_sfa_features_preserved)
+        print ("size of slow part:", self.num_sfa_features_preserved)        
 
         final_pca_node_output_dim = self.output_dim - self.num_sfa_features_preserved
         if final_pca_node_output_dim > self.pca_node.output_dim:
@@ -358,25 +396,26 @@ class iGSFANode(mdp.Node):
             raise Exception(er)
         PCANode_reduce_output_dim(self.pca_node, final_pca_node_output_dim)
 
-        print "ranking method..."
+        print("self.pca_node.d", self.pca_node.d)
+        print("ranking method...")
         if self.offsetting_mode is None:
             self.magn_n_sfa_x = 1.0
-            print "method: constant amplitude for all slow features"
+            print("method: constant amplitude for all slow features")
         elif self.offsetting_mode == "data_dependent":
             # SFA components have an std equal to that of the least significant principal component
             self.magn_n_sfa_x = 1.0 * numpy.median(self.pca_node.d) ** 0.5  # 100.0 * self.pca_node.d[-1] ** 0.5 + 0.0
-            print "method: data dependent"
+            print("method: data dependent")
         else:
             er = "unknown feature scaling method"
             raise Exception(er)
         self.evar = self.pca_node.explained_variance
 
-    def _is_invertible(self):
+    @staticmethod
+    def _is_invertible():
         return True
 
     def _execute(self, x):
-        # ##num_samples = x.shape[0]
-
+        """Extracts iGSFA features from some data. The node must have been already trained. """
         x_zm = x - self.x_mean
 
         if self.pre_expansion_node:
@@ -390,8 +429,6 @@ class iGSFANode(mdp.Node):
             exp_x = x_pre_exp
 
         sfa_x = self.sfa_node.execute(exp_x)
-
-        # sfa_x = sfa_x[:,0:self.num_sfa_features_preserved] #WARNING, REMOVED THIS REDUNDANT STEP
 
         n_sfa_x = (sfa_x - self.sfa_x_mean) / self.sfa_x_std
 
@@ -435,13 +472,12 @@ class iGSFANode(mdp.Node):
         if self.pca_node.output_dim > 0:
             pca_x = self.pca_node.execute(sfa_removed_x)
         else:
-            # print "no reconstructive components present"
+            # No reconstructive components present
             pca_x = numpy.zeros((x.shape[0], 0))
 
         # Finally output is the concatenation of scaled slow features and remaining pca components
         sfa_pca_x = numpy.concatenate((s_n_sfa_x, pca_x), axis=1)
 
-        # sfa_pca_x_truncated =  sfa_pca_x[:,0:self.output_dim] #WARNING. REMOVED THIS REDUNDANT STEP
 
         return sfa_pca_x  # sfa_pca_x_truncated
 
@@ -460,12 +496,17 @@ class iGSFANode(mdp.Node):
     #            print "sfa_filtered[0]=", sfa_filtered[0]
 
     def _inverse(self, y, linear_inverse=True):
+        """This method approximates an inverse function to the feature extraction.
+
+        if linear_inverse is True, a linear method is used. Otherwise, a gradient-based non-linear method is used.
+        """
         if linear_inverse:
             return self.linear_inverse(y)
         else:
             return self.non_linear_inverse(y)
 
     def non_linear_inverse(self, y, verbose=False):
+        """Non-linear inverse approximation method. """
         x_lin = self.linear_inverse(y)
         rmse_lin = ((y - self.execute(x_lin)) ** 2).sum(axis=1).mean() ** 0.5
         # scipy.optimize.leastsq(func, x0, args=(), Dfun=None, full_output=0, col_deriv=0, ftol=1.49012e-08,
@@ -478,29 +519,30 @@ class iGSFANode(mdp.Node):
         else:
             num_zeros_filling = 0
         if verbose:
-            print "x_dim=", x_dim, "y_dim=", y_dim, "num_zeros_filling=", num_zeros_filling
+            print("x_dim=", x_dim, "y_dim=", y_dim, "num_zeros_filling=", num_zeros_filling)
         y_long = numpy.zeros(y_dim + num_zeros_filling)
 
         for i, y_i in enumerate(y):
             y_long[0:y_dim] = y_i
             if verbose:
-                print "x_0=", x_lin[i],
-                print "y_long=", y_long
+                print("x_0=", x_lin[i])
+                print("y_long=", y_long)
             plsq = scipy.optimize.leastsq(func=f_residual, x0=x_lin[i], args=(self, y_long), full_output=False)
             x_nl_i = plsq[0]
             if verbose:
-                print "x_nl_i=", x_nl_i, "plsq[1]=", plsq[1]
+                print("x_nl_i=", x_nl_i, "plsq[1]=", plsq[1])
             if plsq[1] != 2:
-                print "Quitting: plsq[1]=", plsq[1]
+                print("Quitting: plsq[1]=", plsq[1])
                 # quit()
             x_nl[i] = x_nl_i
-            print "|E_lin(%d)|=" % i, ((y_i - self.execute(x_lin[i].reshape((1, -1)))) ** 2).sum() ** 0.5,
-            print "|E_nl(%d)|=" % i, ((y_i - self.execute(x_nl_i.reshape((1, -1)))) ** 2).sum() ** 0.5
+            print("|E_lin(%d)|=" % i, ((y_i - self.execute(x_lin[i].reshape((1, -1)))) ** 2).sum() ** 0.5)
+            print("|E_nl(%d)|=" % i, ((y_i - self.execute(x_nl_i.reshape((1, -1)))) ** 2).sum() ** 0.5)
         rmse_nl = ((y - self.execute(x_nl)) ** 2).sum(axis=1).mean() ** 0.5
-        print "rmse_lin(all samples)=", rmse_lin, "rmse_nl(all samples)=", rmse_nl
+        print("rmse_lin(all samples)=", rmse_lin, "rmse_nl(all samples)=", rmse_nl)
         return x_nl
 
     def linear_inverse(self, y):
+        """Linear inverse approximation method. """
         num_samples = y.shape[0]
         if y.shape[1] != self.output_dim:
             er = "Serious dimensionality inconsistency:", y.shape[0], self.output_dim
@@ -570,44 +612,47 @@ def SFANode_reduce_output_dim(sfa_node, new_output_dim, verbose=False):
     The modification takes place in place
     """
     if verbose:
-        print "Updating the output dimensionality of SFA node"
+        print("Updating the output dimensionality of SFA node")
     if new_output_dim > sfa_node.output_dim:
         er = "Can only reduce output dimensionality of SFA node, not increase it (%d > %d)" % \
              (new_output_dim, sfa_node.output_dim)
         raise Exception(er)
     if verbose:
-        print "Before: sfa_node.d.shape=", sfa_node.d.shape, " sfa_node.sf.shape=", sfa_node.sf.shape,
-        print "sfa_node._bias.shape=", sfa_node._bias.shape
+        print("Before: sfa_node.d.shape=", sfa_node.d.shape, " sfa_node.sf.shape=", sfa_node.sf.shape)
+        print("sfa_node._bias.shape=", sfa_node._bias.shape)
     sfa_node.d = sfa_node.d[:new_output_dim]
     sfa_node.sf = sfa_node.sf[:, :new_output_dim]
     sfa_node._bias = sfa_node._bias[:new_output_dim]
     sfa_node._output_dim = new_output_dim
     if verbose:
-        print "After: sfa_node.d.shape=", sfa_node.d.shape, " sfa_node.sf.shape=", sfa_node.sf.shape,
-        print " sfa_node._bias.shape=", sfa_node._bias.shape
+        print("After: sfa_node.d.shape=", sfa_node.d.shape, " sfa_node.sf.shape=", sfa_node.sf.shape)
+        print(" sfa_node._bias.shape=", sfa_node._bias.shape)
 
 
 def PCANode_reduce_output_dim(pca_node, new_output_dim, verbose=False):
     """ This function modifies an already trained PCA node, 
     reducing the number of preserved SFA features to new_output_dim features.
-    The modification takes place in place. The explained variance field is not modified
+    The modification takes place in place. Also the explained variance field is updated
     """
     if verbose:
-        print "Updating the output dimensionality of PCA node"
+        print("Updating the output dimensionality of PCA node")
     if new_output_dim > pca_node.output_dim:
         er = "Can only reduce output dimensionality of PCA node, not increase it"
         raise Exception(er)
     if verbose:
-        print "Before: pca_node.d.shape=", pca_node.d.shape, " pca_node.sf.shape=", pca_node.sf.shape,
-        print " pca_node._bias.shape=", pca_node._bias.shape
+        print("Before: pca_node.d.shape=", pca_node.d.shape, " pca_node.sf.shape=", pca_node.sf.shape)
+        print(" pca_node._bias.shape=", pca_node._bias.shape)
+    
+    original_total_variance = pca_node.d.sum()
+    original_explained_variance = pca_node.explained_variance
     pca_node.d = pca_node.d[0:new_output_dim]
     pca_node.v = pca_node.v[:, 0:new_output_dim]
     pca_node.avg = pca_node.avg[0:new_output_dim]
     pca_node._output_dim = new_output_dim
-
+    pca_node.explained_variance = original_explained_variance * pca_node.d.sum() / original_total_variance
     if verbose:
-        print "After: pca_node.d.shape=", pca_node.d.shape, " pca_node.v.shape=", pca_node.v.shape,
-        print " pca_node._bias.shape=", pca_node._bias.shape
+        print("After: pca_node.d.shape=", pca_node.d.shape, " pca_node.v.shape=", pca_node.v.shape)
+        print(" pca_node._bias.shape=", pca_node._bias.shape)
 
 
 # Computes output errors dimension by dimension for a single sample: y - node.execute(x_app)
