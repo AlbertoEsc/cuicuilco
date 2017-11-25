@@ -6,7 +6,7 @@
 # slowness principle", e-print arXiv:1601.03945, http://arxiv.org/abs/1601.03945, 2017                              #
 #                                                                                                                   #
 # By Alberto Escalante. Alberto.Escalante@neuroinformatik.ruhr-uni-bochum.de                                        #
-# Ruhr-University-Bochum, Institute for Neural Computation, Group of Prof. Dr. Wiskott                                #
+# Ruhr-University-Bochum, Institute for Neural Computation, Group of Prof. Dr. Wiskott                              #
 #####################################################################################################################
 
 from __future__ import print_function
@@ -238,12 +238,12 @@ class iGSFANode(mdp.Node):
             self.Rpinv = pinv(R)
             s_n_sfa_x = numpy.dot(n_sfa_x, R.T)
         # AKA my method for feature scaling (no rotation)
-        elif self.reconstruct_with_sfa and self.offsetting_mode == "sensitivity_based_pure":
+        elif self.reconstruct_with_sfa and (self.offsetting_mode in ("sensitivity_based_pure", "sensitivity_based_offset")):
             beta = self.lr_node.beta[1:, :]  # bias is used by default, we do not need to consider it
             sens = (beta ** 2).sum(axis=1)
-            self.magn_n_sfa_x = sens
-            s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x ** self.exponent_variance
-            print("method: sensitivity_based_pure enforced")
+            self.magn_n_sfa_x = sens ** self.exponent_variance
+            s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x 
+            print("method: sensitivity_based_pure enforced / sensitivity_based_offset")
         # AKA alternative method for feature scaling (no rotation)
         elif self.reconstruct_with_sfa and self.offsetting_mode == "sensitivity_based_normalized":
             beta = self.lr_node.beta[1:, :]  # bias is used by default, we do not need to consider it
@@ -257,12 +257,6 @@ class iGSFANode(mdp.Node):
             print("method: constant amplitude for all slow features")
         elif self.offsetting_mode == "data_dependent":
             print("skiped data_dependent")
-            # self.magn_n_sfa_x = 1.0 * numpy.median(self.pca_node.d) ** 0.5
-            # # 0.01 * numpy.min(x_zm.std(axis=0)) + 1e-1  # SFA components have the variance of the weakest PCA feature
-            # # self.magn_n_sfa_x = 0.01 * numpy.min(
-            # #     x_zm.var(axis=0))  # SFA components have a variance 1/10000 times the smallest data variance
-            # s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x # Scale according to ranking
-            # print "method: data dependent (setting magn_n_fa_x later)"
         else:
             er = "unknown feature offsetting mode=" + str(self.offsetting_mode) + "for reconstruct_with_sfa=" + \
                  str(self.reconstruct_with_sfa)
@@ -285,9 +279,13 @@ class iGSFANode(mdp.Node):
         pca_x = self.pca_node.execute(sfa_removed_x)
 
         if self.offsetting_mode == "data_dependent":
-            self.magn_n_sfa_x = 1.0 * numpy.median(self.pca_node.d) ** 0.5
-            s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x  # Scale according to ranking
+            self.magn_n_sfa_x = 5.0 * numpy.median(self.pca_node.d) ** 0.5
+            s_n_sfa_x = n_sfa_x ** self.magn_n_sfa_x  # Scale according to ranking
             print("method: data dependent")
+        elif self.offsetting_mode == "sensitivity_based_offset":
+	    self.magn_n_sfa_x = numpy.maximum(self.magn_n_sfa_x, numpy.median(self.pca_node.d) ** 0.5)
+            s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x  # Scale according to updated ranking
+            print("method: sensitivity_based_offset")
 
         if self.pca_node.output_dim + self.num_sfa_features_preserved < self.output_dim:
             er = "Error, the number of features computed is SMALLER than the output dimensionality of the node: " + \
@@ -403,10 +401,10 @@ class iGSFANode(mdp.Node):
             print("method: constant amplitude for all slow features")
         elif self.offsetting_mode == "data_dependent":
             # SFA components have an std equal to that of the least significant principal component
-            self.magn_n_sfa_x = 1.0 * numpy.median(self.pca_node.d) ** 0.5  # 100.0 * self.pca_node.d[-1] ** 0.5 + 0.0
+            self.magn_n_sfa_x = 5.0 * numpy.median(self.pca_node.d) ** 0.5  # 100.0 * self.pca_node.d[-1] ** 0.5 + 0.0
             print("method: data dependent")
         else:
-            er = "unknown feature scaling method"
+            er = "Unknown feature scaling method"
             raise Exception(er)
         self.evar = self.pca_node.explained_variance
 
@@ -454,8 +452,8 @@ class iGSFANode(mdp.Node):
         if self.reconstruct_with_sfa and self.offsetting_mode == "QR_decomposition":
             s_n_sfa_x = numpy.dot(n_sfa_x, self.R.T)
         # AKA my method for feature scaling (no rotation)
-        elif self.reconstruct_with_sfa and self.offsetting_mode == "sensitivity_based_pure":
-            s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x ** self.exponent_variance
+        elif self.reconstruct_with_sfa and (self.offsetting_mode in ("sensitivity_based_pure", "sensitivity_based_offset")):
+            s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x 
         # AKA alternative method for feature scaling (no rotation)
         elif self.reconstruct_with_sfa and self.offsetting_mode == "sensitivity_based_normalized":
             s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x ** self.exponent_variance
@@ -569,7 +567,7 @@ class iGSFANode(mdp.Node):
         if self.reconstruct_with_sfa and self.offsetting_mode == "QR_decomposition":
             n_sfa_x = numpy.dot(s_n_sfa_x, self.Rpinv.T)
         else:
-            n_sfa_x = s_n_sfa_x / self.magn_n_sfa_x ** self.exponent_variance
+            n_sfa_x = s_n_sfa_x / self.magn_n_sfa_x
 
         # sfa_x = n_sfa_x * self.sfa_x_std + self.sfa_x_mean
         if self.reconstruct_with_sfa:
