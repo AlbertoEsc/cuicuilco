@@ -5,7 +5,7 @@
 #            hierarchical networks for supervised learning
 
 # By Alberto Escalante. Alberto.Escalante@neuroinformatik.ruhr-uni-bochum.de 
-# Ruhr-University-Bochum, Institute of Neurocomputation, Group of Prof. Dr. Wiskott
+# Ruhr-University-Bochum, Institute of Neural Computation, Group of Prof. Dr. Wiskott
 
 
 #####################################################################################################################
@@ -278,7 +278,9 @@ if __name__ == "__main__":  # ############## Parse command line arguments ######
                                                           "NumberTargetLabels=", "ConfusionMatrix=",
                                                           "MapDaysToYears=", "AddNoiseToSeenid=", "ClipSeenidNewid=",
                                                           "HierarchicalNetwork=", "ExperimentalDataset=",
-                                                          "SFAGCReducedDim=", "ObjectiveLabel=", "help"])
+                                                          "SFAGCReducedDim=", "ObjectiveLabel=",
+                                                          "ImportNetworksFromFile=", "ImportDatasetsFromFile=",
+                                                          "help"])
                 print ("opts=", opts)
                 print ("args=", args)
 
@@ -573,6 +575,29 @@ if __name__ == "__main__":  # ############## Parse command line arguments ######
                     elif opt in ('--ObjectiveLabel',):
                         objective_label = int(arg)
                         print ("Setting objective_label to", objective_label)
+                    elif opt in ('--ImportNetworksFromFile',):
+                        try:
+                            module = __import__(arg)
+                            reload(module)
+                            print("Extending list of available networks:")
+                            for (obj_name, obj_value) in getmembers(module):
+                                if isinstance(obj_value, system_parameters.ParamsNetwork) and obj_name != "network":
+                                    print("Adding network: ", obj_name)
+                                    available_networks[obj_name] = obj_value
+                        except ImportError:
+                            raise ImportError("It was not possible to import the provided filename:" + arg)
+                    elif opt in ('--ImportDatasetsFromFile',):
+                        try:
+                            module = __import__(arg)
+                            reload(module)
+                            print("Extending list of available experiments:")
+                            for (obj_name, obj_value) in getmembers(module):
+                                if isinstance(obj_value, system_parameters.ParamsSystem):
+                                    print("Adding dataset: ", obj_name)
+                                    available_experiments[obj_name] = obj_value
+                        except ImportError:
+                            raise ImportError("It was not possible to import the provided filename:" + arg)
+
                     elif opt in ('--help',):
                         txt = \
                             """Cuicuilco: displaying help information
