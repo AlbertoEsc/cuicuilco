@@ -1,13 +1,17 @@
-# Implementation of the Graph-Based SFA Node
-# See the publication of Escalante-B and Wiskott (2013) at JMLR
-# By Alberto Escalante. Alberto.Escalante@ini.rub.de
-# Ruhr-University-Bochum, Institute of Neurocomputation, Group of Prof. Dr. Wiskott
+#####################################################################################################################
+# gsfa_node: This module implements the Graph-Based SFA Node and is part of the Cuicuilco framework                 #
+#                                                                                                                   #
+# See the following publication for details:                                                                        #
+# Escalante-B A.-N., Wiskott L, "How to solve classication and regression problems on high-dimensional data with   #
+# a supervised extension of Slow Feature Analysis". Journal of Machine Learning Research 14:3683-3719, 2013         #
+#                                                                                                                   #
+# An example of using GSFA is provided at the end of the file                                                       #
+#                                                                                                                   #
+# By Alberto Escalante. Alberto.Escalante@neuroinformatik.ruhr-uni-bochum.de                                        #
+# Ruhr-University-Bochum, Institute for Neural Computation, Group of Prof. Dr. Wiskott                              #
+#####################################################################################################################
 
-# This module is part of the cuicuilco framework
-# See the end of the file for an example
-# Requires: mdp (modular toolkit for data processing)
-
-
+from __future__ import print_function
 import numpy
 import scipy
 import scipy.optimize
@@ -19,22 +23,29 @@ import sys
 
 # This class is derived from SFANode only to use the function _set_range
 class GSFANode(mdp.nodes.SFANode):
-    """ Graph-Based SFA Node.
-    """
+    """ This node implements "Graph-Based SFA (GSFA)", which is the main component of hierarchical GSFA (HGSFA).
 
+    For further information, see: Escalante-B A.-N., Wiskott L, "How to solve classication and regression
+    problems on high-dimensional data with a supervised extension of Slow Feature Analysis". Journal of Machine
+    Learning Research 14:3683-3719, 2013
+    """
     def __init__(self, input_dim=None, output_dim=None, dtype=None, block_size=None, train_mode=None):
+        """Initializes the GSFA node, which is a subclass of the SFA node.
+
+        The parameters block_size and train_mode are not necessary and it is better to provide them during training.
+        See the _train method for details.
+        """
         super(GSFANode, self).__init__(input_dim, output_dim, dtype)
         self.pinv = None
         self.block_size = block_size
         self.train_mode = train_mode
 
-        # ##self._myvar = None
         self._covdcovmtx = CovDCovMatrix(block_size=block_size)  # why block_size and not input_dim???
         # Parameters accepted during training
         self.list_train_params = ["scheduler", "n_parallel", "train_mode", "block_size"]
 
     def _train_without_scheduler(self, x, block_size=None, train_mode=None, node_weights=None, edge_weights=None):
-        """ main training function of GSFA.
+        """ This is the main training function of GSFA. It is called internally by _train.
         
         x: training data (each sample is a row)
         the usage of the parameters depends on the training mode (train_mode)
@@ -43,6 +54,12 @@ class GSFANode(mdp.nodes.SFANode):
         to train using the clustered graph:
             set train_mode="clustered". The cluster size is given by block_size (integer). 
                Variable cluster sizes are possible if block_size is a list of integers.
+        to train for classification:
+            set train_mode=("classification", labels, weight), where labels is an array with the class information and
+            weight is a scalar value.
+        to train for regression:
+            set train_mode=("serial_regression#", labels, weight), where # is the block size used by a serial graph,
+            labels is an array with the label information and weight is a scalar value.
         to train using a graph without edges:
             set train_mode="unlabeled".
         to train using the serial graph:
@@ -56,18 +73,12 @@ class GSFANode(mdp.nodes.SFANode):
         if train_mode is None:
             train_mode = self.train_mode
         if block_size is None:
-            er = "GSFA no block_size"
-            print er
-            # raise Exception(er)
+            print("parameter block_size was not provided, using default value self.block_size")
             block_size = self.block_size
 
-        # ##self._myvar=1
         self.set_input_dim(x.shape[1])
 
-        # # update the covariance matrices
-        # cut the final point to avoid a trivial solution in special cases
-        # WARNING: Force artificial training
-        print "train_mode=", train_mode
+        print("train_mode=", train_mode)
 
         if isinstance(train_mode, list):
             train_modes = train_mode
@@ -80,7 +91,7 @@ class GSFANode(mdp.nodes.SFANode):
                 labels = train_mode[1]
                 weight = train_mode[2]
                 if method == "classification":
-                    print "update classification"
+                    print("update classification")
                     ordering = numpy.argsort(labels)
                     x2 = x[ordering, :]
                     unique_labels = numpy.unique(labels)
@@ -91,7 +102,7 @@ class GSFANode(mdp.nodes.SFANode):
                     self._covdcovmtx.update_clustered(x2, block_sizes=block_sizes, weight=weight)
                 elif method.startswith("serial_regression"):
                     block_size = int(method[len("serial_regression"):])
-                    print "update serial_regression, block_size=", block_size
+                    print("update serial_regression, block_size=", block_size)
                     ordering = numpy.argsort(labels)
                     x2 = x[ordering, :]
                     self._covdcovmtx.updateSerial(x2, block_size=block_size, weight=weight)
@@ -100,28 +111,28 @@ class GSFANode(mdp.nodes.SFANode):
                     raise Exception(er)
             else:
                 if train_mode == 'unlabeled':
-                    print "updateUnlabeled"
+                    print("updateUnlabeled")
                     self._covdcovmtx.updateUnlabeled(x, weight=0.00015)  # Warning, set this weight appropriately!
                 elif train_mode == "regular":
-                    print "updateRegular"
+                    print("updateRegular")
                     self._covdcovmtx.updateRegular(x, weight=1.0)
                 elif train_mode == 'clustered':
-                    print "update_clustered"
+                    print("update_clustered")
                     self._covdcovmtx.update_clustered(x, block_sizes=block_size, weight=1.0)
                 elif train_mode.startswith('compact_classes'):
-                    print "update_compact_classes:", train_mode
+                    print("update_compact_classes:", train_mode)
                     J = int(train_mode[len('compact_classes'):])
                     self._covdcovmtx.update_compact_classes(x, block_sizes=block_size, Jdes=J, weight=1.0)
                 elif train_mode == 'serial':
-                    print "updateSerial"
+                    print("updateSerial")
                     self._covdcovmtx.updateSerial(x, torify=False, block_size=block_size)
                 elif train_mode.startswith('DualSerial'):
-                    print "updateDualSerial"
+                    print("updateDualSerial")
                     num_blocks = len(x) / block_size
                     dual_num_blocks = int(train_mode[len("DualSerial"):])
                     dual_block_size = len(x) / dual_num_blocks
                     chunk_size = block_size / dual_num_blocks
-                    print "dual_num_blocks = ", dual_num_blocks
+                    print("dual_num_blocks = ", dual_num_blocks)
                     self._covdcovmtx.updateSerial(x, torify=False, block_size=block_size)
                     x2 = numpy.zeros_like(x)
                     for i in range(num_blocks):
@@ -130,7 +141,7 @@ class GSFANode(mdp.nodes.SFANode):
                                 x[i * block_size + j * chunk_size:i * block_size + (j + 1) * chunk_size]
                     self._covdcovmtx.updateSerial(x2, torify=False, block_size=dual_block_size, weight=0.0)
                 elif train_mode == 'mixed':
-                    print "update mixed"
+                    print("update mixed")
                     bs = block_size
                     self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[0:bs], weight=2.0,
                                                                               block_size=block_size)
@@ -141,119 +152,102 @@ class GSFANode(mdp.nodes.SFANode):
                     self._covdcovmtx.updateSerial(x, torify=False, block_size=block_size)
                 elif train_mode[0:6] == 'window':
                     window_halfwidth = int(train_mode[6:])
-                    print "Window (%d)" % window_halfwidth
+                    print("Window (%d)" % window_halfwidth)
                     self._covdcovmtx.updateSlidingWindow(x, weight=1.0, window_halfwidth=window_halfwidth)
                 elif train_mode[0:7] == 'fwindow':
                     window_halfwidth = int(train_mode[7:])
-                    print "Fast Window (%d)" % window_halfwidth
+                    print("Fast Window (%d)" % window_halfwidth)
                     self._covdcovmtx.updateFastSlidingWindow(x, weight=1.0, window_halfwidth=window_halfwidth)
                 elif train_mode[0:13] == 'mirror_window':
                     window_halfwidth = int(train_mode[13:])
-                    print "Mirroring Window (%d)" % window_halfwidth
+                    print("Mirroring Window (%d)" % window_halfwidth)
                     self._covdcovmtx.updateMirroringSlidingWindow(x, weight=1.0, window_halfwidth=window_halfwidth)
                 elif train_mode[0:14] == 'smirror_window':
                     window_halfwidth = int(train_mode[14:])
-                    print "Slow Mirroring Window (%d)" % window_halfwidth
+                    print("Slow Mirroring Window (%d)" % window_halfwidth)
                     self._covdcovmtx.updateSlowMirroringSlidingWindow(x, weight=1.0, window_halfwidth=window_halfwidth)
                 elif train_mode == 'graph':
-                    print "updateGraph"
+                    print("updateGraph")
                     self._covdcovmtx.updateGraph(x, node_weights=node_weights, edge_weights=edge_weights, weight=1.0)
                 elif train_mode == 'smart_unlabeled2':
-                    print "smart_unlabeled2"
+                    print("smart_unlabeled2")
                     N2 = x.shape[0]
 
                     N1 = Q1 = self._covdcovmtx.num_samples * 1.0
                     R1 = self._covdcovmtx.num_diffs * 1.0
                     sum_x_labeled_2D = self._covdcovmtx.sum_x.reshape((1, -1)) + 0.0
                     sum_prod_x_labeled = self._covdcovmtx.sum_prod_x + 0.0
-                    print "Original sum_x[0]/num_samples=", self._covdcovmtx.sum_x[0] / self._covdcovmtx.num_samples
+                    print("Original sum_x[0]/num_samples=", self._covdcovmtx.sum_x[0] / self._covdcovmtx.num_samples)
 
                     weight_fraction_unlabeled = 0.2  # 0.1, 0.25
                     additional_weight_unlabeled = -0.025  # 0.02 0.25, 0.65?
 
                     w1 = Q1 * 1.0 / R1 * (1.0 - weight_fraction_unlabeled)
-                    print "weight_fraction_unlabeled=", weight_fraction_unlabeled
-                    print "N1=Q1=", Q1, "R1=", R1, "w1=", w1
-                    print ""
+                    print("weight_fraction_unlabeled=", weight_fraction_unlabeled)
+                    print("N1=Q1=", Q1, "R1=", R1, "w1=", w1)
+                    print("")
 
                     self._covdcovmtx.sum_prod_diffs *= w1
                     self._covdcovmtx.num_diffs *= w1
-                    print "After diff scaling: num_samples=", self._covdcovmtx.num_samples,
-                    print "num_diffs=", self._covdcovmtx.num_diffs, "\n"
-                    # print "Updated self._covdcovmtx.num_diffs=", self._covdcovmtx.num_diffs,
-                    # "Updated self._covdcovmtx.sum_prod_diffs=", self._covdcovmtx.sum_prod_diffs
+                    print("After diff scaling: num_samples=", self._covdcovmtx.num_samples)
+                    print("num_diffs=", self._covdcovmtx.num_diffs, "\n")
 
                     node_weights2 = Q1 * weight_fraction_unlabeled / N2  # w2*N1
                     w12 = node_weights2 / N1  # One directional weights
-                    print "w12 (one dir)", w12
+                    print("w12 (one dir)", w12)
 
                     sum_x_unlabeled_2D = x.sum(axis=0).reshape((1, -1))
                     sum_prod_x_unlabeled = mdp.utils.mult(x.T, x)
 
                     self._covdcovmtx.AddSamples(sum_prod_x_unlabeled, sum_x_unlabeled_2D.flatten(), num_samples=N2,
                                                 weight=node_weights2)
-                    print "After adding unlabeled nodes: num_samples=", self._covdcovmtx.num_samples,
-                    print "num_diffs=", self._covdcovmtx.num_diffs
-                    print "sum_x[0]/num_samples=", self._covdcovmtx.sum_x[0] / self._covdcovmtx.num_samples
-                    print ""
+                    print("After adding unlabeled nodes: num_samples=", self._covdcovmtx.num_samples)
+                    print("num_diffs=", self._covdcovmtx.num_diffs)
+                    print("sum_x[0]/num_samples=", self._covdcovmtx.sum_x[0] / self._covdcovmtx.num_samples)
+                    print("")
 
-                    print "N2=", N2, "node_weights2=", node_weights2,
-                    # print "self._covdcovmtx.sum_x=", self._covdcovmtx.sum_x, "self._covdcovmtx.sum_prod_x=",
-                    # self._covdcovmtx.sum_prod_x
-
-                    # TODO: Unclear if I should put here the node weights?
-                    # print "T1=", sum_prod_x_unlabeled*N1
-                    # print "T2=", mdp.utils.mult(sum_x_labeled.T, sum_x_unlabeled)
-                    # print "T3=", mdp.utils.mult(sum_x_unlabeled.T, sum_x_labeled)
-                    # print "T4=", sum_prod_x_labeled*N2
+                    print("N2=", N2, "node_weights2=", node_weights2)
 
                     additional_diffs = sum_prod_x_unlabeled * N1 - \
                                        mdp.utils.mult(sum_x_labeled_2D.T, sum_x_unlabeled_2D) - \
                                        mdp.utils.mult(sum_x_unlabeled_2D.T, sum_x_labeled_2D) + sum_prod_x_labeled * N2
-                    print "w12=", w12, "additional_diffs=", additional_diffs
+                    print("w12=", w12, "additional_diffs=", additional_diffs)
                     self._covdcovmtx.AddDiffs(2 * additional_diffs, 2 * N1 * N2,
                                               weight=w12)  # to account for both directions
-                    print "After mixed diff addition: num_samples=", self._covdcovmtx.num_samples,
-                    print "num_diffs=", self._covdcovmtx.num_diffs
-                    print "sum_x[0]/num_samples=", self._covdcovmtx.sum_x[0] / self._covdcovmtx.num_samples
+                    print("After mixed diff addition: num_samples=", self._covdcovmtx.num_samples)
+                    print("num_diffs=", self._covdcovmtx.num_diffs)
+                    print("sum_x[0]/num_samples=", self._covdcovmtx.sum_x[0] / self._covdcovmtx.num_samples)
 
-                    print "\n Adding complete graph for unlabeled data"
+                    print("\n Adding complete graph for unlabeled data")
                     self._covdcovmtx.update_clustered_homogeneous_block_sizes(x, weight=additional_weight_unlabeled,
                                                                               block_size=N2)
-                    print "After complete x2 addition: num_samples=", self._covdcovmtx.num_samples,
-                    print "num_diffs=", self._covdcovmtx.num_diffs
-                    print "sum_x[0]/num_samples=", self._covdcovmtx.sum_x[0] / self._covdcovmtx.num_samples
+                    print("After complete x2 addition: num_samples=", self._covdcovmtx.num_samples)
+                    print("num_diffs=", self._covdcovmtx.num_diffs)
+                    print("sum_x[0]/num_samples=", self._covdcovmtx.sum_x[0] / self._covdcovmtx.num_samples)
 
-                    #        print "\n Removing node weights of unlabeled data"
-                    #        self._covdcovmtx.AddSamples(sum_prod_x_unlabeled, sum_x_unlabeled, N2,
-                    # -1*(node_weights2+additional_weight_unlabeled) )
-                    #        print "self._covdcovmtx.num_samples=", self._covdcovmtx.num_samples,
-                    # "self._covdcovmtx.num_diffs=", self._covdcovmtx.num_diffs
                 elif train_mode == 'smart_unlabeled3':
-                    print "smart_unlabeled3"
+                    print("smart_unlabeled3")
                     N2 = x.shape[0]
 
                     N1 = Q1 = self._covdcovmtx.num_samples * 1.0
                     R1 = self._covdcovmtx.num_diffs * 1.0
-                    print "N1=Q1=", Q1, "R1=", R1, "N2=", N2
+                    print("N1=Q1=", Q1, "R1=", R1, "N2=", N2)
 
                     v = 2.0 ** (-9.5)  # 500.0/4500 #weight of unlabeled samples (making it "500" vs "500")
                     C = 10.0  # 10.0 #Clustered graph assumed, with C classes, and each one having N1/C samples
-                    print "v=", v, "C=", C
+                    print("v=", v, "C=", C)
 
                     v_norm = v / C
                     N1_norm = N1 / C
 
-                    # ##Store original values of important data
                     sum_x_labeled = self._covdcovmtx.sum_x.reshape((1, -1)) + 0.0
                     sum_prod_x_labeled = self._covdcovmtx.sum_prod_x + 0.0
 
-                    print "Original (Diag(C')/num_diffs.avg)**0.5 =", ((numpy.diagonal(
-                        self._covdcovmtx.sum_prod_diffs) / self._covdcovmtx.num_diffs).mean()) ** 0.5
+                    print("Original (Diag(C')/num_diffs.avg)**0.5 =", ((numpy.diagonal(
+                        self._covdcovmtx.sum_prod_diffs) / self._covdcovmtx.num_diffs).mean()) ** 0.5)
 
-                    # ##Adjust connections within labeled data
                     weight_adjustment = (N1_norm - 1) / (N1_norm - 1 + v_norm * N2)
-                    print "weight_adjustment =", weight_adjustment, "w11=", 1 / (N1_norm - 1 + v_norm * N2)
+                    print("weight_adjustment =", weight_adjustment, "w11=", 1 / (N1_norm - 1 + v_norm * N2))
                     # w1 = Q1*1.0/R1 * (1.0-weight_fraction_unlabeled)
 
                     self._covdcovmtx.sum_x *= weight_adjustment
@@ -262,13 +256,11 @@ class GSFANode(mdp.nodes.SFANode):
                     self._covdcovmtx.sum_prod_diffs *= weight_adjustment
                     self._covdcovmtx.num_diffs *= weight_adjustment
                     node_weights_complete_1 = weight_adjustment
-                    print "num_diffs (w11) after weight_adjustment=", self._covdcovmtx.num_diffs
+                    print("num_diffs (w11) after weight_adjustment=", self._covdcovmtx.num_diffs)
                     w11 = 1 / (N1_norm - 1 + v_norm * N2)
-                    # print "Updated self._covdcovmtx.num_diffs=", self._covdcovmtx.num_diffs,
-                    # "Updated self._covdcovmtx.sum_prod_diffs=", self._covdcovmtx.sum_prod_diffs
-                    print "After adjustment (Diag(C')/num_diffs.avg)**0.5 =", ((numpy.diagonal(
-                        self._covdcovmtx.sum_prod_diffs) / self._covdcovmtx.num_diffs).mean()) ** 0.5
-                    print ""
+                    print("After adjustment (Diag(C')/num_diffs.avg)**0.5 =", ((numpy.diagonal(
+                        self._covdcovmtx.sum_prod_diffs) / self._covdcovmtx.num_diffs).mean()) ** 0.5)
+                    print("")
 
                     # ##Connections within unlabeled data (notice that C times this is equivalent to
                     # v*v/(N1+v*(N2-1)) once)
@@ -278,51 +270,51 @@ class GSFANode(mdp.nodes.SFANode):
                     node_weights_complete_2 = w22 * (N2 - 1) * C
                     self._covdcovmtx.update_clustered_homogeneous_block_sizes(x, weight=node_weights_complete_2,
                                                                               block_size=N2)
-                    print "w22=", w22, "node_weights_complete_2*N2=", node_weights_complete_2 * N2
-                    print "After adding complete 2: num_samples=", self._covdcovmtx.num_samples,
-                    print "num_diffs=", self._covdcovmtx.num_diffs
-                    print " (Diag(C')/num_diffs.avg)**0.5 =", ((numpy.diagonal(
-                        self._covdcovmtx.sum_prod_diffs) / self._covdcovmtx.num_diffs).mean()) ** 0.5
-                    print ""
+                    print("w22=", w22, "node_weights_complete_2*N2=", node_weights_complete_2 * N2)
+                    print("After adding complete 2: num_samples=", self._covdcovmtx.num_samples)
+                    print("num_diffs=", self._covdcovmtx.num_diffs)
+                    print(" (Diag(C')/num_diffs.avg)**0.5 =", ((numpy.diagonal(
+                        self._covdcovmtx.sum_prod_diffs) / self._covdcovmtx.num_diffs).mean()) ** 0.5)
+                    print("")
 
-                    # ##Connections between labeled and unlabeled samples
+                    # Connections between labeled and unlabeled samples
                     w12 = 2 * 0.5 * v_norm * (1 / (N1_norm - 1 + v_norm * N2) + 1 / (
                         N1_norm + v_norm * (N2 - 1)))  # Accounts for transitions in both directions
-                    print "(twice) w12=", w12
+                    print("(twice) w12=", w12)
                     sum_prod_diffs_mixed = w12 * (N1 * sum_prod_x_unlabeled -
                                                   (mdp.utils.mult(sum_x_labeled.T, sum_x_unlabeled) +
                                                    mdp.utils.mult(sum_x_unlabeled.T, sum_x_labeled)) +
                                                   N2 * sum_prod_x_labeled)
                     self._covdcovmtx.sum_prod_diffs += sum_prod_diffs_mixed
                     self._covdcovmtx.num_diffs += C * N1_norm * N2 * w12  # w12 already counts twice
-                    print " (Diag(mixed)/num_diffs.avg)**0.5 =", ((numpy.diagonal(sum_prod_diffs_mixed) /
-                                                                   (C * N1_norm * N2 * w12)).mean()) ** 0.5, "\n"
+                    print(" (Diag(mixed)/num_diffs.avg)**0.5 =", ((numpy.diagonal(sum_prod_diffs_mixed) /
+                                                                   (C * N1_norm * N2 * w12)).mean()) ** 0.5, "\n")
 
                     # Additional adjustment for node weights of unlabeled data
                     missing_weight_unlabeled = v - node_weights_complete_2
                     missing_weight_labeled = 1.0 - node_weights_complete_1
-                    print "missing_weight_unlabeled=", missing_weight_unlabeled
-                    print "Before two final AddSamples: num_samples=", self._covdcovmtx.num_samples,
-                    print "num_diffs=", self._covdcovmtx.num_diffs
+                    print("missing_weight_unlabeled=", missing_weight_unlabeled)
+                    print("Before two final AddSamples: num_samples=", self._covdcovmtx.num_samples)
+                    print("num_diffs=", self._covdcovmtx.num_diffs)
                     self._covdcovmtx.AddSamples(sum_prod_x_unlabeled, sum_x_unlabeled, N2, missing_weight_unlabeled)
                     self._covdcovmtx.AddSamples(sum_prod_x_labeled, sum_x_labeled, N1, missing_weight_labeled)
-                    print "Final transformation: num_samples=", self._covdcovmtx.num_samples,
-                    print "num_diffs=", self._covdcovmtx.num_diffs
-                    print "Summary v11=%f+%f, v22=%f+%f" % (weight_adjustment, missing_weight_labeled,
-                                                            node_weights_complete_2, missing_weight_unlabeled)
-                    print "Summary w11=%f, w22=%f, w12(two ways)=%f" % (w11, w22, w12)
-                    print "Summary (N1/C-1)*w11=%f, N2*w12 (one way)=%f" % ((N1 / C - 1) * w11, N2 * w12 / 2)
-                    print "Summary (N2-1)*w22*C=%f, N1*w12 (one way)=%f" % ((N2 - 1) * w22 * C, N1 * w12 / 2)
-                    print "Summary (Diag(C')/num_diffs.avg)**0.5 =", ((numpy.diagonal(
-                        self._covdcovmtx.sum_prod_diffs) / self._covdcovmtx.num_diffs).mean()) ** 0.5
+                    print("Final transformation: num_samples=", self._covdcovmtx.num_samples)
+                    print("num_diffs=", self._covdcovmtx.num_diffs)
+                    print("Summary v11=%f+%f, v22=%f+%f" % (weight_adjustment, missing_weight_labeled,
+                                                            node_weights_complete_2, missing_weight_unlabeled))
+                    print("Summary w11=%f, w22=%f, w12(two ways)=%f" % (w11, w22, w12))
+                    print("Summary (N1/C-1)*w11=%f, N2*w12 (one way)=%f" % ((N1 / C - 1) * w11, N2 * w12 / 2))
+                    print("Summary (N2-1)*w22*C=%f, N1*w12 (one way)=%f" % ((N2 - 1) * w22 * C, N1 * w12 / 2))
+                    print("Summary (Diag(C')/num_diffs.avg)**0.5 =", ((numpy.diagonal(
+                        self._covdcovmtx.sum_prod_diffs) / self._covdcovmtx.num_diffs).mean()) ** 0.5)
                 elif train_mode == 'ignore_data':
-                    print "Training graph: ignoring data"
+                    print("Training graph: ignoring data")
                 else:
                     ex = "Unknown training method"
                     raise Exception(ex)
 
     def _inverse(self, y):
-        """ uses a pseudoinverse of the matrix sf to approximate an inverse to the transformation.
+        """ This function uses a pseudoinverse of the matrix sf to approximate an inverse to the transformation.
         """
         if self.pinv is None:
             self.pinv = pinv(self.sf)
@@ -330,12 +322,14 @@ class GSFANode(mdp.nodes.SFANode):
 
     # TODO: write correct interface to enable for excecution_read, excecution_save
     # TODO: check integer vs float arguments in parallelization
-    # This function could also be called _train_with_scheduler
+    # TODO: This function could also be called _train_with_scheduler
     def _train(self, x, block_size=None, train_mode=None, node_weights=None, edge_weights=None, scheduler=None,
                n_parallel=None):
-        """ training funcion when an mdp scheduler is provided. 
-        Experimental and buggy code, please do not use it at the time. 
-        Intel MKL is preferred to using this method.
+        """ This code is the training funcion when an mdp scheduler is provided (otherwise it resorts to the
+        _train_without_scheduler version).
+
+        The use of an scheduler is still in an experimental and buggy state, please do not use the scheduler.
+        The use of parallelization through Intel MKL is preferred to using this method.
         """
         self._train_phase_started = True
         if train_mode is None:
@@ -343,15 +337,10 @@ class GSFANode(mdp.nodes.SFANode):
         if block_size is None:
             block_size = self.block_size
         if scheduler is None or n_parallel is None or train_mode is None:
-            # print "NO parallel sfa done...  scheduler=", ,uler, " n_parallel=", n_parallel
-            print "BLOCK_SIZE=", block_size
+            print("BLOCK_SIZE=", block_size)
             return self._train_without_scheduler(x, block_size=block_size, train_mode=train_mode,
                                                  node_weights=node_weights, edge_weights=edge_weights)
         else:
-            # self._covdcovmtx.update_clustered_homogeneous_block_sizes(x, weight=1.0)
-
-            # chunk_size=None
-            # num_chunks = n_parallel
             num_chunks = min(n_parallel, x.shape[0] / block_size)  # WARNING, cover case where the division is not exact
             # here chunk_size is given in blocks!!!
             # chunk_size = int(numpy.ceil((x.shape[0]/block_size)*1.0/num_chunks))
@@ -359,12 +348,12 @@ class GSFANode(mdp.nodes.SFANode):
 
             # Notice that parallel training doesn't work with clustered mode and inhomogeneous blocks
             # TODO:Fix this
-            print "%d chunks, of size %d blocks, last chunk contains %d blocks" % \
-                  (num_chunks, chunk_size, (x.shape[0] / block_size) % chunk_size)
+            print("%d chunks, of size %d blocks, last chunk contains %d blocks" % \
+                  (num_chunks, chunk_size, (x.shape[0] / block_size) % chunk_size))
             if train_mode == 'clustered':
                 # TODO: Implement this
                 for i in range(num_chunks):
-                    print "Adding scheduler task //////////////////////"
+                    print("Adding scheduler task")
                     sys.stdout.flush()
                     if i < num_chunks - 1:
                         scheduler.add_task(
@@ -373,23 +362,23 @@ class GSFANode(mdp.nodes.SFANode):
                     else:  # i == num_chunks - 1
                         scheduler.add_task((x[i * block_size * chunk_size:], block_size, 1.0),
                                            ComputeCovDcovMatrixClustered)
-                    print "Done Adding scheduler task ///////////////////"
+                    print("Done Adding scheduler task ///////////////////")
                     sys.stdout.flush()
             elif train_mode == 'serial':
                 for i in range(num_chunks):
                     if i == 0:
-                        print "adding task %d from sample " % i, i * block_size * chunk_size,
-                        print "to", (i + 1) * block_size * chunk_size
+                        print("adding task %d from sample " % i, i * block_size * chunk_size)
+                        print("to", (i + 1) * block_size * chunk_size)
                         scheduler.add_task(
                             (x[i * block_size * chunk_size:(i + 1) * block_size * chunk_size], block_size),
                             ComputeCovDcovMatrixSerial)
                     elif i == num_chunks - 1:  # Add one previous block to the chunk
-                        print "adding task %d from sample " % i, i * block_size * chunk_size - block_size, "to the end"
+                        print("adding task %d from sample " % i, i * block_size * chunk_size - block_size, "to the end")
                         scheduler.add_task((x[i * block_size * chunk_size - block_size:], block_size),
                                            ComputeCovDcovMatrixSerial)
                     else:
-                        print "adding task %d from sample " % i, i * block_size * chunk_size - block_size,
-                        print "to", (i + 1) * block_size * chunk_size
+                        print("adding task %d from sample " % i, i * block_size * chunk_size - block_size)
+                        print("to", (i + 1) * block_size * chunk_size)
                         scheduler.add_task((x[i * block_size * chunk_size -
                                               block_size:(i + 1) * block_size * chunk_size], block_size),
                                            ComputeCovDcovMatrixSerial)
@@ -397,7 +386,7 @@ class GSFANode(mdp.nodes.SFANode):
                 bs = block_size
                 self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[0:bs], weight=0.5)
 
-                # xxxx self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[bs:-bs], weight=1.0)
+                # self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[bs:-bs], weight=1.0)
                 x2 = x[bs:-bs]
                 # num_chunks2 = int(numpy.ceil((x2.shape[0]/block_size-2)*1.0/chunk_size))
                 num_chunks2 = int((x2.shape[0] / block_size - 2) / chunk_size)
@@ -412,7 +401,7 @@ class GSFANode(mdp.nodes.SFANode):
 
                 self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[-bs:], weight=0.5)
 
-                # xxxx self._covdcovmtx.updateSerial(x, torify=False)
+                # self._covdcovmtx.updateSerial(x, torify=False)
                 for i in range(num_chunks):
                     if i == 0:
                         scheduler.add_task(
@@ -428,24 +417,23 @@ class GSFANode(mdp.nodes.SFANode):
             elif train_mode == 'unlabeled':
                 # TODO: IMPLEMENT THIS
                 for i in range(num_chunks):
-                    print "Adding scheduler task //////////////////////"
+                    print("Adding scheduler task")
                     sys.stdout.flush()
                     # BUG:Why am I adding here the clustered graph!!!
                     scheduler.add_task(
                         (x[i * block_size * chunk_size:(i + 1) * block_size * chunk_size], block_size, 1.0),
                         ComputeCovDcovMatrixClustered)
-                    print "Done Adding scheduler task ///////////////////"
+                    print("Done Adding scheduler task")
                     sys.stdout.flush()
             # TODO:ADD support for regular/standard mode
             else:
                 ex = "Unknown training method:", self.train_mode
                 raise Exception(ex)
 
-            print "Getting results"
+            print("Getting results")
             sys.stdout.flush()
 
             results = scheduler.get_results()
-            # print "Shutting down scheduler"
             sys.stdout.flush()
 
             for covdcovmtx in results:
@@ -453,30 +441,15 @@ class GSFANode(mdp.nodes.SFANode):
 
     # TODO: consider removing pca_term and pca_exp
     def _stop_training(self, debug=False, verbose=False, pca_term=0.995, pca_exp=2.0):
-        if ((self.block_size is None) or (isinstance(self.block_size, int) and self.block_size == 1)) and False:
-            # #### request the covariance matrices and clean up
-            self.cov_mtx, self.avg, self.tlen = self._cov_mtx.fix()
-            del self._cov_mtx
-            self.dcov_mtx, davg, dtlen = self._dcov_mtx.fix()
-            del self._dcov_mtx
-            print "Finishing training (regular2222). %d tlen, %d tlen of diff" % (self.tlen, dtlen)
-            print "Avg[0:3] is", self.avg[0:3]
-            print "Cov[0:3,0:3] is", self.cov_mtx[0:3, 0:3]
-            print "DCov[0:3,0:3] is", self.dcov_mtx[0:3, 0:3]
-        else:
-            if verbose or True:
-                print "stop_training: self.block_size=", self.block_size
-            print "self._covdcovmtx.num_samples = ", self._covdcovmtx.num_samples
-            print "self._covdcovmtx.num_diffs= ", self._covdcovmtx.num_diffs
-            self.cov_mtx, self.avg, self.dcov_mtx = self._covdcovmtx.fix()
+        if verbose or True:
+            print("stop_training: self.block_size=", self.block_size)
+        print("self._covdcovmtx.num_samples = ", self._covdcovmtx.num_samples)
+        print("self._covdcovmtx.num_diffs= ", self._covdcovmtx.num_diffs)
+        self.cov_mtx, self.avg, self.dcov_mtx = self._covdcovmtx.fix()
 
-            print "Finishing GSFA training: ", self._covdcovmtx.num_samples,
-            print " num_samples, and ", self._covdcovmtx.num_diffs, " num_diffs"
-            #        print "Avg[0:3] is", self.avg[0:4]
-            #        print "Prod_avg_x[0:3,0:3] is", prod_avg_x[0:3,0:3]
-            #        print "Cov[0:3,0:3] is", self.cov_mtx[0:3,0:3]
-            print "DCov[0:3,0:3] is", self.dcov_mtx[0:3, 0:3]
-            #        quit()
+        print("Finishing GSFA training: ", self._covdcovmtx.num_samples)
+        print(" num_samples, and ", self._covdcovmtx.num_diffs, " num_diffs")
+        print("DCov[0:3,0:3] is", self.dcov_mtx[0:3, 0:3])
 
         if pca_term != 0.0 and False:
             signs = numpy.sign(self.dcov_mtx)
@@ -485,14 +458,14 @@ class GSFANode(mdp.nodes.SFANode):
             self.dcov_mtx = numpy.identity(self.dcov_mtx.shape[0])
         rng = self._set_range()
 
-        # ### solve the generalized eigenvalue problem
+        # Solve the generalized eigenvalue problem
         # the eigenvalues are already ordered in ascending order
         # WARNING, moved dcov to the second argument!!!
         # self.d, self.sf = self._symeig(self.dcov_mtx, self.cov_mtx, range=rng, overwrite=(not debug))
         # TODO: Only remove first eigenvalue and ignore negative eigenvalues (now there are features with
         # negative delta value)
         try:
-            print "***Range used=", rng
+            print("***Range used=", rng)
             # ##            if self.sfa_expo != None and self.pca_expo!=None:
             # ##                self.d, self.sf = _symeig_fake_regularized(self.dcov_mtx, self.cov_mtx, range=rng,
             # overwrite=(not debug), sfa_expo=self.sfa_expo, pca_expo=self.pca_expo,
@@ -512,10 +485,12 @@ class GSFANode(mdp.nodes.SFANode):
         del self.dcov_mtx
         self.cov_mtx = self.dcov_mtx = self._covdcovmtx = None
         self._bias = mult(self.avg, self.sf)
-        print "shape of GSFANode.sf is=", self.sf.shape
+        print("shape of GSFANode.sf is=", self.sf.shape)
 
+##############################################################################################################
+#                              HELPER FUNCTIONS                                                              #
+##############################################################################################################
 
-# ######################################### HELPER FUNCTIONS
 def graph_delta_values(y, edge_weights):
     """ Computes delta values from an arbitrary graph as in the objective 
     function of GSFA. The feature vectors are not normalized to weighted 
@@ -556,11 +531,11 @@ def Hamming_weight(integer_list):
         raise Exception(er)
 
 
-# ####################################
-# Special purpose class to compute the covariance matrices used by GSFA.
-# It supports efficiently training methods for various graphs: clustered, serial, mixed
 # TODO: Remove unneeded global variables
 class CovDCovMatrix(object):
+    """Special purpose class to compute the covariance matrices used by GSFA.
+       It supports efficiently training methods for various graphs: e.g., clustered, serial, mixed.
+    """
     def __init__(self, block_size=None):
         self.block_size = block_size
         self.sum_x = None
@@ -613,8 +588,8 @@ class CovDCovMatrix(object):
         self.AddSamples(sum_prod_x, sum_x, num_samples, weight)
 
     # TODO:Add option to skip last sample from Cov part.
-    # This is equivalent to regular SFA training
     def updateRegular(self, x, weight=1.0):
+        """This is equivalent to regular SFA training. """
         num_samples, dim = x.shape
 
         # Update Cov Matrix
@@ -629,9 +604,11 @@ class CovDCovMatrix(object):
         sum_prod_diffs = mdp.utils.mult(diffs.T, diffs)
         self.AddDiffs(sum_prod_diffs, num_diffs, weight)
 
-    # Updates the covariance/second moment matrices using a graph (samples, node weights, edge weights)
-    # Usually: sum(node_weights)=num_samples
     def updateGraph(self, x, node_weights=None, edge_weights=None, weight=1.0):
+        """Updates the covariance/second moment matrices using a graph (samples, node weights, edge weights).
+
+         Usually sum(node_weights) = num_samples.
+         """
         num_samples, dim = x.shape
 
         if node_weights is None:
@@ -687,8 +664,8 @@ class CovDCovMatrix(object):
             weighted_sum_prod_diffs = mdp.utils.mult(diffs.T, weighted_diffs)
             self.AddDiffs(weighted_sum_prod_diffs, weighted_num_diffs, weight=weight)
 
-    # Same as updateGraph, however the code has not been optimized
     def updateGraphOld(self, x, node_weights=None, edge_weights=None, weight=1.0):
+        """This method performs the same task as updateGraph, however it has not been optimized."""
         num_samples, dim = x.shape
 
         if node_weights is None:
@@ -954,7 +931,7 @@ class CovDCovMatrix(object):
         num_diffs = (num_samples * (2 * width) -
                      2 * width * (width + 1) / 2)  # not counting zero differences, unverified
         self.AddDiffs(sum_prod_diffs_full, num_diffs, weight)
-        print ":|"
+        print(":|")
 
     # ################## Sliding window with node-weight correction #################
     def updateFastSlidingWindow(self, x, weight=1.0, window_halfwidth=2):
@@ -1014,22 +991,6 @@ class CovDCovMatrix(object):
 
         Aacc123 += (2 * width + 1) * mdp.utils.mult(x_middle.T, x_middle)
 
-        # #        a = numpy.zeros((num_samples+1, dim, dim))
-        # #        x1 = numpy.reshape(x, (num_samples, dim, 1))
-        # #        x2 = numpy.reshape(x, (num_samples, 1, dim))
-        # #        pp =numpy.multiply(x1, x2)
-        # #        #print "pp[0]", pp[0], pp.shape
-        # #        #for i in range(1,num_samples+1):
-        # #        #    #reimplement this using sumcum?
-        # #        #    a[i] = a[i-1] + mdp.utils.mult(x[i-1:i,:].T, x[i-1:i,:])
-        # #        #print "a[1]", a[1]
-        # #        #
-        # #        #a2 = a + 0.0
-        # #        a[1:] = pp.cumsum(axis=0)
-        # print "a[-1]", a[-1]
-        # print "a2[-1]", a2[-1]
-        # print "a[i]", a[i]
-        #        print "a[0:2]", a[0:2]
         b = numpy.zeros((num_samples + 1, dim))
         b[1:] = x.cumsum(axis=0)
         #        for i in range(1,num_samples+1):
@@ -1045,7 +1006,6 @@ class CovDCovMatrix(object):
         num_diffs = (num_samples - 2 * width) * (2 * width)  # removed zero differences
         #         print "N3=", num_diffs
         self.AddDiffs(sum_prod_diffs_full, num_diffs, weight)
-        # Add sliding window data to covariance matrices
 
     def updateSlidingWindow(self, x, weight=1.0, window_halfwidth=2):
         num_samples, dim = x.shape
@@ -1054,8 +1014,8 @@ class CovDCovMatrix(object):
             ex = "window_halfwidth %d not supported for %d samples!" % (width, num_samples)
             raise Exception(ex)
 
-            # Update Cov Matrix
-            # Warning, truncating samples to avoid edge problems
+        # Update Cov Matrix
+        # Warning, truncating samples to avoid edge problems
         # TRUNCATED VERSION
         #        x_sel = x[window_halfwidth:-window_halfwidth,:]
         #        sum_x = x_sel.sum(axis=0)
@@ -1199,7 +1159,7 @@ class CovDCovMatrix(object):
         if block_sizes is None:
             er = "error, block_size not specified!!!!"
             raise Exception(er)
-            block_sizes = self.block_size
+            # block_sizes = self.block_size
 
         if num_samples != numpy.array(block_sizes).sum():
             err = "Inconsistency error: num_samples (%d) is not equal to sum of block_sizes:" % num_samples, block_sizes
@@ -1214,7 +1174,7 @@ class CovDCovMatrix(object):
             counter_sample += block_size
 
     def update_clustered_homogeneous_block_sizes(self, x, weight=1.0, block_size=None, include_self_loops=True):
-        print "update_clustered_homogeneous_block_sizes ",
+        print("update_clustered_homogeneous_block_sizes ")
         if block_size is None:
             er = "error, block_size not specified!!!!"
             raise Exception(er)
@@ -1246,19 +1206,19 @@ class CovDCovMatrix(object):
         sum_prod_meds = mdp.utils.mult(media.T, media)
         # FIX1: AFTER DT in (0,4) normalization
         num_diffs = num_blocks * block_size  # ## * (block_size-1+1) / (block_size-1)
-        print "num_diffs in block:", num_diffs, " num_samples:", num_samples
+        print("num_diffs in block:", num_diffs, " num_samples:", num_samples)
         if include_self_loops:
             sum_prod_diffs = 2.0 * block_size * (sum_prod_x - block_size * sum_prod_meds) / block_size
         else:
             sum_prod_diffs = 2.0 * block_size * (sum_prod_x - block_size * sum_prod_meds) / (block_size - 1)
 
         self.AddDiffs(sum_prod_diffs, num_diffs, weight)
-        print "(Diag(complete)/num_diffs.avg)**0.5 =", ((numpy.diagonal(sum_prod_diffs) / num_diffs).mean()) ** 0.5
+        print("(Diag(complete)/num_diffs.avg)**0.5 =", ((numpy.diagonal(sum_prod_diffs) / num_diffs).mean()) ** 0.5)
 
     def update_compact_classes(self, x, block_sizes=None, Jdes=None, weight=1.0):
         num_samples, dim = x.shape
 
-        print "block_sizes=", block_sizes, type(block_sizes)
+        print("block_sizes=", block_sizes, type(block_sizes))
         if isinstance(block_sizes, list):
             block_sizes = numpy.array(block_sizes)
 
@@ -1287,7 +1247,7 @@ class CovDCovMatrix(object):
             Jdes = J
         extra_label = Jdes - J  # 0, 1, 2
 
-        print "Besides J=%d labels, also adding %d labels" % (J, extra_label)
+        print("Besides J=%d labels, also adding %d labels" % (J, extra_label))
 
         if num_classes != 2 ** J:
             err = "Inconsistency error: num_clases %d does not appear to be a power of 2" % num_classes
@@ -1317,12 +1277,12 @@ class CovDCovMatrix(object):
 
         eigenvalues = numpy.array(eigenvalues)
 
-        print "Eigenvalues:", eigenvalues
+        print("Eigenvalues:", eigenvalues)
         eigenvalues /= eigenvalues.sum()
-        print "Eigenvalues normalized:", eigenvalues
+        print("Eigenvalues normalized:", eigenvalues)
 
         for j in range(J + extra_label):
-            print "labels[%d]=" % j, labels[:, j]
+            print("labels[%d]=" % j, labels[:, j])
 
         for j in range(J + extra_label):
             set10 = x[labels[:, j] == -1]
@@ -1350,7 +1310,7 @@ class CovDCovMatrix(object):
 
     def fix(self, divide_by_num_samples_or_differences=True, verbose=False, center_dcov=False):  # include_tail=False,
         if verbose:
-            print "Fixing CovDCovMatrix, with block_size=", self.block_size
+            print("Fixing CovDCovMatrix, with block_size=", self.block_size)
 
         avg_x = self.sum_x * (1.0 / self.num_samples)
 
@@ -1392,51 +1352,51 @@ class CovDCovMatrix(object):
 
 # This function is used by patch_mdp
 def ComputeCovMatrix(x, verbose=False):
-    print "PCov",
+    print("PCov")
     if verbose:
-        print "Computation Began!!! **********************************************************"
+        print("Computation Began!!! **********************************************************")
         sys.stdout.flush()
     covmtx = CovarianceMatrix(bias=True)
     covmtx.update(x)
     if verbose:
-        print "Computation Ended!!! **********************************************************"
+        print("Computation Ended!!! **********************************************************")
         sys.stdout.flush()
     return covmtx
 
 
 def ComputeCovDcovMatrixClustered(params, verbose=False):
-    print "PComp",
+    print("PComp")
     if verbose:
-        print "Computation Began!!! **********************************************************"
+        print("Computation Began!!! **********************************************************")
         sys.stdout.flush()
     x, block_size, weight = params
     covdcovmtx = CovDCovMatrix(block_size)
     covdcovmtx.update_clustered_homogeneous_block_sizes(x, block_size=block_size, weight=weight)
     if verbose:
-        print "Computation Ended!!! **********************************************************"
+        print("Computation Ended!!! **********************************************************")
         sys.stdout.flush()
     return covdcovmtx
 
 
 def ComputeCovDcovMatrixSerial(params, verbose=False):
-    print "PSeq",
+    print("PSeq")
     if verbose:
-        print "Computation Began!!! **********************************************************"
+        print("Computation Began!!! **********************************************************")
         sys.stdout.flush()
     x, block_size = params
     torify = False
     covdcovmtx = CovDCovMatrix(block_size)
     covdcovmtx.updateSerial(x, block_size=block_size, torify=torify)
     if verbose:
-        print "Computation Ended!!! **********************************************************"
+        print("Computation Ended!!! **********************************************************")
         sys.stdout.flush()
     return covdcovmtx
 
 
 def ComputeCovDcovMatrixMixed(params, verbose=False):
-    print "PMixed",
+    print("PMixed")
     if verbose:
-        print "Computation Began!!! **********************************************************"
+        print("Computation Began!!! **********************************************************")
         sys.stdout.flush()
     x, block_size = params
     bs = block_size
@@ -1446,19 +1406,19 @@ def ComputeCovDcovMatrixMixed(params, verbose=False):
     covdcovmtx.update_clustered_homogeneous_block_sizes(x[-bs:], block_size=block_size, weight=0.5)
     covdcovmtx.updateSerial(x, block_size=block_size, torify=False)
     if verbose:
-        print "Computation Ended!!! **********************************************************"
+        print("Computation Ended!!! **********************************************************")
         sys.stdout.flush()
     return covdcovmtx
 
 
 #########################################################################################################
-# ##################################### TESTS ############################################################
+#                                  TESTS                                                                #
 #########################################################################################################
 
 
 def basic_test_GSFA_edge_dict():
-    print "******************************************************************"
-    print "*Basic test of GSFA on random data and graph, edge dictionary mode"
+    print("******************************************************************")
+    print("*Basic test of GSFA on random data and graph, edge dictionary mode")
     x = numpy.random.normal(size=(200, 15))
     v = numpy.ones(200)
     e = {}
@@ -1471,11 +1431,11 @@ def basic_test_GSFA_edge_dict():
     n.stop_training()
 
     y = n.execute(x)
-    print "Graph delta values of training data", graph_delta_values(y, e)
+    print("Graph delta values of training data", graph_delta_values(y, e))
 
     x2 = numpy.random.normal(size=(200, 15))
     y2 = n.execute(x2)
-    print "Graph delta values of test data (should be larger than for training)", graph_delta_values(y2, e)
+    print("Graph delta values of test data (should be larger than for training)", graph_delta_values(y2, e))
 
 # SUMMARY:
 # Mirroring windows work fine in slow and fast versions
@@ -1486,9 +1446,9 @@ def basic_test_GSFA_edge_dict():
 
 
 def test_equivalence_SFA_GSFA_linear_graph():
-    print ""
-    print "*********************************************************************"
-    print "Testing equivalence of Standard SFA and an appropriate graph for GSFA"
+    print("")
+    print("*********************************************************************")
+    print("Testing equivalence of Standard SFA and an appropriate graph for GSFA")
     x = numpy.random.normal(size=(200, 15))
     x2 = numpy.random.normal(size=(200, 15))
 
@@ -1498,36 +1458,36 @@ def test_equivalence_SFA_GSFA_linear_graph():
         e[(t, t + 1)] = 1.0
     e[(0, 0)] = 0.5
     e[(199, 199)] = 0.5
-    print "Training GSFA:"
+    print("Training GSFA:")
     n = GSFANode(output_dim=5)
     n.train(x, train_mode="graph", node_weights=v, edge_weights=e)
     n.stop_training()
 
-    print "Training SFA:"
+    print("Training SFA:")
     n_sfa = mdp.nodes.SFANode(output_dim=5)
     n_sfa.train(x)
     n_sfa.stop_training()
 
-    print "/" * 10, "Brute delta values of GSFA features (training/test):"
+    print("/" * 10, "Brute delta values of GSFA features (training/test):")
     y = n.execute(x)
-    print graph_delta_values(y, e)
+    print(graph_delta_values(y, e))
 
     y2 = n.execute(x2)
-    print graph_delta_values(y2, e)
+    print(graph_delta_values(y2, e))
 
-    print "-" * 10, "Brute delta values of SFA features (training/test):"
+    print("-" * 10, "Brute delta values of SFA features (training/test):")
 
     y_sfa = n_sfa.execute(x)
-    print comp_delta(y_sfa)
+    print(comp_delta(y_sfa))
 
     y2_sfa = n_sfa.execute(x2)
-    print comp_delta(y2_sfa)
+    print(comp_delta(y2_sfa))
 
 
 def test_fast_windows():
-    print ""
-    print "***********************************************************************"
-    print "Testing equivalence of slow and fast mirroring sliding windows for GSFA"
+    print("")
+    print("***********************************************************************")
+    print("Testing equivalence of slow and fast mirroring sliding windows for GSFA")
     x = numpy.random.normal(size=(200, 15))
 
     training_modes = ("window3", "fwindow3", "smirror_window3", "mirror_window3")
@@ -1543,17 +1503,17 @@ def test_fast_windows():
 
         y = n.execute(x)
         delta = comp_delta(y)
-        print "**Brute Delta Values of mode %s are: " % training_mode, delta
+        print("**Brute Delta Values of mode %s are: " % training_mode, delta)
         delta_values.append(delta)
 
-    print delta_values
+    print(delta_values)
     # quit()
 
 
 def test_pathological_outputs(experiment):
-    print ""
-    print "**************************************************************************"
-    print "*Pathological responses. Experiment on graph with weakly connected samples"
+    print("")
+    print("**************************************************************************")
+    print("*Pathological responses. Experiment on graph with weakly connected samples")
     x = numpy.random.normal(size=(20, 19))
     x2 = numpy.random.normal(size=(20, 19))
 
@@ -1573,7 +1533,7 @@ def test_pathological_outputs(experiment):
     train_mode = "graph"
 
     # experiment = 0 #Select the experiment to perform, from 0 to 11
-    print "experiment", experiment
+    print("experiment", experiment)
     if experiment == 0:
         exp_title = "Original linear SFA graph"
     elif experiment == 1:
@@ -1656,12 +1616,12 @@ def test_pathological_outputs(experiment):
         n.train(x, train_mode="graph", node_weights=v, edge_weights=e)
     n.stop_training()
 
-    print "/" * 20, "Brute delta values of GSFA features (training/test):"
+    print("/" * 20, "Brute delta values of GSFA features (training/test):")
     y = n.execute(x)
     y2 = n.execute(x2)
     if e != {}:
-        print graph_delta_values(y, e)
-        print graph_delta_values(y2, e)
+        print(graph_delta_values(y, e))
+        print(graph_delta_values(y2, e))
 
     D = numpy.zeros(20)
     for (j1, j2) in e:
@@ -1684,9 +1644,9 @@ def test_pathological_outputs(experiment):
 
 
 def test_continuous_edge_weights():
-    print ""
-    print "**************************************************************************"
-    print "*Testing continuous edge weigths w_{n,n'} = 1/(|l_n'-l_n|+k)"
+    print("")
+    print("**************************************************************************")
+    print("*Testing continuous edge weigths w_{n,n'} = 1/(|l_n'-l_n|+k)")
     x = numpy.random.normal(size=(20, 19))
     x2 = numpy.random.normal(size=(20, 19))
 
@@ -1708,12 +1668,12 @@ def test_continuous_edge_weights():
     n.train(x, train_mode="graph", node_weights=v, edge_weights=e)
     n.stop_training()
 
-    print "/" * 20, "Brute delta values of GSFA features (training/test):"
+    print("/" * 20, "Brute delta values of GSFA features (training/test):")
     y = n.execute(x)
     y2 = n.execute(x2)
     if e != {}:
-        print graph_delta_values(y, e)
-        print graph_delta_values(y2, e)
+        print(graph_delta_values(y, e))
+        print(graph_delta_values(y2, e))
 
     D = numpy.zeros(20)
     for (j1, j2) in e:
@@ -1732,7 +1692,7 @@ def test_continuous_edge_weights():
     plt.show()
 
 #########################################################################################################
-# ######################## AN EXAMPLE: ###################################################################
+#                      AN EXAMPLE:                                                                      #
 #########################################################################################################
 
 
@@ -1745,7 +1705,7 @@ def example_clustered_graph():
     x = numpy.random.normal(size=(num_samples, dim))
     x += 0.1 * numpy.arange(num_samples).reshape((num_samples, 1))
 
-    print "x=", x
+    print("x=", x)
 
     GSFA_n = GSFANode(output_dim=output_dim)
 
@@ -1761,17 +1721,17 @@ def example_clustered_graph():
     GSFA_n.train(exp_x, train_mode="clustered", block_size=cluster_size)
     GSFA_n.stop_training()
 
-    print "GSFA_n.d=", GSFA_n.d
+    print("GSFA_n.d=", GSFA_n.d)
 
     y = GSFA_n.execute(Exp_n.execute(x))
-    print "y", y
-    print "Standard delta values of output features y:", comp_delta(y)
+    print("y", y)
+    print("Standard delta values of output features y:", comp_delta(y))
 
     x_test = numpy.random.normal(size=(num_samples, dim))
     x_test += 0.1 * numpy.arange(num_samples).reshape((num_samples, 1))
     y_test = GSFA_n.execute(Exp_n.execute(x_test))
-    print "y_test", y_test
-    print "Standard delta values of output features y_test:", comp_delta(y_test)
+    print("y_test", y_test)
+    print("Standard delta values of output features y_test:", comp_delta(y_test))
 
 
 if __name__ == "__main__":
