@@ -3096,7 +3096,7 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
         age_files_list_set1 = self.list_available_images(age_eyes_normalized_base_dir_set1, from_subdirs=None,
                                                          verbose=False)
         age_labeled_files_list_set1 = self.append_GT_labels_to_files(age_files_list_set1, age_all_labels_map_MORPH)
-        age_clusters_set1 = self.age_cluster_labeled_files(age_labeled_files_list_set1, repetition=4, num_clusters=32,
+        age_clusters_set1 = self.age_cluster_labeled_files(age_labeled_files_list_set1, repetition=22, num_clusters=32,
                                                            trim_number=None, shuffle_each_cluster=False)  # r=22
         # WARNING, should be: repetition=22
         # age_clusters_set1 = age_cluster_labeled_files(age_labeled_files_list_set1, repetition=16,
