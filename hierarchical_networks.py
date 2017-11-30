@@ -2936,7 +2936,7 @@ if LRec_use_RGB_images:
     network.layers[0].pca_out_dim = 56  # 50 Problem, more color components also remove higher
     # frequency ones = code image as intensity+color!!!
 else:
-    network.layers[0].pca_out_dim = 20  # 16 #20 #30 #28 #20 #22 more_feats2, 50 for RGB
+    network.layers[0].pca_out_dim =  26  # test B:26, normal:20  # 16 #20 #30 #28 #20 #22 more_feats2, 50 for RGB
 
 for i in range(1, len(network.layers), 2):
     network.layers[i].x_field_channels = 3
@@ -2950,7 +2950,9 @@ for i in range(2, len(network.layers), 2):
     network.layers[i].y_field_spacing = 2
 
 if not LRec_use_RGB_images:
-    HiGSFANet_out_dims = [18, 27, 37, 66, 79, 88, 88, 93, 95, 75, 75]  # New test
+    HiGSFANet_out_dims = [18, 27, 37, 66,  79,  88,  88,  93,  95,  75,  75]  # New test
+    HiGSFANet_out_dims = [19, 29, 42, 70,  90,  95, 105, 115, 125, 135, 145]  # New test larger dimensions A
+    HiGSFANet_out_dims = [21, 31, 48, 74, 110, 135, 145, 155,  95,  75, 145]  # New test larger dimensions B
     print("Number of network features set without RGB:", HiGSFANet_out_dims)
 else:
     print("unsupported")
@@ -2966,20 +2968,21 @@ expanded_dims = [180, 350, 423, 492, 552, 582, 435, 400, 400, 350, 1, 1]  # TEST
 # expanded_dims = [ 50, 150, 200, 250, 250, 300, 250, 150, 200, 200, 1, 1]  # Test
 # expanded_dims = [ 25,  70, 100, 125, 130, 140, 110,  75, 110, 100, 1, 1]  # Test
 
-offsetting_mode = "data_dependent"
-reconstruct_with_sfa = False
+offsetting_mode = "data_dependent"  # "sensitivity_based_offset", "sensitivity_based_pure" or "data_dependent"
+reconstruct_with_sfa = False  # True or False
 for i, layer in enumerate(network.layers):
     layer.sfa_node_class = mdp.nodes.iGSFANode
     layer.sfa_out_dim = HiGSFANet_out_dims[i]
     layer.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": "RandomSigmoids",
-                      "max_lenght_slow_part": None, "offsetting_mode": offsetting_mode,
+                      "max_lenght_slow_part": 16, "offsetting_mode": offsetting_mode,
                       "max_preserved_sfa": 1.91, "expansion_output_dim": expanded_dims[i],
                       "expansion_starting_point": "Pseudo-Identity", 
                       "reconstruct_with_sfa": reconstruct_with_sfa}  # 1.85, 1.91
     # #only for tuning/experimentation, official is below
 
-network.layers[0].sfa_args["max_preserved_sfa"] = 3
-network.layers[1].sfa_args["max_preserved_sfa"] = 4
+max_preserved_sfa = [3, 4, 4, 4, 5, 6, 6, 6, 7, 8]
+network.layers[0].sfa_args["max_preserved_sfa"] = max_preserved_sfa[0]
+network.layers[1].sfa_args["max_preserved_sfa"] = max_preserved_sfa[1]
 # network.layers[2].sfa_args["max_preserved_sfa"] = 1.933 + 0.003 + 0.0015
 # network.layers[3].sfa_args["max_preserved_sfa"] = 1.933 + 0.005 + 0.0015
 # network.layers[4].sfa_args["max_preserved_sfa"] = 1.933 + 0.005 + 0.0023
@@ -3001,13 +3004,14 @@ if double_SFA_top_node:
     layer.sfa_node_class = mdp.nodes.iGSFANode
     layer.sfa_out_dim = HiGSFANet_out_dims[9]
     layer.sfa_args = dict(layer.sfa_args)
-    layer.sfa_args["max_preserved_sfa"] = 1.9
+    layer.sfa_args["max_preserved_sfa"] = 3
     layer.sfa_args["expansion_output_dim"] = expanded_dims[9]
 
 my_DT = 1.985  # TEST B # 1.98 # 1.96  # =1.96, 3 Labels
 for i in range(2, 9):
-    network.layers[i].sfa_args["max_preserved_sfa"] = my_DT
-network.layers[8].pca_args["max_preserved_sfa"] = my_DT
+    network.layers[i].sfa_args["max_preserved_sfa"] = max_preserved_sfa[i]
+network.layers[8].pca_args["max_preserved_sfa"] = max_preserved_sfa[8]
+#network.layers[8].sfa_args["max_preserved_sfa"] = max_preserved_sfa[9]
 
 HiGSFANetworkU11L_Overlap6x6L0_Sigmoids_GUO_3Labels_96x96 = \
     copy.deepcopy(HiGSFANetworkU11L_Overlap6x6L0_Sigmoids_GUO_3Labels)
