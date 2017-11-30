@@ -1,3 +1,16 @@
+#####################################################################################################################
+# more_nodes: This module implements several new nodes and helper functions. It is part of the Cuicuilco framework  #
+#                                                                                                                   #
+# See the following publication for details:                                                                        #
+# Escalante-B A.-N., Wiskott L, "How to solve classication and regression problems on high-dimensional data with   #
+# a supervised extension of Slow Feature Analysis". Journal of Machine Learning Research 14:3683-3719, 2013         #
+#                                                                                                                   #
+# An example of using GSFA is provided at the end of the file                                                       #
+#                                                                                                                   #
+# By Alberto Escalante. Alberto.Escalante@neuroinformatik.ruhr-uni-bochum.de                                        #
+# Ruhr-University-Bochum, Institute for Neural Computation, Group of Prof. Dr. Wiskott                              #
+#####################################################################################################################
+
 import numpy
 import scipy
 import scipy.optimize
