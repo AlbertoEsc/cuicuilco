@@ -1,7 +1,8 @@
 #####################################################################################################################
 # more_nodes: This module implements several new nodes and helper functions. It is part of the Cuicuilco framework  #
 #                                                                                                                   #
-#                                                                                                                   #
+# These nodes include: BasicAdaptiveCutoffNode, SFA_GaussianClassifier, RandomizedMaskNode, GeneralExpansionNode,   #
+# PointwiseFunctionNode, RandomPermutationNode                                                                      #
 #                                                                                                                   #
 # By Alberto Escalante. Alberto.Escalante@ini.ruhr-uni-bochum.de                                                    #
 # Ruhr-University-Bochum, Institute for Neural Computation, Group of Prof. Dr. Wiskott                              #
@@ -22,6 +23,110 @@ from inversion import invert_exp_funcs2
 import inspect
 
 from histogram_equalization import *
+
+
+class BasicAdaptiveCutoffNode(mdp.PreserveDimNode):
+    """Node that allows to "cut off" values at bounds derived from the training data.
+
+    This node is similar to CutoffNode, but the bounds are computed based on the training data. And it is
+    also similar to AdaptiveCutoffNode, but no histograms are stored and the limits are hard.
+
+    This node does not have any have no effect on training data, only on test data and might improve generalization.
+    """
+
+    def __init__(self, input_dim=None, output_dim=None, dtype=None):
+        """Initialize node. """
+        super(BasicAdaptiveCutoffNode, self).__init__(input_dim=input_dim, output_dim=output_dim, dtype=dtype)
+        self.lower_bound = None
+        self.upper_bound = None
+
+    @staticmethod
+    def is_trainable():
+        return True
+
+    @staticmethod
+    def is_invertible():
+        return True
+
+    @staticmethod
+    def _get_supported_dtypes(self):
+        return (mdp.utils.get_dtypes('Float') +
+                mdp.utils.get_dtypes('AllInteger'))
+
+    def _train(self, x):
+        """Training method updates the lower and upper bounds. """
+        if self.lower_bound is None:
+            self.lower_bound = x.min(axis=0)
+        else:
+            self.lower_bound = numpy.minimum(self.lower_bound, x)
+
+        if self.upper_bound is None:
+            self.upper_bound = x.max(axis=0)
+        else:
+            self.upper_bound = numpy.maxium(self.upper_bound, x)
+
+    def _execute(self, x):
+        """Return the clipped data."""
+        return numpy.clip(x, self.lower_bound, self.upper_bound)
+
+    def _inverse(self, x):
+        """An approximate inverse. """
+        return x
+
+
+class SFA_GaussianClassifier(mdp.ClassifierNode):
+    """ This node is a simple extension of the GaussianClassifier node, where SFA is applied before the classifier.
+
+    The labels are important, since they are used to order the data samples before SFA.
+    """
+
+    def __init__(self, reduced_dim=None, verbose=False, **argv):
+        super(SFA_GaussianClassifier, self).__init__(**argv)
+        self.gc_node = mdp.nodes.GaussianClassifier()
+        self.reduced_dim = reduced_dim
+        if self.reduced_dim > 0:
+            self.sfa_node = mdp.nodes.SFANode(output_dim=self.reduced_dim)
+        else:
+            self.sfa_node = mdp.nodes.IdentityNode()
+        self.verbose = verbose
+
+    def _train(self, x, labels=None):
+        if self.reduced_dim > 0:
+            ordering = numpy.argsort(labels)
+            x_ordered = x[ordering, :]
+            self.sfa_node.train(x_ordered)
+            self.sfa_node.stop_training()
+            if self.verbose:
+                print("SFA_GaussianClassifier: sfa_node.d = ", self.sfa_node.d)
+        else:  # sfa_node is the identity node
+            pass
+        y = self.sfa_node.execute(x)
+        self.gc_node.train(y, labels=labels)
+        self.gc_node.stop_training()
+
+    def _label(self, x):
+        y = self.sfa_node.execute(x)
+        return self.gc_node.label(y)
+
+    def regression(self, x, avg_labels, estimate_std=False):
+        y = self.sfa_node.execute(x)
+        return self.gc_node.regression(y, avg_labels, estimate_std)
+
+    def regressionMAE(self, x, avg_labels):
+        y = self.sfa_node.execute(x)
+        return self.gc_node.regressionMAE(y, avg_labels)
+
+    def softCR(self, x, true_classes):
+        y = self.sfa_node.execute(x)
+        return self.gc_node.softCR(y, true_classes)
+
+    def class_probabilities(self, x):
+        y = self.sfa_node.execute(x)
+        return self.gc_node.class_probabilities(y)
+
+    @staticmethod
+    def is_trainable(self):
+        return True
 
 
 # using the provided average and standard deviation
@@ -250,7 +355,7 @@ class GeneralExpansionNode(mdp.Node):
                 out[:, current_pos:current_pos + self.expanded_dims[i]] = func(x)
                 current_pos += self.expanded_dims[i]
         else:
-            data_norm = self.normalization_constant * ( x - self.rs_data_training_mean) / self.rs_data_training_std
+            data_norm = self.normalization_constant * (x - self.rs_data_training_mean) / self.rs_data_training_std
             # A variation of He random weight initialization
             out = extract_sigmoid_features(data_norm, self.rs_coefficients, self.rs_offsets, scale=1.0, offset=0.0,
                                            use_special_features=self.use_special_features)
@@ -574,8 +679,8 @@ def describe_flow(flow):
         node_size = compute_node_size(node)
         total_size += node_size
 
-        print ("Node[%d] is %s, has input_dim=%d, output_dim=%d and size=%d" % (
-        i, str(node), node.input_dim, node.output_dim, node_size))
+        print ("Node[%d] is %s, has input_dim=%d, output_dim=%d and size=%d" % (i, str(node), node.input_dim,
+                                                                                node.output_dim, node_size))
         if isinstance(node, mdp.hinet.CloneLayer):
             print ("   contains %d cloned nodes of type %s, each with input_dim=%d, output_dim=%d" %
                    (len(node.nodes), str(node.nodes[0]), node.nodes[0].input_dim, node.nodes[0].output_dim))
@@ -633,9 +738,9 @@ def display_node_eigenvalues(node, i, mode="All"):
                         num_sfa_features += n.num_sfa_features_preserved
                     if out_sfa_filter:
                         filter_out += n.out_sfa_node.d
-                print (
-                "Node %d is a Layer that contains IEVMNodes containing SFANodes with avg(num_sfa_features_preserved)=%f and avg(d)=" % (
-                    i, node.nodes[0].num_sfa_features_preserved), out / len(node.nodes))
+                print ("Node %d is a Layer that contains IEVMNodes containing SFANodes" % i,
+                       "with avg(num_sfa_features_preserved)=%f"%node.nodes[0].num_sfa_features_preserved,
+                       "and avg(d)=" % out / len(node.nodes))
                 if out_sfa_filter:
                     print ("and output SFA filter with avg(out_sfa_node.d)=", filter_out / len(node.nodes))
 
@@ -671,8 +776,8 @@ def display_node_eigenvalues(node, i, mode="All"):
                 d_avg /= len(node.nodes)
                 evar_avg /= len(node.nodes)
                 avg_num_sfa_features /= len(node.nodes)
-                print ("Node %d"%i, "is a Layer that contains iGSFANodes containing SFANodes with " +
-                       "avg(num_sfa_features_preserved)=%f"%avg_num_sfa_features, "and avg(d)=%s" + str(d_avg) +
+                print ("Node %d" % i, "is a Layer that contains iGSFANodes containing SFANodes with " +
+                       "avg(num_sfa_features_preserved)=%f" % avg_num_sfa_features, "and avg(d)=%s" + str(d_avg) +
                        "and avg(evar)=%f" % evar_avg)
             elif mode == "All":
                 print ("Node %d is a Layer that contains iGSFANodeRecNodes:" % i)
@@ -1139,10 +1244,10 @@ def compute_explained_var(true_samples, approximated_samples):
 def approximate_kNN_op(x, x_exp, y_exp, k=1, ignore_closest_match=False, operation=None):
     """ Approximates a signal y given its expansion y_exp. The method is kNN with training data given by x, x_exp
    
-        If label_avg=True, the inputs of the k closest expansions are averaged, otherwise the most frequent 
-        among k-closest is returned.
-        When label_avg=True, one can also specify to ignore the best match (useful if y_exp = x_exp)
-        """
+    If label_avg=True, the inputs of the k closest expansions are averaged, otherwise the most frequent
+    among k-closest is returned.
+    When label_avg=True, one can also specify to ignore the best match (useful if y_exp = x_exp)
+    """
     n = mdp.nodes.KNNClassifier(k=k, execute_method="label")
     n.train(x_exp, range(len(x_exp)))
 
@@ -1490,8 +1595,8 @@ def rank_expanded_signals_max(x, x_exp, y, y_exp, max_comp=10, k=1, operation="a
         # print "indices_available=",indices_available
         max_explained_var_index_long = indices_available[max_explained_var_index_short]
         if verbose:
-            print(
-            "Selecting index short:", max_explained_var_index_short, " and index_ long:", max_explained_var_index_long)
+            print("Selecting index short:", max_explained_var_index_short,
+                  " and index_ long:", max_explained_var_index_long)
 
         # mark as taken and update temporal variables
         taken.append(max_explained_var_index_long)
@@ -1683,7 +1788,7 @@ def rank_expanded_signals(x, x_exp, y, y_exp, max_comp=10, k=1, linear=False, ma
             scores[taken] += correction
             scores[max_explained_var_index_long] += correction
 
-        #        scores = scores * explained_var / (sum_scores+1e-6) #TODO:CORRECT THIS; INSTEAD OF FACTOR USE ADDITIVE TERM
+        # scores = scores * explained_var / (sum_scores+1e-6) #TODO:CORRECT THIS; INSTEAD OF FACTOR USE ADDITIVE TERM
         if verbose:
             print("normalized scores = ", scores, "sum to:", scores.sum(), "explained_var =", explained_var)
 
@@ -1753,7 +1858,7 @@ def rank_expanded_signals(x, x_exp, y, y_exp, max_comp=10, k=1, linear=False, ma
         scores = scores * total_variance / scores.sum()
         print("Overriding with linear scores:", scores)
 
-    return scores  # **0.5 #WARNING!!!!!
+    return scores
 
 
 # TODO: Remove this node, it is now obsolete
@@ -1790,6 +1895,7 @@ class IEVMNode(mdp.Node):
         self.max_preserved_sfa = max_preserved_sfa
         self.out_sfa_filter = out_sfa_filter
 
+    @staticmethod
     def is_trainable(self):
         return True
 
@@ -1930,7 +2036,6 @@ class IEVMNode(mdp.Node):
             n_pca_x = (pca_x - self.pca_x_mean) / self.pca_x_std
         else:
             n_pca_x = sfa_removed_x[:, 0:pca_out_dim]
-
 
         # Concatenate SFA and PCA signals and rank them preserving SFA components in ordering
         if self.use_pca or self.use_sfa:
@@ -2200,7 +2305,8 @@ class IEVMLRecNode(mdp.Node):
         self.feature_scaling_factor = 0.5  # Factor that prevents amplitudes of features growing acrosss the networks
         self.exponent_variance = 0.5
         self.max_preserved_sfa = max_preserved_sfa
-        self.reconstruct_with_sfa = reconstruct_with_sfa  # Indicates whether (nonlinear) SFA components are used for reconstruction
+        # Indicates whether (nonlinear) SFA components are used for reconstruction
+        self.reconstruct_with_sfa = reconstruct_with_sfa
         self.out_sfa_filter = out_sfa_filter
         self.compress_input_with_pca = False  # True
         self.compression_out_dim = 0.99  # 0.99 #0.95 #98
@@ -2357,7 +2463,6 @@ class IEVMLRecNode(mdp.Node):
                 x_zm.var(axis=0))  # SFA components have a variance of 1/10000 smallest data variance
             s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x ** self.exponent_variance  # Scale according to ranking
 
-
         print("training PCA...")
         self.pca_node = mdp.nodes.PCANode(reduce=True)  # output_dim = pca_out_dim)
         self.pca_node.train(sfa_removed_x)
@@ -2370,9 +2475,9 @@ class IEVMLRecNode(mdp.Node):
 
         if self.pca_node.output_dim + self.num_sfa_features_preserved < self.output_dim:
             er = "Error, the number of features computed is SMALLER than the output dimensionality of the node" + \
-                 "self.pca_node.output_dim=%d"%self.pca_node.output_dim + \
-                 "self.num_sfa_features_preserved=%d"%self.num_sfa_features_preserved + \
-                 "self.output_dim=%d"%self.output_dim
+                 "self.pca_node.output_dim=%d" % self.pca_node.output_dim + \
+                 "self.num_sfa_features_preserved=%d" % self.num_sfa_features_preserved + \
+                 "self.output_dim=%d" % self.output_dim
             raise Exception(er)
 
         # Finally output is the concatenation of scaled slow features and remaining pca components
@@ -2439,7 +2544,6 @@ class IEVMLRecNode(mdp.Node):
         sfa_pca_x_truncated = sfa_pca_x[:, 0:self.output_dim]
 
         return sfa_pca_x_truncated
-
 
     def _inverse(self, y, linear_inverse=True):
         if linear_inverse:
@@ -2662,6 +2766,7 @@ class SFAAdaptiveNLNode(mdp.Node):
         self.f1_mean = None
         self.f1_std = None
 
+    @staticmethod
     def is_trainable(self):
         return True
 
@@ -3015,103 +3120,3 @@ def f_residual(x_app_i, node, y_i):
     return res_long
 
 
-class SFA_GaussianClassifier(mdp.ClassifierNode):
-    """This node is a simple extension of the GaussianClassifier node, where SFA is applied before the classifier.
-    
-    The labels are important, since they are used to order the data samples before SFA.
-    """
-    def __init__(self, reduced_dim=None, verbose=False, **argv):
-        super(SFA_GaussianClassifier, self).__init__(**argv)
-        self.gc_node = mdp.nodes.GaussianClassifier()
-        self.reduced_dim = reduced_dim
-        if self.reduced_dim > 0:
-            self.sfa_node = mdp.nodes.SFANode(output_dim=self.reduced_dim)
-        else:
-            self.sfa_node = mdp.nodes.IdentityNode()
-        self.verbose = verbose
-
-    def _train(self, x, labels=None):
-        if self.reduced_dim > 0: 
-            ordering = numpy.argsort(labels)
-            x_ordered = x[ordering, :]
-            self.sfa_node.train(x_ordered)
-            self.sfa_node.stop_training()
-            if self.verbose:
-                print("SFA_GaussianClassifier: sfa_node.d = ", self.sfa_node.d)
-        else: # sfa_node is the identity node
-            pass
-        y = self.sfa_node.execute(x)
-        self.gc_node.train(y, labels=labels)
-        self.gc_node.stop_training()            
-
-    def _label(self, x):
-        y = self.sfa_node.execute(x)
-        return self.gc_node.label(y)
-
-    def regression(self, x, avg_labels, estimate_std=False):
-        y = self.sfa_node.execute(x)
-        return self.gc_node.regression(y, avg_labels, estimate_std)
-
-    def regressionMAE(self, x, avg_labels):
-        y = self.sfa_node.execute(x)
-        return self.gc_node.regressionMAE(y, avg_labels)
-
-    def softCR(self, x, true_classes):
-        y = self.sfa_node.execute(x)
-        return self.gc_node.softCR(y, true_classes)
-
-    def class_probabilities(self, x):
-        y = self.sfa_node.execute(x)
-        return self.gc_node.class_probabilities(y)
-
-    def is_trainable(self):
-        return True
-
-
-class BasicAdaptiveCutoffNode(mdp.PreserveDimNode):
-    """Node that allows to "cut off" values at bounds derived from the training data.
-
-    This node is similar to CutoffNode, but the bounds are computed based on the training data. And it is
-    also similar to AdaptiveCutoffNode, but no histograms are stored and the limits are hard.
-    
-    This node does not have any have no effect on training data, only on test data and might improve generalization.
-    """
-    def __init__(self, input_dim=None, output_dim=None, dtype=None):
-        """Initialize node. """
-        super(BasicAdaptiveCutoffNode, self).__init__(input_dim=input_dim,
-                                         output_dim=output_dim,
-                                         dtype=dtype)
-        self.lower_bound = None
-        self.upper_bound = None
-
-    @staticmethod
-    def is_trainable():
-        return True
-
-    @staticmethod
-    def is_invertible():
-        return True
-
-    def _get_supported_dtypes(self):
-        return (mdp.utils.get_dtypes('Float') +
-                mdp.utils.get_dtypes('AllInteger'))
-
-    def _train(self, x):
-        """Training method updates the lower and upper bounds. """
-        if self.lower_bound is None:
-            self.lower_bound = x.min(axis=0)
-        else:
-            self.lower_bound = numpy.minimum(self.lower_bound, x)
-
-        if self.upper_bound is None:
-            self.upper_bound = x.max(axis=0)
-        else:
-            self.upper_bound = numpy.maxium(self.upper_bound, x)
-
-    def _execute(self, x):
-        """Return the clipped data."""
-        return numpy.clip(x, self.lower_bound, self.upper_bound)
-
-    def _inverse(self, x):
-        """An approximate inverse. """
-        return x
