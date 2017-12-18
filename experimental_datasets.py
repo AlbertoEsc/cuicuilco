@@ -1,3 +1,23 @@
+#####################################################################################################################
+# experimental_datasets: This module contains various datasets that can be used for experiments                     #
+#                                                                                                                   #
+# Main datasets: ParamsAgeFunc_128x128 (age, gender, and race estimation, MORPH-II),                                #
+#                ParamsCIFAR10Func_32x32 (object classification, CIFAR-10),                                         #
+#                ParamsGenderFunc (Gender estimation, artificial images),                                           #
+#                ParamsMNISTFunc (Handwritten digit recognition, MNIST),                                            #
+#                ParamsREyeTransXYFunc_64x64 (Eye detection, various databases)                                     #
+#                ParamsRFaceCentering2Func (Face discrimination, various databases)                                 #
+#                ParamsRGTSRBFunc (traffic sign recognition, GTSRB)                                                 #
+#                ParamsRTransXYPAngScaleFunc_128x128 (face localization/pose estimation from frontal images)        #
+#                ParamsRandomDataFunc_32x32 (a random artificial dataset)                                           #
+#                ParamsRatlabFunc_320x40_training_40k (simulated view of a rat inside a box, RatLab)                #
+#                                                                                                                   #
+# Note: the user can define new datasets by means of the ImportDatasetsFromFile flag in cuicuilco_run               #
+#                                                                                                                   #
+# By Alberto Escalante. Alberto.Escalante@neuroinformatik.ruhr-uni-bochum.de                                        #
+# Ruhr-University-Bochum, Institute for Neural Computation, Group of Prof. Dr. Wiskott                              #
+#####################################################################################################################
+
 from __future__ import print_function
 import system_parameters
 from system_parameters import load_data_from_sSeq
@@ -65,16 +85,16 @@ class ParamsCIFAR10Experiment(system_parameters.ParamsSystem):
     def unpickle2(file):
         import cPickle
         with open(file, 'rb') as fo:
-            dict = cPickle.load(fo)
-        return dict
+            a_dict = cPickle.load(fo)
+        return a_dict
 
     # Python 2 version.
     @staticmethod
     def unpickle3(file):
         import pickle
         with open(file, 'rb') as fo:
-            dict = pickle.load(fo, encoding='bytes')
-        return dict
+            a_dict = pickle.load(fo, encoding='bytes')
+        return a_dict
 
     def create(self):
         print("CIFR10: starting with experiment_seed= %d" % self.experiment_seed)
