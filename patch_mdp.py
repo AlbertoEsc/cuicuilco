@@ -1,3 +1,12 @@
+#####################################################################################################################
+# patch_mdp: This module adds new nodes and functionality of Cuicuilco to MDP dynamically                           #
+#                                                                                                                   #
+#                                                                                                                   #
+# By Alberto Escalante. Alberto.Escalante@neuroinformatik.ruhr-uni-bochum.de                                        #
+# Ruhr-University-Bochum, Institute for Neural Computation, Group of Prof. Dr. Wiskott                              #
+#####################################################################################################################
+
+from __future__ import print_function
 import numpy
 import mdp
 from mdp import numx
@@ -34,22 +43,21 @@ mdp.nodes.HistogramEqualizationNode = histogram_equalization.HistogramEqualizati
 mdp.nodes.SFA_GaussianClassifier = more_nodes.SFA_GaussianClassifier
 mdp.nodes.BasicAdaptiveCutoffNode = more_nodes.BasicAdaptiveCutoffNode
 
-# print "Adding localized inverse support..."
 mdp.Flow.localized_inverse = inversion.localized_inverse
 
 mdp.nodes.SFANode.localized_inverse = inversion.linear_localized_inverse
 mdp.nodes.PCANode.localized_inverse = inversion.linear_localized_inverse
 mdp.nodes.WhiteningNode.localized_inverse = inversion.linear_localized_inverse
-# RandomizedtationNode.localized_inverse = lambda self, x, y, y_prime: self.inverse(y_prime)
 
 mdp.hinet.Layer.localized_inverse = inversion.layer_localized_inverse
 
 mdp.nodes.GeneralExpansionNode.localized_inverse = inversion.general_expansion_node_localized_inverse
 
-# The original version disregards output_dim if input_dim is None!!! Added: ... or self.input_dim is None...
+
+# The original version disregards output_dim if input_dim is None!!! Correction: ... or self.input_dim is None...
 def SFANode__set_range(self):
     if self.output_dim is not None and (self.output_dim <= self.input_dim or self.input_dim is None):
-        # (eigenvalues sorted in ascending order)
+        # The eigenvalues are sorted in ascending order
         rng = (1, self.output_dim)
     else:
         # otherwise, keep all output components
@@ -58,6 +66,7 @@ def SFANode__set_range(self):
     return rng
 
 mdp.nodes.SFANode._set_range = SFANode__set_range
+
 
 def SFANode_inverse(self, y):
     # pseudo-inverse is stored instead of computed everytime
@@ -71,37 +80,6 @@ mdp.nodes.SFANode._inverse = SFANode_inverse
 
 
 # TODO: Remove block_size=None, train_mode=None
-# # def SFANode__init__(self, input_dim=None, output_dim=None, dtype=None, block_size=None, train_mode=None,
-# # sfa_expo=None, pca_expo=None, magnitude_sfa_biasing=None):
-# #     super(mdp.nodes.SFANode, self).__init__(input_dim, output_dim, dtype)
-# #     #Warning! bias activated, "courtesy" of Alberto
-# #     # create two covariance matrices. The first one for the input data
-# #     self._cov_mtx = CovarianceMatrix(dtype, bias=True)
-# #     # and the second one for the derivatives
-# #     self._dcov_mtx = CovarianceMatrix(dtype, bias=True)
-# # 
-# #     self.pinv = None
-# #     self._symeig = symeig
-# #     self.block_size= block_size
-# #     self.train_mode = train_mode
-# # 
-# #     self.sum_prod_x = None
-# #     self.sum_x = None
-# #     self.num_samples = 0
-# #     self.sum_diff = None 
-# #     self.sum_prod_diff = None  
-# #     self.num_diffs = 0
-# #     
-# #     self.sfa_expo=sfa_expo # 1.2: 1=Regular SFA directions, >1: schrink derivative in the direction of
-# #     the principal components
-# #     self.pca_expo=pca_expo # 0.25: 0=No magnitude reduction 1=Whitening
-# #     self.magnitude_sfa_biasing = magnitude_sfa_biasing
-# #     self._myvar = None
-# #     self._covdcovmtx = CovDCovMatrix(block_size)
-
-# I am not modifying SFANode any longer
-# mdp.nodes.SFANode.__init__ = SFANode__init__
-
 def SFANode_train_scheduler(self, x, block_size=None, train_mode=None, node_weights=None, edge_weights=None,
                             scheduler=None, n_parallel=None):
     self._train_phase_started = True
@@ -110,14 +88,9 @@ def SFANode_train_scheduler(self, x, block_size=None, train_mode=None, node_weig
     if block_size is None:
         block_size = self.block_size
     if scheduler is None or n_parallel is None or train_mode is None:
-        # print "NO parallel sfa done...  scheduler=", ,uler, " n_parallel=", n_parallel
         return SFANode_train(self, x, block_size=block_size, train_mode=train_mode, node_weights=node_weights,
                              edge_weights=edge_weights)
     else:
-        # self._covdcovmtx.update_clustered_homogeneous_block_sizes(x, weight=1.0)
-
-        # chunk_size=None
-        # num_chunks = n_parallel
         num_chunks = min(n_parallel, x.shape[0] / block_size)
         # here chunk_size is given in blocks!!!
         # chunk_size = int(numpy.ceil((x.shape[0]/block_size)*1.0/num_chunks))
@@ -125,12 +98,12 @@ def SFANode_train_scheduler(self, x, block_size=None, train_mode=None, node_weig
 
         # Notice that parallel training doesn't work with clustered mode and inhomogeneous blocks
         # TODO:Fix this
-        print "%d chunks, of size %d blocks, last chunk contains %d blocks" % \
-              (num_chunks, chunk_size, (x.shape[0] / block_size) % chunk_size)
+        print("%d chunks, of size %d blocks, last chunk contains %d blocks" % \
+              (num_chunks, chunk_size, (x.shape[0] / block_size) % chunk_size))
         if train_mode == 'clustered':
             # TODO: Implement this
             for i in range(num_chunks):
-                print "Adding scheduler task //////////////////////"
+                print("Adding scheduler task //////////////////////")
                 sys.stdout.flush()
                 if i < num_chunks - 1:
                     scheduler.add_task(
@@ -139,22 +112,22 @@ def SFANode_train_scheduler(self, x, block_size=None, train_mode=None, node_weig
                 else:  # i == num_chunks - 1
                     scheduler.add_task((x[i * block_size * chunk_size:], block_size, 1.0),
                                        ComputeCovDcovMatrixClustered)
-                print "Done Adding scheduler task ///////////////////"
+                print("Done Adding scheduler task ///////////////////")
                 sys.stdout.flush()
         elif train_mode == 'serial':
             for i in range(num_chunks):
                 if i == 0:
-                    print "adding task %d from sample " % i, i * block_size * chunk_size,
-                    print "to", (i + 1) * block_size * chunk_size
+                    print("adding task %d from sample " % i, i * block_size * chunk_size)
+                    print("to", (i + 1) * block_size * chunk_size)
                     scheduler.add_task((x[i * block_size * chunk_size:(i + 1) * block_size * chunk_size], block_size),
                                        ComputeCovDcovMatrixSerial)
                 elif i == num_chunks - 1:  # Add one previous block to the chunk
-                    print "adding task %d from sample " % i, i * block_size * chunk_size - block_size, "to the end"
+                    print("adding task %d from sample " % i, i * block_size * chunk_size - block_size, "to the end")
                     scheduler.add_task((x[i * block_size * chunk_size - block_size:], block_size),
                                        ComputeCovDcovMatrixSerial)
                 else:
-                    print "adding task %d from sample " % i, i * block_size * chunk_size - block_size,
-                    print "to", (i + 1) * block_size * chunk_size
+                    print("adding task %d from sample " % i, i * block_size * chunk_size - block_size)
+                    print("to", (i + 1) * block_size * chunk_size)
                     scheduler.add_task(
                         (x[i * block_size * chunk_size - block_size:(i + 1) * block_size * chunk_size], block_size),
                         ComputeCovDcovMatrixSerial)
@@ -193,17 +166,17 @@ def SFANode_train_scheduler(self, x, block_size=None, train_mode=None, node_weig
         elif train_mode == 'unlabeled':
             # TODO: IMPLEMENT THIS
             for i in range(num_chunks):
-                print "Adding scheduler task //////////////////////"
+                print("Adding scheduler task //////////////////////")
                 sys.stdout.flush()
                 scheduler.add_task((x[i * block_size * chunk_size:(i + 1) * block_size * chunk_size], block_size, 1.0),
                                    ComputeCovDcovMatrixClustered)
-                print "Done Adding scheduler task ///////////////////"
+                print("Done Adding scheduler task ///////////////////")
                 sys.stdout.flush()
         else:
             ex = "Unknown training method:", self.train_mode
             raise Exception(ex)
 
-        print "Getting results"
+        print("Getting results")
         sys.stdout.flush()
 
         results = scheduler.get_results()
@@ -217,7 +190,7 @@ def SFANode_train_scheduler(self, x, block_size=None, train_mode=None, node_weig
 # TODO: There might be several errors due to incorrect computation of sum_prod_x as mdp.mult(sum_x.T,sum_x)
 # WARNING!!!! CHECK ALL CODE!!!
 def SFANode_train(self, x, block_size=None, train_mode=None, node_weights=None, edge_weights=None):
-    print "obsolete code reached... quitting"
+    print("obsolete code reached... quitting")
     quit()
     if train_mode is None:
         train_mode = self.train_mode
@@ -232,7 +205,7 @@ def SFANode_train(self, x, block_size=None, train_mode=None, node_weights=None, 
     # # update the covariance matrices
     # cut the final point to avoid an incorrect solution in special cases / chaining?
     # WARNING: Force artificial training
-    print "train_mode=", train_mode
+    print("train_mode=", train_mode)
 
     if isinstance(train_mode, list):
         train_modes = train_mode
@@ -245,7 +218,7 @@ def SFANode_train(self, x, block_size=None, train_mode=None, node_weights=None, 
             labels = train_mode[1]
             weight = train_mode[2]
             if method == "classification":
-                print "update classification"
+                print("update classification")
                 ordering = numpy.argsort(labels)
                 x2 = x[ordering, :]
                 unique_labels = numpy.unique(labels)
@@ -259,28 +232,28 @@ def SFANode_train(self, x, block_size=None, train_mode=None, node_weights=None, 
                 raise Exception(er)
         else:
             if train_mode == 'unlabeled':
-                print "updateUnlabeled"
+                print("updateUnlabeled")
                 self._covdcovmtx.updateUnlabeled(x, weight=0.00015)  # Warning, set this weight appropiately!
             elif train_mode == "regular":
-                print "updateRegular"
+                print("updateRegular")
                 self._covdcovmtx.updateRegular(x, weight=1.0)
             elif train_mode == 'clustered':
-                print "update_clustered"
+                print("update_clustered")
                 self._covdcovmtx.update_clustered(x, block_sizes=block_size, weight=1.0)
             elif train_mode.startswith('compact_classes'):
-                print "update_compact_classes:", train_mode
+                print("update_compact_classes:", train_mode)
                 J = int(train_mode[len('compact_classes'):])
                 self._covdcovmtx.update_compact_classes(x, block_sizes=block_size, Jdes=J, weight=1.0)
             elif train_mode == 'serial':
-                print "updateSerial"
+                print("updateSerial")
                 self._covdcovmtx.updateSerial(x, torify=False, block_size=block_size)
             elif train_mode.startswith('DualSerial'):
-                print "updateDualSerial"
+                print("updateDualSerial")
                 num_blocks = len(x) / block_size
                 dual_num_blocks = int(train_mode[len("DualSerial"):])
                 dual_block_size = len(x) / dual_num_blocks
                 chunk_size = block_size / dual_num_blocks
-                print "dual_num_blocks = ", dual_num_blocks
+                print("dual_num_blocks = ", dual_num_blocks)
                 self._covdcovmtx.updateSerial(x, torify=False, block_size=block_size)
                 x2 = numpy.zeros_like(x)
                 for i in range(num_blocks):
@@ -289,7 +262,7 @@ def SFANode_train(self, x, block_size=None, train_mode=None, node_weights=None, 
                             x[i * block_size + j * chunk_size:i * block_size + (j + 1) * chunk_size]
                 self._covdcovmtx.updateSerial(x2, torify=False, block_size=dual_block_size, weight=0.0)
             elif train_mode == 'mixed':
-                print "update mixed"
+                print("update mixed")
                 bs = block_size
                 weight = 1.0 / 3
                 # WARNING: THIS Generates degenerated solutions!!! Check code!! it should actually work fine??!!
@@ -306,52 +279,52 @@ def SFANode_train(self, x, block_size=None, train_mode=None, node_weights=None, 
                 self._covdcovmtx.updateSerial(x, torify=False, block_size=block_size, weight=weight)
             elif train_mode[0:6] == 'window':
                 window_halfwidth = int(train_mode[6:])
-                print "Window (%d)" % window_halfwidth
+                print("Window (%d)" % window_halfwidth)
                 self._covdcovmtx.updateSlidingWindow(x, weight=1.0, window_halfwidth=window_halfwidth)
             elif train_mode[0:7] == 'fwindow':
                 window_halfwidth = int(train_mode[7:])
-                print "Fast Window (%d)" % window_halfwidth
+                print("Fast Window (%d)" % window_halfwidth)
                 self._covdcovmtx.updateFastSlidingWindow(x, weight=1.0, window_halfwidth=window_halfwidth)
             elif train_mode[0:13] == 'mirror_window':
                 window_halfwidth = int(train_mode[13:])
-                print "Mirroring Window (%d)" % window_halfwidth
+                print("Mirroring Window (%d)" % window_halfwidth)
                 self._covdcovmtx.updateMirroringSlidingWindow(x, weight=1.0, window_halfwidth=window_halfwidth)
             elif train_mode[0:14] == 'smirror_window':
                 window_halfwidth = int(train_mode[14:])
-                print "Slow Mirroring Window (%d)" % window_halfwidth
+                print("Slow Mirroring Window (%d)" % window_halfwidth)
                 self._covdcovmtx.updateSlowMirroringSlidingWindow(x, weight=1.0, window_halfwidth=window_halfwidth)
             elif train_mode == 'graph':
-                print "updateGraph"
+                print("updateGraph")
                 self._covdcovmtx.updateGraph(x, node_weights=node_weights, edge_weights=edge_weights, weight=1.0)
             elif train_mode == 'smart_unlabeled2':
-                print "smart_unlabeled2"
+                print("smart_unlabeled2")
                 N2 = x.shape[0]
 
                 N1 = Q1 = self._covdcovmtx.num_samples * 1.0
                 R1 = self._covdcovmtx.num_diffs * 1.0
                 sum_x_labeled_2D = self._covdcovmtx.sum_x.reshape((1, -1)) + 0.0
                 sum_prod_x_labeled = self._covdcovmtx.sum_prod_x + 0.0
-                print "Original sum_x[0]/num_samples=", self._covdcovmtx.sum_x[0] / self._covdcovmtx.num_samples
+                print("Original sum_x[0]/num_samples=", self._covdcovmtx.sum_x[0] / self._covdcovmtx.num_samples)
 
                 weight_fraction_unlabeled = 0.2  # 0.1, 0.25
                 additional_weight_unlabeled = -0.025  # 0.02 0.25, 0.65?
 
                 w1 = Q1 * 1.0 / R1 * (1.0 - weight_fraction_unlabeled)
-                print "weight_fraction_unlabeled=", weight_fraction_unlabeled
-                print "N1=Q1=", Q1, "R1=", R1, "w1=", w1
-                print ""
+                print("weight_fraction_unlabeled=", weight_fraction_unlabeled)
+                print("N1=Q1=", Q1, "R1=", R1, "w1=", w1)
+                print("")
 
                 self._covdcovmtx.sum_prod_diffs *= w1
                 self._covdcovmtx.num_diffs *= w1
-                print "After diff scaling: num_samples=", self._covdcovmtx.num_samples,
-                print "num_diffs=", self._covdcovmtx.num_diffs, "\n"
+                print("After diff scaling: num_samples=", self._covdcovmtx.num_samples)
+                print("num_diffs=", self._covdcovmtx.num_diffs, "\n")
 
                 # print "Updated self._covdcovmtx.num_diffs=", self._covdcovmtx.num_diffs,
                 # print "Updated self._covdcovmtx.sum_prod_diffs=", self._covdcovmtx.sum_prod_diffs
 
                 node_weights2 = Q1 * weight_fraction_unlabeled / N2  # w2*N1
                 w12 = node_weights2 / N1  # One directional weights
-                print "w12 (one dir)", w12
+                print("w12 (one dir)", w12)
 
                 sum_x_unlabeled_2D = x.sum(axis=0).reshape((1, -1))
                 sum_prod_x_unlabeled = mdp.utils.mult(x.T, x)
@@ -361,12 +334,12 @@ def SFANode_train(self, x, block_size=None, train_mode=None, node_weights=None, 
 
                 self._covdcovmtx.AddSamples(sum_prod_x_unlabeled, sum_x_unlabeled_2D.flatten(), num_samples=N2,
                                             weight=node_weights2)
-                print "After adding unlabeled nodes: num_samples=", self._covdcovmtx.num_samples,
-                print "num_diffs=", self._covdcovmtx.num_diffs
-                print "sum_x[0]/num_samples=", self._covdcovmtx.sum_x[0] / self._covdcovmtx.num_samples
-                print ""
+                print("After adding unlabeled nodes: num_samples=", self._covdcovmtx.num_samples)
+                print("num_diffs=", self._covdcovmtx.num_diffs)
+                print("sum_x[0]/num_samples=", self._covdcovmtx.sum_x[0] / self._covdcovmtx.num_samples)
+                print("")
 
-                print "N2=", N2, "node_weights2=", node_weights2,
+                print("N2=", N2, "node_weights2=", node_weights2)
                 # print "self._covdcovmtx.sum_x=", self._covdcovmtx.sum_x,
                 # print "self._covdcovmtx.sum_prod_x=", self._covdcovmtx.sum_prod_x
 
@@ -379,19 +352,19 @@ def SFANode_train(self, x, block_size=None, train_mode=None, node_weights=None, 
                 additional_diffs = sum_prod_x_unlabeled * N1 - \
                                    mdp.utils.mult(sum_x_labeled_2D.T, sum_x_unlabeled_2D) - \
                                    mdp.utils.mult(sum_x_unlabeled_2D.T, sum_x_labeled_2D) + sum_prod_x_labeled * N2
-                print "w12=", w12, "additional_diffs=", additional_diffs
+                print("w12=", w12, "additional_diffs=", additional_diffs)
                 self._covdcovmtx.AddDiffs(2 * additional_diffs, 2 * N1 * N2,
                                           weight=w12)  # to account for both directions
-                print "After mixed diff addition: num_samples=", self._covdcovmtx.num_samples,
-                print "num_diffs=", self._covdcovmtx.num_diffs
-                print "sum_x[0]/num_samples=", self._covdcovmtx.sum_x[0] / self._covdcovmtx.num_samples
+                print("After mixed diff addition: num_samples=", self._covdcovmtx.num_samples)
+                print("num_diffs=", self._covdcovmtx.num_diffs)
+                print("sum_x[0]/num_samples=", self._covdcovmtx.sum_x[0] / self._covdcovmtx.num_samples)
 
-                print "\n Adding complete graph for unlabeled data"
+                print("\n Adding complete graph for unlabeled data")
                 self._covdcovmtx.update_clustered_homogeneous_block_sizes(x, weight=additional_weight_unlabeled,
                                                                           block_size=N2)
-                print "After complete x2 addition: num_samples=", self._covdcovmtx.num_samples,
-                print "num_diffs=", self._covdcovmtx.num_diffs
-                print "sum_x[0]/num_samples=", self._covdcovmtx.sum_x[0] / self._covdcovmtx.num_samples
+                print("After complete x2 addition: num_samples=", self._covdcovmtx.num_samples)
+                print("num_diffs=", self._covdcovmtx.num_diffs)
+                print("sum_x[0]/num_samples=", self._covdcovmtx.sum_x[0] / self._covdcovmtx.num_samples)
 
                 #        print "\n Removing node weights of unlabeled data"
                 #        self._covdcovmtx.AddSamples(sum_prod_x_unlabeled, sum_x_unlabeled, N2,
@@ -399,16 +372,16 @@ def SFANode_train(self, x, block_size=None, train_mode=None, node_weights=None, 
                 #        print "self._covdcovmtx.num_samples=", self._covdcovmtx.num_samples,
                 # "self._covdcovmtx.num_diffs=", self._covdcovmtx.num_diffs
             elif train_mode == 'smart_unlabeled3':
-                print "smart_unlabeled3"
+                print("smart_unlabeled3")
                 N2 = x.shape[0]
 
                 N1 = Q1 = self._covdcovmtx.num_samples * 1.0
                 R1 = self._covdcovmtx.num_diffs * 1.0
-                print "N1=Q1=", Q1, "R1=", R1, "N2=", N2
+                print("N1=Q1=", Q1, "R1=", R1, "N2=", N2)
 
                 v = 2.0 ** (-9.5)  # 500.0/4500 #weight of unlabeled samples (making it "500" vs "500")
                 C = 10.0  # 10.0 #Clustered graph assumed, with C classes, and each one having N1/C samples
-                print "v=", v, "C=", C
+                print("v=", v, "C=", C)
 
                 v_norm = v / C
                 N1_norm = N1 / C
@@ -417,12 +390,12 @@ def SFANode_train(self, x, block_size=None, train_mode=None, node_weights=None, 
                 sum_x_labeled = self._covdcovmtx.sum_x.reshape((1, -1)) + 0.0
                 sum_prod_x_labeled = self._covdcovmtx.sum_prod_x + 0.0
 
-                print "Original (Diag(C')/num_diffs.avg)**0.5 =", ((numpy.diagonal(
-                    self._covdcovmtx.sum_prod_diffs) / self._covdcovmtx.num_diffs).mean()) ** 0.5
+                print("Original (Diag(C')/num_diffs.avg)**0.5 =", ((numpy.diagonal(
+                    self._covdcovmtx.sum_prod_diffs) / self._covdcovmtx.num_diffs).mean()) ** 0.5)
 
                 # Adjust connections within labeled data
                 weight_adjustment = (N1_norm - 1) / (N1_norm - 1 + v_norm * N2)
-                print "weight_adjustment =", weight_adjustment, "w11=", 1 / (N1_norm - 1 + v_norm * N2)
+                print("weight_adjustment =", weight_adjustment, "w11=", 1 / (N1_norm - 1 + v_norm * N2))
                 # w1 = Q1*1.0/R1 * (1.0-weight_fraction_unlabeled)
 
                 self._covdcovmtx.sum_x *= weight_adjustment
@@ -431,13 +404,13 @@ def SFANode_train(self, x, block_size=None, train_mode=None, node_weights=None, 
                 self._covdcovmtx.sum_prod_diffs *= weight_adjustment
                 self._covdcovmtx.num_diffs *= weight_adjustment
                 node_weights_complete_1 = weight_adjustment
-                print "num_diffs (w11) after weight_adjustment=", self._covdcovmtx.num_diffs
+                print("num_diffs (w11) after weight_adjustment=", self._covdcovmtx.num_diffs)
                 w11 = 1 / (N1_norm - 1 + v_norm * N2)
                 # print "Updated self._covdcovmtx.num_diffs=", self._covdcovmtx.num_diffs,
                 # print "Updated self._covdcovmtx.sum_prod_diffs=", self._covdcovmtx.sum_prod_diffs
-                print "After adjustment (Diag(C')/num_diffs.avg)**0.5 =", ((numpy.diagonal(
-                    self._covdcovmtx.sum_prod_diffs) / self._covdcovmtx.num_diffs).mean()) ** 0.5
-                print ""
+                print("After adjustment (Diag(C')/num_diffs.avg)**0.5 =", ((numpy.diagonal(
+                    self._covdcovmtx.sum_prod_diffs) / self._covdcovmtx.num_diffs).mean()) ** 0.5)
+                print("")
 
                 # Connections within unlabeled data (notice that C times this is equivalent to v*v/(N1+v*(N2-1)) once)
                 w22 = 0.5 * 2 * v_norm * v_norm / (N1_norm + v_norm * (N2 - 1))
@@ -446,56 +419,54 @@ def SFANode_train(self, x, block_size=None, train_mode=None, node_weights=None, 
                 node_weights_complete_2 = w22 * (N2 - 1) * C
                 self._covdcovmtx.update_clustered_homogeneous_block_sizes(x, weight=node_weights_complete_2,
                                                                           block_size=N2)
-                print "w22=", w22, "node_weights_complete_2*N2=", node_weights_complete_2 * N2
-                print "After adding complete 2: num_samples=", self._covdcovmtx.num_samples,
-                print "num_diffs=", self._covdcovmtx.num_diffs
-                print " (Diag(C')/num_diffs.avg)**0.5 =", ((numpy.diagonal(
-                    self._covdcovmtx.sum_prod_diffs) / self._covdcovmtx.num_diffs).mean()) ** 0.5
-                print ""
+                print("w22=", w22, "node_weights_complete_2*N2=", node_weights_complete_2 * N2)
+                print("After adding complete 2: num_samples=", self._covdcovmtx.num_samples)
+                print("num_diffs=", self._covdcovmtx.num_diffs)
+                print(" (Diag(C')/num_diffs.avg)**0.5 =", ((numpy.diagonal(
+                    self._covdcovmtx.sum_prod_diffs) / self._covdcovmtx.num_diffs).mean()) ** 0.5)
+                print("")
 
                 # Connections between labeled and unlabeled samples
                 # Accounts for transitions in both directions
                 w12 = 2 * 0.5 * v_norm * (1 / (N1_norm - 1 + v_norm * N2) + 1 / (N1_norm + v_norm * (N2 - 1)))
-                print "(twice) w12=", w12
+                print("(twice) w12=", w12)
                 sum_prod_diffs_mixed = w12 * (N1 * sum_prod_x_unlabeled -
                                               (mdp.utils.mult(sum_x_labeled.T, sum_x_unlabeled) +
                                                mdp.utils.mult(sum_x_unlabeled.T, sum_x_labeled)) +
                                               N2 * sum_prod_x_labeled)
                 self._covdcovmtx.sum_prod_diffs += sum_prod_diffs_mixed
                 self._covdcovmtx.num_diffs += C * N1_norm * N2 * w12  # w12 already counts twice
-                print " (Diag(mixed)/num_diffs.avg)**0.5 =", (numpy.diagonal(sum_prod_diffs_mixed) /
-                                                              (C * N1_norm * N2 * w12)).mean() ** 0.5
-                print ""
+                print(" (Diag(mixed)/num_diffs.avg)**0.5 =", (numpy.diagonal(sum_prod_diffs_mixed) /
+                                                              (C * N1_norm * N2 * w12)).mean() ** 0.5)
+                print("")
 
                 # Additional adjustment for node weights of unlabeled data
                 missing_weight_unlabeled = v - node_weights_complete_2
                 missing_weight_labeled = 1.0 - node_weights_complete_1
-                print "missing_weight_unlabeled=", missing_weight_unlabeled
-                print "Before two final AddSamples: num_samples=", self._covdcovmtx.num_samples,
-                print "num_diffs=", self._covdcovmtx.num_diffs
+                print("missing_weight_unlabeled=", missing_weight_unlabeled)
+                print("Before two final AddSamples: num_samples=", self._covdcovmtx.num_samples)
+                print("num_diffs=", self._covdcovmtx.num_diffs)
                 self._covdcovmtx.AddSamples(sum_prod_x_unlabeled, sum_x_unlabeled, N2, missing_weight_unlabeled)
                 self._covdcovmtx.AddSamples(sum_prod_x_labeled, sum_x_labeled, N1, missing_weight_labeled)
-                print "Final transformation: num_samples=", self._covdcovmtx.num_samples,
-                print "num_diffs=", self._covdcovmtx.num_diffs
-                print "Summary v11=%f+%f, v22=%f+%f" % (
-                weight_adjustment, missing_weight_labeled, node_weights_complete_2, missing_weight_unlabeled)
-                print "Summary w11=%f, w22=%f, w12(two ways)=%f" % (w11, w22, w12)
-                print "Summary (N1/C-1)*w11=%f, N2*w12 (one way)=%f" % ((N1 / C - 1) * w11, N2 * w12 / 2)
-                print "Summary (N2-1)*w22*C=%f, N1*w12 (one way)=%f" % ((N2 - 1) * w22 * C, N1 * w12 / 2)
-                print "Summary (Diag(C')/num_diffs.avg)**0.5 =", ((numpy.diagonal(
-                    self._covdcovmtx.sum_prod_diffs) / self._covdcovmtx.num_diffs).mean()) ** 0.5
+                print("Final transformation: num_samples=", self._covdcovmtx.num_samples)
+                print("num_diffs=", self._covdcovmtx.num_diffs)
+                print("Summary v11=%f+%f, v22=%f+%f" % (
+                    weight_adjustment, missing_weight_labeled, node_weights_complete_2, missing_weight_unlabeled))
+                print("Summary w11=%f, w22=%f, w12(two ways)=%f" % (w11, w22, w12))
+                print("Summary (N1/C-1)*w11=%f, N2*w12 (one way)=%f" % ((N1 / C - 1) * w11, N2 * w12 / 2))
+                print("Summary (N2-1)*w22*C=%f, N1*w12 (one way)=%f" % ((N2 - 1) * w22 * C, N1 * w12 / 2))
+                print("Summary (Diag(C')/num_diffs.avg)**0.5 =", ((numpy.diagonal(
+                    self._covdcovmtx.sum_prod_diffs) / self._covdcovmtx.num_diffs).mean()) ** 0.5)
             elif train_mode == 'ignore_data':
-                print "Training graph: ignoring data"
+                print("Training graph: ignoring data")
             else:
                 ex = "Unknown training method"
                 raise Exception(ex)
-
 
 # mdp.nodes.SFANode._train = SFANode_train
 # UPDATE WARNING, this should be mdp.nodes.SFANode._train not mdp.nodes.SFANode.train
 # I do not modify SFANode anylonger
 # mdp.nodes.SFANode._train = SFANode_train_scheduler
-
 
 
 def SFANode_stop_training(self, debug=False, verbose=False, pca_term=0.995, pca_exp=2.0):
@@ -510,23 +481,23 @@ def SFANode_stop_training(self, debug=False, verbose=False, pca_term=0.995, pca_
         del self._cov_mtx
         self.dcov_mtx, davg, dtlen = self._dcov_mtx.fix()
         del self._dcov_mtx
-        print "Finishing training (regular2222). %d tlen, %d tlen of diff" % (self.tlen, dtlen)
-        print "Avg[0:3] is", self.avg[0:3]
-        print "Cov[0:3,0:3] is", self.cov_mtx[0:3, 0:3]
-        print "DCov[0:3,0:3] is", self.dcov_mtx[0:3, 0:3]
+        print("Finishing training (regular2222). %d tlen, %d tlen of diff" % (self.tlen, dtlen))
+        print("Avg[0:3] is", self.avg[0:3])
+        print("Cov[0:3,0:3] is", self.cov_mtx[0:3, 0:3])
+        print("DCov[0:3,0:3] is", self.dcov_mtx[0:3, 0:3])
     else:
         if verbose or True:
-            print "stop_training: Warning, using experimental SFA training method, ",
-            print "with self.block_size=", self.block_size
-        print "self._covdcovmtx.num_samples = ", self._covdcovmtx.num_samples
-        print "self._covdcovmtx.num_diffs= ", self._covdcovmtx.num_diffs
+            print("stop_training: Warning, using experimental SFA training method, ")
+            print("with self.block_size=", self.block_size)
+        print("self._covdcovmtx.num_samples = ", self._covdcovmtx.num_samples)
+        print("self._covdcovmtx.num_diffs= ", self._covdcovmtx.num_diffs)
         self.cov_mtx, self.avg, self.dcov_mtx = self._covdcovmtx.fix()
 
-        print "Finishing SFA training: ", self.num_samples, " num_samples, and ", self.num_diffs, " num_diffs"
+        print("Finishing SFA training: ", self.num_samples, " num_samples, and ", self.num_diffs, " num_diffs")
         #        print "Avg[0:3] is", self.avg[0:4]
         #        print "Prod_avg_x[0:3,0:3] is", prod_avg_x[0:3,0:3]
         #        print "Cov[0:3,0:3] is", self.cov_mtx[0:3,0:3]
-        print "DCov[0:3,0:3] is", self.dcov_mtx[0:3, 0:3]
+        print("DCov[0:3,0:3] is", self.dcov_mtx[0:3, 0:3])
     #        quit()
 
     if pca_term != 0.0 and False:
@@ -541,7 +512,7 @@ def SFANode_stop_training(self, debug=False, verbose=False, pca_term=0.995, pca_
     # SUPERMEGAWARNING, moved dcov to the second argument!!!
     # self.d, self.sf = self._symeig(self.dcov_mtx, self.cov_mtx, range=rng, overwrite=(not debug))
     try:
-        print "***Range used=", rng
+        print("***Range used=", rng)
         if self.sfa_expo is not None and self.pca_expo is not None:
             self.d, self.sf = _symeig_fake_regularized(self.dcov_mtx, self.cov_mtx, range=rng, overwrite=(not debug),
                                                        sfa_expo=self.sfa_expo, pca_expo=self.pca_expo,
@@ -552,7 +523,7 @@ def SFANode_stop_training(self, debug=False, verbose=False, pca_term=0.995, pca_
         # check that we get only *positive* eigenvalues
         if d.min() < 0:
             raise SymeigException("Got negative eigenvalues: %s." % str(d))
-    except SymeigException, exception:
+    except SymeigException as exception:
         errstr = str(exception) + "\n Covariance matrices may be singular."
         raise Exception(errstr)
 
@@ -562,7 +533,7 @@ def SFANode_stop_training(self, debug=False, verbose=False, pca_term=0.995, pca_
     del self._covdcovmtx
     # store bias
     self._bias = mult(self.avg, self.sf)
-    print "shape of SFANode.sf is=", self.sf.shape
+    print("shape of SFANode.sf is=", self.sf.shape)
 
 
 # I am not modifying SFANode any longer
@@ -603,13 +574,13 @@ def extract_params_relevant_for_node_train(node, params):
         add_list_train_params_to_layer_or_node(node)
 
     all_params = {}
-    print "node=", node
+    print("node=", node)
     if "list_train_params" in dir(node):
         # list_train_params = self.list_train_params
         for par, val in params.items():
             if par in node.list_train_params:
                 all_params[par] = val
-    print "all_params extracted:", all_params, "for node:", node, "with params:", params
+    print("all_params extracted:", all_params, "for node:", node, "with params:", params)
     return all_params
 
 
@@ -625,7 +596,7 @@ def add_list_train_params_to_layer_or_node(node):
         node.list_train_params = list_all_train_params
     else:  # Not Layer or CloneLayer
         if "list_train_params" not in dir(node):
-            print "list_train_params was not present in node!!!"
+            print("list_train_params was not present in node!!!")
             node.list_train_params = []
 
 
@@ -635,8 +606,8 @@ def node_train_params(self, data, params=None, verbose=False):
         raise Exception(er)
     elif "list_train_params" in dir(self):
         all_params = extract_params_relevant_for_node_train(self, params)
-        print "NODE: ", self
-        print "with args: ", inspect.getargspec(self.train)
+        print("NODE: ", self)
+        print("with args: ", inspect.getargspec(self.train))
         # print "and doc:", self.train.__doc__
         # WARNING!!!
         # WARNING, this should be self.train, however an incompatibility was introduced in a newer MDP
@@ -649,24 +620,24 @@ def node_train_params(self, data, params=None, verbose=False):
         #        self._training = False
         if verbose or True:
             # quit()
-            print "params=", params,
-            print "; list_train_params=", self.list_train_params,
-            print "; all_params:", all_params
+            print("params=", params)
+            print("; list_train_params=", self.list_train_params)
+            print("; all_params:", all_params)
         return self._train(data, **all_params)
     else:
         if isinstance(self, mdp.nodes.SFANode):
-            print "wrong condition reached...", dir(self)
+            print("wrong condition reached...", dir(self))
             quit()
-        print self
-        print "wrong wrong 2...", dir(self)
-        print "data_tp=", data
+        print(self)
+        print("wrong wrong 2...", dir(self))
+        print("data_tp=", data)
         # quit()
         return self.train(data)  # no Node.train_params found
 
 
 # Patch all nodes to offer train_params
 # Additionally, list_train_params should be added to relevant nodes
-print "Adding train_params to all mdp Nodes"
+print("Adding train_params to all mdp Nodes")
 for node_str in dir(mdp.nodes):
     node_class = getattr(mdp.nodes, node_str)
     if inspect.isclass(node_class) and issubclass(node_class, mdp.Node):
@@ -676,7 +647,7 @@ for node_str in dir(mdp.nodes):
         node_class.train_params = node_train_params
 
 # Do the same with nodes contained in hinet
-print "Adding train_params to (hinet) mdp.hinet Nodes: ", node_str
+print("Adding train_params to (hinet) mdp.hinet Nodes: ", node_str)
 for node_str in dir(mdp.hinet):
     node_class = getattr(mdp.hinet, node_str)
     if inspect.isclass(node_class) and issubclass(node_class, mdp.Node):
@@ -696,17 +667,17 @@ def node_execute_data_vec(self, data_vec, exec_params=None):
         return self.execute(data_vec)  # **exec_params)
 
     res = []
-    print "data_vect is:", data_vec
+    print("data_vect is:", data_vec)
     for i, data in enumerate(data_vec):
         # print "data=", data
-        print "data.shape=", data.shape
+        print("data.shape=", data.shape)
         # print "self=", self
         res.append(self.execute(data))  # **exec_params)
     return res
 
 
 # Patch all nodes to offer execute_data_vec
-print "Adding execute_data_vec to all nodes"
+print("Adding execute_data_vec to all nodes")
 for node_str in dir(mdp.nodes):
     node_class = getattr(mdp.nodes, node_str)
     # print node_class
@@ -717,7 +688,7 @@ for node_str in dir(mdp.nodes):
         pass
         # print "execute_data_vec not added (Not a node)", node_str
 
-print "Adding execute_data_vec to all hinet nodes"
+print("Adding execute_data_vec to all hinet nodes")
 for node_str in dir(mdp.hinet):
     node_class = getattr(mdp.hinet, node_str)
     # print node_class
@@ -730,14 +701,14 @@ for node_str in dir(mdp.hinet):
 
 
 def ParallelSFANode_join(self, forked_node):
-    print "_joining ParallelSFANode"
+    print("_joining ParallelSFANode")
     """Combine the covariance matrices."""
-    print "old _myvar=", self._myvar
+    print("old _myvar=", self._myvar)
     if self._myvar is None:
         self._myvar = forked_node._myvar
     else:
         self._myvar = self._myvar + forked_node._myvar
-    print "new _myvar=", self._myvar
+    print("new _myvar=", self._myvar)
 
     if self.block_size is None:
         if self._cov_mtx._cov_mtx is None:
@@ -764,7 +735,7 @@ mdp.parallel.ParallelSFANode._join = ParallelSFANode_join
 def PCANode_train_scheduler(self, x, scheduler=None, n_parallel=None):
     if self.input_dim is None:
         self.input_dim = x.shape[1]
-        print "YEAHH, CORRECTED TRULY"
+        print("YEAHH, CORRECTED TRULY")
     if scheduler is None or n_parallel is None:
         # update the covariance matrix
         self._cov_mtx.update(x)
@@ -772,11 +743,11 @@ def PCANode_train_scheduler(self, x, scheduler=None, n_parallel=None):
         num_chunks = n_parallel
         chunk_size_samples = int(numpy.ceil(x.shape[0] * 1.0 / num_chunks))
 
-        print "%d chunks, of size %d samples" % (num_chunks, chunk_size_samples)
+        print("%d chunks, of size %d samples" % (num_chunks, chunk_size_samples))
         for i in range(num_chunks):
             scheduler.add_task(x[i * chunk_size_samples:(i + 1) * chunk_size_samples], ComputeCovMatrix)
 
-        print "Getting results"
+        print("Getting results")
         sys.stdout.flush()
 
         results = scheduler.get_results()
@@ -853,7 +824,7 @@ def GaussianClassifierNode_class_probabilities(self, x, verbose=True):
         # Second attempt: Find maximum, and assing 1 to it, otherwise go to previous strategy...
         # Seems like it always fails with nan for all entries, thus first measure is better...
     if verbose:
-        print "%d probabilities were fixed" % counter
+        print("%d probabilities were fixed" % counter)
 
     # just in case at this point something still failed... looks impossible though.
     probs = numpy.nan_to_num(probs)
@@ -879,7 +850,7 @@ def GaussianSoftCR(self, data, true_classes):
     for i, c in enumerate(true_classes):
         tot_prob += probabilities[i, c]
     tot_prob /= len(true_classes)
-    print "In softCR: probabilities[0,:]=", probabilities[0, :]
+    print("In softCR: probabilities[0,:]=", probabilities[0, :])
     # print "softCR=", tot_prob
     return tot_prob
 
@@ -919,8 +890,8 @@ def GaussianRegressionMAE(self, data, avg_labels):
     probabilities = self.class_probabilities(data)
     acc_probs = probabilities.cumsum(axis=1)
 
-    print "labels=", self.labels
-    print "acc_probs[0:5]", acc_probs[0:5]
+    print("labels=", self.labels)
+    print("acc_probs[0:5]", acc_probs[0:5])
 
     acc_index = numpy.ones(acc_probs.shape).cumsum(axis=1) - 1
     probability_mask = (acc_probs <= 0.5)
@@ -930,7 +901,7 @@ def GaussianRegressionMAE(self, data, avg_labels):
     #    probability_deviation_from_mode = numpy.abs(acc_probs-0.5)
     #    print "probability_deviation_from_mode[0:5]", probability_deviation_from_mode[0:5]
     #    best_match = numpy.argmin(probability_deviation_from_mode, axis=1)
-    print "best_match[0:5]", best_match[0:5]
+    print("best_match[0:5]", best_match[0:5])
     # print type(best_match)
     # print type(self.labels)
     value = avg_labels[best_match]
@@ -950,15 +921,15 @@ def GaussianRegressionMAE_uniform_bars(self, data, avg_labels):
     probabilities = self.class_probabilities(data)
     acc_probs = probabilities.cumsum(axis=1)
 
-    print "labels (classes)=", self.labels
-    print "acc_probs[0:5]", acc_probs[0:5]
+    print("labels (classes)=", self.labels)
+    print("acc_probs[0:5]", acc_probs[0:5])
 
     acc_index = numpy.ones(acc_probs.shape).cumsum(axis=1) - 1
     probability_mask = (acc_probs <= 0.5)
     acc_index[probability_mask] = acc_probs.shape[1] + 100  # mark entries with acc_probs <= 0.5 as a large value.
     best_match = numpy.argmin(acc_index, axis=1)  # making the smallest entry the first one with acc_prob > 0.5
 
-    print "best_match=", best_match,
+    print("best_match=", best_match)
     # Compute x0 and x1, assume symetric bars... do this vectorially
     bar_limit_x0 = numpy.zeros(len(avg_labels))
     bar_limit_x0[1:] = (avg_labels[1:] + avg_labels[0:-1]) / 2.0
@@ -977,9 +948,9 @@ def GaussianRegressionMAE_uniform_bars(self, data, avg_labels):
     x0 = bar_limit_x0[best_match]
     x1 = bar_limit_x1[best_match]
 
-    print "x0.shape=", x0.shape, "x1.shape=", x1.shape, "CP_x0.shape=", CP_x0.shape, "CP_x1.shape=", CP_x1.shape
+    print("x0.shape=", x0.shape, "x1.shape=", x1.shape, "CP_x0.shape=", CP_x0.shape, "CP_x1.shape=", CP_x1.shape)
     value = x0 + (0.5 - CP_x0) * (x1 - x0) / (CP_x1 - CP_x0)
-    print "MAE value=", value
+    print("MAE value=", value)
     #    probability_deviation_from_mode = numpy.abs(acc_probs-0.5)
     #    print "probability_deviation_from_mode[0:5]", probability_deviation_from_mode[0:5]
     #    best_match = numpy.argmin(probability_deviation_from_mode, axis=1)
@@ -1109,12 +1080,12 @@ if patch_layer:
 
     def Layer_new_train(self, x, scheduler=None, n_parallel=0, immediate_stop_training=False, *args, **kwargs):
         """Perform single training step by training the internal nodes."""
-        print "memory efficient layer training that supports a scheduler"
+        print("memory efficient layer training that supports a scheduler")
         if self.homogeneous is True:
             layer_input_dim = x.shape[1]
             self.set_input_dim(layer_input_dim)
             num_nodes = len(self.nodes)
-            print "Training homogeneous layer with input_dim %d and %d nodes" % (layer_input_dim, num_nodes)
+            print("Training homogeneous layer with input_dim %d and %d nodes" % (layer_input_dim, num_nodes))
             for node in self.nodes:
                 node.set_input_dim(layer_input_dim / num_nodes)
             input_dim = 0
@@ -1131,7 +1102,7 @@ if patch_layer:
             if node.is_training():
                 if isinstance(node, (mdp.nodes.SFANode, mdp.nodes.PCANode, mdp.nodes.WhiteningNode,
                                      mdp.hinet.CloneLayer, mdp.hinet.Layer)) and node.input_dim >= 45:
-                    print "Attempting node parallel training in Layer..."
+                    print("Attempting node parallel training in Layer...")
                     node.train(x[:, start_index: stop_index], scheduler=scheduler, n_parallel=n_parallel, *args,
                                **kwargs)
                 else:
@@ -1146,7 +1117,7 @@ if patch_layer:
             layer_input_dim = x.shape[1]
             self.set_input_dim(layer_input_dim)
             num_nodes = len(self.nodes)
-            print "Training homogeneous layer with input_dim %d and %d nodes" % (layer_input_dim, num_nodes)
+            print("Training homogeneous layer with input_dim %d and %d nodes" % (layer_input_dim, num_nodes))
             for node in self.nodes:
                 node.set_input_dim(layer_input_dim / num_nodes)
             input_dim = 0
@@ -1162,8 +1133,8 @@ if patch_layer:
             #           print "stop_index = ", stop_index
             if node.is_training():
                 if verbose:
-                    print "Layer_new_train_params. params=", params
-                    print "Here computation is fine!!!"
+                    print("Layer_new_train_params. params=", params)
+                    print("Here computation is fine!!!")
                 node.train_params(x[:, start_index: stop_index], params)
                 if node.is_training() and immediate_stop_training and not isinstance(self, mdp.hinet.CloneLayer):
                     node.stop_training()
@@ -1190,7 +1161,8 @@ if patch_layer:
                 self.set_input_dim(layer_input_dim)
                 num_nodes = len(self.nodes)
 
-                print "Pre_Execution of homogeneous layer with input_dim %d and %d nodes" % (layer_input_dim, num_nodes)
+                print("Pre_Execution of homogeneous layer with",
+                      "input_dim %d and %d nodes" % (layer_input_dim, num_nodes))
                 for node in self.nodes:
                     node.set_input_dim(layer_input_dim / num_nodes)
                 input_dim = 0
@@ -1263,8 +1235,8 @@ if patch_flow:
         # train each Node successively
         min_input_size_for_parallel = 45
 
-        print data.__class__, data.dtype, data.shape
-        print data
+        print(data.__class__, data.dtype, data.shape)
+        print(data)
 
         data_loaded = True
         for i in range(len(self.flow)):
@@ -1274,37 +1246,37 @@ if patch_flow:
             if benchmark is not None:
                 ttrain0 = time.time()
             if self.verbose:
-                print "*****************************************************************"
-                print "Training node #%d (%s)..." % (i, str(self.flow[i])),
+                print("*****************************************************************")
+                print("Training node #%d (%s)..." % (i, str(self.flow[i])))
                 if isinstance(self.flow[i], mdp.hinet.Layer):
-                    print "of [%s]" % str(self.flow[i].nodes[0])
+                    print("of [%s]" % str(self.flow[i].nodes[0]))
                 elif isinstance(self.flow[i], mdp.hinet.CloneLayer):
-                    print "of cloned [%s]" % str(self.flow[i].nodes[0])
+                    print("of cloned [%s]" % str(self.flow[i].nodes[0]))
 
             hash_verbose = True  # and False
             if str(self.flow[i]) == "CloneLayer":
                 if str(self.flow[i].nodes[0]) == "RandomPermutationNode":
-                    print "BINGO, RandomPermutationNode Found!"
+                    print("BINGO, RandomPermutationNode Found!")
                     # hash_verbose=False
 
             if node_cache_write or node_cache_read or signal_cache_write or signal_cache_read:
                 untrained_node_hash = misc.hash_object(self.flow[i], verbose=hash_verbose).hexdigest()
-                print "untrained_node_hash[%d]=" % i, untrained_node_hash
+                print("untrained_node_hash[%d]=" % i, untrained_node_hash)
                 node_ndim = str(data.shape[1])
                 data_in_hash = misc.hash_object(data).hexdigest()
-                print "data_in_hash[%d]=" % i, data_in_hash
+                print("data_in_hash[%d]=" % i, data_in_hash)
 
             if self.flow[i].is_trainable():
                 # look for trained node in cache
                 if node_cache_read:
                     node_base_filename = "node_%s_%s_%s" % (node_ndim, untrained_node_hash, data_in_hash)
-                    print "Searching for Trained Node:", node_base_filename
+                    print("Searching for Trained Node:", node_base_filename)
                     if node_cache_read.is_file_in_filesystem(base_filename=node_base_filename):
-                        print "Trained node FOUND in cache..."
+                        print("Trained node FOUND in cache...")
                         self.flow[i] = node_cache_read.load_obj_from_cache(base_filename=node_base_filename)
                         trained_node_in_cache = True
                     else:
-                        print "Trained node NOT found in cache..."
+                        print("Trained node NOT found in cache...")
 
                 if not trained_node_in_cache:
                     # Not in cache, then train the node
@@ -1313,60 +1285,61 @@ if patch_flow:
                         # WARNING: REMOVED scheduler & n_parallel
                         # self.flow[i].train(data, scheduler=scheduler, n_parallel=n_parallel)
                         self.flow[i].train(data, scheduler=scheduler, n_parallel=n_parallel)
-                    elif isinstance(self.flow[i], (mdp.nodes.SFANode, mdp.nodes.PCANode, mdp.nodes.WhiteningNode)) and \
+                    elif isinstance(self.flow[i], (mdp.nodes.SFANode,
+                                                   mdp.nodes.PCANode, mdp.nodes.WhiteningNode)) and \
                                     self.flow[i].input_dim >= min_input_size_for_parallel:
                         # print "Here it should be doing parallel training 2!!!"
                         # WARNING: REMOVED scheduler & n_parallel
                         self.flow[i].train(data, scheduler=scheduler, n_parallel=n_parallel)
                     else:
-                        print "Input_dim was: ", self.flow[
-                            i].input_dim, "or unknown parallel method, thus I didn't go parallel"
+                        print("Input_dim was: ", self.flow[
+                            i].input_dim, "or unknown parallel method, thus I didn't go parallel")
                         self.flow[i].train(data)
                     self.flow[i].stop_training()
                     if isinstance(self.flow[i], mdp.nodes.SFANode):
-                        print "trained SFANode.d is", self.flow[i].d
+                        print("trained SFANode.d is", self.flow[i].d)
             ttrain1 = time.time()
 
             if node_cache_write or node_cache_read or signal_cache_write or signal_cache_read:
                 trained_node_hash = misc.hash_object(self.flow[i], verbose=hash_verbose).hexdigest()
-                print "trained_node_hash[%d]=" % i, trained_node_hash
+                print("trained_node_hash[%d]=" % i, trained_node_hash)
 
-            print "++++++++++++++++++++++++++++++++++++ Executing..."
+            print("++++++++++++++++++++++++++++++++++++ Executing...")
             if signal_cache_read:
                 signal_base_filename = "signal_%s_%s_%s" % (node_ndim, data_in_hash, trained_node_hash)
-                print "Searching for Executed Signal: ", signal_base_filename
+                print("Searching for Executed Signal: ", signal_base_filename)
                 if signal_cache_read.is_splitted_file_in_filesystem(base_filename=signal_base_filename):
-                    print "Executed signal FOUND in cache..."
+                    print("Executed signal FOUND in cache...")
                     data = signal_cache_read.load_array_from_cache(base_filename=signal_base_filename, verbose=True)
                     exec_signal_in_cache = True
                 else:
-                    print "Executed signal NOT found in cache..."
+                    print("Executed signal NOT found in cache...")
 
-            print data.__class__, data.dtype, data.shape
-            print "supported types:", self.flow[i].get_supported_dtypes()
-            print data
+            print(data.__class__, data.dtype, data.shape)
+            print("supported types:", self.flow[i].get_supported_dtypes())
+            print(data)
 
             if not exec_signal_in_cache:
                 data = self.flow[i].execute(data)
 
             ttrain2 = time.time()
             if verbose:
-                print "Training finished in %0.3f s, execution in %0.3f s" % (ttrain1 - ttrain0, ttrain2 - ttrain1)
+                print("Training finished in %0.3f s, execution in %0.3f s" % (ttrain1 - ttrain0, ttrain2 - ttrain1))
             else:
-                print "Training finished"
+                print("Training finished")
             if benchmark is not None:
                 benchmark.append(("Train node #%d (%s)" % (i, str(self.flow[i])), ttrain1 - ttrain0))
                 benchmark.append(("Execute node #%d (%s)" % (i, str(self.flow[i])), ttrain2 - ttrain1))
 
             # Add to Cache Memory: Executed Signal
             if node_cache_write and not trained_node_in_cache and self.flow[i].is_trainable():
-                print "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Caching Trained Node..."
+                print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Caching Trained Node...")
                 node_base_filename = "node_%s_%s_%s" % (node_ndim, untrained_node_hash, data_in_hash)
                 node_cache_write.update_cache(self.flow[i], base_filename=node_base_filename, overwrite=True,
                                               verbose=True)
 
             if signal_cache_write and not exec_signal_in_cache:
-                print "####################################### Caching Executed Signal..."
+                print("####################################### Caching Executed Signal...")
                 data_ndim = node_ndim
                 data_base_filename = "signal_%s_%s_%s" % (data_ndim, data_in_hash, trained_node_hash)
                 signal_cache_write.update_cache(data, base_filename=data_base_filename, overwrite=True, verbose=True)
@@ -1404,7 +1377,7 @@ if patch_flow:
                     node_params[i] = {}
             else:
                 if verbose:
-                    print "param_sets =", param_sets
+                    print("param_sets =", param_sets)
                 node_params = param_sets[index]
 
             # # TODO: More robust compatibility function required
@@ -1412,19 +1385,19 @@ if patch_flow:
             # #    er = "node_funcs and node_params are not compatible: "+str(node_funcs)+str(node_params)
             # #    raise Exception(er)
             if verbose:
-                print "node_funcs and node_params:", node_funcs, node_params
+                print("node_funcs and node_params:", node_funcs, node_params)
             return node_funcs, node_params
         else:  # Not a data set, use data itself as training data
             if param_sets is None:
                 param_sets = {}
             if verbose:
-                print "param_sets =", param_sets
+                print("param_sets =", param_sets)
             return funcs_sets, param_sets
 
     # If the input is a list of functions, execute them to generate the data_vect, otherwise use node_funcs directly as
     # array data
     def extract_data_from_funcs(node_funcs):
-        print "node_funcs is:", node_funcs
+        print("node_funcs is:", node_funcs)
         if isinstance(node_funcs, list):
             node_data = []
             for func in node_funcs:
@@ -1477,7 +1450,7 @@ if patch_flow:
             # Extract data and data_params, integrity check
             # if not data_loaded:
             new_node_funcs, new_node_params = extract_node_funcs(funcs_sets, params_sets, node_nr=i)
-            print "new_node_funcs = ", new_node_funcs
+            print("new_node_funcs = ", new_node_funcs)
             # quit()"list_train_params" in dir(self)
             execute_node_data = False
             if isinstance(new_node_funcs, numpy.ndarray):
@@ -1495,7 +1468,7 @@ if patch_flow:
             # data should be extracted from new_node_funcs and propagated just before the current node
             if execute_node_data:
                 node_data = extract_data_from_funcs(new_node_funcs)
-                print "node_data is:", node_data
+                print("node_data is:", node_data)
                 data_vec = self.execute_data_vec(node_data, node_nr=i - 1)
                 # else:
             # data_vec already contains valid data
@@ -1515,17 +1488,17 @@ if patch_flow:
             # if benchmark is not None:
             ttrain0 = time.time()
             if self.verbose:
-                print "*****************************************************************"
-                print "Training node #%d (%s)..." % (i, str(self.flow[i])),
+                print("*****************************************************************")
+                print("Training node #%d (%s)..." % (i, str(self.flow[i])))
                 if isinstance(self.flow[i], mdp.hinet.Layer):
-                    print "of [%s]" % str(self.flow[i].nodes[0])
+                    print("of [%s]" % str(self.flow[i].nodes[0]))
                 elif isinstance(self.flow[i], mdp.hinet.CloneLayer):
-                    print "of cloned [%s]" % str(self.flow[i].nodes[0])
+                    print("of cloned [%s]" % str(self.flow[i].nodes[0]))
 
             hash_verbose = False
             if str(self.flow[i]) == "CloneLayer":
                 if str(self.flow[i].nodes[0]) == "RandomPermutationNode":
-                    print "BINGO, RandomPermutationNode Found!"
+                    print("BINGO, RandomPermutationNode Found!")
                     hash_verbose = False
 
             # Compute hash of Node and Training Data if needed
@@ -1534,25 +1507,25 @@ if patch_flow:
             effective_node_params = extract_params_relevant_for_node_train(self.flow[i], node_params)
             if node_cache_write or node_cache_read or signal_cache_write or signal_cache_read:
                 untrained_node_hash = misc.hash_object(self.flow[i], verbose=hash_verbose).hexdigest()
-                print "untrained_node_hash[%d]=" % i, untrained_node_hash
+                print("untrained_node_hash[%d]=" % i, untrained_node_hash)
                 node_ndim = str(data_vec_ndim(data_vec))
                 # hash data and node parameters for handling the data!
                 if verbose:  # and False:
-                    print "effective_node_params to be hashed: ", effective_node_params
+                    print("effective_node_params to be hashed: ", effective_node_params)
                 data_in_hash = misc.hash_object((data_vec, effective_node_params)).hexdigest()
-                print "data_in_hash[%d]=" % i, data_in_hash
+                print("data_in_hash[%d]=" % i, data_in_hash)
 
             if self.flow[i].is_trainable():
                 # look for trained node in cache
                 if node_cache_read:
                     node_base_filename = "node_%s_%s_%s" % (node_ndim, untrained_node_hash, data_in_hash)
-                    print "Searching for Trained Node:", node_base_filename
+                    print("Searching for Trained Node:", node_base_filename)
                     if node_cache_read.is_file_in_filesystem(base_filename=node_base_filename):
-                        print "Trained node FOUND in cache..."
+                        print("Trained node FOUND in cache...")
                         self.flow[i] = node_cache_read.load_obj_from_cache(base_filename=node_base_filename)
                         trained_node_in_cache = True
                     else:
-                        print "Trained node NOT found in cache..."
+                        print("Trained node NOT found in cache...")
                         # else:
                         # er = "What happened here???"
                         # raise Exception(er)
@@ -1562,64 +1535,65 @@ if patch_flow:
                 if not trained_node_in_cache:
                     # Not in cache, then train the node
                     if isinstance(self.flow[i], (mdp.hinet.CloneLayer, mdp.hinet.Layer)):
-                        print "First step"
+                        print("First step")
                         if isinstance(data_vec, list):
-                            print "First step 2"
+                            print("First step 2")
                             for j, data in enumerate(data_vec):
-                                print "j=", j
+                                print("j=", j)
                                 # Here some logic is expected (list of train parameters on each node???)
                                 self.flow[i].train(data, params=effective_node_params[j],
                                                    immediate_stop_training=immediate_stop_training)
                         else:
-                            print "First step 3"
+                            print("First step 3")
                             self.flow[i].train(data_vec, params=effective_node_params,
                                                immediate_stop_training=immediate_stop_training)
 
                     elif isinstance(self.flow[i], (mdp.nodes.SFANode, mdp.nodes.PCANode, mdp.nodes.WhiteningNode)):
-                        print "Second Step"
+                        print("Second Step")
                         if isinstance(data_vec, list):
                             for j, data in enumerate(data_vec):
                                 if verbose and very_verbose:  #
-                                    print "Parameters used for training node (L)=", effective_node_params
-                                    print "Pre self.flow[i].output_dim=", self.flow[i].output_dim
+                                    print("Parameters used for training node (L)=", effective_node_params)
+                                    print("Pre self.flow[i].output_dim=", self.flow[i].output_dim)
                                 self.flow[i].train_params(data, params=effective_node_params[j])
-                                print "Post self.flow[i].output_dim=", self.flow[i].output_dim
+                                print("Post self.flow[i].output_dim=", self.flow[i].output_dim)
                         else:
                             if verbose and very_verbose:
-                                print "Parameters used for training node=", effective_node_params
+                                print("Parameters used for training node=", effective_node_params)
                             self.flow[i].train_params(data_vec, params=effective_node_params)
                     else:  # Other node which does not have parameters nor parallelization
-                        # print "Input_dim ", self.flow[i].input_dim, "<", min_input_size_for_parallel, ", or unknown parallel method, thus I didn't go parallel"
+                        # print "Input_dim ", self.flow[i].input_dim, "<", min_input_size_for_parallel, ",
+                        # or unknown parallel method, thus I didn't go parallel"
                         if isinstance(data_vec, list):
                             for j, data in enumerate(data_vec):
                                 self.flow[i].train_params(data, params=effective_node_params[j])
                         else:
                             self.flow[i].train_params(data_vec, params=effective_node_params)
-                    print "Finishing training of node %d:" % i, self.flow[i]
+                    print("Finishing training of node %d:" % i, self.flow[i])
                     if self.flow[i].is_training():
                         self.flow[i].stop_training()
-                    print "Post2 self.flow[%d].output_dim="%i, self.flow[i].output_dim
+                    print("Post2 self.flow[%d].output_dim=" % i, self.flow[i].output_dim)
                     if isinstance(self.flow[i], mdp.nodes.SFANode):
-                        print "SFANode.d is ", self.flow[i].d
+                        print("SFANode.d is ", self.flow[i].d)
 
             ttrain1 = time.time()
 
             # is hash of trained node needed??? of course, this is redundant if no training
             if node_cache_write or node_cache_read or signal_cache_write or signal_cache_read:
                 trained_node_hash = misc.hash_object(self.flow[i], verbose=hash_verbose).hexdigest()
-                print "trained_node_hash[%d]=" % i, trained_node_hash
+                print("trained_node_hash[%d]=" % i, trained_node_hash)
 
-            print "++++++++++++++++++++++++++++++++++++ Executing..."
+            print("++++++++++++++++++++++++++++++++++++ Executing...")
             # Look for excecuted signal in cache
             if signal_cache_read:
                 signal_base_filename = "signal_%s_%s_%s" % (node_ndim, data_in_hash, trained_node_hash)
-                print "Searching for Executed Signal: ", signal_base_filename
+                print("Searching for Executed Signal: ", signal_base_filename)
                 if signal_cache_read.is_splitted_file_in_filesystem(base_filename=signal_base_filename):
-                    print "Executed signal FOUND in cache..."
+                    print("Executed signal FOUND in cache...")
                     data_vec = signal_cache_read.load_array_from_cache(base_filename=signal_base_filename, verbose=True)
                     exec_signal_in_cache = True
                 else:
-                    print "Executed signal NOT found in cache..."
+                    print("Executed signal NOT found in cache...")
 
             # print data.__class__, data.dtype, data.shape
             # print "supported types:", self.flow[i].get_supported_dtypes()
@@ -1628,23 +1602,23 @@ if patch_flow:
             # However, excecute should preserve shape here!
             if not exec_signal_in_cache:
                 data_vec = self.flow[i].execute_data_vec(data_vec)
-                print "Post3 self.flow[%d].output_dim=" % i, self.flow[i].output_dim
-                print "data_vec", data_vec
-                print "len(data_vec)", len(data_vec)
-                print "data_vec[0].shape", data_vec[0].shape
+                print("Post3 self.flow[%d].output_dim=" % i, self.flow[i].output_dim)
+                print("data_vec", data_vec)
+                print("len(data_vec)", len(data_vec))
+                print("data_vec[0].shape", data_vec[0].shape)
 
             ttrain2 = time.time()
             if verbose:
-                print "Training finished in %0.3f s, execution in %0.3f s" % ((ttrain1 - ttrain0), (ttrain2 - ttrain1))
+                print("Training finished in %0.3f s, execution in %0.3f s" % ((ttrain1 - ttrain0), (ttrain2 - ttrain1)))
             else:
-                print "Training finished"
+                print("Training finished")
             if benchmark is not None:
                 benchmark.append(("Train node #%d (%s)" % (i, str(self.flow[i])), ttrain1 - ttrain0))
                 benchmark.append(("Execute node #%d (%s)" % (i, str(self.flow[i])), ttrain2 - ttrain1))
 
             # Add to Cache Memory: Trained Node
             if node_cache_write and (not trained_node_in_cache) and self.flow[i].is_trainable():
-                print "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Caching Trained Node..."
+                print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Caching Trained Node...")
                 node_base_filename = "node_%s_%s_%s" % (node_ndim, untrained_node_hash, data_in_hash)
                 node_cache_write.update_cache(self.flow[i], base_filename=node_base_filename, overwrite=True,
                                               verbose=True)
@@ -1652,7 +1626,7 @@ if patch_flow:
             # Add to Cache Memory: Executed Signal
             if signal_cache_write and (not exec_signal_in_cache):
                 # T: Perhaps data should be written based on mdp.array, not on whole data.
-                print "####################################### Caching Executed Signal..."
+                print("####################################### Caching Executed Signal...")
                 data_ndim = node_ndim
                 data_base_filename = "signal_%s_%s_%s" % (data_ndim, data_in_hash, trained_node_hash)
                 signal_cache_write.update_cache(data_vec, base_filename=data_base_filename, overwrite=True,
@@ -1676,7 +1650,7 @@ if patch_flow:
         for i in range(node_nr + 1):
             try:
                 x = flow[i].execute(x)
-            except Exception, e:
+            except Exception as e:
                 self._propagate_exception(e, i)
             if benchmark is not None:
                 benchmark.add_task_from_previous_time("Execution of node %d" % i)
@@ -1714,7 +1688,7 @@ if patch_flow:
             #        raise mdp.MDPException(errstr)
             raise mdp.linear_flows.FlowException(errstr)
         res = numx.concatenate(res)
-        print "result shape is:", res.shape
+        print("result shape is:", res.shape)
         return numx.concatenate(res)
 
     # Supports single array data but also iterator/list
@@ -1839,7 +1813,7 @@ numarray.linear_algebra.eigenvectors with an interface compatible with symeig.
             # diagonalize A
             w, ZA = numx_linalg.eigh(A)
             Z = mdp.utils.mult(ZB_pca, ZA)
-    except numx_linalg.LinAlgError, exception:
+    except numx_linalg.LinAlgError as exception:
         raise SymeigException(str(exception))
 
     _assert_eigenvalues_real_and_positive(w, dtype)
