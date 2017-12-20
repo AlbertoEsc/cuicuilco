@@ -19,7 +19,6 @@ from mdp.utils import pinv
 import copy
 import sys
 from sfa_libs import select_rows_from_matrix, distance_squared_Euclidean
-from inversion import invert_exp_funcs2
 import more_nodes
 from more_nodes import GeneralExpansionNode
 from gsfa_node import GSFANode

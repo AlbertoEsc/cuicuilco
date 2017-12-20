@@ -1,9 +1,9 @@
 #####################################################################################################################
 # lattice: This module implements functions that are useful to build receptive fields localized over a lattice      #
-#          generalizing rectangular swichtboards.                                                                   #
+#          generalizing rectangular swichtboards. It is part of the Cuicuilco framework.                            #
 #          Also a specialized localized/sparse receptive field is supported.                                        #
 #                                                                                                                   #
-# By Alberto Escalante. Alberto.Escalante@neuroinformatik.ruhr-uni-bochum.de                                        #
+# By Alberto Escalante. Alberto.Escalante@ini.rub.de                                                                #
 # Ruhr-University-Bochum, Institute for Neural Computation, Group of Prof. Dr. Wiskott                              #
 #####################################################################################################################
 

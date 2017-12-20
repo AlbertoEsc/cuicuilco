@@ -1,10 +1,10 @@
 #####################################################################################################################
-# inversion: This module provide specialized functions for computing node inverses and localized inverses           #
-#                                                                                                                   #
+# inversion: This module provide specialized functions for computing node inverses and localized inverses.          #
+#            It is part of the Cuicuilco framework                                                                  #
 # Main functions: localized_inverse, linear_localized_inverse, layer_localized_inverse,                             #
 #                 general_expansion_node_localized_inverse, invert_exp_funcs2                                       #
 #                                                                                                                   #
-# By Alberto Escalante. Alberto.Escalante@neuroinformatik.ruhr-uni-bochum.de                                        #
+# By Alberto Escalante. Alberto.Escalante@ini.rub.de                                                                #
 # Ruhr-University-Bochum, Institute for Neural Computation, Group of Prof. Dr. Wiskott                              #
 #####################################################################################################################
 
@@ -67,7 +67,7 @@ def localized_inverse(self, x_local, y_to_invert, verbose=False):
             if not processed:
                 txt = "I was not able to compute the localized inverse of node: %s ", str(node)
                 raise Exception(txt)
-        except e:
+        except Exception as e:
             self._propagate_exception(e, i)
         if verbose:
             print("Localized Node Inversion finished")

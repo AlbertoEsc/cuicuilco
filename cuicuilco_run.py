@@ -1,12 +1,12 @@
 #! /usr/bin/env python
 
 #####################################################################################################################
-# CUICUILCO: A general purpose framework that allows the construction and evaluation of
-#            hierarchical networks for supervised learning
-
-# By Alberto Escalante. Alberto.Escalante@neuroinformatik.ruhr-uni-bochum.de 
-# Ruhr-University-Bochum, Institute of Neural Computation, Group of Prof. Dr. Wiskott
-
+# CUICUILCO: A general purpose framework that allows the construction and evaluation of                             #
+#            hierarchical networks for supervised learning                                                          #
+#                                                                                                                   #
+# By Alberto Escalante. Alberto.Escalante@ini.rub.de                                                                #
+# Ruhr-University-Bochum, Institute of Neural Computation, Group of Prof. Dr. Wiskott                               #
+#####################################################################################################################
 
 #####################################################################################################################
 # USAGE EXAMPLES:

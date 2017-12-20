@@ -1,5 +1,5 @@
 #####################################################################################################################
-# more_nodes: This module implements several new nodes and helper functions. It is part of the Cuicuilco framework  #
+# more_nodes: This module implements several new nodes and helper functions. It is part of the Cuicuilco framework. #
 #                                                                                                                   #
 # These nodes include: BasicAdaptiveCutoffNode, SFA_GaussianClassifier, RandomizedMaskNode, GeneralExpansionNode,   #
 # PointwiseFunctionNode, RandomPermutationNode                                                                      #
@@ -14,14 +14,11 @@ import scipy
 import scipy.optimize
 import mdp
 from mdp.utils import (mult, pinv, symeig, CovarianceMatrix, SymeigException)
-
 import copy
 import sys
 from sfa_libs import select_rows_from_matrix, distance_squared_Euclidean
 from inversion import invert_exp_funcs2
-
 import inspect
-
 from histogram_equalization import *
 
 

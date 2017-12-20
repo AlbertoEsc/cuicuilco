@@ -1,8 +1,8 @@
 #####################################################################################################################
-# patch_mdp: This module adds new nodes and functionality of Cuicuilco to MDP dynamically                           #
+# patch_mdp: This module adds to MDP the new nodes and functionality of Cuicuilco dynamically                       #
 #                                                                                                                   #
 #                                                                                                                   #
-# By Alberto Escalante. Alberto.Escalante@neuroinformatik.ruhr-uni-bochum.de                                        #
+# By Alberto Escalante. Alberto.Escalante@ini.rub.de                                                                #
 # Ruhr-University-Bochum, Institute for Neural Computation, Group of Prof. Dr. Wiskott                              #
 #####################################################################################################################
 

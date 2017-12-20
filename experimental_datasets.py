@@ -1,6 +1,6 @@
 #####################################################################################################################
-# experimental_datasets: This module contains various datasets that can be used for experiments                     #
-#                                                                                                                   #
+# experimental_datasets: This module contains various datasets that can be used for experiments. It is part         #
+#                        of the Cuicuilco framework                                                                 #
 # Main datasets: ParamsAgeFunc_128x128 (age, gender, and race estimation, MORPH-II),                                #
 #                ParamsCIFAR10Func_32x32 (object classification, CIFAR-10),                                         #
 #                ParamsGenderFunc (Gender estimation, artificial images),                                           #
@@ -14,7 +14,7 @@
 #                                                                                                                   #
 # Note: the user can define new datasets by means of the ImportDatasetsFromFile flag in cuicuilco_run               #
 #                                                                                                                   #
-# By Alberto Escalante. Alberto.Escalante@neuroinformatik.ruhr-uni-bochum.de                                        #
+# By Alberto Escalante. Alberto.Escalante@ini.rub.de                                                                #
 # Ruhr-University-Bochum, Institute for Neural Computation, Group of Prof. Dr. Wiskott                              #
 #####################################################################################################################
 
