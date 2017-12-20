@@ -1,10 +1,20 @@
-# This file is part of the Cuicuilco framework. It contains the functions needed to compute ELL graphs
-# By Alberto Escalante, Ruhr-University-Bochum, Institute of Neurocomputation, Group of Prof. Dr. Wiskott
-# See the following reference: "Theoretical Analysis of the Optimal Free Responses of Graph-Based SFA for the Design
-# of Training Graphs}, Alberto N. Escalante-B. and Laurenz Wiskott, Journal of Machine Learning Research, 2016"
+#####################################################################################################################
+# exact_label_learning: This module implements methods for the analysis and construction of training graphs for     #
+#                       GSFA and further extensions (e.g., iGSFA, HiGSFA). It is part of the Cuicuilco framework.   #
+#                                                                                                                   #
+# The module contains functions needed to compute ELL graphs as well as to compute optimal free responses of        #
+# arbitrary training-graphs.                                                                                        #
+#                                                                                                                   #
+# See the following publication for details: Escalante-B AN, Wiskott L, "Theoretical analysis of the optimal        #
+# free responses of graph-based SFA for the design of training graphs", Journal of Machine Learning Research,       #
+# 17(157):1--36, 2016                                                                                               #
+#                                                                                                                   #
+# By Alberto Escalante. Alberto.Escalante@ini.ruhr-uni-bochum.de                                                    #
+# Ruhr-University-Bochum, Institute for Neural Computation, Group of Prof. Dr. Wiskott                              #
+#####################################################################################################################
 
+from __future__ import print_function
 import numpy
-
 
 #####################################################################################################################
 # ########################### FUNCTIONS FOR CONSTRUCTING PREDEFINED TRAINING GRAPHS #################################
@@ -69,13 +79,13 @@ def GenerateCompactClassesGraph(label_block_size, J):
     for j in range(J):
         w = 1.0 / (N / 2 - 1)
         c10 = all_nodes[labels[:, j] == 1]
-        print "c10=", c10
+        print("c10=", c10)
         for n1 in c10:
             for n2 in c10:
                 if n1 != n2:
                     add_edge(edge_weights, n1, n2, w)
         c10 = all_nodes[labels[:, j] == 0]
-        print "c10=", c10
+        print("c10=", c10)
         for n1 in c10:
             for n2 in c10:
                 if n1 != n2:
@@ -183,7 +193,7 @@ def GenerateSlidingWindowConsistentGraph(num_samples, d):
     for (i, j) in edge_weights.keys():
         connectivity[i] += edge_weights[(i, j)]
 
-    print "Connectivities are:", connectivity
+    print("Connectivities are:", connectivity)
     for i in range(N):
         if connectivity[i] < 1.0:
             edge_weights[(i, i)] = 1 - connectivity[i]
@@ -192,7 +202,7 @@ def GenerateSlidingWindowConsistentGraph(num_samples, d):
     for (i, j) in edge_weights.keys():
         connectivity[i] += edge_weights[(i, j)]
 
-    print "Connectivities are:", connectivity
+    print("Connectivities are:", connectivity)
     for i in range(N):
         if connectivity[i] < 1.0:
             edge_weights[(i, i)] = 1 - connectivity[i]
@@ -299,10 +309,10 @@ def IsGraphConsistent(node_weights, edge_weights):
         c_in[np] += w
 
     if (node_weights / Q - c_out / R > 0.000001).any():
-        print "Graph is not consistent! node_weights/Q=", node_weights / Q, " but c_out/R=", c_out / R
+        print("Graph is not consistent! node_weights/Q=", node_weights / Q, " but c_out/R=", c_out / R)
         return 0
     if (node_weights / Q - c_in / R > 0.000001).any():
-        print "Graph is not consistent! node_weights/Q=", node_weights / Q, " but c_in/R=", c_out / R
+        print("Graph is not consistent! node_weights/Q=", node_weights / Q, " but c_in/R=", c_out / R)
         return 0
     return 1
 
@@ -388,17 +398,17 @@ def EnforceEigenvectorConst(l, eigv, node_weights):
     s = Q ** -0.5 * node_weights ** 0.5  # Assuring s^T s = Q/Q = 1
     #    energy_s = numpy.dot(s, s)
 
-    print "s=", s
-    print "eigvT=", eigv
+    print("s=", s)
+    print("eigvT=", eigv)
 
     constant_added = False
     for j in range(eigv.shape[1])[::-1]:
         prod = numpy.dot(s, eigv[:, j])
-        if numpy.abs(prod) > 0.000001 and constant_added == False:
-            print "Setting eigenvector %d as constant" % j
+        if numpy.abs(prod) > 0.000001 and not constant_added:
+            print("Setting eigenvector %d as constant" % j)
             eigv[:, j] = s
             constant_added = True
-    print "Constant added: eigvT=", eigv
+    print("Constant added: eigvT=", eigv)
 
     for j in range(eigv.shape[1])[::-1]:
         energy_j = numpy.dot(eigv[:, j], eigv[:, j])
@@ -409,7 +419,7 @@ def EnforceEigenvectorConst(l, eigv, node_weights):
             prod = numpy.dot(eigv[:, j], eigv[:, k])
             if numpy.abs(prod) > 0.000001:
                 eigv[:, k] = eigv[:, k] - eigv[:, j] * prod
-    print "Re-orthogonalization: eigvT=", eigv
+    print("Re-orthogonalization: eigvT=", eigv)
 
     return l, eigv
 
@@ -431,8 +441,8 @@ def RemoveNegativeEdgeWeights(node_weights, Gamma):
     N = len(node_weights)
     m = Gamma.min()
     if m < 0:
-        print "m=", m
-        print "node_weights=", node_weights
+        print("m=", m)
+        print("node_weights=", node_weights)
         # correct_but_slow:
         # node_weights_m1 = numpy.diag(1.0/node_weights)
         # c = -1 * numpy.dot(node_weights_m1, numpy.dot(Gamma, node_weights_m1)).min()
@@ -440,16 +450,16 @@ def RemoveNegativeEdgeWeights(node_weights, Gamma):
         node_weights_m1_col = (1.0 / node_weights).reshape((-1, 1))
         c = -1 * (node_weights_m1_col * Gamma * node_weights_m1_row).min()
 
-        print "c=", c
+        print("c=", c)
         Z = numpy.dot(node_weights.reshape((N, 1)), node_weights.reshape((1, N)))
-        print "Z=", Z
+        print("Z=", Z)
         Q = node_weights.sum()
         R = Gamma.sum()
-        print "R=", R
+        print("R=", R)
         b = c * Q ** 2 / R
         Gamma = (Gamma + c * Z) / (1.0 + b)
     else:
-        print "Graph has already non-negative weights"
+        print("Graph has already non-negative weights")
     return Gamma
 
 
@@ -466,7 +476,7 @@ def MapLabelsToFreeResponses(labels, node_weights):
     J = labels.shape[1]
 
     Q = ComputeQ(node_weights)
-    print "Q=", Q
+    print("Q=", Q)
     # node_weights_12 = node_weights ** 0.5
 
     free_responses = numpy.zeros((N, J + 1))  # Response zero is constant
@@ -486,9 +496,9 @@ def MapLabelsToFreeResponses(labels, node_weights):
             # numpy.dot(free_responses[:,k], free_responses[:,j]) * free_responses[:,j] / norm_free_response**2
             free_responses[:, k] = free_responses[:, k] - proj * free_responses[:, j]
 
-    print "Free responses:", free_responses
+    print("Free responses:", free_responses)
     for j in range(J + 1):
-        print "l'[%d]^T D(v) l'[%d]= " % (j, j), numpy.dot(free_responses[:, j] * node_weights, free_responses[:, j])
+        print("l'[%d]^T D(v) l'[%d]= " % (j, j), numpy.dot(free_responses[:, j] * node_weights, free_responses[:, j]))
 
     return free_responses
 
@@ -503,9 +513,9 @@ def MapFreeResponsesToEigenvectors(free_responses, node_weights):
     for j in range(J):
         eigenvectors[:, j] = free_responses[:, j] * node_weights ** 0.5 / Q ** 0.5
 
-    print "verifying eigenvectors have unit norm"
+    print("verifying eigenvectors have unit norm")
     for j in range(J):
-        print "Norm ev[%d] is %f" % (j, numpy.dot(eigenvectors[:, j], eigenvectors[:, j]))
+        print("Norm ev[%d] is %f" % (j, numpy.dot(eigenvectors[:, j], eigenvectors[:, j])))
     return eigenvectors
 
 
@@ -515,11 +525,11 @@ def ConstructMFromEigenvectors(eigenvectors, deltas, Q, R):
     M = numpy.zeros((N, N))
 
     eigenvalues = (2.0 - deltas) * R / (2 * Q)
-    print "eigenvalues being used:", eigenvalues
-    print "assuming given eigenvectors have unit norm"
+    print("eigenvalues being used:", eigenvalues)
+    print("assuming given eigenvectors have unit norm")
     for j in range(J):
         term = eigenvalues[j] * numpy.dot(eigenvectors[:, j:j + 1], eigenvectors[:, j:j + 1].T)
-        print "adding term: ", term
+        print("adding term: ", term)
         M += term
     return M
 
@@ -538,10 +548,10 @@ def ConstructGammaFromLabels(labels, node_weights, constant_deltas=False):
         deltas[0:J] = 0.0
     else:
         deltas[0:J] = 2.0 * numpy.arange(J) / J
-    print "deltas=", deltas
+    print("deltas=", deltas)
     M = ConstructMFromEigenvectors(eigenvectors, deltas, Q, R)
     Gamma = ComputeGammaFromM(node_weights, M)
-    print "Gamma computed"
+    print("Gamma computed")
     return Gamma
 
 
