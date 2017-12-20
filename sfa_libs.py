@@ -1,14 +1,22 @@
-# Basic Functions related to SFA, MDP, Display, Image Processing, Matplotlib
-# By Alberto Escalante. Alberto.Escalante@neuroinformatik.ruhr-uni-bochum.de First Version 19 Mai 2009
-# Ruhr-University-Bochum, Institute of Neurocomputation, Group of Prof. Dr. Wiskott
+#####################################################################################################################
+# sfa_libs: This module implements a few helper functions related to SFA, MDP, display, and image processing.       #
+#           It is part of the Cuicuilco framework.                                                                  #
+#                                                                                                                   #
+#                                                                                                                   #
+# By Alberto Escalante. Alberto.Escalante@ini.ruhr-uni-bochum.de                                                    #
+# Ruhr-University-Bochum, Institute for Neural Computation, Group of Prof. Dr. Wiskott                              #
+#####################################################################################################################
 
+from __future__ import print_function
 import numpy
 
 
-# default scales (-1,1) into (0, 255)
-# Normalized to [-scale/2, scale/2]
 def scale_to(val, av_in=0.0, delta_in=2.0, av_out=127.5, delta_out=255.0, scale=1.0, transf='lin'):
-    normalized = scale*(val - av_in) / delta_in
+    """Applies a linear scaling to the elements of an ndarray (trans=='lin') or a non-linear scaling (trans=='tanh').
+
+    The default parameters scale values in (-1,1) into (0, 255).
+    """
+    normalized = scale * (val - av_in) / delta_in
     if transf == 'lin':
         return normalized * delta_out + av_out
     elif transf == 'tanh':
@@ -35,15 +43,6 @@ def wider_1Darray(x, scale_x=1):
     for i in range(x.shape[0]):
         z[scale_x*i:scale_x*(i+1)] = x[i]
     return z
-
-# def format_coord(x, y, numcols, numrows, width_factor=1.0, height_factor=1.0):
-#     col = int(x/width_factor+0.5)
-#     row = int(y/height_factor+0.5)
-#     if col>=0 and col<numcols and row>=0 and row<numrows:
-#         z = X[row,col]
-#         return 'x=%1.4f, y=%1.4f, z=%1.4f'%(x, y, z)
-#     else:
-#         return 'x=%1.4f, y=%1.4f'%(x, y)
 
 
 def extend_channel_mask_to_signal_mask(input_dim, channel_mask):
@@ -81,16 +80,6 @@ def inv_clipping_sigma(x, max_in):
 
 def row_func(func, x):
     return numpy.array(map(func, x))
-
-
-# Obsolete, there is a method that does this... (with t-1 as denominator)
-def comp_variance(x):
-    t, num_vars = x.shape
-    delta = numpy.zeros(num_vars)
-    for row in x:
-        delta = delta + numpy.square(row)
-    delta = delta / t
-    return delta
 
 
 # Returns zero-mean unit-variance samples for data in MDP format
@@ -179,7 +168,7 @@ def comp_typical_delta_eta(x, block_size, num_reps=10, training_mode='serial'):
         eta = eta / num_reps       
     elif training_mode == "clustered" or training_mode == "compact_classes":
         # verify this... and make exact computation
-        print "exact computation of delta value for clustered graph..."
+        print ("exact computation of delta value for clustered graph...")
         # print "x.std(axis=0)=", x.std(axis=0)
         if isinstance(block_size, int):
             block_sizes = [block_size] * (t / block_size)
@@ -199,9 +188,9 @@ def comp_typical_delta_eta(x, block_size, num_reps=10, training_mode='serial'):
     elif training_mode is None or training_mode == "regular":
         delta = comp_delta(x)    
     else:
-        er = "Training mode unknown:", training_mode, "still, computing delta as a sequence"
-        print er
-        delta = comp_delta(x)    
+        er = "Training mode unknown:" + training_mode + "still, computing delta as a sequence"
+        print (er)
+        delta = comp_delta(x)
 
     if eta is None:
         eta = comp_eta_from_t_and_delta(t, delta)
@@ -346,7 +335,16 @@ def ndarray_to_string(x, prefix="", col_sep=", ", row_sep="\n", out_filename=Non
         fileobj.write(s)
         fileobj.close()
     return s
-    
+
+# # Obsolete, there is a method that does this... (with t-1 as denominator)
+# def comp_variance(x):
+#     t, num_vars = x.shape
+#     delta = numpy.zeros(num_vars)
+#     for row in x:
+#         delta = delta + numpy.square(row)
+#     delta = delta / t
+#     return delta
+
 # x = numpy.linspace(1.0, 10.0, 1000)
 # x = x.reshape((4,250))
 # ndarray_to_string(x, "/local/tmp/escalafl/test_write.txt")
@@ -369,18 +367,18 @@ if test_select_rows_from_matrix_speed:
     import time
     t0 = time.time()
     z1 = select_rows_from_matrix1(w, x)
-    print "time used by select_rows_from_matrix1:", time.time()-t0    
+    print ("time used by select_rows_from_matrix1:", time.time() - t0)
     t0 = time.time()
     z2 = select_rows_from_matrix2(w, x)
-    print "time used by select_rows_from_matrix2:", time.time()-t0   
+    print ("time used by select_rows_from_matrix2:", time.time() - t0)
     t0 = time.time()
     z3 = select_rows_from_matrix3(w, x)
-    print "time used by select_rows_from_matrix3:", time.time()-t0
+    print ("time used by select_rows_from_matrix3:", time.time() - t0)
     t0 = time.time()
     z4 = select_rows_from_matrix4(w, x)
-    print "time used by select_rows_from_matrix4:", time.time()-t0
+    print ("time used by select_rows_from_matrix4:", time.time() - t0)
     t0 = time.time()
     z5 = select_rows_from_matrix(w, x, mode=None)
-    print "time used by select_rows_from_matrix:", time.time()-t0
-    
-    print ((z1-z2)**2+(z2-z3)**2+(z3-z4)**2+(z4-z5)**2).sum()
+    print ("time used by select_rows_from_matrix:", time.time() - t0)
+
+    print(((z1 - z2) ** 2 + (z2 - z3) ** 2 + (z3 - z4) ** 2 + (z4 - z5) ** 2).sum())
