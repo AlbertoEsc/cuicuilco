@@ -1,3 +1,14 @@
+#####################################################################################################################
+# histogram_equalization: This module contains two nodes: HistogramEqualizationNode and NLIPCANode                  #
+#                                                                                                                   #
+# HistogramEqualizationNode: Histogram equalization by step-wise linear functions                                   #
+# NLIPCANode: A nonlinear (feature-) incremental implementation of PCA                                              #
+#                                                                                                                   #
+# By Alberto Escalante. Alberto.Escalante@ini.ruhr-uni-bochum.de                                                    #
+# Ruhr-University-Bochum, Institute for Neural Computation, Group of Prof. Dr. Wiskott                              #
+#####################################################################################################################
+
+from __future__ import print_function
 import mdp
 import numpy as numx
 import numpy
@@ -12,8 +23,8 @@ def learn_histogram_equalizer(x, num_pivots, linear_histogram=False, ignore_two_
     else:
         indices_pivots = numpy.linspace(0, num_samples - 1, num_pivots).round().astype(int)
     pivots = y[indices_pivots]
-    print "pivots computed=", pivots
-    print "indices_pivots=", indices_pivots
+    print("pivots computed=", pivots)
+    print("indices_pivots=", indices_pivots)
     if linear_histogram:
         pivot_outputs = numpy.linspace(0, 1.0, num_pivots)
     else:
@@ -40,15 +51,15 @@ class HistogramEqualizationNode(mdp.Node):
         self.a = a
         self.b = b
         self.hx = []
-        print "Node creation. num_pivots=", num_pivots, "hx=", self.hx
+        print("Node creation. num_pivots=", num_pivots, "hx=", self.hx)
 
     def _train(self, x):
         dim = x.shape[1]
         self.hx = []
         for i in range(dim):
             self.hx.append(learn_histogram_equalizer(x[:, i], self.num_pivots))
-        print "Trained: self.hx[0]=", self.hx[0]
-        print "x[:,0]=", x[:, 0]
+        print("Trained: self.hx[0]=", self.hx[0])
+        print("x[:,0]=", x[:, 0])
 
     def _execute(self, x):
         dim = len(self.hx)
@@ -62,7 +73,8 @@ class HistogramEqualizationNode(mdp.Node):
             # print "y[:,0] sorted =", yy
         return y.clip(self.a, self.b)
 
-    def _is_trainable(self):
+    @staticmethod
+    def _is_trainable():
         return True
 
 
@@ -131,9 +143,9 @@ def cos_exp_dD_F(x, degree, keep_identity=False):
             next_lens[j + 1] = len_
             k = k + len_
 
-    print "keep identity is:", keep_identity
+    print("keep identity is:", keep_identity)
     if keep_identity:
-        print "*****************"
+        print("*****************")
         dexp[0:dim, :] = x[:, :].T
         dexp[dim:, :] = numpy.cos(dexp[dim:, :] * numx.pi)
         out = dexp.T
@@ -208,7 +220,8 @@ class NormalizeABNode(mdp.Node):
         y = (x - self.x_min) * (self.b - self.a) / (self.x_max - self.x_min) + self.a
         return y.clip(self.a, self.b)
 
-    def _is_trainable(self):
+    @staticmethod
+    def _is_trainable():
         return True
 
 
@@ -221,13 +234,13 @@ class NLIPCANode(mdp.Node):
         self.feats_at_once = feats_at_once
         self.factor_projection_out = factor_projection_out
         self.factor_mode = factor_mode
-        print "self.factor_projection_out=", self.factor_projection_out
-        print "self.factor_mode=", self.factor_mode
+        print("self.factor_projection_out=", self.factor_projection_out)
+        print("self.factor_mode=", self.factor_mode)
         self.expand_chunkwise = expand_chunkwise
         self.norm_nodes = []
         self.lr_nodes = []
         self.exp_func = exp_func
-        print "Initialization finished"
+        print("Initialization finished")
 
     def _train(self, x):
         num_samples = x.shape[0]
@@ -235,8 +248,8 @@ class NLIPCANode(mdp.Node):
         y = numpy.zeros((num_samples, self.output_dim))
         normalized_y = numpy.zeros((num_samples, self.output_dim))
 
-        print "Energy of input data is", (residual_data ** 2).sum()
-        print "output_dim is", self.output_dim
+        print("Energy of input data is", (residual_data ** 2).sum())
+        print("output_dim is", self.output_dim)
         for feat_nr in range(0, self.output_dim, self.feats_at_once):
             pca_node = mdp.nodes.PCANode(output_dim=self.feats_at_once)  # PCANode
             pca_node.train(residual_data)
@@ -264,11 +277,11 @@ class NLIPCANode(mdp.Node):
                 else:
                     expanded_data = normalized_y[:, 0:feat_nr + self.feats_at_once]
             lr_node = mdp.nodes.LinearRegressionNode(use_pinv=True)
-            print "AA Energy of residual data is", (residual_data ** 2).sum()
+            print("AA Energy of residual data is", (residual_data ** 2).sum())
             lr_node.train(expanded_data, residual_data)
             lr_node.stop_training()
             residual_data_app = lr_node.execute(expanded_data)
-            print "BB Energy of residual data app is", (residual_data_app ** 2).sum()
+            print("BB Energy of residual data app is", (residual_data_app ** 2).sum())
             if self.factor_mode == "constant":
                 effective_projection_factor = self.factor_projection_out
             elif self.factor_mode == "increasing":
@@ -283,7 +296,7 @@ class NLIPCANode(mdp.Node):
             residual_data = residual_data - residual_data_app * effective_projection_factor
             self.pca_nodes.append(pca_node)
             self.lr_nodes.append(lr_node)
-            print "CC Energy of residual data is", (residual_data ** 2).sum()
+            print("CC Energy of residual data is", (residual_data ** 2).sum())
 
     # TODO: FIX AMPLITUDE OF OUTPUT FEATURES!
     def _execute(self, x):
@@ -327,9 +340,9 @@ class NLIPCANode(mdp.Node):
             else:
                 ex = "unknown factor_mode:", self.factor_mode
                 raise Exception(ex)
-            print "effective_projection_factor=", effective_projection_factor
+            print("effective_projection_factor=", effective_projection_factor)
             residual_data = residual_data - residual_data_app * effective_projection_factor
-            print "Energy of residual data is", (residual_data ** 2).sum()
+            print("Energy of residual data is", (residual_data ** 2).sum())
         return y
 
     def _inverse(self, y):
@@ -368,14 +381,16 @@ class NLIPCANode(mdp.Node):
             else:
                 ex = "unknown factor_mode:", self.factor_mode
                 raise Exception(ex)
-            print "effective_projection_factor=", effective_projection_factor
+            print("effective_projection_factor=", effective_projection_factor)
             residual_data = residual_data + residual_data_app * effective_projection_factor
-            print "Energy of residual data is", (residual_data ** 2).sum()
+            print("Energy of residual data is", (residual_data ** 2).sum())
         return residual_data
 
-    def is_trainable(self):
+    @staticmethod
+    def is_trainable():
         return True
 
+    @staticmethod
     def is_invertible(self):
         return True
         # TODO: code inversion function
@@ -543,7 +558,7 @@ def cos_exp_eE_mM_F(x, exact_degree, max_sel_vars, keep_identity=False):
         all_feature_vectors.append(list(feature_vector))
     # print "all_feature_vectors=", all_feature_vectors
     exp_dim = len(all_feature_vectors)
-    print "expanded dim is", exp_dim, " ",
+    print("expanded dim is", exp_dim, " ")
     dexp = numpy.zeros((num_samples, exp_dim))
     for i, feature_vector in enumerate(all_feature_vectors):
         # print "feature_vector=", feature_vector
@@ -566,7 +581,7 @@ def cos_exp_mix1_F(x):
     expanded_data.append(cos_exp_eE_mM_F(x[:, 0:20], exact_degree=4, max_sel_vars=2))
     expanded_data.append(cos_exp_eE_mM_F(x[:, 0:15], exact_degree=5, max_sel_vars=1))
     for a in expanded_data:
-        print "a.shape is", a.shape
+        print("a.shape is", a.shape)
     return numpy.hstack(expanded_data)
 
 
@@ -580,7 +595,7 @@ def cos_exp_mix2_F(x):
     expanded_data.append(cos_exp_eE_mM_F(x[:, 0:15], exact_degree=6, max_sel_vars=1))
     expanded_data.append(cos_exp_eE_mM_F(x[:, 0:15], exact_degree=7, max_sel_vars=1))
     for a in expanded_data:
-        print " a.shape is", a.shape,
+        print(" a.shape is", a.shape)
     return numpy.hstack(expanded_data)
 
 
@@ -594,7 +609,7 @@ def cos_exp_mix3_F(x):
     expanded_data.append(cos_exp_eE_mM_F(x[:, 0:60], exact_degree=6, max_sel_vars=1))
     expanded_data.append(cos_exp_eE_mM_F(x[:, 0:60], exact_degree=7, max_sel_vars=1))
     for a in expanded_data:
-        print " a.shape is", a.shape,
+        print(" a.shape is", a.shape)
     return numpy.hstack(expanded_data)
 
 
@@ -608,7 +623,7 @@ def cos_exp_mix4_F(x):
     expanded_data.append(cos_exp_eE_mM_F(x[:, 0:60], exact_degree=6, max_sel_vars=1))
     expanded_data.append(cos_exp_eE_mM_F(x[:, 0:60], exact_degree=7, max_sel_vars=1))
     for a in expanded_data:
-        print " a.shape is", a.shape,
+        print(" a.shape is", a.shape)
     return numpy.hstack(expanded_data)
 
 
@@ -622,7 +637,7 @@ def cos_exp_mix5_F(x):
     expanded_data.append(cos_exp_eE_mM_F(x[:, 0:60], exact_degree=6, max_sel_vars=1))
     expanded_data.append(cos_exp_eE_mM_F(x[:, 0:60], exact_degree=7, max_sel_vars=1))
     for a in expanded_data:
-        print " a.shape is", a.shape,
+        print(" a.shape is", a.shape)
     return numpy.hstack(expanded_data)
 
 
@@ -638,7 +653,7 @@ def cos_exp_mix6_F(x):
     expanded_data.append(cos_exp_eE_mM_F(x[:, 0:15], exact_degree=8, max_sel_vars=1))
     expanded_data.append(cos_exp_eE_mM_F(x[:, 0:15], exact_degree=9, max_sel_vars=1))
     for a in expanded_data:
-        print " a.shape is", a.shape,
+        print(" a.shape is", a.shape)
     return numpy.hstack(expanded_data)
 
 
@@ -658,7 +673,7 @@ def cos_exp_mix7_F(x):
     expanded_data.append(cos_exp_eE_mM_F(x[:, 0:], exact_degree=8, max_sel_vars=1))
     expanded_data.append(cos_exp_eE_mM_F(x[:, 0:], exact_degree=9, max_sel_vars=1))
     for a in expanded_data:
-        print " a.shape is", a.shape,
+        print(" a.shape is", a.shape)
     return numpy.hstack(expanded_data)
 
 
@@ -678,7 +693,7 @@ def cos_exp_mix8_F(x):
     #    expanded_data.append(cos_exp_eE_mM_F(x[:,0:],   exact_degree=8, max_sel_vars=1))
     #    expanded_data.append(cos_exp_eE_mM_F(x[:,0:],   exact_degree=9, max_sel_vars=1))
     for a in expanded_data:
-        print " a.shape is", a.shape,
+        print(" a.shape is", a.shape)
     return numpy.hstack(expanded_data)
 
 
@@ -689,7 +704,7 @@ def cos_exp_mix8chunk_F(x):
     expanded_data.append(cos_exp_eE_mM_F(x[:, 0:25], exact_degree=3, max_sel_vars=3))
     expanded_data.append(cos_exp_eE_mM_F(x[:, 0:10], exact_degree=4, max_sel_vars=4))
     for a in expanded_data:
-        print " a.shape is", a.shape,
+        print(" a.shape is", a.shape)
     return numpy.hstack(expanded_data)
 
 
@@ -701,7 +716,7 @@ def cos_exp_mix8block_F(x):
     expanded_data.append(cos_exp_eE_mM_F(x[:, 25:50], exact_degree=3, max_sel_vars=3))
     #    expanded_data.append(cos_exp_eE_mM_F(x[:,0:10],  exact_degree=4, max_sel_vars=4))
     for a in expanded_data:
-        print " a.shape is", a.shape,
+        print(" a.shape is", a.shape)
     return numpy.hstack(expanded_data)
 
 
@@ -714,7 +729,7 @@ def cos_exp_mix8block25n20n15c_F(x):
     expanded_data.append(cos_exp_eE_mM_F(x[:, 45:60], exact_degree=3, max_sel_vars=3))
     #    expanded_data.append(cos_exp_eE_mM_F(x[:,0:10],  exact_degree=4, max_sel_vars=4))
     for a in expanded_data:
-        print " a.shape is", a.shape,
+        print(" a.shape is", a.shape)
     return numpy.hstack(expanded_data)
 
 
@@ -732,7 +747,7 @@ def cos_exp_mix9_F(x):
     expanded_data.append(cos_exp_eE_mM_F(x[:, 0:120], exact_degree=8, max_sel_vars=1))
     expanded_data.append(cos_exp_eE_mM_F(x[:, 0:120], exact_degree=9, max_sel_vars=1))
     for a in expanded_data:
-        print " a.shape is", a.shape,
+        print(" a.shape is", a.shape)
     return numpy.hstack(expanded_data)
 
 
@@ -742,7 +757,7 @@ def cos_exp_mix35_F(x):
     expanded_data.append(cos_exp_eE_mM_F(x[:, 0:60], exact_degree=2, max_sel_vars=2))
     expanded_data.append(cos_exp_eE_mM_F(x[:, 0:35], exact_degree=3, max_sel_vars=3))
     for a in expanded_data:
-        print " a.shape is", a.shape,
+        print(" a.shape is", a.shape)
     return numpy.hstack(expanded_data)
 
 
@@ -752,7 +767,7 @@ def cos_exp_mix25_F(x):
     expanded_data.append(cos_exp_eE_mM_F(x[:, 0:25], exact_degree=2, max_sel_vars=2))
     expanded_data.append(cos_exp_eE_mM_F(x[:, 0:25], exact_degree=3, max_sel_vars=3))
     for a in expanded_data:
-        print " a.shape is", a.shape,
+        print(" a.shape is", a.shape)
     return numpy.hstack(expanded_data)
 
 
@@ -762,7 +777,7 @@ def cos_exp_mix30_F(x):
     expanded_data.append(cos_exp_eE_mM_F(x[:, 0:30], exact_degree=2, max_sel_vars=2))
     expanded_data.append(cos_exp_eE_mM_F(x[:, 0:30], exact_degree=3, max_sel_vars=3))
     for a in expanded_data:
-        print " a.shape is", a.shape,
+        print(" a.shape is", a.shape)
     return numpy.hstack(expanded_data)
 
 
@@ -772,12 +787,12 @@ def cos_exp_mix60q_F(x):
     expanded_data.append(cos_exp_eE_mM_F(x[:, 0:60], exact_degree=2, max_sel_vars=2))
     #    expanded_data.append(cos_exp_eE_mM_F(x[:,0:35], exact_degree=3, max_sel_vars=3))
     for a in expanded_data:
-        print " a.shape is", a.shape,
+        print(" a.shape is", a.shape)
     return numpy.hstack(expanded_data)
 
 
 def test1():
-    print "testing histogram equalizer"
+    print("testing histogram equalizer")
     num_samples = 1000
     x = numpy.random.normal(size=num_samples)
     eq_num_pivots = 200
@@ -787,29 +802,29 @@ def test1():
     hx_sorted = hx[sorting]
     hx_dif = hx_sorted[1:] - hx_sorted[:-1]
     mask = hx_dif < 0
-    print "mask.sum()=", mask.sum()
+    print("mask.sum()=", mask.sum())
     hx.sort()
-    print "hx.sorted=", hx
-    print "pivots=", eq_pivots
-    print "pivot_outputs=", eq_pivot_outputs
-    print "pivot_factor=", eq_pivot_factor
+    print("hx.sorted=", hx)
+    print("pivots=", eq_pivots)
+    print("pivot_outputs=", eq_pivot_outputs)
+    print("pivot_factor=", eq_pivot_factor)
 
     num_samples_y = 50000
     y = numpy.random.normal(size=num_samples_y)
     y.sort()
     hy = histogram_equalizer(y, eq_num_pivots, eq_pivots, eq_pivot_outputs, eq_pivot_factor)
-    print "hy[:20]=", hy[:20]
-    print "hy[-20:]=", hy[-20:]
+    print("hy[:20]=", hy[:20])
+    print("hy[-20:]=", hy[-20:])
     # print  "hy.sorted=", hy
     hy_dif = hy[1:] - hy[:-1]
     mask = hy_dif < 0
-    print "mask.sum()=", mask.sum()
-    print "test finished\n"
+    print("mask.sum()=", mask.sum())
+    print("test finished\n")
     # quit()
 
 
 def test2():
-    print "Testing HistogramEqualizationNode"
+    print("Testing HistogramEqualizationNode")
     num_samples = 10000
     x = numpy.random.normal(size=(num_samples, 2)) - 30
     hen = HistogramEqualizationNode(num_pivots=300)
@@ -817,14 +832,14 @@ def test2():
     hen.stop_training()
     x.sort(axis=0)
     hx = hen.execute(x)
-    print "hx (sorted) =", hx
-    print "hx[0] (sorted) =", hx[:, 0]
-    print "eq_pivots=", hen.hx
+    print("hx (sorted) =", hx)
+    print("hx[0] (sorted) =", hx[:, 0])
+    print("eq_pivots=", hen.hx)
     y = numpy.random.normal(size=(num_samples * 5, 2)) - 30
     y.sort(axis=0)
     hy = hen.execute(y)
-    print "hy[0:100,0] (sorted) =", hy[:100, 0]
-    print "hy[-100:,0] (sorted) =", hy[-100:, 0]
+    print("hy[0:100,0] (sorted) =", hy[:100, 0])
+    print("hy[-100:,0] (sorted) =", hy[-100:, 0])
 
     num_samples = 1000
     x = numpy.random.normal(size=(num_samples, 2)) - 30
@@ -833,10 +848,10 @@ def test2():
     hen.stop_training()
     hx = hen.execute(x)
     hx.sort(axis=0)
-    print "hx.sorted=", hx
-    print "hx[0] (sorted) =", hx[:, 0]
-    print "eq_pivots=", hen.hx
-    print "test finished\n"
+    print("hx.sorted=", hx)
+    print("hx[0] (sorted) =", hx[:, 0])
+    print("eq_pivots=", hen.hx)
+    print("test finished\n")
     # quit()
 
 
@@ -848,33 +863,33 @@ def test3():
     y = x.copy()
     y.sort()
     indices_pivots = numpy.linspace(0, num_samples - 1, num_pivots).round().astype(int)
-    print indices_pivots
+    print(indices_pivots)
     pivots = y[indices_pivots]
-    print pivots
+    print(pivots)
     indices_sorting = numpy.searchsorted(pivots, x, side="left")
     indices_sorting[indices_sorting <= 0] = 1
     indices_sorting -= 1
-    print indices_sorting
+    print(indices_sorting)
 
     # print x
     # print y
     pivot_outputs = numpy.linspace(0, 1.0, num_pivots)
-    print pivot_outputs
+    print(pivot_outputs)
 
     diff_pivot_outputs = pivot_outputs[1:] - pivot_outputs[:-1]
-    print diff_pivot_outputs
+    print(diff_pivot_outputs)
 
     diff_pivots = pivots[1:] - pivots[:-1]
-    print diff_pivots
+    print(diff_pivots)
 
     hx = pivot_outputs[indices_sorting] + (x - pivots[indices_sorting]) * diff_pivot_outputs[indices_sorting] / \
                                           diff_pivots[indices_sorting]
     hx.clip(pivots[0], pivots[-1])
-    print hx
+    print(hx)
 
     hy = hx.copy()
     hy.sort()
-    print hy
+    print(hy)
 
     xx = numpy.random.normal(size=num_samples)
     indices_sorting = numpy.searchsorted(pivots, xx, side="left")
@@ -892,7 +907,7 @@ def test3():
 
     hyy = hxx.copy()
     hyy.sort()
-    print hyy
+    print(hyy)
 
 
 def test4():  # or True:
@@ -915,7 +930,7 @@ def test4():  # or True:
     x = numpy.dstack((x0, x1, x2, x3, x4, x5))[0]
     xp = numpy.dstack((y0, y1, y2, y3, y4, y5))[0]
 
-    print "x=", x
+    print("x=", x)
     # constant -> 0.7 
     # increasing -> 0.35
     # decreasing -> 0.4
@@ -923,54 +938,54 @@ def test4():  # or True:
                              factor_projection_out=0.35, factor_mode="increasing", input_dim=None, output_dim=4,
                              dtype=None)
     nlipca_node.train(x)
-    print "feature extraction"
+    print("feature extraction")
     y = nlipca_node.execute(x)
     # print "y=", y
-    print "executing inverse function"
+    print("executing inverse function")
     xx = nlipca_node.inverse(y)
-    print "using test data"
+    print("using test data")
     zp = nlipca_node.execute(xp)
     # print "y=", y
-    print "executing inverse function"
+    print("executing inverse function")
     xxp = nlipca_node.inverse(zp)
 
     # print "xx=", xx
 
-    print ""
+    print("")
     nlipca_node2 = NLIPCANode(exp_func=cos_exp_I_5D_F, norm_class=NormalizeABNode, feats_at_once=4, input_dim=None,
                               output_dim=4, dtype=None)
-    print "training second node"
+    print("training second node")
     nlipca_node2.train(x)
-    print "feature extraction, second node"
+    print("feature extraction, second node")
     y2 = nlipca_node2.execute(x)
     # print "y=", y
-    print "executing inverse function, second node"
+    print("executing inverse function, second node")
     xx2 = nlipca_node2.inverse(y2)
-    print "using test data"
+    print("using test data")
     zp2 = nlipca_node2.execute(xp)
     # print "y=", y
-    print "executing inverse function"
+    print("executing inverse function")
     xxp2 = nlipca_node2.inverse(zp2)
 
     # print "xx2=", xx2
-    print "error1=", ((xx - x) ** 2).sum()
-    print "error2=", ((xx2 - x) ** 2).sum()
-    print "test data"
-    print "error1=", ((xxp - xp) ** 2).sum()
-    print "error2=", ((xxp2 - xp) ** 2).sum()
+    print("error1=", ((xx - x) ** 2).sum())
+    print("error2=", ((xx2 - x) ** 2).sum())
+    print("test data")
+    print("error1=", ((xxp - xp) ** 2).sum())
+    print("error2=", ((xxp2 - xp) ** 2).sum())
 
 
 def test5():
     cen = CosineExpansionNode(5)  # Max factor
     x = numpy.linspace(0, 1, 150).reshape(-1, 1)
     y2 = cen.execute(x)  # Assumes elements of x in [0,1]
-    print "y2=", y2
+    print("y2=", y2)
 
 
 def test6():
     x = numpy.linspace(0, 1, 150).reshape(-1, 1)
     yy2 = cos_exp_5D_F(x)
-    print "yy2=", yy2
+    print("yy2=", yy2)
 
 
 def test7():
@@ -978,7 +993,7 @@ def test7():
     x = numpy.linspace(0, 1, 150).reshape(-1, 1)
     n01n.train(x - 0.3)
     y3 = n01n.execute(x - 0.3)
-    print "y3=", y3
+    print("y3=", y3)
 
 
 if __name__ == "__main__":
