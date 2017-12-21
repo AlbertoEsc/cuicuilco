@@ -282,7 +282,7 @@ class iGSFANode(mdp.Node):
             s_n_sfa_x = n_sfa_x ** self.magn_n_sfa_x  # Scale according to ranking
             print("method: data dependent")
         elif self.offsetting_mode == "sensitivity_based_offset":
-	    self.magn_n_sfa_x = numpy.maximum(self.magn_n_sfa_x, numpy.median(self.pca_node.d) ** 0.5)
+            self.magn_n_sfa_x = numpy.maximum(self.magn_n_sfa_x, numpy.median(self.pca_node.d) ** 0.5)
             s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x  # Scale according to updated ranking
             print("method: sensitivity_based_offset")
 

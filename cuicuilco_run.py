@@ -72,7 +72,7 @@ __version__ = "0.8.0"
 
 # For Python 2 and 3 compatibility
 from builtins import input
-cmp = lambda(x, y): (x > y) - (x < y)
+cmp = lambda x, y: (x > y) - (x < y)
 
 # benchmark is a list that contains benchmark information (running times) with entries: ("description", time as float
 #  in seconds). This will be upgraded to a Benchmark object.
@@ -2420,11 +2420,11 @@ def main():
         print (correct_classes_training)
         print (classes_kNN_training)
         # MSE
-        results.class_ncc_rate_train = classifiers.correct_classif_rate(correct_classes_training, classes_ncc_training)
-        results.class_kNN_rate_train = classifiers.correct_classif_rate(correct_classes_training, classes_kNN_training)
-        results.class_Gauss_rate_train = classifiers.correct_classif_rate(correct_classes_training,
+        results.class_ncc_rate_train = classifiers.classification_rate(correct_classes_training, classes_ncc_training)
+        results.class_kNN_rate_train = classifiers.classification_rate(correct_classes_training, classes_kNN_training)
+        results.class_Gauss_rate_train = classifiers.classification_rate(correct_classes_training,
                                                                           classes_Gauss_training)
-        results.class_svm_rate_train = classifiers.correct_classif_rate(correct_classes_training, classes_svm_training)
+        results.class_svm_rate_train = classifiers.classification_rate(correct_classes_training, classes_svm_training)
         results.mse_ncc_train = distance_squared_Euclidean(correct_labels_training, labels_ncc_training) / len(
             labels_kNN_training)
         results.mse_kNN_train = distance_squared_Euclidean(correct_labels_training, labels_kNN_training) / len(
@@ -2455,10 +2455,10 @@ def main():
         results.rmse3_svm_train = results.mse3_svm_train ** 0.5
         results.rmse_lr_train = results.mse_lr_train ** 0.5
 
-        results.class_ncc_rate_seenid = classifiers.correct_classif_rate(correct_classes_seenid, classes_ncc_seenid)
-        results.class_kNN_rate_seenid = classifiers.correct_classif_rate(correct_classes_seenid, classes_kNN_seenid)
-        results.class_Gauss_rate_seenid = classifiers.correct_classif_rate(correct_classes_seenid, classes_Gauss_seenid)
-        results.class_svm_rate_seenid = classifiers.correct_classif_rate(correct_classes_seenid, classes_svm_seenid)
+        results.class_ncc_rate_seenid = classifiers.classification_rate(correct_classes_seenid, classes_ncc_seenid)
+        results.class_kNN_rate_seenid = classifiers.classification_rate(correct_classes_seenid, classes_kNN_seenid)
+        results.class_Gauss_rate_seenid = classifiers.classification_rate(correct_classes_seenid, classes_Gauss_seenid)
+        results.class_svm_rate_seenid = classifiers.classification_rate(correct_classes_seenid, classes_svm_seenid)
         results.mse_ncc_seenid = distance_squared_Euclidean(correct_labels_seenid, labels_ncc_seenid) / len(
             labels_kNN_seenid)
         results.mse_kNN_seenid = distance_squared_Euclidean(correct_labels_seenid, labels_kNN_seenid) / len(
@@ -2487,10 +2487,10 @@ def main():
         results.rmse_lr_seenid = results.mse_lr_seenid ** 0.5
 
         print (correct_classes_newid.shape, classes_kNN_newid.shape)
-        results.class_ncc_rate_newid = classifiers.correct_classif_rate(correct_classes_newid, classes_ncc_newid)
-        results.class_kNN_rate_newid = classifiers.correct_classif_rate(correct_classes_newid, classes_kNN_newid)
-        results.class_Gauss_rate_newid = classifiers.correct_classif_rate(correct_classes_newid, classes_Gauss_newid)
-        results.class_svm_rate_newid = classifiers.correct_classif_rate(correct_classes_newid, classes_svm_newid)
+        results.class_ncc_rate_newid = classifiers.classification_rate(correct_classes_newid, classes_ncc_newid)
+        results.class_kNN_rate_newid = classifiers.classification_rate(correct_classes_newid, classes_kNN_newid)
+        results.class_Gauss_rate_newid = classifiers.classification_rate(correct_classes_newid, classes_Gauss_newid)
+        results.class_svm_rate_newid = classifiers.classification_rate(correct_classes_newid, classes_svm_newid)
         results.mse_ncc_newid = distance_squared_Euclidean(correct_labels_newid, labels_ncc_newid) / len(
             labels_kNN_newid)
         results.mse_kNN_newid = distance_squared_Euclidean(correct_labels_newid, labels_kNN_newid) / len(
@@ -2796,19 +2796,19 @@ def main():
         print ("Computing effective gender recognition:")
         binary_gender_estimation_training = binarize_array(regression_Gauss_training)
         binary_correct_labels_training = binarize_array(correct_labels_training)
-        binary_gender_estimation_rate_training = classifiers.correct_classif_rate(binary_correct_labels_training,
+        binary_gender_estimation_rate_training = classifiers.classification_rate(binary_correct_labels_training,
                                                                                   binary_gender_estimation_training)
         print ("Binary gender classification rate (training) from continuous labels is %f" %
                binary_gender_estimation_rate_training)
         binary_gender_estimation_seenid = binarize_array(regression_Gauss_seenid)
         binary_correct_labels_seenid = binarize_array(correct_labels_seenid)
-        binary_gender_estimation_rate_seenid = classifiers.correct_classif_rate(binary_correct_labels_seenid,
+        binary_gender_estimation_rate_seenid = classifiers.classification_rate(binary_correct_labels_seenid,
                                                                                 binary_gender_estimation_seenid)
         print ("Binary gender classification rate (seenid) from continuous labels is %f" %
                binary_gender_estimation_rate_seenid)
         binary_gender_estimation_newid = binarize_array(regression_Gauss_newid)
         binary_correct_labels_newid = binarize_array(correct_labels_newid)
-        binary_gender_estimation_rate_newid = classifiers.correct_classif_rate(binary_correct_labels_newid,
+        binary_gender_estimation_rate_newid = classifiers.classification_rate(binary_correct_labels_newid,
                                                                                binary_gender_estimation_newid)
         print ("Binary gender classification rate (newid) from continuous labels is %f" %
                binary_gender_estimation_rate_newid)
