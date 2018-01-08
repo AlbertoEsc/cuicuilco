@@ -46,7 +46,7 @@ class BasicAdaptiveCutoffNode(mdp.PreserveDimNode):
         return True
 
     @staticmethod
-    def _get_supported_dtypes(self):
+    def _get_supported_dtypes():
         return (mdp.utils.get_dtypes('Float') +
                 mdp.utils.get_dtypes('AllInteger'))
 
@@ -122,7 +122,7 @@ class SFA_GaussianClassifier(mdp.ClassifierNode):
         return self.gc_node.class_probabilities(y)
 
     @staticmethod
-    def is_trainable(self):
+    def is_trainable():
         return True
 
 
@@ -191,7 +191,7 @@ class RandomizedMaskNode(mdp.Node):
         self.seen_samples = self.seen_samples + new_samples
 
     @staticmethod
-    def is_invertible(self):
+    def is_invertible():
         return False
 
     def _execute(self, x):
@@ -370,7 +370,7 @@ class PointwiseFunctionNode(mdp.Node):
         super(PointwiseFunctionNode, self).__init__(input_dim, dtype)
 
     @staticmethod
-    def is_trainable(self):
+    def is_trainable():
         return False
 
     def is_invertible(self):
@@ -1893,7 +1893,7 @@ class IEVMNode(mdp.Node):
         self.out_sfa_filter = out_sfa_filter
 
     @staticmethod
-    def is_trainable(self):
+    def is_trainable():
         return True
 
     def _train(self, x, block_size=None, train_mode=None, node_weights=None, edge_weights=None, scheduler=None,
@@ -2764,7 +2764,7 @@ class SFAAdaptiveNLNode(mdp.Node):
         self.f1_std = None
 
     @staticmethod
-    def is_trainable(self):
+    def is_trainable():
         return True
 
     # sfa_block_size, sfa_train_mode, etc. would be preferred

@@ -291,7 +291,7 @@ def NetworkSetPCASFAExpo(network, first_pca_expo=0.0, last_pca_expo=1.0, first_s
 print("*******************************************************************")
 print("******  Creating Void (identity)Layer and Network      ************")
 print("*******************************************************************")
-print("******** Setting Layer L0 Parameters          *********************")
+print("******  Setting Layer L0 Parameters                    ************")
 layer = pVoidLayer = system_parameters.ParamsSFASuperNode()
 layer.name = "Void Layer"
 layer.pca_node_class = None

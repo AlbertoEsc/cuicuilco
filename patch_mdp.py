@@ -625,12 +625,12 @@ def node_train_params(self, data, params=None, verbose=False):
             print("; all_params:", all_params)
         return self._train(data, **all_params)
     else:
-        if isinstance(self, mdp.nodes.SFANode):
-            print("wrong condition reached...", dir(self))
-            quit()
-        print(self)
-        print("wrong wrong 2...", dir(self))
-        print("data_tp=", data)
+        # if isinstance(self, mdp.nodes.SFANode):
+        print("suspicious condition reached. No node.list_train_params found. Using default train", dir(self))
+        # quit()
+        # print(self)
+        # print("wrong wrong 2...", dir(self))
+        # print("data_tp=", data)
         # quit()
         return self.train(data)  # no Node.train_params found
 
@@ -647,7 +647,7 @@ for node_str in dir(mdp.nodes):
         node_class.train_params = node_train_params
 
 # Do the same with nodes contained in hinet
-print("Adding train_params to (hinet) mdp.hinet Nodes: ", node_str)
+print("Adding train_params to (hinet) mdp.hinet Nodes")
 for node_str in dir(mdp.hinet):
     node_class = getattr(mdp.hinet, node_str)
     if inspect.isclass(node_class) and issubclass(node_class, mdp.Node):
