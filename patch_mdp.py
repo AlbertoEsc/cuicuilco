@@ -1638,16 +1638,16 @@ if patch_flow:
             return data_vec
 
     # Supports mainly single array data or merges iterator data
-    def flow__execute_seq(self, x, node_nr=None, benchmark=None):
-        # Filters input data 'x' through the nodes 0..'node_nr' included
+    def flow__execute_seq(self, x, nodenr=None, benchmark=None):
+        # Filters input data 'x' through the nodes 0..'nodenr' included
         flow = self.flow
-        if node_nr is None:
-            node_nr = len(flow) - 1
+        if nodenr is None:
+            nodenr = len(flow) - 1
 
         if benchmark is not None:
             benchmark.update_start_time()
 
-        for i in range(node_nr + 1):
+        for i in range(nodenr + 1):
             try:
                 x = flow[i].execute(x)
             except Exception as e:
@@ -1662,7 +1662,7 @@ if patch_flow:
     # Supports single array data but also iterator
     # However result is concatenated! Not PowerTraining Compatible???
     # Thus this function is usually called for each single chunk
-    def flow_execute(self, iterable, node_nr=None, benchmark=None):
+    def flow_execute(self, iterable, nodenr=None, benchmark=None):
         """Process the data through all nodes in the flow.
             
         'iterable' is an iterable or iterator (note that a list is also an
@@ -1672,17 +1672,17 @@ if patch_flow:
         If 'nodenr' is specified, the flow is executed only up to
         node nr. 'nodenr'. This is equivalent to 'flow[:nodenr+1](iterable)'.
         """
-        # Strange bug when nodenr is None, it seems like somethimes None<0 is True!!!
-        if node_nr < 0 and node_nr is not None:
+        # Strange bug when nodenr is None, it seems like None<0 is True!!!
+        if nodenr < 0 and nodenr is not None:
             return iterable
 
         if isinstance(iterable, numx.ndarray):
-            return self._execute_seq(iterable, node_nr, benchmark)
+            return self._execute_seq(iterable, nodenr, benchmark)
         res = []
         empty_iterator = True
         for x in iterable:
             empty_iterator = False
-            res.append(self._execute_seq(x, node_nr))
+            res.append(self._execute_seq(x, nodenr))
         if empty_iterator:
             errstr = "The execute data iterator is empty."
             #        raise mdp.MDPException(errstr)
@@ -1693,21 +1693,21 @@ if patch_flow:
 
     # Supports single array data but also iterator/list
     # Small variation over flow_execute: Result has same shape
-    def flow_execute_data_vec(self, iterable, node_nr=None, benchmark=None):
+    def flow_execute_data_vec(self, iterable, nodenr=None, benchmark=None):
         """Process the data through all nodes in the flow.
         keeping the structure
         If 'nodenr' is specified, the flow is executed only up to
         node nr. 'nodenr'. This is equivalent to 'flow[:nodenr+1](iterable)'.
         """
         if isinstance(iterable, numx.ndarray):
-            return self._execute_seq(iterable, node_nr, benchmark)
-        if node_nr == -1:
+            return self._execute_seq(iterable, nodenr, benchmark)
+        if nodenr == -1:
             return iterable
         res = []
         empty_iterator = True
         for x in iterable:
             empty_iterator = False
-            res.append(self._execute_seq(x, node_nr))
+            res.append(self._execute_seq(x, nodenr))
         if empty_iterator:
             errstr = "The execute data iterator is empty."
             #        raise mdp.MDPException(errstr)
