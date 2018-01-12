@@ -1,24 +1,30 @@
-# Functions for loading several images
-# By Alberto Escalante. Alberto.Escalante@neuroinformatik.ruhr-uni-bochum.de
-# First Version 15 July 2009
+#####################################################################################################################
+# image_loader: This module implements various functions useful for loading images                                  #
+#                                                                                                                   #
+# The process of loading an image involves several transformations, including channel reduction, rotation,         #
+# scaling, noise, filtering, mirroring, contrast enhancement.                                                       #
+#                                                                                                                   #
+# By Alberto Escalante. Alberto.Escalante@neuroinformatik.ruhr-uni-bochum.de                                        #
+# Ruhr-University-Bochum, Institute for Neural Computation, Group of Prof. Dr. Wiskott                              #
+#####################################################################################################################
 
+from __future__ import print_function
 import numpy
-# import scipy
 import scipy.misc
 
 import PIL
 from PIL import Image
 from PIL import ImageOps
-# ####import Image
-# import ImageOps
 import os
 import glob
-# import random
 import sfa_libs
 import time
 import struct
 import math
 import multiprocessing
+
+# For Python 2 and 3 compatibility
+cmp = lambda x, y: (x > y) - (x < y)
 
 # im.save(fullname)
 
@@ -46,7 +52,7 @@ def create_image_filenames(im_seq_base_dir, slow_signal=0, ids=[0], expressions=
     The possible values of these variables are given as parameters. 
     """
     if verbose:
-        print "creating image filenames..."
+        print("creating image filenames...")
     parameters = list(sfa_libs.product(ids, expressions, morphs, poses, lightings))
     parameters.sort(lambda x, y: cmp(x[slow_signal], y[slow_signal]))
 
@@ -67,7 +73,7 @@ def create_image_filenames(im_seq_base_dir, slow_signal=0, ids=[0], expressions=
 def create_image_filenames2(im_seq_base_dir, slow_signal=0, ids=[0], ages=[999], genders=[999], racetweens=[999],
                             expressions=[0], morphs=[0], poses=[0], lightings=[0], step=1, offset=0, verbose=False):
     if verbose:
-        print "creating image filenames..."
+        print("creating image filenames...")
     parameters = list(sfa_libs.product(ids, ages, genders, racetweens, expressions, morphs, poses, lightings))
     parameters.sort(lambda x, y: cmp(x[slow_signal], y[slow_signal]))
 
@@ -92,7 +98,7 @@ def create_image_filenames3(im_seq_base_dir, im_base_name, slow_signal=0, ids=[0
                             racetweens=[999], expressions=[0], morphs=[0], poses=[0], lightings=[0], step=1,
                             offset=0, verbose=False, len_ids=3, image_postfix=".tif"):
     if verbose:
-        print "creating image filenames..."
+        print("creating image filenames...")
 
     parameters = list(sfa_libs.product(ids, ages, genders, racetweens, expressions, morphs, poses, lightings))
     parameters.sort(lambda x, y: cmp(x[slow_signal], y[slow_signal]))
@@ -136,7 +142,7 @@ def create_image_filenames3(im_seq_base_dir, im_base_name, slow_signal=0, ids=[0
         filename += image_postfix
         filenames.append(filename)
     if verbose:
-        print "filenames=", filenames
+        print("filenames=", filenames)
     return filenames
 
 
@@ -293,19 +299,20 @@ def simple_normalization_Age(im, relevant_width, relevant_height, obj_avg=0.0, o
 def load_image_data_monoprocessor(image_files, image_array, image_width, image_height, subimage_width, subimage_height,
                                   pre_mirroring_flags=False, pixelsampling_x=2, pixelsampling_y=2, subimage_first_row=0,
                                   subimage_first_column=0, add_noise=True, convert_format="L", translations_x=None,
-                                  translations_y=None, trans_sampled=True, rotations=None, rotate_before_translation=False, contrast_enhance=None,
+                                  translations_y=None, trans_sampled=True, rotations=None,
+                                  rotate_before_translation=False, contrast_enhance=None,
                                   obj_avgs=None, obj_stds=None, background_type=None, color_background_filter=None,
                                   subimage_reference_point=0, verbose=False):
     t0 = time.time()
     num_images = len(image_files)
-    print "Loading ", num_images,
+    print("Loading ", num_images)
 
     if isinstance(image_width, (numpy.float, numpy.float64, numpy.int)):
-        print "Images: width=%d, height=%d" % (image_width, image_height),
+        print("Images: width=%d, height=%d" % (image_width, image_height))
     else:
-        print "Images[0]: width=%d, height=%d" % (image_width[0], image_height[0]),
+        print("Images[0]: width=%d, height=%d" % (image_width[0], image_height[0]))
 
-    print " subimage_width=%d,subimage_height=%d" % (subimage_width, subimage_height)
+    print(" subimage_width=%d,subimage_height=%d" % (subimage_width, subimage_height))
 
     out_size = (subimage_width, subimage_height)
 
@@ -317,13 +324,13 @@ def load_image_data_monoprocessor(image_files, image_array, image_width, image_h
     if translations_y is None:
         translations_y = numpy.zeros(num_images)
 
-    print "color_background_filter is:", color_background_filter
+    print("color_background_filter is:", color_background_filter)
 
     if convert_format == "L":
         pixel_dimensions = 1
-        print "image_loading: pixel_format=L"
+        print("image_loading: pixel_format=L")
     elif convert_format == "RGB":
-        print "image_loading: pixel_format=RGB"
+        print("image_loading: pixel_format=RGB")
         pixel_dimensions = 3
     else:
         err = "Don't know the pixel_dimensions for image format: ", convert_format
@@ -407,7 +414,7 @@ def load_image_data_monoprocessor(image_files, image_array, image_width, image_h
                 act_im_num_indices[image_file].append(act_im_num)
             else:
                 act_im_num_indices[image_file] = [act_im_num]
-        print "loading/processing"
+        print("loading/processing")
         info_displayed = False
         for image_file in unique_image_files:
             # print "Loading unique image", image_file
@@ -415,12 +422,12 @@ def load_image_data_monoprocessor(image_files, image_array, image_width, image_h
                 im_orig = Image.open(image_file)
             elif isinstance(image_array, PIL.Image.Image):
                 if (not info_displayed) or verbose:  # Display information only once, unless in verbose mode
-                    print "considering image_array as PIL.Image.Image"
+                    print("considering image_array as PIL.Image.Image")
                     info_displayed = True
                 im_orig = image_array
             elif isinstance(image_array, numpy.ndarray):
                 if (not info_displayed) or verbose:  # Display information only once, unless in verbose mode
-                    print "considering image_array as ndarray"
+                    print("considering image_array as ndarray")
                     info_displayed = True
                 im_orig = scipy.misc.toimage(image_array[image_file], mode='L')
             else:
@@ -451,12 +458,11 @@ def load_image_data_monoprocessor(image_files, image_array, image_width, image_h
                     delta_ang = None
 
                 if rotate_before_translation:
-                    print ":Y",
+                    print(":Y")
                     if delta_ang is not None:
                         im = rotate_improved(im, delta_ang, Image.BICUBIC)
 
-
-                    #            print "IMAGE: ", image_file
+                    # print "IMAGE: ", image_file
                 # subimage_coordinates = (x0, y0, x1, y1)
                 #            print "subimage_coordinates: ", subimage_coordinates
                 #            print "pixelsampling_x[act_im_num], pixelsampling_y[act_im_num] = ",
@@ -475,8 +481,8 @@ def load_image_data_monoprocessor(image_files, image_array, image_width, image_h
 
                 if x1 < 0 or y1 < 0 or x0 >= im.size[0] or y0 >= im.size[1]:
                     err = "Image Loading Failed: Subimage seriously out of Image: ", image_file
-                    print "subimage_coordinates =", (x0, y0, x1, y1)
-                    print "Image size: im.size[0], im.size[1] = ", im.size[0], im.size[1]
+                    print("subimage_coordinates =", (x0, y0, x1, y1))
+                    print("Image size: im.size[0], im.size[1] = ", im.size[0], im.size[1])
                     raise Exception(err)
 
                     #            if x0<0 or y0<0 or x1>=im.size[0] or y1>=im.size[1]:
@@ -535,20 +541,20 @@ def load_image_data_monoprocessor(image_files, image_array, image_width, image_h
                     im_crop_first = im.transform(crop_size, Image.EXTENT, crop_coordinates)  # , Image.BICUBIC)
 
                     if image_file.endswith("EyeNZ2Dummy.jpg"):
-                        print "SAVING image 1"
-                        print "subimage_first_column[act_im_num]=", subimage_first_column[act_im_num]
-                        print "ori_width, ori_height =", ori_width, ori_height
-                        print "subimage_coordinates =", subimage_coordinates
-                        print "rotation_center_x_int, rotation_center_y_int=", rotation_center_x_int,
-                        print rotation_center_y_int
-                        print "Delta_x, Delta_y=", Delta_x, Delta_y
+                        print("SAVING image 1")
+                        print("subimage_first_column[act_im_num]=", subimage_first_column[act_im_num])
+                        print("ori_width, ori_height =", ori_width, ori_height)
+                        print("subimage_coordinates =", subimage_coordinates)
+                        print("rotation_center_x_int, rotation_center_y_int=", rotation_center_x_int)
+                        print(rotation_center_y_int)
+                        print("Delta_x, Delta_y=", Delta_x, Delta_y)
                         im_crop_first.save("cropped.png")
 
                     # print delta_ang
                     im_rotated = rotate_improved(im_crop_first, delta_ang, Image.BICUBIC)
 
                     if image_file.endswith("EyeNZ2Dummy.jpg"):
-                        print "SAVING image 2"
+                        print("SAVING image 2")
                         im_rotated.save("rotated.png")
 
                     # Warning, make this conditional, use equalize instead, autocontrast is too weak!
@@ -597,18 +603,18 @@ def load_image_data_monoprocessor(image_files, image_array, image_width, image_h
                             im_contrasted = simple_normalization_GenderMultiply(im_contrasted)
                             im_contrasted = simple_normalization_GenderMultiply(im_contrasted)
                         else:
-                            print "Unhandled contrast enhance method"
+                            print("Unhandled contrast enhance method")
                             quit()
                     elif (contrast_enhance is None) or str(contrast_enhance).startswith("array_mean_std"):
                         im_contrasted = im_rotated
                         Delta_x_rotated = Delta_y_rotated = 0
                     else:
-                        print "Unknown contrast_enhance method!!!, ", contrast_enhance
+                        print("Unknown contrast_enhance method!!!, ", contrast_enhance)
                         quit()
                         im_contrasted = im_rotated
 
                     if image_file.endswith("EyeNZ2Dummy.jpg"):
-                        print "SAVING image 3"
+                        print("SAVING image 3")
                         im_contrasted.save("im_contrasted.png")
 
                     center_x_geometric = (crop_size[0] - 1) / 2.0
@@ -664,10 +670,10 @@ def load_image_data_monoprocessor(image_files, image_array, image_width, image_h
                                                          interpolation_format_sampling)
 
                     if image_file.endswith("EyeNZ2Dummy.jpg"):
-                        print "SAVING image 4"
-                        print "center_x_geometric, center_y_geometric=", center_x_geometric, center_y_geometric
-                        print "Delta_x_rotated, Delta_y_rotated were=", Delta_x_rotated, Delta_y_rotated
-                        print "subimage_coordinates were=", subimage_coordinates
+                        print("SAVING image 4")
+                        print("center_x_geometric, center_y_geometric=", center_x_geometric, center_y_geometric)
+                        print("Delta_x_rotated, Delta_y_rotated were=", Delta_x_rotated, Delta_y_rotated)
+                        print("subimage_coordinates were=", subimage_coordinates)
                         im_out.save("im_out.png")
 
                 else:  # No rotation is applied at all
@@ -716,12 +722,12 @@ def load_image_data_monoprocessor(image_files, image_array, image_width, image_h
                             im_contrasted = simple_normalization_GenderMultiply(im_contrasted)
                             im_contrasted = simple_normalization_GenderMultiply(im_contrasted)
                         else:
-                            print "Incorrect method (unknown constant enhancement)", contrast_enhance
+                            print("Incorrect method (unknown constant enhancement)", contrast_enhance)
                             quit()
                     elif (contrast_enhance is None) or str(contrast_enhance).startswith("array_mean_std"):
                         im_contrasted = im_rotated
                     else:
-                        print "Unknown contrast_enhance method!!!, ", contrast_enhance
+                        print("Unknown contrast_enhance method!!!, ", contrast_enhance)
                         quit()
                     # W interpolation_format / format_nearest
                     im_out = im_contrasted.transform(out_size, Image.EXTENT, subimage_coordinates,
@@ -736,27 +742,27 @@ def load_image_data_monoprocessor(image_files, image_array, image_width, image_h
 
                 im_small = numpy.asarray(im_out)
 
-                if add_noise and False:
-                    ex = "Was not supposed to add noise here"
-                    raise Exception(ex)
-                    if convert_format == "L":
-                        # Using uniform noise for speed over normal noise
-                        high = (3 ** 0.5) * 0.05  # standard deviation 0.05
-                        noise = numpy.random.uniform(low=-high, high=high, size=(subimage_height, subimage_width))
-                        # noise = numpy.random.normal(loc=0.0, scale=0.05, size=(subimage_height, subimage_width))
-                    elif convert_format == "RGB":
-                        noise_amplitude = 5.0  # RGB has range from 0 to 255
-                        high = (3 ** 0.5) * noise_amplitude  # standard deviation 0.05
-                        noise = numpy.random.uniform(low=-high, high=high, size=(subimage_height, subimage_width, 3))
-                    #                        noise = numpy.random.normal(loc=0.0, scale=noise_amplitude,
-                    # size=(subimage_height, subimage_width, 3))
-                    else:
-                        err = "Don't kwon how to generate noise for given image format: ", convert_format
-                        raise Exception(err)
-                    im_small = im_small * 1.0 + noise
-                    # irb_transform = True
-                    # if convert_format == "RGB" and irb_transform:
-                    #    im_small = rgb_to_irb_array(im_small)
+                # if add_noise and False:
+                #     ex = "Was not supposed to add noise here"
+                #     raise Exception(ex)
+                #     if convert_format == "L":
+                #         # Using uniform noise for speed over normal noise
+                #         high = (3 ** 0.5) * 0.05  # standard deviation 0.05
+                #         noise = numpy.random.uniform(low=-high, high=high, size=(subimage_height, subimage_width))
+                #         # noise = numpy.random.normal(loc=0.0, scale=0.05, size=(subimage_height, subimage_width))
+                #     elif convert_format == "RGB":
+                #         noise_amplitude = 5.0  # RGB has range from 0 to 255
+                #         high = (3 ** 0.5) * noise_amplitude  # standard deviation 0.05
+                #         noise = numpy.random.uniform(low=-high, high=high, size=(subimage_height, subimage_width, 3))
+                #     #                        noise = numpy.random.normal(loc=0.0, scale=noise_amplitude,
+                #     # size=(subimage_height, subimage_width, 3))
+                #     else:
+                #         err = "Don't kwon how to generate noise for given image format: ", convert_format
+                #         raise Exception(err)
+                #     im_small = im_small * 1.0 + noise
+                #     # irb_transform = True
+                #     # if convert_format == "RGB" and irb_transform:
+                #     #    im_small = rgb_to_irb_array(im_small)
 
                 subimages[act_im_num] = im_small.flatten()
                 del im_small
@@ -804,22 +810,23 @@ def load_image_data_monoprocessor(image_files, image_array, image_width, image_h
 
             background = random_filtered_noise2D(im_small.shape, color_background_filter, min_val=0, max_val=255)
             if verbose:
-                print "background.shape = ", background.shape
-                print "background_mask.shape = ", background_mask.shape
-                print "Z",
+                print("background.shape = ", background.shape)
+                print("background_mask.shape = ", background_mask.shape)
+                print("Z")
 
             #            print "im_small:", im_small
             im_small[background_mask] = background[background_mask]
 
-            if add_noise and False:
-                ex = "Was not supposed to add noise here"
-                raise Exception(ex)
-                noise = numpy.random.normal(loc=0.0, scale=0.025, size=(subimage_height, subimage_width))
-                im_small = im_small * 1.0 + noise
+            # if add_noise and False:
+            #     ex = "Was not supposed to add noise here"
+            #     raise Exception(ex)
+            #     noise = numpy.random.normal(loc=0.0, scale=0.025, size=(subimage_height, subimage_width))
+            #     im_small = im_small * 1.0 + noise
             subimages[act_im_num] = im_small.flatten()
             del im, im_rgb, im_out_rgb, im_small, im_small_rgb
     else:
-        print "Invalid 'background_type' and/or 'color_background_filter'"
+        print("Invalid 'background_type' and/or 'color_background_filter'")
+        return
 
     if add_noise:  # Add noise to the whole images loaded
         if convert_format == "L":
@@ -842,14 +849,14 @@ def load_image_data_monoprocessor(image_files, image_array, image_width, image_h
         _, mean, std = contrast_enhance.split("-")
         mean = float(mean)
         std = float(std)
-        print "Contrast enhancement directly on array. Fixing mean to %f and std to %f (approx)" % (mean, std)
-        print "Before: avg_min=", subimages.min(axis=1).mean(), "avg_max=", subimages.min(axis=1).max()
+        print("Contrast enhancement directly on array. Fixing mean to %f and std to %f (approx)" % (mean, std))
+        print("Before: avg_min=", subimages.min(axis=1).mean(), "avg_max=", subimages.min(axis=1).max())
         image_array_contrast_normalize_avg_std(subimages, mean=mean, std=std)
         quit()
 
     t1 = time.time()
     if verbose:
-        print num_images, " Images loaded in %0.3f ms" % ((t1 - t0) * 1000.0)
+        print(num_images, " Images loaded in %0.3f ms" % ((t1 - t0) * 1000.0))
     return subimages
 
 
@@ -871,13 +878,14 @@ def vectorize(scalar_vector, length, preserve_None=False):
 def load_image_data(image_files, image_array, image_width, image_height, subimage_width, subimage_height,
                     pre_mirroring_flags=False, pixelsampling_x=2, pixelsampling_y=2, subimage_first_row=0,
                     subimage_first_column=0, add_noise=True, convert_format="L", translations_x=None,
-                    translations_y=None, trans_sampled=True, rotations=None, rotate_before_translation=False, contrast_enhance=None, obj_avgs=None,
+                    translations_y=None, trans_sampled=True, rotations=None, rotate_before_translation=False,
+                    contrast_enhance=None, obj_avgs=None,
                     obj_stds=None, background_type=None, color_background_filter=None, subimage_reference_point=0,
                     verbose=False):
     num_proc = os.getenv("CUICUILCO_IMAGE_LOADING_NUM_PROC")
     if num_proc:
         num_proc = int(num_proc)
-        print "setting num_proc for image loading to", num_proc
+        print("setting num_proc for image loading to", num_proc)
     else:
         er = "CUICUILCO_IMAGE_LOADING_NUM_PROC undefined"
         raise Exception(er)
@@ -885,24 +893,25 @@ def load_image_data(image_files, image_array, image_width, image_height, subimag
     if image_array is not None:
         num_proc = 1
     if num_proc == 1 or not num_proc:  # single processor loading
-        print "defaulting to single processor image loading"
+        print("defaulting to single processor image loading")
         return load_image_data_monoprocessor(image_files, image_array, image_width, image_height, subimage_width,
                                              subimage_height, pre_mirroring_flags, pixelsampling_x, pixelsampling_y,
                                              subimage_first_row, subimage_first_column, add_noise,
                                              convert_format, translations_x, translations_y, trans_sampled,
-                                             rotations, rotate_before_translation, contrast_enhance, obj_avgs, obj_stds, background_type,
+                                             rotations, rotate_before_translation,
+                                             contrast_enhance, obj_avgs, obj_stds, background_type,
                                              color_background_filter, subimage_reference_point, verbose)
 
     t0 = time.time()
     num_images = len(image_files)
-    print "Loading ", num_images,
+    print("Loading ", num_images)
 
     if isinstance(image_width, (numpy.float, numpy.float64, numpy.int)):
-        print "Images: width=%d, height=%d" % (image_width, image_height),
+        print("Images: width=%d, height=%d" % (image_width, image_height))
     else:
-        print "Images[0]: width=%d, height=%d" % (image_width[0], image_height[0]),
+        print("Images[0]: width=%d, height=%d" % (image_width[0], image_height[0]))
 
-    print " subimage_width=%d,subimage_height=%d" % (subimage_width, subimage_height)
+    print(" subimage_width=%d,subimage_height=%d" % (subimage_width, subimage_height))
 
     # out_size = (subimage_width, subimage_height)
 
@@ -912,13 +921,13 @@ def load_image_data(image_files, image_array, image_width, image_height, subimag
     translations_x = vectorize(translations_x, num_images)
     translations_y = vectorize(translations_y, num_images)
 
-    print "color_background_filter is:", color_background_filter
+    print("color_background_filter is:", color_background_filter)
 
     if convert_format == "L":
         pixel_dimensions = 1
-        print "image_loading: pixel_format=L"
+        print("image_loading: pixel_format=L")
     elif convert_format == "RGB":
-        print "image_loading: pixel_format=RGB"
+        print("image_loading: pixel_format=RGB")
         pixel_dimensions = 3
     else:
         err = "Don't know the pixel_dimensions for image format: ", convert_format
@@ -987,8 +996,9 @@ def load_image_data(image_files, image_array, image_width, image_height, subimag
             unique_image_files_subsets[i % num_proc].append(image_file)
 
         all_im_params = (pre_mirroring_flags, pixelsamplings_x, pixelsamplings_y, subimages_first_row,
-                         subimages_first_column, translations_x, translations_y, delta_angs, rotate_before_translation, contrast_enhance,
-                         obj_avgs, obj_stds)
+                         subimages_first_column, translations_x, translations_y,
+                         delta_angs, rotate_before_translation,
+                         contrast_enhance, obj_avgs, obj_stds)
 
         queue = multiprocessing.Queue()
         jobs = []
@@ -999,12 +1009,12 @@ def load_image_data(image_files, image_array, image_width, image_height, subimag
                             color_background_filter, all_im_params, proc_num, queue, verbose)
             p = multiprocessing.Process(target=load_multiple_image_data, args=process_args)
             jobs.append(p)
-            print "parallel image loading: starting image loading by process %d in [0,%d]" % (proc_num, num_proc - 1)
+            print("parallel image loading: starting image loading by process %d in [0,%d]" % (proc_num, num_proc - 1))
             p.start()
 
-        print "parallel image loading: waiting for results"
+        print("parallel image loading: waiting for results")
         for proc, p in enumerate(jobs):
-            print "waiting for result number %d" % proc
+            print("waiting for result number %d" % proc)
             (subset_indices, subimages_subset) = queue.get()
             # print "incorporating results: (subset_indices, subimages_subset)=", subset_indices, subimages_subset
             subimages[subset_indices, :] = subimages_subset
@@ -1012,7 +1022,7 @@ def load_image_data(image_files, image_array, image_width, image_height, subimag
         # sleep for 2 secs
         time.sleep(2)
         for p in jobs:
-            print "parallel image loading: joining image loading processes"
+            print("parallel image loading: joining image loading processes")
             p.join()
 
     if add_noise:  # Add noise to the whole images loaded
@@ -1034,14 +1044,14 @@ def load_image_data(image_files, image_array, image_width, image_height, subimag
         subimages = subimages / 256.0
 
     t1 = time.time()
-    print "image loading finished in %f ms, %f ms/im" % ((t1 - t0) * 1000, (t1 - t0) * 1000.0 / num_images)
+    print("image loading finished in %f ms, %f ms/im" % ((t1 - t0) * 1000, (t1 - t0) * 1000.0 / num_images))
     return subimages
 
 
 def load_multiple_image_data(unique_image_files_subset, act_im_num_indices, subimage_width, subimage_height,
                              pixel_dimensions, add_noise, convert_format, background_type, color_background_filter,
                              all_im_params, proc, queue, verbose):
-    print "loading/processing %d unique source images (process %d)" % (len(unique_image_files_subset), proc)
+    print("loading/processing %d unique source images (process %d)" % (len(unique_image_files_subset), proc))
 
     subset_indices = []
     for image_file in unique_image_files_subset:
@@ -1051,14 +1061,15 @@ def load_multiple_image_data(unique_image_files_subset, act_im_num_indices, subi
     subimages = numpy.zeros((num_images, subimage_width * subimage_height * pixel_dimensions))
 
     (pre_mirroring_flags, pixelsamplings_x, pixelsamplings_y, subimages_first_row, subimages_first_column,
-     translations_x, translations_y, delta_angs, rotate_before_translation, contrast_enhance, objs_avg, objs_std) = all_im_params
+     translations_x, translations_y, delta_angs, rotate_before_translation,
+     contrast_enhance, objs_avg, objs_std) = all_im_params
       
     # Noise is added to whole matrix, to prevent randomness differences w.r.t. non parallelized version
     add_noise2 = False
     image_counter = 0
     for image_file in unique_image_files_subset:
         if verbose:
-            print "Loading unique image", image_file
+            print("Loading unique image", image_file)
         im_orig = Image.open(image_file)
         # this makes sure the image data is decoded now
         im_orig.load()
@@ -1071,7 +1082,8 @@ def load_multiple_image_data(unique_image_files_subset, act_im_num_indices, subi
             im_params = (subimage_width, subimage_height, pre_mirroring_flags[act_im_num], pixelsamplings_x[act_im_num],
                          pixelsamplings_y[act_im_num], subimages_first_row[act_im_num],
                          subimages_first_column[act_im_num], add_noise2, convert_format, translations_x[act_im_num],
-                         translations_y[act_im_num], delta_angs[act_im_num], rotate_before_translation, contrast_enhance, objs_avg[act_im_num],
+                         translations_y[act_im_num], delta_angs[act_im_num], rotate_before_translation,
+                         contrast_enhance, objs_avg[act_im_num],
                          objs_std[act_im_num], background_type, color_background_filter, verbose, save_intermediate)
             # time.sleep(1) #TURBO WARNING!!!
             subimages[image_counter] = load_single_image_data(im_orig, im_params)
@@ -1081,8 +1093,8 @@ def load_multiple_image_data(unique_image_files_subset, act_im_num_indices, subi
         _, mean, std = contrast_enhance.split("-")
         mean = float(mean)
         std = float(std)
-        print "Contrast enhancement directly on array. Fixing mean to %f and std to %f (approx)" % (mean, std)
-        print "Before: avg_min=", subimages.min(axis=1).mean(), "avg_max=", subimages.max(axis=1).mean()
+        print("Contrast enhancement directly on array. Fixing mean to %f and std to %f (approx)" % (mean, std))
+        print("Before: avg_min=", subimages.min(axis=1).mean(), "avg_max=", subimages.max(axis=1).mean())
         image_array_contrast_normalize_avg_std(subimages, mean=mean, std=std)
 
     queue.put((subset_indices, subimages))
@@ -1091,7 +1103,8 @@ def load_multiple_image_data(unique_image_files_subset, act_im_num_indices, subi
 # Translations are given in original image coordinates
 def load_single_image_data(im_orig, im_params):
     (subimage_width, subimage_height, pre_mirroring_flag, pixelsampling_x, pixelsampling_y, subimage_first_row,
-     subimage_first_column, add_noise, convert_format, translation_x, translation_y, delta_ang, rotate_before_translation, contrast_enhance,
+     subimage_first_column, add_noise, convert_format, translation_x, translation_y,
+     delta_ang, rotate_before_translation, contrast_enhance,
      obj_avg, obj_std, background_type, color_background_filter, verbose, save_intermediate) = im_params
 
     out_size = (subimage_width, subimage_height)
@@ -1115,8 +1128,8 @@ def load_single_image_data(im_orig, im_params):
 
         if x1 < 0 or y1 < 0 or x0 >= im.size[0] or y0 >= im.size[1]:
             err = "Image Loading Failed: Subimage seriously out of Image"
-            print "subimage_coordinates =", (x0, y0, x1, y1)
-            print "Image size: im.size[0], im.size[1] = ", im.size[0], im.size[1]
+            print("subimage_coordinates =", (x0, y0, x1, y1))
+            print("Image size: im.size[0], im.size[1] = ", im.size[0], im.size[1])
             raise Exception(err)
 
         if rotate_before_translation:
@@ -1171,26 +1184,26 @@ def load_single_image_data(im_orig, im_params):
                                          interpolation_format_sampling)  # , Image.BICUBIC)
 
             if save_intermediate:
-                print "SAVING image 1"
-                print "subimage_first_column[act_im_num]=", subimage_first_column
-                print "ori_width, ori_height =", ori_width, ori_height
-                print "subimage_coordinates =", subimage_coordinates
-                print "rotation_center_x_int, rotation_center_y_int=", rotation_center_x_int, rotation_center_y_int
-                print "Delta_x, Delta_y=", Delta_x, Delta_y
+                print("SAVING image 1")
+                print("subimage_first_column[act_im_num]=", subimage_first_column)
+                print("ori_width, ori_height =", ori_width, ori_height)
+                print("subimage_coordinates =", subimage_coordinates)
+                print("rotation_center_x_int, rotation_center_y_int=", rotation_center_x_int, rotation_center_y_int)
+                print("Delta_x, Delta_y=", Delta_x, Delta_y)
                 im_crop_first.save("cropped.png")
 
             # print delta_ang
             im_rotated = rotate_improved(im_crop_first, delta_ang, Image.BICUBIC)
 
             if save_intermediate:
-                print "SAVING image 2"
+                print("SAVING image 2")
                 im_rotated.save("rotated.png")
 
             # Warning, make this conditional, use equalize instead, autocontrast is too weak!
             im_contrasted = contrast_enhance_image(im_rotated, x0, x1, y0, y1, obj_avg, obj_std, contrast_enhance)
 
             if save_intermediate:
-                print "SAVING image 3"
+                print("SAVING image 3")
                 im_contrasted.save("im_contrasted.png")
 
             center_x_geometric = (crop_size[0] - 1) / 2.0
@@ -1215,9 +1228,9 @@ def load_single_image_data(im_orig, im_params):
             im_out = final_sampling_and_contrast_enhance(im_contrasted, out_size, x0, x1, y0, y1, contrast_enhance)
 
             if save_intermediate:
-                print "SAVING image 4. center_x_geometric, center_y_geometric=", center_x_geometric, center_y_geometric
-                print "Delta_x_rotated, Delta_y_rotated were=", Delta_x_rotated, Delta_y_rotated
-                print "subimage_coordinates were=", subimage_coordinates
+                print("SAVING image 4. center_x_geometric, center_y_geometric=", center_x_geometric, center_y_geometric)
+                print("Delta_x_rotated, Delta_y_rotated were=", Delta_x_rotated, Delta_y_rotated)
+                print("subimage_coordinates were=", subimage_coordinates)
                 im_out.save("im_out.png")
         else:  # No rotation is applied at all
             # Warning, make this conditional, use equalize instead, autocontrast is too weak!
@@ -1229,26 +1242,26 @@ def load_single_image_data(im_orig, im_params):
 
         im_small = numpy.asarray(im_out)
 
-        if add_noise and False:
-            ex = "Was not supposed to add noise here..."
-            raise Exception(ex)
-            if convert_format == "L":
-                # Using uniform noise for speed over normal noise
-                high = (3 ** 0.5) * 0.05  # standard deviation 0.05
-                noise = numpy.random.uniform(low=-high, high=high, size=(subimage_height, subimage_width))
-                # noise = numpy.random.normal(loc=0.0, scale=0.05, size=(subimage_height, subimage_width))
-            elif convert_format == "RGB":
-                noise_amplitude = 5.0  # RGB has range from 0 to 255
-                high = (3 ** 0.5) * noise_amplitude  # standard deviation 0.05
-                noise = numpy.random.uniform(low=-high, high=high, size=(subimage_height, subimage_width, 3))
-            # noise = numpy.random.normal(loc=0.0, scale=noise_amplitude, size=(subimage_height, subimage_width, 3))
-            else:
-                err = "Don't know how to generate noise for given image format: ", convert_format
-                raise Exception(err)
-            im_small = im_small * 1.0 + noise
-            # irb_transform = True
-            # if convert_format == "RGB" and irb_transform:
-            #    im_small = rgb_to_irb_array(im_small)
+        # if add_noise and False:
+        #     ex = "Was not supposed to add noise here..."
+        #     raise Exception(ex)
+        #     if convert_format == "L":
+        #         # Using uniform noise for speed over normal noise
+        #         high = (3 ** 0.5) * 0.05  # standard deviation 0.05
+        #         noise = numpy.random.uniform(low=-high, high=high, size=(subimage_height, subimage_width))
+        #         # noise = numpy.random.normal(loc=0.0, scale=0.05, size=(subimage_height, subimage_width))
+        #     elif convert_format == "RGB":
+        #         noise_amplitude = 5.0  # RGB has range from 0 to 255
+        #         high = (3 ** 0.5) * noise_amplitude  # standard deviation 0.05
+        #         noise = numpy.random.uniform(low=-high, high=high, size=(subimage_height, subimage_width, 3))
+        #     # noise = numpy.random.normal(loc=0.0, scale=noise_amplitude, size=(subimage_height, subimage_width, 3))
+        #     else:
+        #         err = "Don't know how to generate noise for given image format: ", convert_format
+        #         raise Exception(err)
+        #     im_small = im_small * 1.0 + noise
+        #     # irb_transform = True
+        #     # if convert_format == "RGB" and irb_transform:
+        #     #    im_small = rgb_to_irb_array(im_small)
 
         return im_small.flatten()
 
@@ -1363,8 +1376,8 @@ def extract_subimages_basic(images, image_indices, coordinates, out_size=(64, 64
         if (x0 < 0 or y0 < 0 or x1 >= images[im_index].size[0] or y1 >= images[im_index].size[1]) and \
                 not allow_out_of_image_sampling:
             err = "Image Loading Failed: Subimage out of Image"
-            print "subimage_coordinates =", (x0, y0, x1, y1)
-            print "Image size: im.size[0], im.size[1] = ", images[im_index].size[0], images[im_index].size[1]
+            print("subimage_coordinates =", (x0, y0, x1, y1))
+            print("Image size: im.size[0], im.size[1] = ", images[im_index].size[0], images[im_index].size[1])
             raise Exception(err)
 
         im_out = images[im_index].transform(out_size, Image.EXTENT, subimage_coordinates, interpolation_format_sampling)
@@ -1401,8 +1414,8 @@ def extract_subimage_rotate(image, subimage_coordinates, delta_ang, out_size=(64
     (x0, y0, x1, y1) = subimage_coordinates
     if (x0 < 0 or y0 < 0 or x1 >= image.size[0] or y1 >= image.size[1]) and not allow_out_of_image_sampling:
         err = "Image Loading Failed: Subimage out of Image"
-        print "subimage_coordinates =", (x0, y0, x1, y1)
-        print "Image size: im.size[0], im.size[1] = ", image.size[0], image.size[1]
+        print("subimage_coordinates =", (x0, y0, x1, y1))
+        print("Image size: im.size[0], im.size[1] = ", image.size[0], image.size[1])
         raise Exception(err)
 
     if delta_ang is not None:
@@ -1503,8 +1516,8 @@ def code_gender(gender):
 
 def generate_color_filter4(size):
     height, width = size
-    center_x = width / 2.0
-    center_y = height / 2.0
+    # center_x = width / 2.0
+    # center_y = height / 2.0
     #    factor = numpy.sqrt(numpy.sqrt(center_x**4 +center_y**4))
     factor = numpy.sqrt(numpy.sqrt(width ** 4 + height ** 4))
     my_filter = numpy.ones(size)
@@ -1586,8 +1599,8 @@ def random_filtered_noise2D(shape, my_filter, min_val=0, max_val=255, mean=127.5
     amplitude = (max_val - min_val)
 
     if verbose:
-        print "Filter size is: ", shape
-        print "Filter shape is: ", my_filter.shape
+        print("Filter size is: ", shape)
+        print("Filter shape is: ", my_filter.shape)
 
     white_noise = numpy.random.random(shape) * amplitude + min_val
     Fwhite_noise = numpy.fft.fft2(white_noise)
@@ -1612,7 +1625,7 @@ def rename_filenames_facegen():
     identities = range(20)
     for identity in identities:
         prefix = "random%03d_e0_c0_p" % identity
-        print "prefix=", prefix
+        print("prefix=", prefix)
 
         image_files = glob.glob(im_seq_base_dir + "/" + prefix + "?_*tif")
         for i in range(0, len(image_files) + 0):
@@ -1621,7 +1634,7 @@ def rename_filenames_facegen():
 
         #   Sample name: random000_e0_c0_p23_i0.tif
         image_files = glob.glob(im_seq_base_dir + "/" + prefix + "??_*tif")
-        print "prefix2=", prefix
+        print("prefix2=", prefix)
         for i in range(10, len(image_files) + 10):
             os.rename(im_seq_base_dir + "/" + prefix + str(i) + suffix,
                       im_seq_base_dir + "/" + prefix + "%03d" % i + suffix)
@@ -1635,7 +1648,7 @@ def read_binary_header(data_base_dir="", base_filename="data_bin_1.bin"):
     fd.close()
 
     # Note, on 64 bit machine, unsigned integer size (I) is 4 bytes, short integer (H) is... 2 bytes
-    print "binary string read:", s
+    print("binary string read:", s)
     #    (magic_num, iteration, numSamples, numHid, sampleSpan) = struct.unpack('<IIIII', s)
     (magic_num, iteration, numSamples, numHid) = struct.unpack('<IIII', s)
     sampleSpan = -1
@@ -1644,7 +1657,7 @@ def read_binary_header(data_base_dir="", base_filename="data_bin_1.bin"):
         er = "Wrong magic number, was %d, should be 666" % magic_num
         raise Exception(er)
 
-    print "Loaded header: ", (magic_num, iteration, numSamples, numHid, sampleSpan)
+    print("Loaded header: ", (magic_num, iteration, numSamples, numHid, sampleSpan))
     return magic_num, iteration, numSamples, numHid, sampleSpan
 
 
@@ -1662,7 +1675,7 @@ def read_natural_header(data_base_dir="", base_filename="data_bin_1.bin"):
         er = "Wrong magic number, was %d, should be 666" % magic_num
         raise Exception(er)
 
-    print "Loaded header: ", (magic_num, iteration, numSamples, numHid, sampleSpan)
+    print("Loaded header: ", (magic_num, iteration, numSamples, numHid, sampleSpan))
     return magic_num, iteration, numSamples, numHid, sampleSpan
 
 
@@ -1689,11 +1702,11 @@ def load_raw_data(data_base_dir="/scratch/escalafl/cooperations/igel/patches_8x8
     fd.close()
 
     if verbose:
-        print "data (brute) .shape=", data.shape
+        print("data (brute) .shape=", data.shape)
     if select_samples is not None:
         data = data[select_samples]
     if verbose:
-        print "Data, samples selected:", data
+        print("Data, samples selected:", data)
     #    print data
     #    quit()
     return data
@@ -1713,11 +1726,13 @@ def load_natural_data(data_base_dir="", base_filename="data_bin_1.bin", samples=
     data = numpy.fromfile(fd, dtype=float, count=-1, sep='').reshape(numSamples, numHid)
     fd.close()
 
-    print "data.shape=", data.shape
-    print "Header: ", (magic_num, iteration, numSamples, numHid, sampleSpan)
+    if verbose:
+        print("data.shape=", data.shape)
+        print("Header: ", (magic_num, iteration, numSamples, numHid, sampleSpan))
     if samples is not None:
         data = data[samples]
-    print "Data, samples selected:", data
+    if verbose:
+        print("Data, samples selected:", data)
     return data
 
 
@@ -1760,7 +1775,7 @@ def rotate_improved(self, angle, resample=Image.NEAREST, expand=0, force_odd_out
                 out_width += 1
             if out_height & 1 == 0:
                 out_height += 1
-            print "aborted..."
+            print("aborted...")
             quit()
     else:
         out_width = im_width
