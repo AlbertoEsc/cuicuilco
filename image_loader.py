@@ -1,11 +1,11 @@
 #####################################################################################################################
 # image_loader: This module implements various functions useful for loading images                                  #
 #                                                                                                                   #
-# The process of loading an image involves several transformations, including channel reduction, rotation,         #
+# The process of loading an image involves several transformations, including channel reduction, rotation,          #
 # scaling, noise, filtering, mirroring, contrast enhancement.                                                       #
 #                                                                                                                   #
-# By Alberto Escalante. Alberto.Escalante@neuroinformatik.ruhr-uni-bochum.de                                        #
-# Ruhr-University-Bochum, Institute for Neural Computation, Group of Prof. Dr. Wiskott                              #
+# By Alberto Escalante. Alberto.Escalante@ini.rub.de                                                                #
+# Ruhr-University Bochum, Institute for Neural Computation, Group of Prof. Dr. Wiskott                              #
 #####################################################################################################################
 
 from __future__ import print_function

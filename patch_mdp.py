@@ -1356,15 +1356,15 @@ if patch_flow:
     # which means that the data/parameters from the previous node is used
     # The output is the data functions and parameters needed to train a particular node
     # Add logic for data_params
-    def extract_node_funcs(funcs_sets, param_sets, node_nr, verbose=False):
+    def extract_node_funcs(funcs_sets, param_sets, nodenr, verbose=False):
         # print "funcs_sets is:", funcs_sets
         # print "param_sets is:", param_sets
         if isinstance(funcs_sets, list):
             # Find index of last data_vec closer to the requested node
-            if node_nr >= len(funcs_sets):
+            if nodenr >= len(funcs_sets):
                 index = len(funcs_sets) - 1
             else:
-                index = node_nr
+                index = nodenr
 
             # Find index of last data_vec with not None data
             while funcs_sets[index] is None and index > 0:
@@ -1449,7 +1449,7 @@ if patch_flow:
 
             # Extract data and data_params, integrity check
             # if not data_loaded:
-            new_node_funcs, new_node_params = extract_node_funcs(funcs_sets, params_sets, node_nr=i)
+            new_node_funcs, new_node_params = extract_node_funcs(funcs_sets, params_sets, nodenr=i)
             print("new_node_funcs = ", new_node_funcs)
             # quit()"list_train_params" in dir(self)
             execute_node_data = False
@@ -1469,7 +1469,7 @@ if patch_flow:
             if execute_node_data:
                 node_data = extract_data_from_funcs(new_node_funcs)
                 print("node_data is:", node_data)
-                data_vec = self.execute_data_vec(node_data, node_nr=i - 1)
+                data_vec = self.execute_data_vec(node_data, nodenr=i - 1)
                 # else:
             # data_vec already contains valid data
 
