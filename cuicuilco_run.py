@@ -60,7 +60,7 @@ import getopt
 from lockfile import LockFile
 from inspect import getmembers
 import subprocess
-import mkl
+# import mkl
 
 import matplotlib as mpl
 
@@ -71,6 +71,7 @@ import socket
 __version__ = "0.8.0"
 
 # For Python 2 and 3 compatibility
+import functools
 from builtins import input
 cmp = lambda x, y: (x > y) - (x < y)
 
@@ -78,7 +79,7 @@ cmp = lambda x, y: (x > y) - (x < y)
 #  in seconds). This will be upgraded to a Benchmark object.
 benchmark = None
 
-mkl.set_num_threads(18)  # Number of threads used by mlk to parallelize matrix operations of numpy.
+# mkl.set_num_threads(18)  # Number of threads used by mlk to parallelize matrix operations of numpy.
 # Adjust this value according to the number of cores in your system. MKL might decide to ignore this.
 
 print("Running on hostname= " + socket.gethostname())
@@ -964,7 +965,8 @@ def main():
     else:
         network_hashes_base_filenames = []
 
-    network_hashes_base_filenames.sort(lambda x, y: cmp((x[1], y[1])))
+    #network_hashes_base_filenames.sort(lambda x, y: cmp(x[1], y[1]))
+    network_hashes_base_filenames.sort(key=functools.cmp_to_key(cmp))
 
     print ("%d networks found:" % len(network_hashes_base_filenames))
     for i, (network_filename, network_hash) in enumerate(network_hashes_base_filenames):
@@ -2401,7 +2403,7 @@ def main():
     correct_labels_newid_sorted = correct_labels_newid + 0.0
     correct_labels_newid_sorted.sort()
     median_estimation = numpy.ones(len(correct_labels_newid)) * correct_labels_newid_sorted[
-        len(correct_labels_newid) / 2]
+        len(correct_labels_newid) // 2]
     chance_level_MAE_newid = classifiers.mean_average_error(correct_labels_newid, median_estimation)
     print ("chance_level_RMSE_newid=", chance_level_RMSE_newid, "chance_level_MAE_newid=", chance_level_MAE_newid)
     print ("correct_labels_newid.mean()=", correct_labels_newid.mean(),

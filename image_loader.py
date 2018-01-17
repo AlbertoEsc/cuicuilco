@@ -54,7 +54,7 @@ def create_image_filenames(im_seq_base_dir, slow_signal=0, ids=[0], expressions=
     if verbose:
         print("creating image filenames...")
     parameters = list(sfa_libs.product(ids, expressions, morphs, poses, lightings))
-    parameters.sort(lambda x, y: cmp(x[slow_signal], y[slow_signal]))
+    parameters.sort(key=functools.cmp_to_key(lambda x, y: cmp(x[slow_signal], y[slow_signal])))
 
     # print "parameters=", parameters
     selection = parameters[offset::step]

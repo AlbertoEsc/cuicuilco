@@ -1476,7 +1476,7 @@ if patch_flow:
             node_funcs = new_node_funcs
             node_params = new_node_params
 
-            if self.flow[i].input_dim >= min_input_size_for_parallel:
+            if self.flow[i].input_dim is not None and self.flow[i].input_dim >= min_input_size_for_parallel:
                 if isinstance(data_vec, list):
                     for j in range(len(data_vec)):
                         new_node_params[j]["scheduler"] = scheduler
@@ -1673,7 +1673,7 @@ if patch_flow:
         node nr. 'nodenr'. This is equivalent to 'flow[:nodenr+1](iterable)'.
         """
         # Strange bug when nodenr is None, it seems like None<0 is True!!!
-        if nodenr < 0 and nodenr is not None:
+        if nodenr is not None and nodenr < 0:
             return iterable
 
         if isinstance(iterable, numx.ndarray):
