@@ -14,6 +14,7 @@
 
 
 from __future__ import print_function
+from __future__ import division
 import mdp
 import more_nodes
 import lattice
@@ -138,7 +139,7 @@ def create_layer(prev_layer, layer, num_layer, prev_layer_height=None, prev_laye
                                                        layer.mat_connections)
 
         # layer.switchboard.connections
-        layer.num_nodes = layer.lat_mat.size / 2
+        layer.num_nodes = layer.lat_mat.size // 2
 
         if layer.pca_node_class:
             if layer.cloneLayer:
@@ -153,7 +154,7 @@ def create_layer(prev_layer, layer, num_layer, prev_layer_height=None, prev_laye
             else:
                 print("Layer L%d with " % num_layer, layer.num_nodes)
                 print(" independent PCA nodes will be created, with arguments ", layer.pca_args)
-                layer.PCA_nodes = range(layer.num_nodes)
+                layer.PCA_nodes = list(range(layer.num_nodes))
                 for i in range(layer.num_nodes):
                     layer.PCA_nodes[i] = layer.pca_node_class(input_dim=layer.preserve_mask_sparse.sum(),
                                                               output_dim=layer.pca_out_dim, **layer.pca_args)
@@ -171,7 +172,7 @@ def create_layer(prev_layer, layer, num_layer, prev_layer_height=None, prev_laye
                 layer.ord_layer = mdp.hinet.CloneLayer(layer.ord_node, n_nodes=layer.num_nodes)
             else:
                 print("Layer L%d with " % num_layer, layer.num_nodes, " independent ORD nodes will be created")
-                layer.ORD_nodes = range(layer.num_nodes)
+                layer.ORD_nodes = list(range(layer.num_nodes))
                 for i in range(layer.num_nodes):
                     layer.ORD_nodes[i] = layer.ord_node_class(**layer.ord_args)
                 layer.ord_layer = mdp.hinet.Layer(layer.ORD_nodes, homogeneous=True)
@@ -192,7 +193,7 @@ def create_layer(prev_layer, layer, num_layer, prev_layer_height=None, prev_laye
                 layer.red_layer = mdp.hinet.CloneLayer(layer.red_node, n_nodes=layer.num_nodes)
             else:
                 print("Layer L%d with " % num_layer, layer.num_nodes, " independent RED nodes will be created")
-                layer.RED_nodes = range(layer.num_nodes)
+                layer.RED_nodes = list(range(layer.num_nodes))
                 for i in range(layer.num_nodes):
                     layer.RED_nodes[i] = layer.red_node_class(output_dim=layer.red_out_dim, **layer.red_args)
                 layer.red_layer = mdp.hinet.Layer(layer.RED_nodes, homogeneous=True)
@@ -215,7 +216,7 @@ def create_layer(prev_layer, layer, num_layer, prev_layer_height=None, prev_laye
             else:
                 print("Layer L%d with " % num_layer, layer.num_nodes)
                 print(" independent SFA nodes will be created, with arguments ", layer.sfa_args)
-                layer.SFA_nodes = range(layer.num_nodes)
+                layer.SFA_nodes = list(range(layer.num_nodes))
                 for i in range(layer.num_nodes):
                     layer.SFA_nodes[i] = layer.sfa_node_class(output_dim=layer.sfa_out_dim, **layer.sfa_args)
 
@@ -338,7 +339,7 @@ def add_additional_features_to_connections(connections, components_per_node, ori
     where the next layer has nodes with the same input dimensionality 'components_per_node'.
     """
     orig_out_dim = len(connections)
-    num_nodes = orig_out_dim / components_per_node
+    num_nodes = orig_out_dim // components_per_node
     final_out_dim = orig_out_dim + num_features_appended_to_input
 
     connections_out = numpy.zeros(num_nodes * final_out_dim)

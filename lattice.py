@@ -8,6 +8,7 @@
 #####################################################################################################################
 
 from __future__ import print_function
+from __future__ import division
 import numpy
 
 
@@ -33,8 +34,8 @@ def compute_lattice_matrix(v1, v2, mask, x_in_channels, y_in_channels, in_channe
     out_channel_dim = mask_i.sum()
     # print "Mask shape is ", mask.shape
     
-    mat_height = (y_in_channels - mask.shape[0])/v2[1] + 1
-    mat_width = (x_in_channels-mask.shape[1])/v1[0] + 1
+    mat_height = (y_in_channels - mask.shape[0]) // v2[1] + 1
+    mat_width = (x_in_channels-mask.shape[1]) // v1[0] + 1
     
     mat = numpy.ones((mat_height, mat_width, 2)) * -1
     # Create Index Matrix, -1 entries equal empty cell
@@ -156,14 +157,14 @@ def compute_lsrf_preserve_masks(x_field_channels, y_field_channels, nx_value, ny
     else:
         preserve_mask_local = numpy.ones((y_field_channels, x_field_channels)) > 0.5
     
-    if nx_value > 0:
+    if nx_value is not None and nx_value > 0:
         h_vector_sparse = numpy.ones((1, nx_value+1)) > 0.5
         # h_vector_sparse[0][x_field_channels:nx_value] = False
         h_vector_sparse[0][x_field_channels:nx_value] = False
     else:
         h_vector_sparse = numpy.ones((1, x_field_channels)) > 0.5
 
-    if ny_value > 0:
+    if ny_value is not None and ny_value > 0:
         v_vector_sparse = numpy.ones((ny_value+1, 1)) > 0.5
         v_vector_sparse[y_field_channels:ny_value, 0] = False
     else:
@@ -257,7 +258,7 @@ def compute_lsrf_matrix_connections(v1, v2, preserve_mask_local, preserve_mask_s
                                     0:preserve_mask_sparse.shape[1]][preserve_mask_sparse].flatten()
 
     mask_x_coordinates = mask_indices % x_in_channels
-    mask_y_coordinates = mask_indices / x_in_channels
+    mask_y_coordinates = mask_indices // x_in_channels
 
     connections = None
     for ind_y in range(lat_mat.shape[0]):
