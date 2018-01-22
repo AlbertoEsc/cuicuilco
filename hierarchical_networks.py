@@ -553,10 +553,10 @@ print("*******************************************************************")
 print("******** Setting Layer L0 Parameters          *********************")
 pSFALayerL0 = system_parameters.ParamsSFALayer()
 pSFALayerL0.name = "Homogeneous Linear Layer L0 6x6 2 Nodes"
-pSFALayerL0.x_field_channels = 28
-pSFALayerL0.y_field_channels = 28
-pSFALayerL0.x_field_spacing = 28
-pSFALayerL0.y_field_spacing = 28
+pSFALayerL0.x_field_channels = 24
+pSFALayerL0.y_field_channels = 24
+pSFALayerL0.x_field_spacing = 24
+pSFALayerL0.y_field_spacing = 24
 # pSFALayerL0.in_channel_dim=1
 
 pSFALayerL0.pca_node_class = mdp.nodes.PCANode

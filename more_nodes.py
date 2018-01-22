@@ -269,7 +269,7 @@ class GeneralExpansionNode(mdp.Node):
         self.rs_data_training_mean = x.mean(axis=0)
         self.rs_data_training_std = x.std(axis=0)
 
-        print ("GeneralExpansionNode: output_dim=", self.output_dim(), end="")
+        print ("GeneralExpansionNode: output_dim=", self.output_dim, end="")
         starting_point = self.starting_point
         c1, l1 = generate_random_sigmoid_weights(self.input_dim, self.output_dim)
         if starting_point == "Identity":

@@ -55,6 +55,7 @@ mdp.nodes.GeneralExpansionNode.localized_inverse = inversion.general_expansion_n
 
 
 # The original version disregards output_dim if input_dim is None!!! Correction: ... or self.input_dim is None...
+# Apparently, this code is never reached with self.input_dim True
 def SFANode__set_range(self):
     if self.output_dim is not None and (self.output_dim <= self.input_dim or self.input_dim is None):
         # The eigenvalues are sorted in ascending order
@@ -65,7 +66,7 @@ def SFANode__set_range(self):
         self.output_dim = self.input_dim
     return rng
 
-mdp.nodes.SFANode._set_range = SFANode__set_range
+# mdp.nodes.SFANode._set_range = SFANode__set_range
 
 
 def SFANode_inverse(self, y):
@@ -1027,6 +1028,16 @@ if patch_layer:
                 self.node_input_dims[index] = node.input_dim
 
         output_dim = self._get_output_dim_from_nodes()
+
+        # set layer state
+        nodes_is_training = [node.is_training() for node in nodes]
+        if mdp.numx.any(nodes_is_training):
+            self._is_trainable = True
+            self._training = True
+        else:
+            self._is_trainable = False
+            self._training = False
+
         super(mdp.hinet.Layer, self).__init__(input_dim=input_dim,
                                               output_dim=output_dim,
                                               dtype=dtype)
