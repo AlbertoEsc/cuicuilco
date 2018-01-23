@@ -7,6 +7,7 @@
 #####################################################################################################################
 
 from __future__ import print_function
+from __future__ import division
 import numpy
 import mdp
 from mdp import numx
@@ -92,15 +93,15 @@ def SFANode_train_scheduler(self, x, block_size=None, train_mode=None, node_weig
         return SFANode_train(self, x, block_size=block_size, train_mode=train_mode, node_weights=node_weights,
                              edge_weights=edge_weights)
     else:
-        num_chunks = min(n_parallel, x.shape[0] / block_size)
+        num_chunks = min(n_parallel, x.shape[0] // block_size)
         # here chunk_size is given in blocks!!!
         # chunk_size = int(numpy.ceil((x.shape[0]/block_size)*1.0/num_chunks))
-        chunk_size = int((x.shape[0] / block_size) / num_chunks)
+        chunk_size = int((x.shape[0] // block_size) // num_chunks)
 
         # Notice that parallel training doesn't work with clustered mode and inhomogeneous blocks
         # TODO:Fix this
         print("%d chunks, of size %d blocks, last chunk contains %d blocks" % \
-              (num_chunks, chunk_size, (x.shape[0] / block_size) % chunk_size))
+              (num_chunks, chunk_size, (x.shape[0] // block_size) % chunk_size))
         if train_mode == 'clustered':
             # TODO: Implement this
             for i in range(num_chunks):
@@ -140,7 +141,7 @@ def SFANode_train_scheduler(self, x, block_size=None, train_mode=None, node_weig
             # xxxx self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[bs:-bs], weight=1.0)
             x2 = x[bs:-bs]
             # num_chunks2 = int(numpy.ceil((x2.shape[0]/block_size-2)*1.0/chunk_size))
-            num_chunks2 = int((x2.shape[0] / block_size - 2) / chunk_size)
+            num_chunks2 = int((x2.shape[0] // block_size - 2) // chunk_size)
             for i in range(num_chunks2):
                 if i < num_chunks2 - 1:
                     scheduler.add_task(
@@ -167,7 +168,7 @@ def SFANode_train_scheduler(self, x, block_size=None, train_mode=None, node_weig
         elif train_mode == 'unlabeled':
             # TODO: IMPLEMENT THIS
             for i in range(num_chunks):
-                print("Adding scheduler task //////////////////////")
+                print("Adding scheduler task /////////////////////")
                 sys.stdout.flush()
                 scheduler.add_task((x[i * block_size * chunk_size:(i + 1) * block_size * chunk_size], block_size, 1.0),
                                    ComputeCovDcovMatrixClustered)
@@ -250,10 +251,10 @@ def SFANode_train(self, x, block_size=None, train_mode=None, node_weights=None, 
                 self._covdcovmtx.updateSerial(x, torify=False, block_size=block_size)
             elif train_mode.startswith('DualSerial'):
                 print("updateDualSerial")
-                num_blocks = len(x) / block_size
+                num_blocks = len(x) // block_size
                 dual_num_blocks = int(train_mode[len("DualSerial"):])
-                dual_block_size = len(x) / dual_num_blocks
-                chunk_size = block_size / dual_num_blocks
+                dual_block_size = len(x) // dual_num_blocks
+                chunk_size = block_size // dual_num_blocks
                 print("dual_num_blocks = ", dual_num_blocks)
                 self._covdcovmtx.updateSerial(x, torify=False, block_size=block_size)
                 x2 = numpy.zeros_like(x)
@@ -487,7 +488,7 @@ def SFANode_stop_training(self, debug=False, verbose=False, pca_term=0.995, pca_
         print("Cov[0:3,0:3] is", self.cov_mtx[0:3, 0:3])
         print("DCov[0:3,0:3] is", self.dcov_mtx[0:3, 0:3])
     else:
-        if verbose or True:
+        if verbose:
             print("stop_training: Warning, using experimental SFA training method, ")
             print("with self.block_size=", self.block_size)
         print("self._covdcovmtx.num_samples = ", self._covdcovmtx.num_samples)
@@ -1098,7 +1099,7 @@ if patch_layer:
             num_nodes = len(self.nodes)
             print("Training homogeneous layer with input_dim %d and %d nodes" % (layer_input_dim, num_nodes))
             for node in self.nodes:
-                node.set_input_dim(layer_input_dim / num_nodes)
+                node.set_input_dim(layer_input_dim // num_nodes)
             input_dim = 0
             for index, node in enumerate(self.nodes):
                 input_dim += node.input_dim
@@ -1130,7 +1131,7 @@ if patch_layer:
             num_nodes = len(self.nodes)
             print("Training homogeneous layer with input_dim %d and %d nodes" % (layer_input_dim, num_nodes))
             for node in self.nodes:
-                node.set_input_dim(layer_input_dim / num_nodes)
+                node.set_input_dim(layer_input_dim // num_nodes)
             input_dim = 0
             for index, node in enumerate(self.nodes):
                 input_dim += node.input_dim
@@ -1143,9 +1144,9 @@ if patch_layer:
             stop_index += node.input_dim
             #           print "stop_index = ", stop_index
             if node.is_training():
-                if verbose:
+                if verbose or True:
                     print("Layer_new_train_params. params=", params)
-                    print("Here computation is fine!!!")
+                    print("Here computation is fine!!! start_index = ", start_index, "stop_index=", stop_index)
                 node.train_params(x[:, start_index: stop_index], params)
                 if node.is_training() and immediate_stop_training and not isinstance(self, mdp.hinet.CloneLayer):
                     node.stop_training()
@@ -1175,7 +1176,7 @@ if patch_layer:
                 print("Pre_Execution of homogeneous layer with",
                       "input_dim %d and %d nodes" % (layer_input_dim, num_nodes))
                 for node in self.nodes:
-                    node.set_input_dim(layer_input_dim / num_nodes)
+                    node.set_input_dim(layer_input_dim // num_nodes)
                 input_dim = 0
                 for index, node in enumerate(self.nodes):
                     input_dim += node.input_dim

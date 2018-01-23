@@ -578,7 +578,7 @@ pSFALayerL0.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
 pSFALayerL0.sfa_out_dim = 60
 pSFALayerL0.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": "RandomSigmoids",
                         "expansion_starting_point": None, "max_lenght_slow_part": None,
-                        "offsetting_mode": "sensitivity_based_pure", "max_preserved_sfa": 4.99999,
+                        "offsetting_mode": "sensitivity_based_pure", "max_preserved_sfa": 1.99999,
                         "expansion_output_dim": 300}
 
 pSFALayerL0.cloneLayer = False
@@ -600,16 +600,16 @@ pSFALayerL1.red_node_class = None
 
 pSFALayerL1.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
 pSFALayerL1.sfa_out_dim = 9
-expansion_output_dim = int(tuning_parameter)
+expansion_output_dim = 1000  # int(tuning_parameter)
 pSFALayerL1.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": "RandomSigmoids",
                         "expansion_starting_point": None, "max_lenght_slow_part": None,
-                        "offsetting_mode": "sensitivity_based_pure", "max_preserved_sfa": 4.99999,
+                        "offsetting_mode": "sensitivity_based_pure", "max_preserved_sfa": 1.99999,
                         "expansion_output_dim": expansion_output_dim}
 pSFALayerL1.cloneLayer = False
 pSFALayerL1.name = comp_supernode_name(pSFALayerL1.exp_funcs, pSFALayerL1.pca_out_dim, pSFALayerL1.sfa_out_dim)
 system_parameters.test_object_contents(pSFALayerL1)
 
-network = SFANetworkMNIST2L = system_parameters.ParamsNetwork()
+network = SFANetworkMNIST2L_24x24 = system_parameters.ParamsNetwork()
 network.name = "2L network 6x6 pixels (4x4=16 Nodes) for MNIST"
 network.L0 = copy.deepcopy(pSFALayerL0)
 network.L1 = copy.deepcopy(pSFALayerL1)

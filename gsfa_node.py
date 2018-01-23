@@ -12,6 +12,7 @@
 #####################################################################################################################
 
 from __future__ import print_function
+from __future__ import division
 import numpy
 import scipy
 import scipy.optimize
@@ -128,10 +129,10 @@ class GSFANode(mdp.nodes.SFANode):
                     self._covdcovmtx.updateSerial(x, torify=False, block_size=block_size)
                 elif train_mode.startswith('DualSerial'):
                     print("updateDualSerial")
-                    num_blocks = len(x) / block_size
+                    num_blocks = len(x) // block_size
                     dual_num_blocks = int(train_mode[len("DualSerial"):])
-                    dual_block_size = len(x) / dual_num_blocks
-                    chunk_size = block_size / dual_num_blocks
+                    dual_block_size = len(x) // dual_num_blocks
+                    chunk_size = block_size // dual_num_blocks
                     print("dual_num_blocks = ", dual_num_blocks)
                     self._covdcovmtx.updateSerial(x, torify=False, block_size=block_size)
                     x2 = numpy.zeros_like(x)
@@ -341,15 +342,15 @@ class GSFANode(mdp.nodes.SFANode):
             return self._train_without_scheduler(x, block_size=block_size, train_mode=train_mode,
                                                  node_weights=node_weights, edge_weights=edge_weights)
         else:
-            num_chunks = min(n_parallel, x.shape[0] / block_size)  # WARNING, cover case where the division is not exact
+            num_chunks = min(n_parallel, x.shape[0] // block_size)  # WARNING, cover case division is not exact
             # here chunk_size is given in blocks!!!
             # chunk_size = int(numpy.ceil((x.shape[0]/block_size)*1.0/num_chunks))
-            chunk_size = int((x.shape[0] / block_size) / num_chunks)
+            chunk_size = int((x.shape[0] // block_size) // num_chunks)
 
             # Notice that parallel training doesn't work with clustered mode and inhomogeneous blocks
             # TODO:Fix this
             print("%d chunks, of size %d blocks, last chunk contains %d blocks" % \
-                  (num_chunks, chunk_size, (x.shape[0] / block_size) % chunk_size))
+                  (num_chunks, chunk_size, (x.shape[0] // block_size) % chunk_size))
             if train_mode == 'clustered':
                 # TODO: Implement this
                 for i in range(num_chunks):
@@ -524,7 +525,7 @@ def Hamming_weight(integer_list):
         while n > 0:
             if n % 2:
                 w += 1
-            n /= 2
+            n = n // 2
         return w
     else:
         er = "unsupported input type for Hamming_weight:", integer_list
@@ -888,7 +889,7 @@ class CovDCovMatrix(object):
 
         sum_prod_diffs_full = (2 * width + 1) * sum_prod_x_full + Aacc123 - Bprod - Bprod.T
         num_diffs = 2 * (num_samples * width -
-                         width * (width + 1) / 2)  # num_samples*(2*width) # removed zero differences
+                         width * (width + 1) // 2)  # num_samples*(2*width) # removed zero differences
         self.AddDiffs(sum_prod_diffs_full, num_diffs, weight)
 
     def updateFastTruncatingSlidingWindow2(self, x, weight=1.0, window_halfwidth=2):
@@ -929,7 +930,7 @@ class CovDCovMatrix(object):
 
         sum_prod_diffs_full = t1 - t2 - t2.T + t6
         num_diffs = (num_samples * (2 * width) -
-                     2 * width * (width + 1) / 2)  # not counting zero differences, unverified
+                     2 * width * (width + 1) // 2)  # not counting zero differences, unverified
         self.AddDiffs(sum_prod_diffs_full, num_diffs, weight)
         print(":|")
 
@@ -1099,7 +1100,7 @@ class CovDCovMatrix(object):
         if num_samples % block_size > 0:
             err = "Consistency error: num_samples is not a multiple of block_size"
             raise Exception(err)
-        num_blocks = num_samples / block_size
+        num_blocks = num_samples // block_size
 
         # warning, plenty of dtype missing!!!!!!!!
         # Optimize computation of x.T ???
@@ -1190,7 +1191,7 @@ class CovDCovMatrix(object):
             err = "Inconsistency error: num_samples (%d) is not a multiple of block_size (%d)" % \
                   (num_samples, block_size)
             raise Exception(err)
-        num_blocks = num_samples / block_size
+        num_blocks = num_samples // block_size
 
         # warning, plenty of dtype missing!!!!!!!!
         sum_x = x.sum(axis=0)
@@ -1241,7 +1242,7 @@ class CovDCovMatrix(object):
             err = "Inconsistency error: num_samples (%d) must be a multiple of block_size: " % num_samples, block_sizes
             raise Exception(err)
 
-        num_classes = num_samples / block_size
+        num_classes = num_samples // block_size
         J = int(numpy.log2(num_classes))
         if Jdes is None:
             Jdes = J
@@ -1256,7 +1257,7 @@ class CovDCovMatrix(object):
         N = num_samples
         labels = numpy.zeros((N, J + extra_label))
         for j in range(J):
-            labels[:, j] = (numpy.arange(N) / block_size / (2 ** (J - j - 1)) % 2) * 2 - 1
+            labels[:, j] = (numpy.arange(N) // block_size // (2 ** (J - j - 1)) % 2) * 2 - 1
         eigenvalues = numpy.concatenate(([1.0] * (J - 1), numpy.arange(1.0, 0.0, -1.0 / (extra_label + 1))))
         #        eigenvalues = numpy.concatenate(([1.0]*(J-1), 0.98**numpy.arange(0, extra_label+1)))
 
@@ -1287,10 +1288,10 @@ class CovDCovMatrix(object):
         for j in range(J + extra_label):
             set10 = x[labels[:, j] == -1]
             self.update_clustered_homogeneous_block_sizes(set10, weight=eigenvalues[j],
-                                                          block_size=N / 2)  # first cluster
+                                                          block_size=N // 2)  # first cluster
             set10 = x[labels[:, j] == 1]
             self.update_clustered_homogeneous_block_sizes(set10, weight=eigenvalues[j],
-                                                          block_size=N / 2)  # second cluster
+                                                          block_size=N // 2)  # second cluster
 
     def addCovDCovMatrix(self, cov_dcov_mat, adding_weight=1.0, own_weight=1.0):
         if self.sum_prod_x is None:
