@@ -8,6 +8,7 @@
 #####################################################################################################################
 
 from __future__ import print_function
+from __future__ import division
 import numpy
 
 
@@ -47,7 +48,7 @@ def wider_1Darray(x, scale_x=1):
 
 def extend_channel_mask_to_signal_mask(input_dim, channel_mask):
     channel_size = channel_mask.size
-    rep = input_dim / channel_size
+    rep = input_dim // channel_size
     if input_dim % channel_size != 0:
         err = "incompatible channel_mask length and input_dim"
         raise Exception(err)  
@@ -128,7 +129,7 @@ def comp_typical_delta_eta(x, block_size, num_reps=10, training_mode='serial'):
     
     # TODO: support non-homogeneous block sizes, and training modes
     if isinstance(block_size, int):
-        num_blocks = t / block_size
+        num_blocks = t // block_size
         if block_size == 1:
             num_reps = 1
     # block_origins = numpy.arange(num_blocks) * block_size
@@ -171,7 +172,7 @@ def comp_typical_delta_eta(x, block_size, num_reps=10, training_mode='serial'):
         print ("exact computation of delta value for clustered graph...")
         # print "x.std(axis=0)=", x.std(axis=0)
         if isinstance(block_size, int):
-            block_sizes = [block_size] * (t / block_size)
+            block_sizes = [block_size] * (t // block_size)
         else:
             block_sizes = block_size
         delta = 0.0

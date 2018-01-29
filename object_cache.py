@@ -10,6 +10,7 @@
 #####################################################################################################################
 
 from __future__ import print_function
+from __future__ import division
 import sys
 import os
 import inspect
@@ -492,7 +493,7 @@ class chunk_iterator(object):
                      "over signal %d do not have the same size!" % x.shape[0]
                 print(er)
         else:
-            if x.shape[0] % block_size != 0 or (x.shape[0]/block_size-1) % (chunk_size-1) != 0:
+            if x.shape[0] % block_size != 0 or (x.shape[0] // block_size-1) % (chunk_size-1) != 0:
                 print("WARNING! Last Chunk won't have the same size (%d chunk_size, %d x.shape[0])" % (chunk_size,
                                                                                                        x.shape[0]))
 

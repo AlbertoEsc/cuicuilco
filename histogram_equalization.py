@@ -9,6 +9,7 @@
 #####################################################################################################################
 
 from __future__ import print_function
+from __future__ import division
 import mdp
 import numpy as numx
 import numpy
@@ -306,12 +307,12 @@ class NLIPCANode(mdp.Node):
         normalized_y = numpy.zeros((num_samples, self.output_dim))
 
         for feat_nr in range(0, self.output_dim, self.feats_at_once):
-            pca_node = self.pca_nodes[feat_nr / self.feats_at_once]
+            pca_node = self.pca_nodes[feat_nr // self.feats_at_once]
             new_feature = pca_node.execute(residual_data)
             y[:, feat_nr:feat_nr + self.feats_at_once] = new_feature
 
             if self.norm_class:
-                norm_node = self.norm_nodes[feat_nr / self.feats_at_once]
+                norm_node = self.norm_nodes[feat_nr // self.feats_at_once]
                 normalized_y[:, feat_nr:feat_nr + self.feats_at_once] = norm_node.execute(new_feature)
             else:
                 normalized_y[:, feat_nr:feat_nr + self.feats_at_once] = y[:, feat_nr:feat_nr + self.feats_at_once]
@@ -327,7 +328,7 @@ class NLIPCANode(mdp.Node):
                 else:
                     expanded_data = normalized_y[:, 0:feat_nr + self.feats_at_once]
 
-            lr_node = self.lr_nodes[feat_nr / self.feats_at_once]
+            lr_node = self.lr_nodes[feat_nr // self.feats_at_once]
             residual_data_app = lr_node.execute(expanded_data)
             if self.factor_mode == "constant":
                 effective_projection_factor = self.factor_projection_out
@@ -352,7 +353,7 @@ class NLIPCANode(mdp.Node):
         if self.norm_class:
             for feat_nr in range(0, self.output_dim, self.feats_at_once):
                 normalized_y[:, feat_nr:feat_nr + self.feats_at_once] = self.norm_nodes[
-                    feat_nr / self.feats_at_once].execute(y[:, feat_nr:feat_nr + self.feats_at_once])
+                    feat_nr // self.feats_at_once].execute(y[:, feat_nr:feat_nr + self.feats_at_once])
         else:
             normalized_y = y
 
@@ -368,7 +369,7 @@ class NLIPCANode(mdp.Node):
                 else:
                     expanded_data = normalized_y[:, 0:output_nr + self.feats_at_once]
 
-            lr_node = self.lr_nodes[output_nr / self.feats_at_once]
+            lr_node = self.lr_nodes[output_nr // self.feats_at_once]
             residual_data_app = lr_node.execute(expanded_data)
             if self.factor_mode == "constant":
                 effective_projection_factor = self.factor_projection_out

@@ -29,6 +29,7 @@
 
 
 from __future__ import print_function
+from __future__ import division
 import numpy
 import scipy
 import scipy.misc
@@ -735,16 +736,16 @@ def main():
         (magic_num, iteration, numSamples, rbm_sfa_numHid, sampleSpan) = read_binary_header("", input_filename)
         print ("Iteration Number=%d," % iteration, "numSamples=%d" % numSamples, "rbm_sfa_numHid=%d," % rbm_sfa_numHid)
 
-        Parameters.sTrain.subimage_width = rbm_sfa_numHid / 8
-        Parameters.sTrain.subimage_height = rbm_sfa_numHid / Parameters.sTrain.subimage_width
+        Parameters.sTrain.subimage_width = rbm_sfa_numHid // 8
+        Parameters.sTrain.subimage_height = rbm_sfa_numHid // Parameters.sTrain.subimage_width
         Parameters.sTrain.name = "RBM Natural. 8x8 (exp 64=%d), iter %d, num_images %d" % (rbm_sfa_numHid, iteration,
                                                                                            Parameters.sTrain.num_images)
-        Parameters.sSeenid.subimage_width = rbm_sfa_numHid / 8
-        Parameters.sSeenid.subimage_height = rbm_sfa_numHid / Parameters.sSeenid.subimage_width
+        Parameters.sSeenid.subimage_width = rbm_sfa_numHid // 8
+        Parameters.sSeenid.subimage_height = rbm_sfa_numHid // Parameters.sSeenid.subimage_width
         Parameters.sSeenid.name = "RBM Natural. 8x8 (exp 64=%d), iter %d, num_images %d" % \
                                   (rbm_sfa_numHid, iteration, Parameters.sSeenid.num_images)
-        Parameters.sNewid.subimage_width = rbm_sfa_numHid / 8
-        Parameters.sNewid.subimage_height = rbm_sfa_numHid / Parameters.sNewid.subimage_width
+        Parameters.sNewid.subimage_width = rbm_sfa_numHid // 8
+        Parameters.sNewid.subimage_height = rbm_sfa_numHid // Parameters.sNewid.subimage_width
         Parameters.sNewid.name = "RBM Natural. 8x8 (exp 64=%d), iter %d, num_images %d" % \
                                  (rbm_sfa_numHid, iteration, Parameters.sNewid.num_images)
 
@@ -1272,7 +1273,7 @@ def main():
                             print ("Correction done")  # fdssf
                             train_data_sets[i][j] = subimages_train
 
-        # TODO: Support train signal chache for generalized training
+        # TODO: Support train signal cache for generalized training
         if signal_cache_write and (subimages_train_signal_in_cache is False) and False:
             print ("Caching Train Signal...")
             subimages_ndim = subimages_train.shape[1]
@@ -1311,12 +1312,12 @@ def main():
                         im = scipy.misc.toimage(im_raw, mode="L")
 
                     if save_images_training_supplementary_info is None:
-                        filename = "image%05d.png" % (i / decimate)
+                        filename = "image%05d.png" % (i // decimate)
                         # quit()
                     elif save_images_training_supplementary_info == "Class":
-                        filename = "image%05d_gt%05d.png" % (i / decimate, iTrain.correct_classes[i])
+                        filename = "image%05d_gt%05d.png" % (i // decimate, iTrain.correct_classes[i])
                     elif save_images_training_supplementary_info == "Label":
-                        filename = "image%05d_gt%05.5f.png" % (i / decimate, iTrain.correct_labels[i])
+                        filename = "image%05d_gt%05.5f.png" % (i // decimate, iTrain.correct_labels[i])
                         # quit()
                     else:
                         er = "Incorrect value of save_images_training_supplementary_info:" + str(
@@ -1836,7 +1837,7 @@ def main():
 
     if cf_block_size is not None:
         if isinstance(cf_block_size, (numpy.float, numpy.float64, numpy.int)):
-            num_blocks = cf_sl.shape[0] / cf_block_size
+            num_blocks = cf_sl.shape[0] // cf_block_size
         else:
             num_blocks = len(cf_block_size)
     else:
@@ -1850,7 +1851,7 @@ def main():
         svm_node.train(svm_scale(cf_sl[:, 0:reg_num_signals], data_mins, data_maxs, svm_min, svm_max),
                        cf_correct_classes)
         if svm_gamma == 0:
-            svm_gamma = 1.0 / (num_blocks)
+            svm_gamma = 1.0 / num_blocks
         svm_node.stop_training()
 
     if enable_svr:
@@ -2329,9 +2330,9 @@ def main():
     print ("computed delta/eta in %0.3f ms" % ((t_delta_eta1 - t_delta_eta0) * 1000.0))
 
     if isinstance(block_size, int):
-        print ("virtual sequence length complete = ", num_images_training * (block_size - 1) / 2)
+        print ("virtual sequence length complete = ", num_images_training * (block_size - 1) // 2)
         print ("virtual sequence length sequence = ", (num_images_training - block_size) * block_size)
-        print ("virtual sequence length mixed = ", num_images_training * (block_size - 1) / 2 +
+        print ("virtual sequence length mixed = ", num_images_training * (block_size - 1) // 2 +
                (num_images_training - block_size) * block_size)
     else:
         print ("length of virtual sequence not computed = ")
@@ -2765,7 +2766,7 @@ def main():
 
     print ("Computing average SFA...")
     if isinstance(iTrain.block_size, int):
-        num_blocks_train = iTrain.num_images / iTrain.block_size
+        num_blocks_train = iTrain.num_images // iTrain.block_size
     elif iTrain.block_size is not None:
         num_blocks_train = len(iTrain.block_size)
     else:
@@ -2907,7 +2908,7 @@ def main():
                     im = scipy.misc.toimage(im_raw, mode="L")
 
                 fullname = os.path.join(save_images_sorted_error_Gauss_newid_base_dir,
-                                        "image%05d_gt%+05f_e%+05f.png" % (i / decimate, correct_labels_newid[i_x],
+                                        "image%05d_gt%+05f_e%+05f.png" % (i // decimate, correct_labels_newid[i_x],
                                                                           regression_Gauss_newid[i_x]))
                 im.save(fullname)
         total_samples = len(sorting_error_Gauss_newid)
@@ -2954,7 +2955,7 @@ def main():
                     im = scipy.misc.toimage(im_raw, mode="L")
 
                 fullname = os.path.join(save_images_sorted_incorrect_class_Gauss_newid_base_dir,
-                                        "image%05d_gt%03d_c%03d.png" % (i / decimate, correct_classes_newid[i_x],
+                                        "image%05d_gt%03d_c%03d.png" % (i // decimate, correct_classes_newid[i_x],
                                                                         classes_Gauss_newid[i_x]))
                 im.save(fullname)
 
@@ -3040,7 +3041,7 @@ def main():
         for seqn in range(3):
             for im in range(num_images_per_set):
                 tmp_sb = plt.subplot(3, num_images_per_set, num_images_per_set * seqn + im + 1)
-                y = im * (nums_images[seqn] - 1) / (num_images_per_set - 1)
+                y = im * (nums_images[seqn] - 1) // (num_images_per_set - 1)
                 subimage_im = sequences[seqn][y][0:num_pixels_per_image].reshape(sizes[seqn])
 
                 tmp_sb.imshow(subimage_im.clip(0, max_clip), norm=None, vmin=0, vmax=max_clip, aspect='auto',
@@ -3145,7 +3146,7 @@ def main():
         sp12 = plt.subplot(2, 2, 2)
         if Parameters.train_mode == 'serial' or Parameters.train_mode == 'mixed':
             plt.title("Example of Ideal SFA Outputs")
-            num_blocks = num_images_training / block_size
+            num_blocks = num_images_training // block_size
             sl_optimal = numpy.zeros((num_images, relevant_out_dim))
             factor = -1.0 * numpy.sqrt(2.0)
             t_opt = numpy.linspace(0, numpy.pi, num_blocks)
@@ -3279,15 +3280,16 @@ def main():
             #    subimage_im = subimages[y].reshape((sTrain.subimage_height, sTrain.subimage_width)) + 0.0
             subimage_im = subimages[y][0:num_pixels_per_image].reshape(subimage_shape) + 0.0
 
+            # TODO: make sure the indices are integer
             if show_translation_x:
                 if sTrain.trans_sampled:
-                    subimage_im[:, sTrain.subimage_width / 2.0 - sTrain.translations_x[y]] = max_clip
-                    subimage_im[:, sTrain.subimage_width / 2.0 - regression_Gauss_training[y] / reduction_factor] = 0
+                    subimage_im[:, sTrain.subimage_width // 2 - sTrain.translations_x[y]] = max_clip
+                    subimage_im[:, sTrain.subimage_width // 2 - regression_Gauss_training[y] // reduction_factor] = 0
                 else:
-                    subimage_im[:,
-                    sTrain.subimage_width / 2.0 - sTrain.translations_x[y] * sTrain.pixelsampling_x] = max_clip
-                    subimage_im[:, sTrain.subimage_width / 2.0 - regression_Gauss_training[
-                                                                     y] / reduction_factor * sTrain.pixelsampling_x] = 0
+                    subimage_im[:, sTrain.subimage_width // 2 -
+                                   sTrain.translations_x[y] * sTrain.pixelsampling_x] = max_clip
+                    subimage_im[:, sTrain.subimage_width // 2 -
+                                   regression_Gauss_training[y] // reduction_factor * sTrain.pixelsampling_x] = 0
 
             f1a12.imshow(subimage_im.clip(0, max_clip), aspect='auto', interpolation='nearest', origin='upper',
                          cmap=mpl.pyplot.cm.gray)
@@ -4028,7 +4030,7 @@ def main():
                                         interpolation='nearest', origin='upper', cmap=mpl.pyplot.cm.gray)
                     elif display_type == "mo2":
                         # delta_sfa = sfa*-sfa
-                        sfa_asterix = sl_seq[(slow_value + 2) * (num_images - 1) / 4].reshape((1, hierarchy_out_dim))
+                        sfa_asterix = sl_seq[(slow_value + 2) * (num_images - 1) // 4].reshape((1, hierarchy_out_dim))
                         delta_sfa = sfa_asterix - data_out
                         delta_im = flow.inverse(delta_sfa)
                         delta_im = delta_im[0, 0:num_pixels_per_image].reshape(subimage_shape)
@@ -4494,8 +4496,8 @@ def main():
                 node = flow.flow[node_i]
                 if isinstance(node, (mdp.hinet.Layer, mdp.hinet.CloneLayer)):
                     num_nodes = len(node.nodes)
-                    central_node_nr = num_nodes / 2 + int((num_nodes ** 0.5)) / 2
-                    z = sl_partial.shape[1] / num_nodes
+                    central_node_nr = num_nodes // 2 + int((num_nodes ** 0.5)) // 2
+                    z = sl_partial.shape[1] // num_nodes
                     sl_partial = sl_partial[:, z * central_node_nr:z * (central_node_nr + 1)]
                     print("num_nodes=", num_nodes, "central_node_nr=", central_node_nr)
                     print("sl_partial.shape=", sl_partial.shape)

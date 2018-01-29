@@ -162,7 +162,7 @@ def compute_quadratic_indices(dim):
     Returns: (indices1, indices2): a 2-tuple of two 1D numpy arrays, where the quadratic expansion of two
     dim-dimensional arrays array1 and array2 is array1[indices1] * array2[indices2].
     """
-    indices1 = numpy.zeros(dim * (dim + 1) / 2, dtype=int)
+    indices1 = numpy.zeros(dim * (dim + 1) // 2, dtype=int)
     indices2 = indices1.copy()
 
     current_pos = 0
@@ -582,7 +582,7 @@ def halbs_product_expansion(x, func):
     if x_width % 2 != 0:
         ex = "input dimension must be of even!!!"
         raise ex
-    N = x_width / 2
+    N = x_width // 2
 
     y1 = x[:, :N].reshape(x_height, N, 1)
     y2 = x[:, N:].reshape(x_height, 1, N)
@@ -603,10 +603,10 @@ def div2_sel65_unsigned_08expo_orig(x):
     if dim % 2:
         ex = "Input dimensionality is odd, input array cannot be splitted."
         raise Exception(ex)
-    split_size = min(dim / 2, 65)
+    split_size = min(dim // 2, 65)
     y = numpy.zeros((num_samples, split_size * 2))
     y[:, 0:split_size] = unsigned_08expo(x[:, 0:split_size])
-    y[:, split_size:] = unsigned_08expo(x[:, dim / 2:dim / 2 + split_size])
+    y[:, split_size:] = unsigned_08expo(x[:, dim // 2:dim // 2 + split_size])
     return y
 
 
@@ -635,8 +635,8 @@ def divN_selK_unsigned_08expo(x, num_parts, max_feats_per_part):
     if dim % num_parts:
         ex = "Input dimensionality is not a multiple of num_parts, input array cannot be splitted."
         raise Exception(ex)
-    split_size = min(dim / num_parts, max_feats_per_part)
-    orig_part_size = dim / num_parts
+    split_size = min(dim // num_parts, max_feats_per_part)
+    orig_part_size = dim // num_parts
     y = numpy.zeros((num_samples, split_size * num_parts))
     for part in range(num_parts):
         y[:, split_size * part:split_size * (part + 1)] = unsigned_08expo(
@@ -1577,8 +1577,8 @@ def ch3_sF_QT(x, F):
     ns, dim = x.shape
     xs = numpy.zeros((ns, ch * s))
     xs[:, 0:s] = x[:, 0:s]
-    xs[:, s:2 * s] = x[:, dim / 3:dim / 3 + s]
-    xs[:, 2 * s:] = x[:, 2 * dim / 3:2 * dim / 3 + s]
+    xs[:, s:2 * s] = x[:, dim // 3:dim // 3 + s]
+    xs[:, 2 * s:] = x[:, 2 * dim // 3:2 * dim // 3 + s]
     return QT(xs)
 
 
@@ -1613,8 +1613,8 @@ def ch3_Offset_sF_QT(x, Off, F):
     else:
         xs = numpy.zeros((ns, ch * s))
         xs[:, 0:s] = x[:, Off:Off + s]
-        xs[:, s:2 * s] = x[:, dim / 3 + Off:dim / 3 + Off + s]
-        xs[:, 2 * s:] = x[:, 2 * dim / 3 + Off:2 * dim / 3 + Off + s]
+        xs[:, s:2 * s] = x[:, dim // 3 + Off:dim // 3 + Off + s]
+        xs[:, 2 * s:] = x[:, 2 * dim // 3 + Off:2 * dim // 3 + Off + s]
         return QT(xs)
 
 
@@ -2450,7 +2450,7 @@ def ch2_sF_u08(x, F):
     else:
         xs = numpy.zeros((ns, ch * F))
         xs[:, 0:F] = x[:, 0:F]
-        xs[:, F:2 * F] = x[:, dim / 2:dim / 2 + F]
+        xs[:, F:2 * F] = x[:, dim // 2:dim // 2 + F]
         return unsigned_08expo(xs)
 
 
@@ -2495,8 +2495,8 @@ def ch3_sF_u08(x, F):
     else:
         xs = numpy.zeros((ns, ch * F))
         xs[:, 0:F] = x[:, 0:F]
-        xs[:, F:2 * F] = x[:, dim / 3:dim / 3 + F]
-        xs[:, 2 * F:] = x[:, 2 * dim / 3:2 * dim / 3 + F]
+        xs[:, F:2 * F] = x[:, dim // 3:dim // 3 + F]
+        xs[:, 2 * F:] = x[:, 2 * dim // 3:2 * dim // 3 + F]
         return unsigned_08expo(xs)
 
 
@@ -2508,8 +2508,8 @@ def ch3_oO_sF_u08(x, off, F):
     else:
         xs = numpy.zeros((ns, ch * F))
         xs[:, :F] = x[:, off:F + off]
-        xs[:, F:2 * F] = x[:, dim / 3 + off:dim / 3 + F + off]
-        xs[:, 2 * F:] = x[:, 2 * dim / 3 + off:2 * dim / 3 + F + off]
+        xs[:, F:2 * F] = x[:, dim // 3 + off:dim // 3 + F + off]
+        xs[:, 2 * F:] = x[:, 2 * dim // 3 + off:2 * dim // 3 + F + off]
         return unsigned_08expo(xs)
 
 
@@ -2806,9 +2806,9 @@ def ch4_sF_u08(x, F):
     else:
         xs = numpy.zeros((ns, ch * F))
         xs[:, 0:F] = x[:, 0:F]
-        xs[:, F:2 * F] = x[:, dim / 4:dim / 4 + F]
-        xs[:, 2*F:3 * F] = x[:, 2 * dim / 4: 2 * dim / 4 + F]
-        xs[:, 3*F:] = x[:, 3 * dim / 4: 3 * dim / 4 + F]
+        xs[:, F:2 * F] = x[:, dim // 4:dim // 4 + F]
+        xs[:, 2*F:3 * F] = x[:, 2 * dim // 4: 2 * dim // 4 + F]
+        xs[:, 3*F:] = x[:, 3 * dim // 4: 3 * dim // 4 + F]
         return unsigned_08expo(xs)
 
 
@@ -2844,8 +2844,8 @@ def ch3_sF_max(x, F):
         return maximum_mix1_ex(x)
     else:
         x1 = x[:, 0:F]
-        x2 = x[:, dim / 3:dim / 3 + F]
-        x3 = x[:, 2 * dim / 3:2 * dim / 3 + F]
+        x2 = x[:, dim // 3:dim // 3 + F]
+        x3 = x[:, 2 * dim // 3:2 * dim // 3 + F]
         return numpy.concatenate((maximum_mix1_ex(x1), maximum_mix1_ex(x2), maximum_mix1_ex(x3)), axis=1)
 
 
@@ -2857,8 +2857,8 @@ def ch3_oO_sF_max(x, off, F):
         return maximum_mix1_ex(x)
     else:
         x1 = x[:, off:F + off]
-        x2 = x[:, dim / 3 + off:dim / 3 + F + off]
-        x3 = x[:, 2 * dim / 3 + off:2 * dim / 3 + F + off]
+        x2 = x[:, dim // 3 + off:dim // 3 + F + off]
+        x3 = x[:, 2 * dim // 3 + off:2 * dim // 3 + F + off]
         return numpy.concatenate((maximum_mix1_ex(x1), maximum_mix1_ex(x2), maximum_mix1_ex(x3)), axis=1)
 
 
@@ -3081,8 +3081,8 @@ def ch3_sF_head(x, F):
     if 3 * F >= dim:
         return x
     x1 = x[:, 0:F]
-    x2 = x[:, dim / 3:dim / 3 + F]
-    x3 = x[:, 2 * dim / 3:2 * dim / 3 + F]
+    x2 = x[:, dim // 3:dim // 3 + F]
+    x3 = x[:, 2 * dim // 3:2 * dim // 3 + F]
     return numpy.concatenate((x1, x2, x3), axis=1)
 
 
@@ -3350,8 +3350,8 @@ def ch3_Offset_sF_dD_Q_N(x, Off, F, d):
 
     xs = numpy.zeros((ns, ch * s))
     xs[:, 0:s] = x[:, Off:Off + s]
-    xs[:, s:2 * s] = x[:, dim / 3 + Off:dim / 3 + Off + s]
-    xs[:, 2 * s:] = x[:, 2 * dim / 3 + Off:2 * dim / 3 + Off + s]
+    xs[:, s:2 * s] = x[:, dim // 3 + Off:dim // 3 + Off + s]
+    xs[:, 2 * s:] = x[:, 2 * dim // 3 + Off:2 * dim // 3 + Off + s]
     return Q_N(xs, k=1.0, d=d)  # xi xj / (1 + ||x||^2*d)
 
 
@@ -3785,8 +3785,8 @@ def ch3_Offset_sF_CT(x, Off, F):
     else:
         xs = numpy.zeros((ns, ch * s))
         xs[:, 0:s] = x[:, Off:Off + s]
-        xs[:, s:2 * s] = x[:, dim / 3 + Off:dim / 3 + Off + s]
-        xs[:, 2 * s:] = x[:, 2 * dim / 3 + Off:2 * dim / 3 + Off + s]
+        xs[:, s:2 * s] = x[:, dim // 3 + Off:dim // 3 + Off + s]
+        xs[:, 2 * s:] = x[:, 2 * dim // 3 + Off:2 * dim // 3 + Off + s]
         return CT(xs)
 
 
@@ -3805,8 +3805,8 @@ def ch3_Offset_sF_P4(x, Off, F):
     else:
         xs = numpy.zeros((ns, ch * s))
         xs[:, 0:s] = x[:, Off:Off + s]
-        xs[:, s:2 * s] = x[:, dim / 3 + Off:dim / 3 + Off + s]
-        xs[:, 2 * s:] = x[:, 2 * dim / 3 + Off:2 * dim / 3 + Off + s]
+        xs[:, s:2 * s] = x[:, dim // 3 + Off:dim // 3 + Off + s]
+        xs[:, 2 * s:] = x[:, 2 * dim // 3 + Off:2 * dim // 3 + Off + s]
         return P4(xs)
 
 

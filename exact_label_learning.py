@@ -14,6 +14,7 @@
 #####################################################################################################################
 
 from __future__ import print_function
+from __future__ import division
 import numpy
 
 #####################################################################################################################
@@ -71,7 +72,7 @@ def GenerateCompactClassesGraph(label_block_size, J):
     N = label_block_size * num_classes
     labels = numpy.zeros((N, J))
     for j in range(J):
-        labels[:, j] = numpy.arange(N) / label_block_size / (2 ** (J - j - 1)) % 2
+        labels[:, j] = numpy.arange(N) // label_block_size // (2 ** (J - j - 1)) % 2
 
     node_weights = numpy.ones(N)
     all_nodes = numpy.arange(N)
@@ -96,7 +97,7 @@ def GenerateCompactClassesGraph(label_block_size, J):
 def GenerateSerialGraph(num_samples, block_size):
     """ Generates a (consistent) serial graph. """
     N = num_samples
-    num_blocks = N / block_size
+    num_blocks = N // block_size
 
     if N % block_size != 0:
         err = "num_samples(%d) must be a multiple of block_size (%d)" % (num_samples, block_size)
@@ -123,7 +124,7 @@ def GenerateSerialGraph(num_samples, block_size):
 def GenerateMixedGraph(num_samples, block_size):
     """ Generates a (consistent) mixed graph. """
     N = num_samples
-    num_blocks = N / block_size
+    num_blocks = N // block_size
 
     if N % block_size != 0:
         err = "num_samples(%d) must be a multiple of block_size (%d)" % (num_samples, block_size)
@@ -216,7 +217,7 @@ def GenerateImprovedGraph(num_samples, block_size, balance_factor=1.0):
     One attempt at semi-supervised learning.
     """
     N = num_samples
-    num_blocks = N / block_size
+    num_blocks = N // block_size
 
     if N % block_size != 0:
         err = "num_samples(%d) must be a multiple of block_size (%d)" % (num_samples, block_size)

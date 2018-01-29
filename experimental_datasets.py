@@ -19,6 +19,7 @@
 #####################################################################################################################
 
 from __future__ import print_function
+from __future__ import division
 import system_parameters
 from system_parameters import load_data_from_sSeq
 import numpy
@@ -508,7 +509,7 @@ class ParamsGenderExperiment(system_parameters.ParamsSystem):
             num_classes = 60
             skin_color_classes_SeenidGender = numpy.zeros(iSeenidGender.num_images)
             skin_color_classes_SeenidGender[sorting] = numpy.arange(
-                iSeenidGender.num_images) * num_classes / iSeenidGender.num_images
+                iSeenidGender.num_images) * num_classes // iSeenidGender.num_images
             avg_labels = more_nodes.compute_average_labels_for_each_class(skin_color_classes_SeenidGender,
                                                                           skin_color_labels)
             all_classes = numpy.unique(skin_color_classes_SeenidGender)
@@ -630,20 +631,20 @@ class ParamsGenderExperiment(system_parameters.ParamsSystem):
         iSeq.step = 1
         iSeq.offset = 0
         iSeq.input_files = image_loader.create_image_filenames2(iSeq.data_base_dir, iSeq.slow_signal, iSeq.ids,
-                                                                iSeq.ages, \
+                                                                iSeq.ages,
                                                                 iSeq.genders, iSeq.racetweens, iSeq.expressions,
-                                                                iSeq.morphs, \
+                                                                iSeq.morphs,
                                                                 iSeq.poses, iSeq.lightings, iSeq.step, iSeq.offset)
         iSeq.num_images = len(iSeq.input_files)
-        iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, \
+        iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions,
                        iSeq.morphs, iSeq.poses, iSeq.lightings]
 
         if iSeq.gender_continuous:
-            iSeq.block_size = iSeq.num_images / len(iSeq.params[iSeq.slow_signal])
+            iSeq.block_size = iSeq.num_images // len(iSeq.params[iSeq.slow_signal])
             iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.real_genders, iSeq.block_size)
             iSeq.correct_classes = sfa_libs.wider_1Darray(iSeq.real_genders, iSeq.block_size)
         else:
-            bs = iSeq.num_images / len(iSeq.params[iSeq.slow_signal])
+            bs = iSeq.num_images // len(iSeq.params[iSeq.slow_signal])
             bs1 = len(iSeq.real_genders[iSeq.real_genders < 0]) * bs
             bs2 = len(iSeq.real_genders[iSeq.real_genders >= 0]) * bs
 
@@ -675,6 +676,7 @@ class ParamsGenderExperiment(system_parameters.ParamsSystem):
         sSeq.pixelsampling_x = 1
         sSeq.pixelsampling_y = 1
         sSeq.subimage_pixelsampling = 2
+        # TODO: do these variables have to be integers?
         sSeq.subimage_first_row = sSeq.image_height / 2 - sSeq.subimage_height * sSeq.pixelsampling_y / 2
         sSeq.subimage_first_column = sSeq.image_width / 2 - sSeq.subimage_width * sSeq.pixelsampling_x / 2 + 5 * sSeq.pixelsampling_x
         sSeq.add_noise_L0 = True
@@ -779,7 +781,7 @@ class ParamsAgeExperiment(system_parameters.ParamsSystem):
         # iSeqAge.params = [ids, expressions, morphs, poses, lightings]
         iSeqAge.params = [iSeqAge.ids, iSeqAge.ages, iSeqAge.genders, iSeqAge.racetweens, iSeqAge.expressions, \
                           iSeqAge.morphs, iSeqAge.poses, iSeqAge.lightings]
-        iSeqAge.block_size = iSeqAge.num_images / len(iSeqAge.ages)
+        iSeqAge.block_size = iSeqAge.num_images // len(iSeqAge.ages)
 
         iSeqAge.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeqAge.ages)), iSeqAge.block_size)
         iSeqAge.correct_labels = sfa_libs.wider_1Darray(iSeqAge.ages, iSeqAge.block_size)
@@ -950,10 +952,10 @@ class ParamsREyePosXYExperiment(system_parameters.ParamsSystem):
 
         iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions, iSeq.morphs, iSeq.poses,
                        iSeq.lightings]
-        iSeq.block_size = iSeq.num_images / num_classes
+        iSeq.block_size = iSeq.num_images // num_classes
 
         iSeq.train_mode = "serial"  # TODO:should learn both labels simultaneously
-        all_classes = numpy.arange(iSeq.num_images, dtype="int") * num_classes / iSeq.num_images
+        all_classes = numpy.arange(iSeq.num_images, dtype="int") * num_classes // iSeq.num_images
         correct_classes_X = numpy.zeros(iSeq.num_images, dtype="int")
         correct_classes_Y = numpy.zeros(iSeq.num_images, dtype="int")
         correct_classes_X[numpy.argsort(iSeq.translations_x)] = all_classes.copy()
@@ -1137,7 +1139,7 @@ class ParamsRFaceCentering2Experiment(system_parameters.ParamsSystem):
         iSeq.ids = alldbnormalized_available_images[
                    first_image:first_image + num_images]  # 30000, numpy.arange(0,6000) # 6000
         iSeq.faces = numpy.arange(0, 10)  # 0=centered normalized face, 1=not centered normalized face
-        block_size = len(iSeq.ids) / len(iSeq.faces)
+        block_size = len(iSeq.ids) // len(iSeq.faces)
 
         # iSeq.scales = numpy.linspace(pipeline_fd['smin0'], pipeline_fd['smax0'], 50) # (-50, 50, 2)
         if len(iSeq.ids) % len(iSeq.faces) != 0:
@@ -1183,12 +1185,12 @@ class ParamsRFaceCentering2Experiment(system_parameters.ParamsSystem):
         # iSeq.params = [ids, expressions, morphs, poses, lightings]
         iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions,
                        iSeq.morphs, iSeq.poses, iSeq.lightings]
-        iSeq.block_size = iSeq.num_images / len(iSeq.faces)
+        iSeq.block_size = iSeq.num_images // len(iSeq.faces)
         iSeq.train_mode = "clustered"  # "serial" #"clustered"
         print ("BLOCK SIZE =" + str(iSeq.block_size))
 
         iSeq.correct_classes = sfa_libs.wider_1Darray(numpy.arange(len(iSeq.faces)), iSeq.block_size)
-        iSeq.correct_labels = iSeq.correct_classes / (len(iSeq.faces) - 1)
+        iSeq.correct_labels = iSeq.correct_classes // (len(iSeq.faces) - 1)
 
         system_parameters.test_object_contents(iSeq)
         return iSeq
@@ -1222,7 +1224,7 @@ class ParamsRFaceCentering2Experiment(system_parameters.ParamsSystem):
         sSeq.translations_x = numpy.zeros(sSeq.num_images)
         sSeq.translations_y = numpy.zeros(sSeq.num_images)
 
-        num_blocks = sSeq.num_images / sSeq.block_size
+        num_blocks = sSeq.num_images // sSeq.block_size
         for block_nr in range(num_blocks):
             # For exterior box
             fraction = ((block_nr + 1.0) / (num_blocks - 1)) ** 0.25  # From 1/(N-1) to 1.0 # **0.333
@@ -1243,7 +1245,7 @@ class ParamsRFaceCentering2Experiment(system_parameters.ParamsSystem):
                     eff_block_nr = block_nr
                 else:
                     eff_block_nr = block_nr - 1
-                fraction2 = (eff_block_nr / (num_blocks - 1)) ** 0.25  # ** 0.333
+                fraction2 = (eff_block_nr // (num_blocks - 1)) ** 0.25  # ** 0.333
                 if fraction2 > 1:
                     fraction2 = 1
                 x_max = sSeq.trans_x_max * fraction2
@@ -1336,7 +1338,7 @@ class ParamsRFaceCentering2Experiment(system_parameters.ParamsSystem):
         sSeq.translations_x = numpy.zeros(sSeq.num_images)
         sSeq.translations_y = numpy.zeros(sSeq.num_images)
 
-        num_blocks = sSeq.num_images / sSeq.block_size
+        num_blocks = sSeq.num_images // sSeq.block_size
         for block_nr in range(num_blocks - 1):  # Last block (backgrounds) is not randomized
             radious_min = block_nr / (num_blocks - 1.0) * 4  #
             radious_max = (block_nr + 1.0) / (num_blocks - 1) * 4
@@ -1353,8 +1355,8 @@ class ParamsRFaceCentering2Experiment(system_parameters.ParamsSystem):
 
         sSeq.pixelsampling_y = sSeq.pixelsampling_x.copy()
 
-        sSeq.subimage_first_row = sSeq.image_height / 2 - sSeq.subimage_height * sSeq.pixelsampling_y / 2.0
-        sSeq.subimage_first_column = sSeq.image_width / 2 - sSeq.subimage_width * sSeq.pixelsampling_x / 2.0
+        sSeq.subimage_first_row = sSeq.image_height / 2.0 - sSeq.subimage_height * sSeq.pixelsampling_y / 2.0
+        sSeq.subimage_first_column = sSeq.image_width / 2.0 - sSeq.subimage_width * sSeq.pixelsampling_x / 2.0
 
         sSeq.add_noise_L0 = True
         sSeq.convert_format = "L"
@@ -1808,10 +1810,10 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
                     rand_scale_factor2 = 1.0 + numpy.random.uniform(-delta_rand_scale, delta_rand_scale)
                     width = (sign_coordinates[2] - sign_coordinates[0] + 1) * shrink_factor * rand_scale_factor1
                     height = (sign_coordinates[3] - sign_coordinates[1] + 1) * shrink_factor * rand_scale_factor2
-                    row[3] = center_x - width / 2
-                    row[5] = center_x + width / 2
-                    row[4] = center_y - height / 2
-                    row[6] = center_y + height / 2
+                    row[3] = center_x - width // 2
+                    row[5] = center_x + width // 2
+                    row[4] = center_y - height // 2
+                    row[6] = center_y + height // 2
                 extended_row = extended_row + map(float, row[1:7])
                 if include_labels:
                     extended_row.append(int(row[7]))  # the 8th column is the label
@@ -1871,10 +1873,10 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
                 center_y = (sign_coordinates[1] + sign_coordinates[3]) / 2.0
                 width = (sign_coordinates[2] - sign_coordinates[0] + 1) * shrink_factor
                 height = (sign_coordinates[3] - sign_coordinates[1] + 1) * shrink_factor
-                row[3] = center_x - width / 2
-                row[5] = center_x + width / 2
-                row[4] = center_y - height / 2
-                row[6] = center_y + height / 2
+                row[3] = center_x - width // 2
+                row[5] = center_x + width // 2
+                row[4] = center_y - height // 2
+                row[6] = center_y + height // 2
             extended_row = extended_row + map(float, row[1:7])
             if include_labels:
                 label = int(row[7])
@@ -2629,7 +2631,7 @@ class ParamsRTransXYPAngScaleExperiment(system_parameters.ParamsSystem):
         iSeq.params = [iSeq.ids, iSeq.ages, iSeq.genders, iSeq.racetweens, iSeq.expressions,
                        iSeq.morphs, iSeq.poses, iSeq.lightings]
 
-        iSeq.block_size = iSeq.num_images / num_steps
+        iSeq.block_size = iSeq.num_images // num_steps
 
         if not self.continuous:
             print ("before len(iSeq.trans_pangs_scales)= %d" % len(iSeq.trans_pangs_scales))
@@ -2648,7 +2650,7 @@ class ParamsRTransXYPAngScaleExperiment(system_parameters.ParamsSystem):
         #        iSeq.train_mode = None
 
         print ("BLOCK SIZE =" +  str(iSeq.block_size))
-        iSeq.correct_classes = numpy.arange(num_steps * iSeq.block_size) / iSeq.block_size
+        iSeq.correct_classes = numpy.arange(num_steps * iSeq.block_size) // iSeq.block_size
         #    sfa_libs.wider_1Darray(numpy.arange(len(iSeq.trans)), iSeq.block_size)
         #    if not continuous:
         #        iSeq.correct_labels = sfa_libs.wider_1Darray(iSeq.trans, iSeq.block_size)
@@ -2819,8 +2821,9 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
     """ Experiment for the estimation of age from normalized faces in image patches (real photographs).
     This experiment also supports gender and 'race' estimation.
     """
-    def __init__(self, experiment_seed, experiment_basedir, subimage_width_height=96,
-                 use_setup_Guo=True, training_set=1, pre_mirroring_supervised_test=False):
+    def __init__(self, experiment_seed, experiment_basedir, subimage_size=96,
+                 use_setup_Guo=True, rep_Guo_train=22, rep_Guo_supervised=3,
+                 training_set=1, pre_mirroring_supervised_test=False):
         super(ParamsRAgeExperiment, self).__init__()
         self.experiment_seed = experiment_seed
         self.experiment_basedir = experiment_basedir
@@ -2829,11 +2832,13 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
         self.train_mode = "Weird Mode"  # Ignored for the moment
         self.analysis = None
         self.enable_reduced_image_sizes = True
-        self.reduction_factor = 160.0 / subimage_width_height  # 160.0/72 ## 160.0/96 # (article 2.0)
-        self.hack_image_size = subimage_width_height  # 72 ## 96 # (article 80)
+        self.reduction_factor = 160.0 / subimage_size  # 160.0/72 ## 160.0/96 # (article 2.0)
+        self.hack_image_size = subimage_size  # 72 ## 96 # (article 80)
         self.enable_hack_image_size = True
         self.patch_network_for_RGB = False  #
         self.use_setup_Guo = use_setup_Guo
+        self.rep_Guo_train = rep_Guo_train
+        self.rep_Guo_supervised = rep_Guo_supervised
         self.pre_mirroring_supervised_test = pre_mirroring_supervised_test
         if training_set == 1 or training_set == 2:
             self.training_set = training_set
@@ -2901,8 +2906,8 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
         #    counter += age_files_dict_MORPH_out[subdir][0]
         # print "age_files_dict_MORPH_out (LKO) contains %d images"%counter
 
-        age_all_labels_map_MORPH = load_GT_labels(
-            "/local/escalafl/Alberto/MORPH_setsS1S2S3_seed12345/GT_MORPH_AgeRAgeGenderRace.txt", age_included=True,
+        age_all_labels_map_MORPH = load_GT_labels( #/MORPH_setsS1S2S3_seed12345/
+            "/local/escalafl/Alberto/GT_MORPH_AgeRAgeGenderRace.txt", age_included=True,
             rAge_included=True, gender_included=True, race_included=True, avgColor_included=False)
         age_all_labels_map_INI = load_GT_labels("/home/escalafl/Databases/faces/INIBilder/GT_INI_AgeRAgeGenderRace.txt",
                                                 age_included=True, rAge_included=True, gender_included=True,
@@ -3116,8 +3121,9 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
         age_files_list_set1 = self.list_available_images(age_eyes_normalized_base_dir_set1, from_subdirs=None,
                                                          verbose=False)
         age_labeled_files_list_set1 = self.append_GT_labels_to_files(age_files_list_set1, age_all_labels_map_MORPH)
-        age_clusters_set1 = self.age_cluster_labeled_files(age_labeled_files_list_set1, repetition=22, num_clusters=32,
-                                                           trim_number=None, shuffle_each_cluster=False)  # r=22
+        age_clusters_set1 = self.age_cluster_labeled_files(age_labeled_files_list_set1, repetition=self.rep_Guo_train,
+                                                           num_clusters=32, trim_number=None,
+                                                           shuffle_each_cluster=False)  # r=22
         # WARNING, should be: repetition=22
         # age_clusters_set1 = age_cluster_labeled_files(age_labeled_files_list_set1, repetition=16,
         # num_clusters=33, trim_number=None, shuffle_each_cluster=False)
@@ -3146,7 +3152,8 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
                                                           verbose=False)
         age_labeled_files_list_set1b = self.append_GT_labels_to_files(age_files_list_set1b, age_all_labels_map_MORPH,
                                                                       select_races=[-2, -1, 0, 1, 2], verbose=True)  # [-2, 2] for only black and white (redundant)
-        age_clusters_set1b = self.age_cluster_labeled_files(age_labeled_files_list_set1b, repetition=3, num_clusters=1,
+        age_clusters_set1b = self.age_cluster_labeled_files(age_labeled_files_list_set1b,
+                                                            repetition=self.rep_Guo_supervised, num_clusters=1,
                                                             trim_number=None, shuffle_each_cluster=False)  # r=3
         # WARNING, should be: repetition=3
         # age_clusters_set1b = age_cluster_labeled_files(age_labeled_files_list_set1b, repetition=2, num_clusters=1,
@@ -3770,9 +3777,9 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
             # race_classes_tmp[race_labels_NewidRAge == 1] = 0  #H
             # race_classes_NewidRAge = race_classes_tmp
 
-            race_classes_TrainRAge = (race_labels_TrainRAge + 2 + 3).astype(int) / 4  # B=0 O=1 A=1 H=1 W=1
-            race_classes_SeenidRAge = (race_labels_SeenidRAge + 2 + 3).astype(int) / 4
-            race_classes_NewidRAge = (race_labels_NewidRAge + 2 + 3).astype(int) / 4
+            race_classes_TrainRAge = (race_labels_TrainRAge + 2 + 3).astype(int) // 4  # B=0 O=1 A=1 H=1 W=1
+            race_classes_SeenidRAge = (race_labels_SeenidRAge + 2 + 3).astype(int) // 4
+            race_classes_NewidRAge = (race_labels_NewidRAge + 2 + 3).astype(int) // 4
 
             gender_classes_TrainRAge = gender_labels_TrainRAge.reshape((-1, 1))
             gender_classes_SeenidRAge = gender_labels_SeenidRAge.reshape((-1, 1))
@@ -4081,7 +4088,7 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
         num_files = len(labeled_files_list)
         print("num_files =" + str(num_files))
 
-        cluster_size = num_files / num_clusters
+        cluster_size = num_files // num_clusters
         if cluster_size * num_clusters != num_files:
             print("Number of files %d is not a multiple of num_clusters %d. Fixing this discarding first few samples" % (
             num_files, num_clusters))
@@ -4347,7 +4354,7 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
             # label of the current cluster being considered
             iSeq.ids.extend(cluster_id)
 
-            increasing_indices = numpy.arange(num_images_per_cluster_used * repetition_factor) / repetition_factor
+            increasing_indices = numpy.arange(num_images_per_cluster_used * repetition_factor) // repetition_factor
             cluster_labels = (cluster[3][first_image_index:first_image_index + num_images_per_cluster_used, :])[
                              increasing_indices, :]  # orig_label
             if len(cluster_id) != len(cluster_labels):
@@ -4392,7 +4399,7 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
         elif iSeq.pre_mirroring == "duplicate":
             iSeq.input_files = sfa_libs.repeat_list_elements(iSeq.input_files, rep=2)
             iSeq.ids = sfa_libs.repeat_list_elements(iSeq.ids)
-            increasing_indices = numpy.arange(iSeq.num_images * repetition_factor) / repetition_factor
+            increasing_indices = numpy.arange(iSeq.num_images * repetition_factor) // repetition_factor
             iSeq.orig_labels = iSeq.orig_labels[increasing_indices, :]
             tmp_pre_mirror_flags = more_nodes.random_boolean_array(iSeq.num_images)  # e.g., [T, T, F, F, T, F]
             iSeq.pre_mirror_flags = numpy.array([item ^ val for item in tmp_pre_mirror_flags for val in
@@ -4593,6 +4600,10 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
 
 ParamsRAgeFunc_set1_96x96 = ParamsRAgeFunc = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 96,
                                                              use_setup_Guo=True, training_set=1, pre_mirroring_supervised_test=False)
+ParamsRAgeFunc_set1_96x96_mini = ParamsRAgeFunc = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 96,
+                                                                       use_setup_Guo=True, rep_Guo_train=1,
+                                                                       rep_Guo_supervised=1, training_set=1,
+                                                                       pre_mirroring_supervised_test=False)
 ParamsRAgeFunc_set1_48x48 = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 48, use_setup_Guo=True, training_set=1, pre_mirroring_supervised_test=False)
 ParamsRAgeFunc_set1_24x24 = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 24, use_setup_Guo=True, training_set=1, pre_mirroring_supervised_test=False)
 ParamsRAgeFunc_mirror_set1_96x96 = ParamsRAgeFunc = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 96,
@@ -5081,7 +5092,7 @@ class ParamsRatlabExperiment(system_parameters.ParamsSystem):
         self.sTrain = [[self.sSeqCreateRatlab(self.iTrain[0][0], seed=-1, use_RGB_images=True)]]
 
         self.iSeenid = self.iSeqCreateRatlab(ratlab_images, first_image_index=first_image_training,
-                                             num_images_used=num_images_test / 4, data_base_dir=ratlab_data_base_dir)
+                                             num_images_used=num_images_test // 4, data_base_dir=ratlab_data_base_dir)
         self.sSeenid = self.sSeqCreateRatlab(self.iSeenid, seed=-1, use_RGB_images=True)
 
         self.iNewid = [[self.iSeqCreateRatlab(ratlab_images, first_image_index=first_image_test,

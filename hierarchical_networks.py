@@ -495,7 +495,7 @@ network.layers = [network.L0, network.L1, network.L2]
 ####################################################################
 u08expoNetwork1L = NetworkSetExpFuncs([identity, sel_exp(42, unsigned_2_08expo), ], copy.deepcopy(SFANetwork1L))
 u08expoNetwork1L.layers[0].pca_node_class = mdp.nodes.PCANode
-u08expoNetwork1L.layers[0].pca_out_dim = 500 / 3  # 49
+u08expoNetwork1L.layers[0].pca_out_dim = 500 // 3  # 49
 u08expoNetwork1L.layers[0].ord_node_class = None  # mdp.nodes.GSFANode
 u08expoNetwork1L.layers[0].ord_args = {"output_dim": 100}
 u08expoNetwork1L.layers[0].sfa_out_dim = 30  # 49
@@ -2775,8 +2775,8 @@ network = HiGSFANetworkU11L_Overlap4x4L0 = copy.deepcopy(HiGSFANetworkU11L_Overl
 rec_field_size = 4  # 6 => 192x192, 5=> 160x160, 4=>128x128
 network.layers[0].x_field_channels = rec_field_size
 network.layers[0].y_field_channels = rec_field_size
-network.layers[0].x_field_spacing = rec_field_size / 2
-network.layers[0].y_field_spacing = rec_field_size / 2
+network.layers[0].x_field_spacing = rec_field_size // 2
+network.layers[0].y_field_spacing = rec_field_size // 2
 network.layers[0].pca_out_dim = 16
 
 HiGSFANet4x4_out_dims = [16, 24, 33, 60, 72, 80, 80, 75, 75, 50, 75]
@@ -3278,21 +3278,21 @@ HeuristicEvaluationExpansionsNetworkU11L = NetworkSetExpFuncs(S_d08_L, Heuristic
 u08expoS42NetworkU11L = NetworkSetExpFuncs([identity, sel_exp(42, unsigned_08expo)],
                                            copy.deepcopy(nonlinearNetworkU11L))
 u08expoS42NetworkU11L.L0.pca_node_class = mdp.nodes.PCANode
-u08expoS42NetworkU11L.L1.pca_out_dim = 39 / 3
+u08expoS42NetworkU11L.L1.pca_out_dim = 39 // 3
 # u08expoS42NetworkU11L.L0.ord_node_class = mdp.nodes.GSFANode
 # u08expoS42NetworkU11L.L0.exp_funcs = [identity, unsigned_08expo]
 u08expoS42NetworkU11L.L0.sfa_node_class = mdp.nodes.HeadNode  # mdp.nodes.GSFANode
-u08expoS42NetworkU11L.L0.sfa_out_dim = 78 / 3  # No dim reduction!
+u08expoS42NetworkU11L.L0.sfa_out_dim = 78 // 3  # No dim reduction!
 
 u08expoS42NetworkU11L.L1.pca_node_class = mdp.nodes.GSFANode
-u08expoS42NetworkU11L.L1.pca_out_dim = 55 / 2
+u08expoS42NetworkU11L.L1.pca_out_dim = 55 // 2
 u08expoS42NetworkU11L.L1.sfa_node_class = mdp.nodes.HeadNode
-u08expoS42NetworkU11L.L1.sfa_out_dim = 96 / 2
+u08expoS42NetworkU11L.L1.sfa_out_dim = 96 // 2
 
 u08expoS42NetworkU11L.L2.pca_node_class = mdp.nodes.GSFANode
-u08expoS42NetworkU11L.L2.pca_out_dim = 55 / 1.5
+u08expoS42NetworkU11L.L2.pca_out_dim = int(55 / 1.5)
 u08expoS42NetworkU11L.L2.sfa_node_class = mdp.nodes.HeadNode
-u08expoS42NetworkU11L.L2.sfa_out_dim = 96 / 1.5
+u08expoS42NetworkU11L.L2.sfa_out_dim = int(96 / 1.5)
 
 u08expoS42NetworkU11L.L3.pca_node_class = mdp.nodes.GSFANode
 u08expoS42NetworkU11L.L3.pca_out_dim = 55
@@ -3550,8 +3550,8 @@ network = HiGSFANetworkU11L_Overlap_4x4L0_EyeL_128x128 = copy.deepcopy(HiGSFANet
 rec_field_size = 4
 network.layers[0].x_field_channels = rec_field_size
 network.layers[0].y_field_channels = rec_field_size
-network.layers[0].x_field_spacing = rec_field_size / 2
-network.layers[0].y_field_spacing = rec_field_size / 2
+network.layers[0].x_field_spacing = rec_field_size // 2
+network.layers[0].y_field_spacing = rec_field_size // 2
 for i in range(1, len(network.layers)):
     if i % 2 == 0:  # A vertical layer
         network.layers[i].x_field_channels = 1

@@ -9,6 +9,7 @@
 #####################################################################################################################
 
 from __future__ import print_function
+from __future__ import division
 import numpy
 import scipy
 import scipy.optimize
@@ -400,7 +401,7 @@ class PointwiseFunctionNode(mdp.Node):
 
 class PairwiseAbsoluteExpansionNode(mdp.Node):
     def expanded_dim(self, n):
-        return n + n * (n + 1) / 2
+        return n + n * (n + 1) // 2
 
     def is_trainable(self):
         return False
@@ -1290,7 +1291,7 @@ def approximate_kNN_op(x, x_exp, y_exp, k=1, ignore_closest_match=False, operati
         x_expit = numpy.zeros((x_exp_dim + 1, nk))
         x_expit[x_exp_dim, :] = 1.0 * k  #
         zero_threshold = -40.0500  # -0.004
-        max_zero_weights = nk / 5
+        max_zero_weights = nk // 5
 
         w_0 = numpy.ones((nk, 1)) * 1.0 / nk
         # print "w_0", w_0
@@ -2917,11 +2918,11 @@ def indices_training_graph_split(num_samples, train_mode="regular", block_size=N
     elif train_mode in ["serial", "sequence"]:
         if isinstance(block_size, int):
             shuffled_indices = numpy.zeros(num_samples)
-            for block in range(num_samples / block_size):
+            for block in range(num_samples // block_size):
                 shuffled_indices[block * block_size:(block + 1) * block_size] = \
                     (numpy.arange(block_size) * 1.0 * num_parts / block_size).astype(int)
 
-            for block in range(num_samples / block_size):
+            for block in range(num_samples // block_size):
                 shuffled_indices = (numpy.arange(block_size) * 1.0 * num_parts / block_size).astype(int)
 
                 numpy.random.shuffle(shuffled_indices[block * block_size:(block + 1) * block_size])
