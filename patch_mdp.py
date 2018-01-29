@@ -12,7 +12,7 @@ import numpy
 import mdp
 from mdp import numx
 from mdp.utils import (mult, pinv, symeig, CovarianceMatrix, SymeigException)
-from mdp.utils._symeig import _assert_eigenvalues_real_and_positive, _type_keys, _type_conv, _greatest_common_dtype
+# _assert_eigenvalues_real_and_positive
 import more_nodes
 from gsfa_node import CovDCovMatrix, ComputeCovDcovMatrixSerial, ComputeCovDcovMatrixClustered, ComputeCovMatrix
 import gsfa_node
@@ -465,89 +465,7 @@ def SFANode_train(self, x, block_size=None, train_mode=None, node_weights=None, 
                 ex = "Unknown training method"
                 raise Exception(ex)
 
-# mdp.nodes.SFANode._train = SFANode_train
-# UPDATE WARNING, this should be mdp.nodes.SFANode._train not mdp.nodes.SFANode.train
-# I do not modify SFANode anylonger
-# mdp.nodes.SFANode._train = SFANode_train_scheduler
-
-
-def SFANode_stop_training(self, debug=False, verbose=False, pca_term=0.995, pca_exp=2.0):
-    #    self._myvar = self._myvar * 10
-    #    Warning, changed block_size to artificial_training
-    #    if (self.block_size is None) or (isinstance(self.block_size, int) and self.block_size == 1):
-    #   WARNING!!! WARNING!!!
-    # TODO: Define a proper way to fix training matrices... add training mode "regular" to SFA???
-    if ((self.block_size is None) or (isinstance(self.block_size, int) and self.block_size == 1)) and False:
-        ##### request the covariance matrices and clean up
-        self.cov_mtx, self.avg, self.tlen = self._cov_mtx.fix()
-        del self._cov_mtx
-        self.dcov_mtx, davg, dtlen = self._dcov_mtx.fix()
-        del self._dcov_mtx
-        print("Finishing training (regular2222). %d tlen, %d tlen of diff" % (self.tlen, dtlen))
-        print("Avg[0:3] is", self.avg[0:3])
-        print("Cov[0:3,0:3] is", self.cov_mtx[0:3, 0:3])
-        print("DCov[0:3,0:3] is", self.dcov_mtx[0:3, 0:3])
-    else:
-        if verbose:
-            print("stop_training: Warning, using experimental SFA training method, ")
-            print("with self.block_size=", self.block_size)
-        print("self._covdcovmtx.num_samples = ", self._covdcovmtx.num_samples)
-        print("self._covdcovmtx.num_diffs= ", self._covdcovmtx.num_diffs)
-        self.cov_mtx, self.avg, self.dcov_mtx = self._covdcovmtx.fix()
-
-        print("Finishing SFA training: ", self.num_samples, " num_samples, and ", self.num_diffs, " num_diffs")
-        #        print "Avg[0:3] is", self.avg[0:4]
-        #        print "Prod_avg_x[0:3,0:3] is", prod_avg_x[0:3,0:3]
-        #        print "Cov[0:3,0:3] is", self.cov_mtx[0:3,0:3]
-        print("DCov[0:3,0:3] is", self.dcov_mtx[0:3, 0:3])
-    #        quit()
-
-    if pca_term != 0.0 and False:
-        signs = numpy.sign(self.dcov_mtx)
-        self.dcov_mtx = ((1.0 - pca_term) * signs * numpy.abs(self.dcov_mtx) ** (1.0 / pca_exp) +
-                         pca_term * numpy.identity(self.dcov_mtx.shape[0])) ** pca_exp
-        self.dcov_mtx = numpy.identity(self.dcov_mtx.shape[0])
-    rng = self._set_range()
-
-    # ### solve the generalized eigenvalue problem
-    # the eigenvalues are already ordered in ascending order
-    # SUPERMEGAWARNING, moved dcov to the second argument!!!
-    # self.d, self.sf = self._symeig(self.dcov_mtx, self.cov_mtx, range=rng, overwrite=(not debug))
-    try:
-        print("***Range used=", rng)
-        if self.sfa_expo is not None and self.pca_expo is not None:
-            self.d, self.sf = _symeig_fake_regularized(self.dcov_mtx, self.cov_mtx, range=rng, overwrite=(not debug),
-                                                       sfa_expo=self.sfa_expo, pca_expo=self.pca_expo,
-                                                       magnitude_sfa_biasing=self.magnitude_sfa_biasing)
-        else:
-            self.d, self.sf = self._symeig(self.dcov_mtx, self.cov_mtx, range=rng, overwrite=(not debug))
-        d = self.d
-        # check that we get only *positive* eigenvalues
-        if d.min() < 0:
-            raise SymeigException("Got negative eigenvalues: %s." % str(d))
-    except SymeigException as exception:
-        errstr = str(exception) + "\n Covariance matrices may be singular."
-        raise Exception(errstr)
-
-    # delete covariance matrix if no exception occurred
-    del self.cov_mtx
-    del self.dcov_mtx
-    del self._covdcovmtx
-    # store bias
-    self._bias = mult(self.avg, self.sf)
-    print("shape of SFANode.sf is=", self.sf.shape)
-
-
-# I am not modifying SFANode any longer
-# mdp.nodes.SFANode._stop_training = SFANode_stop_training
-
-# sfa_train_params = ["block_size", "training_mode", "include_last"]
-# mdp.nodes.SFANode.train_params = sfa_train_params
-
-# mdp.nodes.SFANode.list_train_params = ["scheduler", "n_parallel", "train_mode", "include_latest", "block_size"]
-# "scheduler", "n_parallel", "train_mode", "block_size", "node_weights", "edge_weights"] # "sfa_expo", "pca_expo",
-# "magnitude_sfa_biasing"
-# mdp.nodes.SFANode.list_train_params = ["scheduler", "n_parallel"] # Now strictly using original version of SFA
+# The SFANode is no longer being modified/monkey patched
 mdp.nodes.SFAPCANode.list_train_params = ["scheduler", "n_parallel", "train_mode",
                                           "block_size"]  # "sfa_expo", "pca_expo", "magnitude_sfa_biasing"
 mdp.nodes.PCANode.list_train_params = ["scheduler", "n_parallel"]
@@ -769,14 +687,6 @@ def PCANode_train_scheduler(self, x, scheduler=None, n_parallel=None):
 
 mdp.nodes.PCANode._train = PCANode_train_scheduler
 
-
-# def apply_permutation_to_signal(x, permutation, output_dim):
-#    xt = x.T
-#    yt = numpy.zeros((x.shape[1], output_dim))
-#    for i in permutation:
-#        yt[i] = xt[i]
-#    y = yt.T
-#    return y
 
 # Make switchboard faster!!!
 def switchboard_new_execute(self, x):
@@ -1735,133 +1645,8 @@ if patch_flow:
 
 numx_linalg = mdp.numx_linalg
 
-
-# sfa_expo: eigenvalues wB of B are corrected with a factor sqrt(wB**sfa_expo) instead of sqrt(wB)
-# pca_expo: whithening is done using corrected eigenvalues sqrt(wB**pca_expo) instead of sqrt(wB)
-def _symeig_fake_regularized(A, B=None, eigenvectors=True, range=None,
-                             type=1, overwrite=False, sfa_expo=1.0, pca_expo=1.0, magnitude_sfa_biasing=False):
-    """Solve standard and generalized eigenvalue problem for symmetric
-(hermitian) definite positive matrices.
-This function is a wrapper of LinearAlgebra.eigenvectors or
-numarray.linear_algebra.eigenvectors with an interface compatible with symeig.
-
-    Syntax:
-
-      w,Z = symeig(A) 
-      w = symeig(A,eigenvectors=0)
-      w,Z = symeig(A,range=(lo,hi))
-      w,Z = symeig(A,B,range=(lo,hi))
-
-    Inputs:
-
-      A     -- An N x N matrix.
-      B     -- An N x N matrix.
-      eigenvectors -- if set return eigenvalues and eigenvectors, otherwise
-                      only eigenvalues 
-      turbo -- not implemented
-      range -- the tuple (lo,hi) represent the indexes of the smallest and
-               largest (in ascending order) eigenvalues to be returned.
-               1 <= lo < hi <= N
-               if range = None, returns all eigenvalues and eigenvectors. 
-      type  -- not implemented, always solve A*x = (lambda)*B*x
-      overwrite -- not implemented
-      
-    Outputs:
-
-      w     -- (selected) eigenvalues in ascending order.
-      Z     -- if range = None, Z contains the matrix of eigenvectors,
-               normalized as follows:
-                  Z^H * A * Z = lambda and Z^H * B * Z = I
-               where ^H means conjugate transpose.
-               if range, an N x M matrix containing the orthonormal
-               eigenvectors of the matrix A corresponding to the selected
-               eigenvalues, with the i-th column of Z holding the eigenvector
-               associated with w[i]. The eigenvectors are normalized as above.
-    """
-
-    dtype = numx.dtype(_greatest_common_dtype([A, B]))
-    try:
-        if B is None:
-            w, Z = numx_linalg.eigh(A)
-        else:
-            # make B the identity matrix
-            wB, ZB = numx_linalg.eigh(B)
-            _assert_eigenvalues_real_and_positive(wB, dtype)
-
-            if sfa_expo < 1:
-                ex = "sfa_expo should be at least 1.0"
-                raise Exception(ex)
-            if pca_expo > 1:
-                ex = "pca_expo should be at most 1.0"
-                raise Exception(ex)
-
-            # pca_expo = 0.25
-            # sfa_expo = 1.1
-
-            # TODO: SMART SFA_PCA WITHOUT STRANGE EXPONENTS
-            wB_pca_mapped = wB.real
-            # wB_pca_mapped = wB.real**pca_expo
-            ZB_pca = ZB.real / numx.sqrt(wB_pca_mapped)
-            if magnitude_sfa_biasing:
-                ZB_sfa = ZB.real / numx.sqrt(wB.real ** sfa_expo)
-                quit()
-            else:
-                ZB_sfa = ZB.real / numx.sqrt(wB.real * numpy.linspace(sfa_expo, 1.0, len(wB)))
-                # ZB_sfa = ZB.real / numx.sqrt(wB.real**sfa_expo)
-
-            # #            if magnitude_sfa_biasing:
-            # #                ZB_sfa = ZB.real / numx.sqrt(wB.real**sfa_expo)
-            # #            elif sfa_expo and False:
-            # #                print "sfa_expo=", sfa_expo
-            # #                ZB_sfa = ZB.real / numx.sqrt(wB.real* numpy.linspace(1.33, 1.0, len(wB)))
-            # #                print "len(wB) is", len(wB)
-            # #                print "something went wrong"
-            # ##                quit()
-            # #            else:
-            # #                ZB_sfa = ZB.real / numx.sqrt(wB.real)
-
-            # transform A in the new basis: A = ZB^T * A * ZB
-            A = mdp.utils.mult(mdp.utils.mult(ZB_sfa.T, A), ZB_sfa)
-            # diagonalize A
-            w, ZA = numx_linalg.eigh(A)
-            Z = mdp.utils.mult(ZB_pca, ZA)
-    except numx_linalg.LinAlgError as exception:
-        raise SymeigException(str(exception))
-
-    _assert_eigenvalues_real_and_positive(w, dtype)
-    w = w.real
-    Z = Z.real
-
-    idx = w.argsort()
-    w = w.take(idx)
-    Z = Z.take(idx, axis=1)
-
-    # sanitize range:
-    n = A.shape[0]
-    if range is not None:
-        lo, hi = range
-        if lo < 1:
-            lo = 1
-        if lo > n:
-            lo = n
-        if hi > n:
-            hi = n
-        if lo > hi:
-            lo, hi = hi, lo
-
-        Z = Z[:, lo - 1:hi]
-        w = w[lo - 1:hi]
-
-    # the final call to refcast is necessary because of a bug in the casting
-    # behavior of Numeric and numarray: eigenvector does not wrap the LAPACK
-    # single precision routines
-    if eigenvectors:
-        return mdp.utils.refcast(w, dtype), mdp.utils.refcast(Z, dtype)
-    else:
-        return mdp.utils.refcast(w, dtype)
-
-
 # routines
+
 
 def KNNClassifier_klabels(self, x):
     """Label the data by comparison with the reference points."""
