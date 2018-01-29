@@ -27,7 +27,7 @@
 # --HierarchicalNetwork=HiGSFANetworkU11L_Overlap6x6L0_Sigmoids_GUO_3Labels_48x48 --SleepM=-1
 #####################################################################################################################
 
-
+from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
 import numpy

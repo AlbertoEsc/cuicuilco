@@ -4,7 +4,10 @@
 # By Alberto Escalante. Alberto.Escalante@neuroinformatik.ruhr-uni-bochum.de                                        #
 # Ruhr-University-Bochum, Institute of Neurocomputation, Group of Prof. Dr. Wiskott                                 #
 #####################################################################################################################
+
+from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import division
 import numpy
 import numexpr
 
