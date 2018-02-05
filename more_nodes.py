@@ -21,8 +21,9 @@ import sys
 print("(more_nodes) __name__=", __name__)
 print("(more_nodes) __file__=", __file__)
 print("(more_nodes) __package__=", __package__)
+from . import sfa_libs
 from .sfa_libs import select_rows_from_matrix, distance_squared_Euclidean
-from .inversion import invert_exp_funcs2
+# from . import inversion
 import inspect
 from .histogram_equalization import *
 
@@ -3122,3 +3123,38 @@ def f_residual(x_app_i, node, y_i):
     return res_long
 
 
+# input: exp_x_noisy.shape=[1,dim_exp_x],
+# outputs: one dim vectors
+# Improved version
+def invert_exp_funcs2(exp_x_noisy, dim_x, exp_funcs, distance=sfa_libs.distance_best_squared_Euclidean,
+                      use_hint=False, max_steady_factor=5, delta_factor=0.7, min_delta=0.0001, k=0.5, verbose=False):
+    """ Function that approximates a preimage of exp_x_noisy notice 
+    that distance, max_steady_factor, delta, min_delta are deprecated and useless
+    """
+    num_samples = exp_x_noisy.shape[0]
+
+    if isinstance(use_hint, numpy.ndarray):
+        if verbose:
+            print("Using suggested approximation!")
+        app_x = use_hint.copy()
+    elif use_hint:
+        if verbose:
+            print("Using lowest dim_x=%d elements of input for first approximation!" % (dim_x))
+        app_x = exp_x_noisy[:, 0:dim_x].copy()
+    else:
+        app_x = numpy.random.normal(size=(num_samples, dim_x))
+
+    for row in range(num_samples):
+        # app_x_row = app_x[row].reshape(1, dim_x)
+        # exp_x_noisy_row = exp_x_noisy[row].reshape(1, dim_exp_x)
+        # app_exp_x_row = app_exp_x[row].reshape(1, dim_exp_x)
+        # Definition:       scipy.optimize.leastsq(func, x0, args=(), Dfun=None, full_output=0, col_deriv=0,
+        #                                         ftol=1.49012e-08, xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0,
+        #                                         factor=100, diag=None, warning=True)
+        plsq = scipy.optimize.leastsq(residuals, app_x[row], args=(exp_x_noisy[row], exp_funcs, app_x[row], k),
+                                      ftol=1.49012e-06, xtol=1.49012e-06, gtol=0.0, maxfev=50*dim_x, epsfcn=0.0,
+                                      factor=1.0)
+        app_x[row] = plsq[0]
+
+    app_exp_x = sfa_libs.apply_funcs_to_signal(exp_funcs, app_x)
+    return app_x, app_exp_x
