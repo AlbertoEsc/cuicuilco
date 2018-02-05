@@ -36,28 +36,9 @@ import scipy.misc
 
 import sklearn.svm as slsvm
 # mpl.style.use('classic')
-
-print("(cuicuilco_run) __name__=", __name__)
-print("(cuicuilco_run) __file__=", __file__)
-print("(cuicuilco_run) __package__=", __package__)
-
 import PIL
-import mdp
-from . import more_nodes
-from . import patch_mdp
-
-import object_cache as cache
 import os
 import sys
-import sfa_libs
-from sfa_libs import (scale_to, distance_squared_Euclidean, str3, wider_1Darray, ndarray_to_string)
-from exact_label_learning import (ConstructGammaFromLabels, RemoveNegativeEdgeWeights, MapGammaToEdgeWeights)
-import system_parameters
-from system_parameters import (scale_sSeq, take_first_02D, take_0_k_th_from_2D_list, sSeq_force_image_size,
-                               sSeq_getinfo_format, convert_sSeq_to_funcs_params_sets)
-from image_loader import *
-import classifiers_regressions as classifiers
-import network_builder
 import time
 import string
 
@@ -72,6 +53,25 @@ import matplotlib as mpl
 mpl.use('Qt4Agg')
 import matplotlib.pyplot as plt
 import socket
+
+import mdp
+
+print("(cuicuilco_run) __name__=", __name__)
+print("(cuicuilco_run) __file__=", __file__)
+print("(cuicuilco_run) __package__=", __package__)
+
+from . import more_nodes
+from . import patch_mdp
+from . import object_cache as cache
+from . import sfa_libs
+from .sfa_libs import (scale_to, distance_squared_Euclidean, str3, wider_1Darray, ndarray_to_string)
+from .exact_label_learning import (ConstructGammaFromLabels, RemoveNegativeEdgeWeights, MapGammaToEdgeWeights)
+from . import system_parameters
+from .system_parameters import (scale_sSeq, take_first_02D, take_0_k_th_from_2D_list, sSeq_force_image_size,
+                               sSeq_getinfo_format, convert_sSeq_to_funcs_params_sets)
+from .image_loader import *
+from . import classifiers_regressions as classifiers
+from . import network_builder
 
 __version__ = "0.8.0"
 
@@ -176,8 +176,8 @@ minutes_sleep = 0
 t0 = time.time()
 print("LOADING INPUT/SETUP INFORMATION")
 
-import hierarchical_networks
-import experimental_datasets
+from . import hierarchical_networks
+from . import experimental_datasets
 
 print("Using mdp version:", mdp.__version__, "file:", mdp.__file__)
 print(hierarchical_networks.__file__)
@@ -220,8 +220,8 @@ name_default_network = "voidNetwork1L"
 DefaultExperimentalDataset = available_experiments[name_default_experiment]
 DefaultNetwork = available_networks[name_default_network]
 
-from experimental_datasets import experiment_seed
-from experimental_datasets import DAYS_IN_A_YEAR
+from .experimental_datasets import experiment_seed
+from .experimental_datasets import DAYS_IN_A_YEAR
 
 
 def my_sigmoid(x):
@@ -243,7 +243,6 @@ if coherent_seeds:
     numpy.random.seed(experiment_seed + 111111)
 
 print("(cuicuilco_run) __package__=", __package__)
-quit()
 
 if __name__ == "__main__":  # ############## Parse  command line arguments ####################
     if enable_command_line:

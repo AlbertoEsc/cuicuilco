@@ -1,13 +1,29 @@
-#TODO: Add header, what happened?
+#####################################################################################################################
+# system_parameters: This module defines the fundamental classes used in the Cuiculco framework                     #
+#                                                                                                                   #
+# Classes: ParamsNetwork: Abstract description of a hierarchical network, which can be undestood by network_builder #
+#          ParamsSFALayer: Describes a composite hierarchical layer                                                 #
+#          ParamsSFASuperNode: Describes a composite non-hierarchical layer (no switchboard information)            #
+#          ParamsInput: Describes a dataset from an abstract level (number of samples, labels)                      #
+#          ParamsDataLoading: Describes the elements of a dataset concretely (image filenames, image sizes,         #
+#                             transformations to be applied, such as rotations, contrast enhancements, offsettings) #
+#                                                                                                                   #
+# By Alberto Escalante. Alberto.Escalante@ini.rub.de                                                                #
+# Ruhr-University-Bochum, Institute for Neural Computation, Group of Prof. Dr. Wiskott                              #
+#####################################################################################################################
+
 from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
-import mdp
-import more_nodes
-import patch_mdp
-import image_loader
+
 import numpy
 import inspect
+
+import mdp
+
+from . import more_nodes
+from . import patch_mdp
+from . import image_loader
 
 TOP_LEFT_CORNER = 0
 

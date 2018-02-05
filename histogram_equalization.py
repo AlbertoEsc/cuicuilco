@@ -11,9 +11,10 @@
 from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
-import mdp
 import numpy as numx
 import numpy
+
+import mdp
 
 
 def learn_histogram_equalizer(x, num_pivots, linear_histogram=False, ignore_two_pivots=False):

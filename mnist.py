@@ -1,3 +1,14 @@
+#####################################################################################################################
+# mnist: This module loads the MNIST dataset                                                                        #
+#        It is included in the Cuicuilco framework                                                                  #
+#                                                                                                                   #
+# Hint: execute this file directly (as main) for an example                                                         #
+#                                                                                                                   #
+# Code slightly modified by Alberto Escalante. Alberto.Escalante@ini.rub.de                                         #
+# Ruhr-University-Bochum, Institute for Neural Computation, Group of Prof. Dr. Wiskott                              #
+# See the docstrings for the original authors                                                                       #
+#####################################################################################################################
+
 from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division

@@ -15,15 +15,16 @@ from __future__ import division
 import numpy
 import scipy
 import scipy.optimize
+import copy
+import sys
+
 import mdp
 from mdp.utils import pinv
 
-import copy
-import sys
-from sfa_libs import select_rows_from_matrix, distance_squared_Euclidean
-import more_nodes
-from more_nodes import GeneralExpansionNode
-from gsfa_node import GSFANode
+from .sfa_libs import select_rows_from_matrix, distance_squared_Euclidean
+from . import more_nodes
+from .more_nodes import GeneralExpansionNode
+from .gsfa_node import GSFANode
 
 
 class iGSFANode(mdp.Node):

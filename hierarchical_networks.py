@@ -1,22 +1,38 @@
+#####################################################################################################################
+# hierarchical_networks: This module defines several hierarchical networks with specific structure                  #
+#                        It is part of the Cuicuilco framework                                                      #
+#                                                                                                                   #
+# A network must be converted into an MDP flow by using the functions provided in the network_builder module        #
+# Examples of networks: HiGSFA_CIFAR10_Network_11L, RatlabImprovedNetwork3L_320x40, voidNetwork1L, HeadNetwork1L,   #
+#                       SFANetwork1L, HiGSFANetworkU11L_NoOverlap_4x4L0_Basic_PosXPosYScaleAngle_64x64,             #
+#                       PCANetwork1L, HiGSFANetworkU11L_NoOverlap_4x4L0_EyeL_64x64,                                 #
+#                       HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96                                            #
+#                                                                                                                   #
+# By Alberto Escalante. Alberto.Escalante@ini.rub.de                                                                #
+# Ruhr-University-Bochum, Institute for Neural Computation, Group of Prof. Dr. Wiskott                              #
+#####################################################################################################################
+
 from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
-import system_parameters
 import numpy
 import scipy
-import mdp
-import sfa_libs
-import more_nodes
-import more_nodes as he
-import patch_mdp
-import image_loader
-from nonlinear_expansion import *
-import lattice
-import PIL
-from PIL import Image
 import copy
 import os
 import string
+import PIL
+from PIL import Image
+
+import mdp
+
+from . import system_parameters
+from . import sfa_libs
+from . import more_nodes
+from . import more_nodes as he
+from . import patch_mdp
+from . import image_loader
+from .nonlinear_expansion import *
+from . import lattice
 
 
 ###########################################################################################
@@ -3782,265 +3798,3 @@ for i, layer in enumerate(network.layers):
     # features are slow, and the remaining reconstructive
 
 
-# c35_to_800 = numpy.zeros((35, 800))
-# for i in range(800):
-#     index_35_2 = numpy.random.randint(35)
-#     c35_to_800[index_35_2, i] = numpy.random.normal(loc=0.0, scale=2.0, size=(1,))
-#     index_35_2 = numpy.random.randint(35)
-#     c35_to_800[index_35_2, i] = numpy.random.normal(loc=0.0, scale=2.0, size=(1,))
-#
-# print("c35_to_800=", c35_to_800)
-# print("c35_to_800.shape=", c35_to_800.shape)
-# l35_to_800 = numpy.random.normal(loc=0.0, scale=1.0, size=800)
-#
-#
-# def random_sigmoids_pairwise_35_to_800(x):
-#     return extract_sigmoid_features(x[:, 0:35], c35_to_800, l35_to_800)
-#
-#
-# c35_to_400 = numpy.zeros((35, 400))
-# for i in range(400):
-#     index_35_2 = numpy.random.randint(35)
-#     c35_to_400[index_35_2, i] = numpy.random.normal(loc=0.0, scale=4.0, size=(1,))
-#     index_35_2 = numpy.random.randint(35)
-#     c35_to_400[index_35_2, i] = numpy.random.normal(loc=0.0, scale=4.0, size=(1,))
-#
-# print("c35_to_400=", c35_to_400)
-# print("c35_to_400.shape=", c35_to_400.shape)
-# l35_to_400 = numpy.random.normal(loc=0.0, scale=0.05, size=400)
-#
-#
-# def random_sigmoids_pairwise_35_to_400(x):
-#     return extract_sigmoid_features(x, c35_to_400, l35_to_400)
-#
-#
-# c35_to_200 = numpy.zeros((35, 200))
-# for i in range(200):
-#     index_35_2 = numpy.random.randint(35)
-#     c35_to_200[index_35_2, i] = numpy.random.normal(loc=0.0, scale=2.0, size=(1,))
-#     index_35_2 = numpy.random.randint(35)
-#     c35_to_200[index_35_2, i] = numpy.random.normal(loc=0.0, scale=2.0, size=(1,))
-#
-# print("c35_to_200=", c35_to_200)
-# print("c35_to_200.shape=", c35_to_200.shape)
-# l35_to_200 = numpy.random.normal(loc=0.0, scale=0.05, size=200)
-#
-#
-# def random_sigmoids_pairwise_35_to_200(x):
-#     return extract_sigmoid_features(x, c35_to_200, l35_to_200)
-#
-#
-# def unsigned_08expo_100(x):
-#     return unsigned_08expo(x[:, 0:100])
-#
-#
-# def encode_signal_p9(x):
-#     dim = x.shape[1]
-#     x_out = x + 0.0
-#     for i in range(9, dim):  # 9
-#         yy = (-1.0) ** (numpy.floor(numpy.abs(x[:, i]) * 2.0) % 2)
-#         # if a = (+/-)**.1*** then a=> -(+/-)a, otherwise a=>a
-#         print(yy)
-#         x_out[:, i] = x_out[:, i] * yy
-#     return x_out
-
-#
-# network = PCA_QT35_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [identity, s35QT]  # unsigned_08expo
-#
-# # NETWORK MNIST Net1
-# network = PCA_QT40_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [identity, s40QT]  # unsigned_08expo
-#
-# # NETWORK MNIST NetB
-# network = PCA_U08_QT40_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [identity, unsigned_08expo, s40QT]  # unsigned_08expo
-#
-# network = PCA_control4linear_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [control4_linear, ]  # unsigned_08expo
-#
-# network = PCA_control4_QT20_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [control4_QT20, ]  # unsigned_08expo
-#
-# network = PCA_control4_QT30_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [control4_QT30, ]  # unsigned_08expo
-#
-# network = PCA_control4_QT40_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [control4_QT40, ]  # unsigned_08expo
-#
-# network = PCA_control1_QT40_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [control1_QT40, ]  # unsigned_08expo
-#
-# network = PCA_control2_QT40_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [control2_QT40, ]  # unsigned_08expo
-#
-# network = PCA_control2_QT60_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [control2_QT60, ]  # unsigned_08expo
-#
-# network = PCA_control3_QT40_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [control3_QT40, ]  # unsigned_08expo
-#
-# network = PCA_control5_QT40_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [control5_QT40, ]  # unsigned_08expo
-#
-# network = PCA_control6_QT40_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [control6_QT40, ]  # unsigned_08expo
-#
-# network = PCA_control6_QT50_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [control6_QT50, ]  # unsigned_08expo
-#
-# network = PCA_control4_QT50_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [control4_QT50, ]  # unsigned_08expo
-#
-# network = PCA_control4_QT60_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [control4_QT60, ]  # unsigned_08expo
-#
-# network = PCA_control5_QT60_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [control5_QT60, ]  # unsigned_08expo
-#
-# network = PCA_control6_QT60_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [control6_QT60, ]  # unsigned_08expo
-#
-# network = PCA_control8_QT60_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [control8_QT60, ]  # unsigned_08expo
-#
-# network = PCA_control9_QT60_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [control9_QT60, ]  # unsigned_08expo
-#
-# network = PCA_control2_QT40_CT10_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [control2_QT40_CT10, ]  # unsigned_08expo
-#
-# network = PCA_control2_QT40_CT15_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [control2_QT40_CT15, ]  # unsigned_08expo
-#
-# network = PCA_control2_QT40_CT20_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [control2_QT40_CT20, ]  # unsigned_08expo
-#
-# network = PCA_control2_QT40_CT25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [control2_QT40_CT25, ]  # unsigned_08expo
-#
-# network = PCA_control3_QT40_CT25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [control3_QT40_CT25, ]  # unsigned_08expo
-#
-# network = PCA_control2_QT40_CT30_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [control2_QT40_CT30, ]  # unsigned_08expo
-#
-# network = PCA_control2_QT40_CT35_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [control2_QT40_CT35, ]  # unsigned_08expo
-#
-# network = PCA_control2_QT50_CT25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [control2_QT50_CT25, ]  # unsigned_08expo
-#
-# network = PCA_control3_QT50_CT25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [control3_QT50_CT25, ]  # unsigned_08expo
-#
-# network = PCA_control6_QT50_CT10_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [control6_QT50_CT10, ]  # unsigned_08expo
-#
-# network = PCA_control6_QT50_CT15_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [control6_QT50_CT15, ]  # unsigned_08expo
-#
-# network = PCA_control6_QT50_CT20_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [control6_QT50_CT20, ]  # unsigned_08expo
-#
-# network = PCA_QT60_CT30_control6_QT40_CT10_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [QT60_CT30_control6_QT40_CT10, ]  # unsigned_08expo
-#
-# network = PCA_QT60_CT35_control6_QT40_CT10_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [QT60_CT35_control6_QT40_CT10, ]  # unsigned_08expo
-#
-# network = PCA_QT60_CT25_control3_QT40_CT10_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [QT60_CT25_control3_QT40_CT10, ]  # unsigned_08expo
-#
-# network = PCA_QT50_CT20_control9_QT30_CT5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [QT50_CT20_control9_QT30_CT5, ]  # unsigned_08expo
-#
-# network = PCA_QT50_CT20_control5_QT35_CT5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [QT50_CT20_control5_QT35_CT5, ]  # unsigned_08expo
-#
-# network = PCA_QT50_CT20_control5_QT40_CT5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [QT50_CT20_control5_QT40_CT5, ]  # unsigned_08expo
-#
-# network = PCA_QT50_CT20_control5_QT45_CT5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [QT50_CT20_control5_QT45_CT5, ]  # unsigned_08expo
-#
-# network = PCA_QT50_CT20_control5_QT50_CT5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [QT50_CT20_control5_QT50_CT5, ]  # unsigned_08expo
-#
-# network = PCA_QT50_CT20_control5_QT50_CT10_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [QT50_CT20_control5_QT50_CT10, ]  # unsigned_08expo
-#
-# network = PCA_QT50_CT20_control5_QT50_CT15_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [QT50_CT20_control5_QT50_CT15, ]  # unsigned_08expo
-#
-# network = PCA_QT40_CT25_control5_QT30_CT5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [QT40_CT25_control5_QT30_CT5, ]  # unsigned_08expo
-#
-# network = PCA_QT40_CT35_control5_QT30_CT5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [QT40_CT35_control5_QT30_CT5, ]  # unsigned_08expo
-#
-# network = PCA_QT40_CT30_control5_QT30_CT5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [QT40_CT30_control5_QT30_CT5, ]  # unsigned_08expo
-#
-# network = PCA_QT50_CT20_control9_QT40_CT5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [QT50_CT20_control9_QT40_CT5, ]  # unsigned_08expo
-#
-# network = PCA_QT60_CT30_control9_QT30_CT5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [QT60_CT30_control9_QT30_CT5, ]  # unsigned_08expo
-#
-# network = PCA_QT50_CT20_control9_QT25_CT5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [QT50_CT20_control9_QT25_CT5, ]  # unsigned_08expo
-#
-# network = PCA_QT50_CT20_control9_QT35_CT5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [QT50_CT20_control9_QT35_CT5, ]  # unsigned_08expo
-#
-# network = PCA_QT50_CT20_control9_QT45_CT5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [QT50_CT20_control9_QT45_CT5, ]  # unsigned_08expo
-#
-# network = PCA_QT60_CT35_control4_QT40_CT5_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [QT60_CT35_control4_QT40_CT5, ]  # unsigned_08expo
-#
-# # NETWORK MNIST NetA
-# network = PCA_QT50_CT25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [identity, s50QT, s25CT, ]  # unsigned_08expo
-#
-# network = PCA_control2_QT60_CT25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [control2_QT60_CT25, ]  # unsigned_08expo
-#
-# network = PCA_control2_QT70_CT25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [control2_QT70_CT25, ]  # unsigned_08expo
-#
-# network = PCA_control2_QT75_CT25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [control2_QT75_CT25, ]  # unsigned_08expo
-#
-# network = PCA_QT40_CT15_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [identity, s40QT, s15CT]  # unsigned_08expo
-#
-# network = PCA_QT40_CT20_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [identity, s40QT, s20CT]  # unsigned_08expo
-#
-# network = PCA_QT40_CT25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [identity, s40QT, s25CT]  # unsigned_08expo
-#
-# network = PCA_QT40_CT30_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [identity, s40QT, s30CT]  # unsigned_08expo
-#
-# network = PCA_QT45_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [identity, s45QT]  # unsigned_08expo
-#
-# network = PCA_QT45_CT25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [identity, s45QT, s25CT]  # unsigned_08expo
-#
-# network = PCA_QT50_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [identity, s50QT]  # unsigned_08expo
-#
-# network = PCA_QT55_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [identity, s55QT]  # unsigned_08expo
-#
-# network = PCA_QT35_CT25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [identity, s35QT, s25CT]  # unsigned_08expo
-#
-# network = PCA_QT30_CT25_GSFA_Network1L = copy.deepcopy(PCA_GSFA_Network1L)
-# network.L0.exp_funcs = [identity, s30QT, s25CT]  # unsigned_08expo
-#
-# # QT50_CT20_control9_QT30_CT5

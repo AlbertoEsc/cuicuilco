@@ -15,15 +15,17 @@
 from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
-import mdp
-import more_nodes
-import lattice
-from nonlinear_expansion import identity
-from sfa_libs import remove_Nones
+import numpy
 import copy
 import time
-import system_parameters
-import numpy
+
+import mdp
+
+from . import more_nodes
+from . import lattice
+from .nonlinear_expansion import identity
+from .sfa_libs import remove_Nones
+from . import system_parameters
 
 
 # def CreateNetwork(Network, subimage_width, subimage_height, block_size, train_mode, benchmark, in_channel_dim=1,

@@ -10,6 +10,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import division
 import numpy
 import scipy.misc
 
@@ -18,11 +19,12 @@ from PIL import Image
 from PIL import ImageOps
 import os
 import glob
-import sfa_libs
 import time
 import struct
 import math
 import multiprocessing
+
+from . import sfa_libs
 
 # For Python 2 and 3 compatibility
 cmp = lambda x, y: (x > y) - (x < y)
@@ -182,23 +184,16 @@ def simple_normalization_from_coords(im, relevant_left, relevant_right, relevant
         if obj_std is None:
             obj_std = std / 255.0 + 0.0
 
-        im_ar = 255 * obj_std * (im_ar - mean) / std + 127.5 + 255 * obj_avg  # 255*std = 50
+        im_ar = 255.0 * obj_std * (im_ar - mean) / std + 127.5 + 255 * obj_avg  # 255*std = 50
         im_ar = cutoff(im_ar, 0, 255)
-        # quit()
     else:  # each component in an L image ranges from 0 to 1 (float), apparently only for saving/display,
         # otherwise it ranges in 0-255
-        # print "looks fine"
-        # quit()
         if obj_avg is None:
             obj_avg = mean / 255.0 - 0.5
         if obj_std is None:
             obj_std = std / 255.0 + 0.0
-            # print "mean=", mean, "std=", std
-        # print "obj_avg=", 0.5+obj_avg, "obj_std=", obj_std
         im_ar = obj_std * (im_ar - mean) / std + 0.5 + obj_avg  # std = 0.2, obj_avg=0.0
         im_ar = cutoff(im_ar, 0, 1)
-        # print "im_ar=", im_ar
-        # quit()
     # The code below is useful to see which region is considered for normalization, as well as to see/contrast the
     # extreme intensities
     if show_points:
@@ -336,11 +331,6 @@ def load_image_data_monoprocessor(image_files, image_array, image_width, image_h
     else:
         err = "Don't know the pixel_dimensions for image format: ", convert_format
         raise Exception(err)
-        # quit()
-
-    #    if rotations==None:
-    #        er = "rotations disabled :("
-    #        raise Exception(er)
 
     if isinstance(image_width, (numpy.float, numpy.float64, numpy.int)):
         image_width = numpy.ones(num_images) * image_width
@@ -432,8 +422,8 @@ def load_image_data_monoprocessor(image_files, image_array, image_width, image_h
                     info_displayed = True
                 im_orig = scipy.misc.toimage(image_array[image_file], mode='L')
             else:
-                er = "unknown type of image_array:" + str(type(image_array))
-                raise Exception(er)
+                err = "unknown type of image_array:" + str(type(image_array))
+                raise Exception(err)
 
             for act_im_num in act_im_num_indices[image_file]:
                 # print "Computing image for act_im_num:", act_im_num
@@ -463,19 +453,8 @@ def load_image_data_monoprocessor(image_files, image_array, image_width, image_h
                     if delta_ang is not None:
                         im = rotate_improved(im, delta_ang, Image.BICUBIC)
 
-                    # print "IMAGE: ", image_file
-                # subimage_coordinates = (x0, y0, x1, y1)
-                #            print "subimage_coordinates: ", subimage_coordinates
-                #            print "pixelsampling_x[act_im_num], pixelsampling_y[act_im_num] = ",
-                # pixelsampling_x[act_im_num], pixelsampling_y[act_im_num]
-                #            quit()
-
-                #            if verbose:
-                #                print "subimage_coordinates =", (x0,y0,x1,y1)
                 # WARNING!!!!! IS THERE AN OFFSET HERE???? CHECK ROTATION CODE!!!! THIS IS WEIRD, AS USUAL!!!
                 # subimage_coordinates = (x0 + 1, y0 + 1, x1 + 1, y1 + 1)
-                #            print "subimage_coordinates =", subimage_coordinates
-                # BUGFIX: This should be correct
                 subimage_coordinates = (x0, y0, x1, y1)
                 ori_width = x1 - x0
                 ori_height = y1 - y0
@@ -486,17 +465,9 @@ def load_image_data_monoprocessor(image_files, image_array, image_width, image_h
                     print("Image size: im.size[0], im.size[1] = ", im.size[0], im.size[1])
                     raise Exception(err)
 
-                    #            if x0<0 or y0<0 or x1>=im.size[0] or y1>=im.size[1]:
-                    #                err = "Image Loading Failed: Subimage out of Image: ", image_file
-                    #                print "subimage_coordinates =", (x0,y0,x1,y1)
-                    #                print "Image size: im.size[0], im.size[1] = ", im.size[0],  im.size[1]
-                    #                raise Exception(err)
-                # print "AAA"
                 if delta_ang is not None and not rotate_before_translation:
                     rotation_center_x = (x0 + x1 - 1) / 2.0
                     rotation_center_y = (y0 + y1 - 1) / 2.0
-
-                    # print "BBB"
 
                     integer_rotation_center = True  # and False
                     if integer_rotation_center:
@@ -531,8 +502,6 @@ def load_image_data_monoprocessor(image_files, image_array, image_width, image_h
                     crop_size = (int(rotation_window_width + 0.5), int(rotation_window_height + 0.5))
 
                     crop_coordinates = (rotation_crop_x0, rotation_crop_y0, rotation_crop_x1, rotation_crop_y1)
-                    # print crop_size
-                    #                print crop_coordinates
 
                     # TODO:Reconsider using always bicubic interpolation
                     # if rotation_window_width + rotation_window_height < (rotation_crop_x1 - rotation_crop_x0) +
@@ -723,13 +692,13 @@ def load_image_data_monoprocessor(image_files, image_array, image_width, image_h
                             im_contrasted = simple_normalization_GenderMultiply(im_contrasted)
                             im_contrasted = simple_normalization_GenderMultiply(im_contrasted)
                         else:
-                            print("Incorrect method (unknown constant enhancement)", contrast_enhance)
-                            quit()
+                            err = "Incorrect method (unknown constant enhancement): " + str(contrast_enhance)
+                            raise Exception(err)
                     elif (contrast_enhance is None) or str(contrast_enhance).startswith("array_mean_std"):
                         im_contrasted = im_rotated
                     else:
-                        print("Unknown contrast_enhance method!!!, ", contrast_enhance)
-                        quit()
+                        err = "Unknown contrast_enhance method: " + str(contrast_enhance)
+                        raise Exception(err)
                     # W interpolation_format / format_nearest
                     im_out = im_contrasted.transform(out_size, Image.EXTENT, subimage_coordinates,
                                                      interpolation_format_sampling)
@@ -931,9 +900,8 @@ def load_image_data(image_files, image_array, image_width, image_height, subimag
         print("image_loading: pixel_format=RGB")
         pixel_dimensions = 3
     else:
-        err = "Don't know the pixel_dimensions for image format: ", convert_format
+        err = "Don't know the pixel_dimensions for image format: " + str(convert_format)
         raise Exception(err)
-    # quit()
 
     image_width = vectorize(image_width, num_images)
     image_height = vectorize(image_height, num_images)
@@ -1560,15 +1528,15 @@ def generate_colored_noise(my_filter):
 def frequencies_1D(length):
     freq = numpy.zeros(length)
     # length2 = length / 2
-    freq[0:length / 2 + 1] = numpy.arange(1, length / 2 + 2) * 1.0 / length
-    freq[length / 2 + 1:length] = freq[(length + 1) / 2 - 1:0:-1]
+    freq[0:length // 2 + 1] = numpy.arange(1, length // 2 + 2) * 1.0 / length
+    freq[length // 2 + 1:length] = freq[(length + 1) // 2 - 1:0:-1]
     return freq
 
 
 def filter_colored_noise1D(length, alpha):
     freq = numpy.zeros(length)
-    freq[0:length / 2 + 1] = numpy.arange(1, length / 2 + 2)
-    freq[length / 2 + 1:length] = freq[(length + 1) / 2 - 1:0:-1]
+    freq[0:length // 2 + 1] = numpy.arange(1, length // 2 + 2)
+    freq[length // 2 + 1:length] = freq[(length + 1) // 2 - 1:0:-1]
     my_filter = 1.0 / (freq ** (alpha / 2.0))
     return my_filter
 
@@ -1698,7 +1666,7 @@ def load_raw_data(data_base_dir="/scratch/escalafl/cooperations/igel/patches_8x8
     if len(data) % input_dim != 0:
         er = "number of bytes in data is not multiple of 64"
         raise Exception(er)
-    numSamples = len(data) / input_dim
+    numSamples = len(data) // input_dim
     data = data.reshape(numSamples, input_dim)
     fd.close()
 
@@ -1708,8 +1676,6 @@ def load_raw_data(data_base_dir="/scratch/escalafl/cooperations/igel/patches_8x8
         data = data[select_samples]
     if verbose:
         print("Data, samples selected:", data)
-    #    print data
-    #    quit()
     return data
 
 
@@ -1776,8 +1742,8 @@ def rotate_improved(self, angle, resample=Image.NEAREST, expand=0, force_odd_out
                 out_width += 1
             if out_height & 1 == 0:
                 out_height += 1
-            print("aborted...")
-            quit()
+            err = "option 'force_odd_output_size' not yet supported"
+            raise Exception(err)
     else:
         out_width = im_width
         out_height = im_height

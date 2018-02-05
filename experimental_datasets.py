@@ -21,18 +21,19 @@
 from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
-import system_parameters
-from system_parameters import load_data_from_sSeq
 import numpy
-import sfa_libs
-import more_nodes
-import image_loader
-from nonlinear_expansion import signed_expo
-import PIL
-from PIL import Image
 import copy
 import os
 import string
+import PIL
+from PIL import Image
+
+from .import system_parameters
+from .system_parameters import load_data_from_sSeq
+from . import sfa_libs
+from . import more_nodes
+from . import image_loader
+from .nonlinear_expansion import signed_expo
 
 DAYS_IN_A_YEAR = 365.242
 
@@ -4744,7 +4745,7 @@ class ParamsMNISTExperiment(system_parameters.ParamsSystem):
 
     def load_MNIST_clusters(self, digits_used=[2, 8], image_set='training',
                             images_base_dir='/home/escalafl/Databases/MNIST'):
-        import mnist
+        from . import mnist
 
         images, labels = mnist.read(digits_used, image_set, images_base_dir)
         labels = labels.reshape((-1,))

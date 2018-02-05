@@ -17,10 +17,10 @@ from __future__ import division
 import numpy
 import scipy
 import scipy.optimize
+import sys
 
 import mdp
 from mdp.utils import (mult, pinv, CovarianceMatrix, SymeigException)  # , symeig
-import sys
 
 
 # This class is derived from SFANode only to use the function _set_range

@@ -10,21 +10,22 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
 import numpy
+import sys
+import time
+import inspect
+
 import mdp
 from mdp import numx
 from mdp.utils import (mult, pinv, symeig, CovarianceMatrix, SymeigException)
-# _assert_eigenvalues_real_and_positive
-import more_nodes
-from gsfa_node import CovDCovMatrix, ComputeCovDcovMatrixSerial, ComputeCovDcovMatrixClustered, ComputeCovMatrix
-import gsfa_node
-import igsfa_node
-import histogram_equalization
-from sfa_libs import select_rows_from_matrix
-import inversion
-import sys
-import time
-import object_cache as misc
-import inspect
+
+from . import more_nodes
+from .gsfa_node import CovDCovMatrix, ComputeCovDcovMatrixSerial, ComputeCovDcovMatrixClustered, ComputeCovMatrix
+from . import gsfa_node
+from . import igsfa_node
+from . import histogram_equalization
+from .sfa_libs import select_rows_from_matrix
+from . import inversion
+from . import object_cache as misc
 
 mdp.nodes.RandomizedMaskNode = more_nodes.RandomizedMaskNode
 mdp.nodes.GeneralExpansionNode = more_nodes.GeneralExpansionNode

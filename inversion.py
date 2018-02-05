@@ -14,10 +14,13 @@ from __future__ import division
 import numpy
 import scipy
 import scipy.optimize
+
 import mdp
+
 print("(inversion) __name__=", __name__)
 print("(inversion) __file__=", __file__)
 print("(inversion) __package__=", __package__)
+
 from . import more_nodes
 from . import sfa_libs
 
