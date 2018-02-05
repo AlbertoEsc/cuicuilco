@@ -18,10 +18,13 @@ import mdp
 from mdp.utils import (mult, pinv, symeig, CovarianceMatrix, SymeigException)
 import copy
 import sys
-from sfa_libs import select_rows_from_matrix, distance_squared_Euclidean
-from inversion import invert_exp_funcs2
+print("(more_nodes) __name__=", __name__)
+print("(more_nodes) __file__=", __file__)
+print("(more_nodes) __package__=", __package__)
+from .sfa_libs import select_rows_from_matrix, distance_squared_Euclidean
+from .inversion import invert_exp_funcs2
 import inspect
-from histogram_equalization import *
+from .histogram_equalization import *
 
 
 class BasicAdaptiveCutoffNode(mdp.PreserveDimNode):

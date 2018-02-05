@@ -15,8 +15,11 @@ import numpy
 import scipy
 import scipy.optimize
 import mdp
-import more_nodes
-import sfa_libs
+print("(inversion) __name__=", __name__)
+print("(inversion) __file__=", __file__)
+print("(inversion) __package__=", __package__)
+from . import more_nodes
+from . import sfa_libs
 
 
 def localized_inverse(self, x_local, y_to_invert, verbose=False):

@@ -37,10 +37,14 @@ import scipy.misc
 import sklearn.svm as slsvm
 # mpl.style.use('classic')
 
+print("(cuicuilco_run) __name__=", __name__)
+print("(cuicuilco_run) __file__=", __file__)
+print("(cuicuilco_run) __package__=", __package__)
+
 import PIL
 import mdp
-import more_nodes
-import patch_mdp
+from . import more_nodes
+from . import patch_mdp
 
 import object_cache as cache
 import os
@@ -238,7 +242,10 @@ if coherent_seeds:
     print ("experimental_datasets.experiment_seed=", experiment_seed)
     numpy.random.seed(experiment_seed + 111111)
 
-if __name__ == "__main__":  # ############## Parse command line arguments ####################
+print("(cuicuilco_run) __package__=", __package__)
+quit()
+
+if __name__ == "__main__":  # ############## Parse  command line arguments ####################
     if enable_command_line:
         argv = None
         if argv is None:
