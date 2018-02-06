@@ -17,10 +17,6 @@ import scipy.optimize
 
 import mdp
 
-print("(inversion) __name__=", __name__)
-print("(inversion) __file__=", __file__)
-print("(inversion) __package__=", __package__)
-
 from . import more_nodes
 from . import sfa_libs
 

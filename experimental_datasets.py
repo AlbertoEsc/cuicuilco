@@ -4607,6 +4607,11 @@ ParamsRAgeFunc_set1_96x96_mini = ParamsRAgeFunc = ParamsRAgeExperiment(experimen
                                                                        rep_Guo_supervised=1, training_set=1,
                                                                        pre_mirroring_supervised_test=False)
 ParamsRAgeFunc_set1_48x48 = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 48, use_setup_Guo=True, training_set=1, pre_mirroring_supervised_test=False)
+ParamsRAgeFunc_set1_48x48_mini = ParamsRAgeFunc = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 48,
+                                                                       use_setup_Guo=True, rep_Guo_train=1,
+                                                                       rep_Guo_supervised=1, training_set=1,
+                                                                       pre_mirroring_supervised_test=False)
+
 ParamsRAgeFunc_set1_24x24 = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 24, use_setup_Guo=True, training_set=1, pre_mirroring_supervised_test=False)
 ParamsRAgeFunc_mirror_set1_96x96 = ParamsRAgeFunc = ParamsRAgeExperiment(experiment_seed, experiment_basedir, 96,
                                                              use_setup_Guo=True, training_set=1, pre_mirroring_supervised_test=True)

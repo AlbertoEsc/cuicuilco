@@ -56,10 +56,6 @@ import socket
 
 import mdp
 
-print("(cuicuilco_run) __name__=", __name__)
-print("(cuicuilco_run) __file__=", __file__)
-print("(cuicuilco_run) __package__=", __package__)
-
 from . import more_nodes
 from . import patch_mdp
 from . import object_cache as cache

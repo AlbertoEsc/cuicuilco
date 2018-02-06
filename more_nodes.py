@@ -21,10 +21,6 @@ import inspect
 import mdp
 from mdp.utils import (mult, pinv, symeig, CovarianceMatrix, SymeigException)
 
-print("(more_nodes) __name__=", __name__)
-print("(more_nodes) __file__=", __file__)
-print("(more_nodes) __package__=", __package__)
-
 from . import sfa_libs
 from .sfa_libs import select_rows_from_matrix, distance_squared_Euclidean
 # from . import inversion
