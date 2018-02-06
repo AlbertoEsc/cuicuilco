@@ -38,11 +38,11 @@ Assuming the code was donwloaded into the cuicuilco directory, the framework can
 Several command line options are accepted as well as additional parameters specified by environment variables (see the file 'set_environment_variables'). For details regarding these options and parameters, the inclusion of new experimental databases, and the creation of new hierarchical networks, **please consult Appendix A of the dissertation mentioned in the references below, which is the most extensive documentation of this framework currently**.
 
 Elements of the code can be reused, particularly the new nodes:
-  > import cuicuilco
-  > from cuicuilco.gsfa_node import GSFANode
-  > from cuicuilco.igsfa_node import iGSFANode
-  > from cuicuilco.more_nodes import BasicAdaptiveCutoffNode
-
+```import cuicuilco
+from cuicuilco.gsfa_node import GSFANode
+from cuicuilco.igsfa_node import iGSFANode
+from cuicuilco.more_nodes import BasicAdaptiveCutoffNode
+```
 
 ## A single run of Cuicuilco
 In rough terms, each run of Cuicuilco (cuicuilco_run) executes the following steps:
