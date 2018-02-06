@@ -698,11 +698,11 @@ def display_node_eigenvalues(node, i, mode="All"):
     if isinstance(node, mdp.hinet.CloneLayer):
         if isinstance(node.nodes[0], mdp.nodes.SFANode):
             print ("Node %d is a CloneLayer that contains an SFANode with d=" % i, node.nodes[0].d)
-        elif isinstance(node.nodes[0], mdp.nodes.IEVMNode):
-            if node.nodes[0].use_sfa:
-                print ("Node %d is a CloneLayer that contains an IEVMNode containing an SFA node with" % i, end="")
-                print ("num_sfa_features_preserved=%d" % node.nodes[0].num_sfa_features_preserved, end="")
-                print ("and d=", node.nodes[0].sfa_node.d)
+        # elif isinstance(node.nodes[0], mdp.nodes.IEVMNode):
+        #     if node.nodes[0].use_sfa:
+        #         print ("Node %d is a CloneLayer that contains an IEVMNode containing an SFA node with" % i, end="")
+        #         print ("num_sfa_features_preserved=%d" % node.nodes[0].num_sfa_features_preserved, end="")
+        #         print ("and d=", node.nodes[0].sfa_node.d)
         elif isinstance(node.nodes[0], mdp.nodes.iGSFANode):
             print ("Node %d is a CloneLayer that contains an iGSFANode containing an SFA node with" % i, end="")
             print ("num_sfa_features_preserved=%d" % node.nodes[0].num_sfa_features_preserved, end="")
@@ -727,44 +727,44 @@ def display_node_eigenvalues(node, i, mode="All"):
             else:
                 er = 'Unknown mode in display_eigenvalues, try "FirstNodeInLayer", "Average" or "All"'
                 raise Exception(er)
-        elif isinstance(node.nodes[0], mdp.nodes.IEVMNode) and (node.nodes[0].use_sfa or node.nodes[0].out_sfa_filter):
-            use_sfa = node.nodes[0].use_sfa
-            out_sfa_filter = node.nodes[0].out_sfa_filter
-            if mode == "Average":
-                out = 0.0
-                num_sfa_features = 0.0
-                filter_out = 0.0
-                for n in node.nodes:
-                    if use_sfa:
-                        out += n.sfa_node.d
-                        num_sfa_features += n.num_sfa_features_preserved
-                    if out_sfa_filter:
-                        filter_out += n.out_sfa_node.d
-                print ("Node %d is a Layer that contains IEVMNodes containing SFANodes" % i,
-                       "with avg(num_sfa_features_preserved)=%f"%node.nodes[0].num_sfa_features_preserved,
-                       "and avg(d)=" % out / len(node.nodes))
-                if out_sfa_filter:
-                    print ("and output SFA filter with avg(out_sfa_node.d)=", filter_out / len(node.nodes))
-
-            elif mode == "All":
-                for n in node.nodes:
-                    print ("Node %d is a Layer that contains an IEVMNode" % i, end="")
-                    if use_sfa:
-                        print ("containing an SFANode with num_sfa_features_preserved=%f and d=" %
-                               n.num_sfa_features_preserved, n.sfa_node.d)
-                    if out_sfa_filter:
-                        print ("and output SFA filter with out_sfa_node.d=", n.out_sfa_node.d)
-
-            elif mode == "FirstNodeInLayer":
-                print ("Node %d is a Layer, and its first IEVMNode" % i)
-                if use_sfa:
-                    print ("contains an SFANode with num_sfa_features_preserved)=%f and d=" % node.nodes[
-                        0].num_sfa_features_preserved, node.nodes[0].sfa_node.d)
-                    if out_sfa_filter:
-                        print ("and Output SFA filter with out_sfa_node.d=", node.nodes[0].out_sfa_node.d)
-                else:
-                    er = 'Unknown mode in display_eigenvalues, try "FirstNodeInLayer", "Average" or "All"'
-                    raise Exception(er)
+        # elif isinstance(node.nodes[0], mdp.nodes.IEVMNode) and (node.nodes[0].use_sfa or node.nodes[0].out_sfa_filter):
+        #     use_sfa = node.nodes[0].use_sfa
+        #     out_sfa_filter = node.nodes[0].out_sfa_filter
+        #     if mode == "Average":
+        #         out = 0.0
+        #         num_sfa_features = 0.0
+        #         filter_out = 0.0
+        #         for n in node.nodes:
+        #             if use_sfa:
+        #                 out += n.sfa_node.d
+        #                 num_sfa_features += n.num_sfa_features_preserved
+        #             if out_sfa_filter:
+        #                 filter_out += n.out_sfa_node.d
+        #         print ("Node %d is a Layer that contains IEVMNodes containing SFANodes" % i,
+        #                "with avg(num_sfa_features_preserved)=%f"%node.nodes[0].num_sfa_features_preserved,
+        #                "and avg(d)=" % out / len(node.nodes))
+        #         if out_sfa_filter:
+        #             print ("and output SFA filter with avg(out_sfa_node.d)=", filter_out / len(node.nodes))
+        #
+        #     elif mode == "All":
+        #         for n in node.nodes:
+        #             print ("Node %d is a Layer that contains an IEVMNode" % i, end="")
+        #             if use_sfa:
+        #                 print ("containing an SFANode with num_sfa_features_preserved=%f and d=" %
+        #                        n.num_sfa_features_preserved, n.sfa_node.d)
+        #             if out_sfa_filter:
+        #                 print ("and output SFA filter with out_sfa_node.d=", n.out_sfa_node.d)
+        #
+        #     elif mode == "FirstNodeInLayer":
+        #         print ("Node %d is a Layer, and its first IEVMNode" % i)
+        #         if use_sfa:
+        #             print ("contains an SFANode with num_sfa_features_preserved)=%f and d=" % node.nodes[
+        #                 0].num_sfa_features_preserved, node.nodes[0].sfa_node.d)
+        #             if out_sfa_filter:
+        #                 print ("and Output SFA filter with out_sfa_node.d=", node.nodes[0].out_sfa_node.d)
+        #         else:
+        #             er = 'Unknown mode in display_eigenvalues, try "FirstNodeInLayer", "Average" or "All"'
+        #             raise Exception(er)
         elif isinstance(node.nodes[0], mdp.nodes.iGSFANode):
             if mode == "Average":
                 evar_avg = 0.0
@@ -834,11 +834,11 @@ def display_node_eigenvalues(node, i, mode="All"):
                 raise Exception(er)
     elif isinstance(node, mdp.nodes.SFANode):
         print ("Node %d is an SFANode with d=" % i, node.d)
-    elif isinstance(node, mdp.nodes.IEVMNode):
-        if node.use_sfa:
-            print ("Node %d is an IEVMNode containing an SFA node with num_sfa_features_preserved=%d" %
-                   (i, node.num_sfa_features_preserved), end="")
-            print ("and d=", node.sfa_node.d)
+    # elif isinstance(node, mdp.nodes.IEVMNode):
+    #     if node.use_sfa:
+    #         print ("Node %d is an IEVMNode containing an SFA node with num_sfa_features_preserved=%d" %
+    #                (i, node.num_sfa_features_preserved), end="")
+    #         print ("and d=", node.sfa_node.d)
     elif isinstance(node, mdp.nodes.iGSFANode):
         print ("Node %d is an iGSFANode containing an SFA node with num_sfa_features_preserved=%d" %
                (i, node.num_sfa_features_preserved), end="")
@@ -993,111 +993,111 @@ class HeadNode(mdp.Node):
         return numpy.concatenate((y, zz), axis=1)
 
 
-# This code is obsolete.
-class SFAPCANode(mdp.Node):
-    """Node that extracts slow features unless their delta value is too high. In such a case PCA features are extracted.
-    """
-
-    def __init__(self, input_dim=None, output_dim=None, max_delta=1.95, sfa_args={}, pca_args={}, **argv):
-        super(SFAPCANode, self).__init__(input_dim=input_dim, output_dim=output_dim, **argv)
-        self.sfa_node = mdp.nodes.SFANode(**sfa_args)
-        # max delta value allowed for a slow feature, otherwise a principal component is extracted
-        self.max_delta = max_delta
-        self.avg = None  # input average
-        self.W = None  # weights for complete transformation
-        self.pinv = None  # weights for pseudoinverse of complete transformation
-
-    def is_trainable(self):
-        return True
-
-    def _train(self, x, **argv):
-        self.sfa_node.train(x, **argv)
-
-    @staticmethod
-    def _is_invertible():
-        return True
-
-    def _execute(self, x):
-        W = self.W
-        avg = self.avg
-        return numpy.dot(x - avg, W)
-
-    def _stop_training(self, **argv):
-        # New GraphSFA node
-        if "_covdcovmtx" in dir(self.sfa_node):
-            # Warning, fix is computed twice. TODO: avoid double computation
-            C, self.avg, CD = self.sfa_node._covdcovmtx.fix()
-        else:
-            # Old fix destroys data... so we copy the matrices first.
-            cov_mtx = copy.deepcopy(self.sfa_node._cov_mtx)
-            dcov_mtx = copy.deepcopy(self.sfa_node._dcov_mtx)
-
-            C, self.avg, tlen = cov_mtx.fix()
-            DC, davg, dtlen = dcov_mtx.fix()
-
-        dim = C.shape[0]
-        type_ = C.dtype
-        self.sfa_node.stop_training()
-        d = self.sfa_node.d
-        sfa_output_dim = len(d[d <= self.max_delta])
-        sfa_output_dim = min(sfa_output_dim, self.output_dim)
-        print ("sfa_output_dim=", sfa_output_dim)
-
-        Wsfa = self.sfa_node.sf[:, 0:sfa_output_dim]
-        print ("Wsfa.shape=", Wsfa.shape)
-        if Wsfa.shape[1] == 0:  # No slow components will be used
-            print ("No Psfa created")
-            PS = numpy.zeros((dim, dim), dtype=type_)
-        else:
-            Psfa = pinv(Wsfa)
-            print ("Psfa.shape=", Psfa.shape)
-            PS = numpy.dot(Wsfa, Psfa)
-
-        print ("PS.shape=", PS.shape)
-        Cproy = numpy.dot(PS, numpy.dot(C, PS.T))
-        Cpca = C - Cproy
-
-        if self.output_dim is None:
-            self.output_dim = dim
-
-        pca_output_dim = self.output_dim - sfa_output_dim
-        print ("PCA output_dim=", pca_output_dim)
-        if pca_output_dim > 0:
-            pca_node = mdp.nodes.PCANode(output_dim=pca_output_dim)  # WARNING: WhiteningNode should be used here
-            pca_node._cov_mtx._dtype = type_
-            pca_node._cov_mtx._input_dim = dim
-            pca_node._cov_mtx._avg = numpy.zeros(dim, type_)
-            pca_node._cov_mtx.bias = True
-            pca_node._cov_mtx._tlen = 1  # WARNING!!! 1
-            pca_node._cov_mtx._cov_mtx = Cpca
-            pca_node._input_dim = dim
-            pca_node._train_phase_started = True
-            pca_node.stop_training()
-            print ("pca_node.d=", pca_node.d)
-            print ("1000000 * pca_node.d[0]=", 1000000 * pca_node.d[0])
-
-            Wpca = pca_node.v
-            Ppca = pca_node.v.T
-        else:
-            Wpca = numpy.array([]).reshape((dim, 0))
-            Ppca = numpy.array([]).reshape((0, dim))
-
-        print ("Wpca.shape=", Wpca.shape)
-        print ("Ppca.shape=", Ppca.shape)
-
-        self.W = numpy.concatenate((Wsfa, Wpca), axis=1)
-        self.pinv = None  # WARNING, why this does not work correctly: numpy.concatenate((Psfa, Ppca),axis=0) ?????
-        #        print "Pinv 1=", self.pinv
-        #        print "Pinv 2-Pinv1=", pinv(self.W)-self.pinv
-        print ("W.shape=", self.W.shape)
-        #        print "pinv.shape=", self.pinv.shape
-        print ("avg.shape=", self.avg.shape)
-
-    def _inverse(self, y):
-        if self.pinv is None:
-            print ("Computing PINV", end="")
-            self.pinv = pinv(self.W)
-        return numpy.dot(y, self.pinv) + self.avg
+# # This code is obsolete.
+# class SFAPCANode(mdp.Node):
+#     """Node that extracts slow features unless their delta value is too high. In such a case PCA features are extracted.
+#     """
+#
+#     def __init__(self, input_dim=None, output_dim=None, max_delta=1.95, sfa_args={}, pca_args={}, **argv):
+#         super(SFAPCANode, self).__init__(input_dim=input_dim, output_dim=output_dim, **argv)
+#         self.sfa_node = mdp.nodes.SFANode(**sfa_args)
+#         # max delta value allowed for a slow feature, otherwise a principal component is extracted
+#         self.max_delta = max_delta
+#         self.avg = None  # input average
+#         self.W = None  # weights for complete transformation
+#         self.pinv = None  # weights for pseudoinverse of complete transformation
+#
+#     def is_trainable(self):
+#         return True
+#
+#     def _train(self, x, **argv):
+#         self.sfa_node.train(x, **argv)
+#
+#     @staticmethod
+#     def _is_invertible():
+#         return True
+#
+#     def _execute(self, x):
+#         W = self.W
+#         avg = self.avg
+#         return numpy.dot(x - avg, W)
+#
+#     def _stop_training(self, **argv):
+#         # New GraphSFA node
+#         if "_covdcovmtx" in dir(self.sfa_node):
+#             # Warning, fix is computed twice. TODO: avoid double computation
+#             C, self.avg, CD = self.sfa_node._covdcovmtx.fix()
+#         else:
+#             # Old fix destroys data... so we copy the matrices first.
+#             cov_mtx = copy.deepcopy(self.sfa_node._cov_mtx)
+#             dcov_mtx = copy.deepcopy(self.sfa_node._dcov_mtx)
+#
+#             C, self.avg, tlen = cov_mtx.fix()
+#             DC, davg, dtlen = dcov_mtx.fix()
+#
+#         dim = C.shape[0]
+#         type_ = C.dtype
+#         self.sfa_node.stop_training()
+#         d = self.sfa_node.d
+#         sfa_output_dim = len(d[d <= self.max_delta])
+#         sfa_output_dim = min(sfa_output_dim, self.output_dim)
+#         print ("sfa_output_dim=", sfa_output_dim)
+#
+#         Wsfa = self.sfa_node.sf[:, 0:sfa_output_dim]
+#         print ("Wsfa.shape=", Wsfa.shape)
+#         if Wsfa.shape[1] == 0:  # No slow components will be used
+#             print ("No Psfa created")
+#             PS = numpy.zeros((dim, dim), dtype=type_)
+#         else:
+#             Psfa = pinv(Wsfa)
+#             print ("Psfa.shape=", Psfa.shape)
+#             PS = numpy.dot(Wsfa, Psfa)
+#
+#         print ("PS.shape=", PS.shape)
+#         Cproy = numpy.dot(PS, numpy.dot(C, PS.T))
+#         Cpca = C - Cproy
+#
+#         if self.output_dim is None:
+#             self.output_dim = dim
+#
+#         pca_output_dim = self.output_dim - sfa_output_dim
+#         print ("PCA output_dim=", pca_output_dim)
+#         if pca_output_dim > 0:
+#             pca_node = mdp.nodes.PCANode(output_dim=pca_output_dim)  # WARNING: WhiteningNode should be used here
+#             pca_node._cov_mtx._dtype = type_
+#             pca_node._cov_mtx._input_dim = dim
+#             pca_node._cov_mtx._avg = numpy.zeros(dim, type_)
+#             pca_node._cov_mtx.bias = True
+#             pca_node._cov_mtx._tlen = 1  # WARNING!!! 1
+#             pca_node._cov_mtx._cov_mtx = Cpca
+#             pca_node._input_dim = dim
+#             pca_node._train_phase_started = True
+#             pca_node.stop_training()
+#             print ("pca_node.d=", pca_node.d)
+#             print ("1000000 * pca_node.d[0]=", 1000000 * pca_node.d[0])
+#
+#             Wpca = pca_node.v
+#             Ppca = pca_node.v.T
+#         else:
+#             Wpca = numpy.array([]).reshape((dim, 0))
+#             Ppca = numpy.array([]).reshape((0, dim))
+#
+#         print ("Wpca.shape=", Wpca.shape)
+#         print ("Ppca.shape=", Ppca.shape)
+#
+#         self.W = numpy.concatenate((Wsfa, Wpca), axis=1)
+#         self.pinv = None  # WARNING, why this does not work correctly: numpy.concatenate((Psfa, Ppca),axis=0) ?????
+#         #        print "Pinv 1=", self.pinv
+#         #        print "Pinv 2-Pinv1=", pinv(self.W)-self.pinv
+#         print ("W.shape=", self.W.shape)
+#         #        print "pinv.shape=", self.pinv.shape
+#         print ("avg.shape=", self.avg.shape)
+#
+#     def _inverse(self, y):
+#         if self.pinv is None:
+#             print ("Computing PINV", end="")
+#             self.pinv = pinv(self.W)
+#         return numpy.dot(y, self.pinv) + self.avg
 
 
 # Computes the variance of some MDP data array

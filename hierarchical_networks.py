@@ -3209,12 +3209,12 @@ for layer in [network.L6, network.L7, network.L8, network.L9, network.L10]:
     # final_expanded_dim = 20, initial_expansion_size = 15, expansion_size_decrement = 5,
     # expansion_size_increment = 10, number_iterations=3)
 
-HardSFAPCA_u08expoNetworkU11L = copy.deepcopy(u08expoNetworkU11L)
-HardSFAPCA_u08expoNetworkU11L.L0.pca_node_class = mdp.nodes.SFAPCANode
-NetworkSetSFANodeClass(mdp.nodes.SFAPCANode, HardSFAPCA_u08expoNetworkU11L)
+# HardSFAPCA_u08expoNetworkU11L = copy.deepcopy(u08expoNetworkU11L)
+# HardSFAPCA_u08expoNetworkU11L.L0.pca_node_class = mdp.nodes.SFAPCANode
+# NetworkSetSFANodeClass(mdp.nodes.SFAPCANode, HardSFAPCA_u08expoNetworkU11L)
 
-GTSRB_Network2 = copy.deepcopy(HardSFAPCA_u08expoNetworkU11L)
-GTSRB_Network2.pca_output_dim = 43
+# GTSRB_Network2 = copy.deepcopy(HardSFAPCA_u08expoNetworkU11L)
+# GTSRB_Network2.pca_output_dim = 43
 
 # identity, unsigned_08expo, pair_prod_ex
 HeuristicEvaluationExpansionsNetworkU11L = copy.deepcopy(u08expoNetworkU11L)
