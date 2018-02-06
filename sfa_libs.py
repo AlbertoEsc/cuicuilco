@@ -12,9 +12,6 @@ from __future__ import print_function
 from __future__ import division
 import numpy
 
-print("(sfa_libs) __name__=", __name__)
-print("(sfa_libs) __file__=", __file__)
-print("(sfa_libs) __package__=", __package__)
 
 def scale_to(val, av_in=0.0, delta_in=2.0, av_out=127.5, delta_out=255.0, scale=1.0, transf='lin'):
     """Applies a linear scaling to the elements of an ndarray (trans=='lin') or a non-linear scaling (trans=='tanh').
