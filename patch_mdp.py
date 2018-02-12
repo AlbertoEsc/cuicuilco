@@ -16,10 +16,10 @@ import inspect
 
 import mdp
 from mdp import numx
-from mdp.utils import (mult, pinv, symeig, CovarianceMatrix, SymeigException)
+from mdp.utils import (mult, pinv)  # , symeig, CovarianceMatrix, SymeigException)
 
 from . import more_nodes
-from .gsfa_node import CovDCovMatrix, ComputeCovDcovMatrixSerial, ComputeCovDcovMatrixClustered, ComputeCovMatrix
+from .gsfa_node import ComputeCovMatrix
 from . import gsfa_node
 from . import igsfa_node
 from . import histogram_equalization

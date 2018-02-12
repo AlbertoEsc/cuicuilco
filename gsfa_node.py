@@ -489,6 +489,7 @@ class GSFANode(mdp.nodes.SFANode):
         self._bias = mult(self.avg, self.sf)
         print("shape of GSFANode.sf is=", self.sf.shape)
 
+
 ##############################################################################################################
 #                              HELPER FUNCTIONS                                                              #
 ##############################################################################################################
@@ -1414,102 +1415,46 @@ def ComputeCovDcovMatrixMixed(params, verbose=False):
 
 
 #########################################################################################################
-#                                  TESTS                                                                #
+#                      AN EXAMPLE:                                                                      #
 #########################################################################################################
 
 
-def basic_test_GSFA_edge_dict():
-    print("******************************************************************")
-    print("*Basic test of GSFA on random data and graph, edge dictionary mode")
-    x = numpy.random.normal(size=(200, 15))
-    v = numpy.ones(200)
-    e = {}
-    for i in range(1500):
-        n1 = numpy.random.randint(200)
-        n2 = numpy.random.randint(200)
-        e[(n1, n2)] = numpy.random.normal() + 1.0
-    n = GSFANode(output_dim=5)
-    n.train(x, train_mode="graph", node_weights=v, edge_weights=e)
-    n.stop_training()
+def example_clustered_graph():
+    cluster_size = 20
+    num_clusters = 5
+    num_samples = cluster_size * num_clusters
+    dim = 20
+    output_dim = 2
+    x = numpy.random.normal(size=(num_samples, dim))
+    x += 0.1 * numpy.arange(num_samples).reshape((num_samples, 1))
 
-    y = n.execute(x)
-    print("Graph delta values of training data", graph_delta_values(y, e))
+    print("x=", x)
 
-    x2 = numpy.random.normal(size=(200, 15))
-    y2 = n.execute(x2)
-    print("Graph delta values of test data (should be larger than for training)", graph_delta_values(y2, e))
+    GSFA_n = GSFANode(output_dim=output_dim)
 
-# SUMMARY:
-# Mirroring windows work fine in slow and fast versions
-# Truncating window does not work in optimized version, I need to clarify the algebraic optimization
-# Plain Sliding window (node-weight adjusting) seems to be broken in optimized version.
-# Is it worth it to have so many methods? I guess the mirroring windows are enough, they have constant node weights
-# and edge weights almost fulfill consistency
+    def identity(xx):
+        return xx
 
+    def norm2(xx):  # Computes the norm of each sample returning an Nx1 array
+        return ((xx ** 2).sum(axis=1) ** 0.5).reshape((-1, 1))
 
-def test_equivalence_SFA_GSFA_linear_graph():
-    print("")
-    print("*********************************************************************")
-    print("Testing equivalence of Standard SFA and an appropriate graph for GSFA")
-    x = numpy.random.normal(size=(200, 15))
-    x2 = numpy.random.normal(size=(200, 15))
+    Exp_n = mdp.nodes.GeneralExpansionNode([identity, norm2])
 
-    v = numpy.ones(200)
-    e = {}
-    for t in range(199):
-        e[(t, t + 1)] = 1.0
-    e[(0, 0)] = 0.5
-    e[(199, 199)] = 0.5
-    print("Training GSFA:")
-    n = GSFANode(output_dim=5)
-    n.train(x, train_mode="graph", node_weights=v, edge_weights=e)
-    n.stop_training()
+    exp_x = Exp_n.execute(x)  # Expanded data
+    GSFA_n.train(exp_x, train_mode="clustered", block_size=cluster_size)
+    GSFA_n.stop_training()
 
-    print("Training SFA:")
-    n_sfa = mdp.nodes.SFANode(output_dim=5)
-    n_sfa.train(x)
-    n_sfa.stop_training()
+    print("GSFA_n.d=", GSFA_n.d)
 
-    print("/" * 10, "Brute delta values of GSFA features (training/test):")
-    y = n.execute(x)
-    print(graph_delta_values(y, e))
+    y = GSFA_n.execute(Exp_n.execute(x))
+    print("y", y)
+    print("Standard delta values of output features y:", comp_delta(y))
 
-    y2 = n.execute(x2)
-    print(graph_delta_values(y2, e))
-
-    print("-" * 10, "Brute delta values of SFA features (training/test):")
-
-    y_sfa = n_sfa.execute(x)
-    print(comp_delta(y_sfa))
-
-    y2_sfa = n_sfa.execute(x2)
-    print(comp_delta(y2_sfa))
-
-
-def test_fast_windows():
-    print("")
-    print("***********************************************************************")
-    print("Testing equivalence of slow and fast mirroring sliding windows for GSFA")
-    x = numpy.random.normal(size=(200, 15))
-
-    training_modes = ("window3", "fwindow3", "smirror_window3", "mirror_window3")
-    # Other training modes: "truncate_window3", "ftruncate_window3")
-    #    training_modes = ("truncate_window3", "ftruncate_window3",)
-    #    training_modes = ("smirror_window32", "mirror_window32") #Test passed
-
-    delta_values = []
-    for training_mode in training_modes:
-        n = GSFANode(output_dim=5)
-        n.train(x, train_mode=training_mode)
-        n.stop_training()
-
-        y = n.execute(x)
-        delta = comp_delta(y)
-        print("**Brute Delta Values of mode %s are: " % training_mode, delta)
-        delta_values.append(delta)
-
-    print(delta_values)
-    # quit()
+    x_test = numpy.random.normal(size=(num_samples, dim))
+    x_test += 0.1 * numpy.arange(num_samples).reshape((num_samples, 1))
+    y_test = GSFA_n.execute(Exp_n.execute(x_test))
+    print("y_test", y_test)
+    print("Standard delta values of output features y_test:", comp_delta(y_test))
 
 
 def test_pathological_outputs(experiment):
@@ -1645,102 +1590,8 @@ def test_pathological_outputs(experiment):
     plt.show()
 
 
-def test_continuous_edge_weights():
-    print("")
-    print("**************************************************************************")
-    print("*Testing continuous edge weigths w_{n,n'} = 1/(|l_n'-l_n|+k)")
-    x = numpy.random.normal(size=(20, 19))
-    x2 = numpy.random.normal(size=(20, 19))
-
-    l = numpy.random.normal(size=20)
-    l -= l.mean()
-    l /= l.std()
-    l.sort()
-    k = 0.0001
-
-    v = numpy.ones(20)
-    e = {}
-    for n1 in range(20):
-        for n2 in range(20):
-            if n1 != n2:
-                e[(n1, n2)] = 1.0 / (numpy.abs(l[n2] - l[n1]) + k)
-
-    exp_title = "Original linear SFA graph"
-    n = GSFANode(output_dim=5)
-    n.train(x, train_mode="graph", node_weights=v, edge_weights=e)
-    n.stop_training()
-
-    print("/" * 20, "Brute delta values of GSFA features (training/test):")
-    y = n.execute(x)
-    y2 = n.execute(x2)
-    if e != {}:
-        print(graph_delta_values(y, e))
-        print(graph_delta_values(y2, e))
-
-    D = numpy.zeros(20)
-    for (j1, j2) in e:
-        D[j1] += e[(j1, j2)] / 2.0
-        D[j2] += e[(j1, j2)] / 2.0
-
-    import matplotlib as mpl
-    import matplotlib.pyplot as plt
-
-    plt.figure()
-    plt.title("Overfitted outputs on training data,v=" + str(v))
-    plt.xlabel(exp_title + "\n With D=" + str(D))
-    plt.xticks(numpy.arange(0, 20, 1))
-    plt.plot(y)
-    plt.plot(l, "*")
-    plt.show()
-
-#########################################################################################################
-#                      AN EXAMPLE:                                                                      #
-#########################################################################################################
-
-
-def example_clustered_graph():
-    cluster_size = 20
-    num_clusters = 5
-    num_samples = cluster_size * num_clusters
-    dim = 20
-    output_dim = 2
-    x = numpy.random.normal(size=(num_samples, dim))
-    x += 0.1 * numpy.arange(num_samples).reshape((num_samples, 1))
-
-    print("x=", x)
-
-    GSFA_n = GSFANode(output_dim=output_dim)
-
-    def identity(xx):
-        return xx
-
-    def norm2(xx):  # Computes the norm of each sample returning an Nx1 array
-        return ((xx ** 2).sum(axis=1) ** 0.5).reshape((-1, 1))
-
-    Exp_n = mdp.nodes.GeneralExpansionNode([identity, norm2])
-
-    exp_x = Exp_n.execute(x)  # Expanded data
-    GSFA_n.train(exp_x, train_mode="clustered", block_size=cluster_size)
-    GSFA_n.stop_training()
-
-    print("GSFA_n.d=", GSFA_n.d)
-
-    y = GSFA_n.execute(Exp_n.execute(x))
-    print("y", y)
-    print("Standard delta values of output features y:", comp_delta(y))
-
-    x_test = numpy.random.normal(size=(num_samples, dim))
-    x_test += 0.1 * numpy.arange(num_samples).reshape((num_samples, 1))
-    y_test = GSFA_n.execute(Exp_n.execute(x_test))
-    print("y_test", y_test)
-    print("Standard delta values of output features y_test:", comp_delta(y_test))
-
 
 if __name__ == "__main__":
-    basic_test_GSFA_edge_dict()
-    test_equivalence_SFA_GSFA_linear_graph()
-    test_fast_windows()
     for experiment_number in range(0, 12):
         test_pathological_outputs(experiment=experiment_number)
-    test_continuous_edge_weights()
     example_clustered_graph()
