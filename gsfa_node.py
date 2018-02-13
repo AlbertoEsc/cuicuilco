@@ -1420,6 +1420,9 @@ def ComputeCovDcovMatrixMixed(params, verbose=False):
 
 
 def example_clustered_graph():
+    print("")
+    print("**************************************************************************")
+    print("*Example of training GSFA using a clustered graph")
     cluster_size = 20
     num_clusters = 5
     num_samples = cluster_size * num_clusters
@@ -1457,7 +1460,7 @@ def example_clustered_graph():
     print("Standard delta values of output features y_test:", comp_delta(y_test))
 
 
-def test_pathological_outputs(experiment):
+def example_pathological_outputs(experiment):
     print("")
     print("**************************************************************************")
     print("*Pathological responses. Experiment on graph with weakly connected samples")
@@ -1576,11 +1579,12 @@ def test_pathological_outputs(experiment):
         D[j2] += e[(j1, j2)] / 2.0
 
     import matplotlib as mpl
+    mpl.use('Qt4Agg')
     import matplotlib.pyplot as plt
 
     plt.figure()
-    plt.title("Overfitted outputs on training data,v=" + str(v))
-    plt.xlabel(exp_title + "\n With D=" + str(D))
+    plt.title("Overfitted outputs on training data, v (node weights)=" + str(v))
+    plt.xlabel(exp_title + "\n With D (half the sum of all edges from/to each vertex)=" + str(D))
     plt.xticks(numpy.arange(0, 20, 1))
     plt.plot(y)
     if experiment in (6, 7, 8):
@@ -1590,8 +1594,58 @@ def test_pathological_outputs(experiment):
     plt.show()
 
 
+def example_continuous_edge_weights():
+    print("")
+    print("**************************************************************************")
+    print("*Testing continuous edge weigths w_{n,n'} = 1/(|l_n'-l_n|+k)")
+    x = numpy.random.normal(size=(20, 19))
+    x2 = numpy.random.normal(size=(20, 19))
+
+    l = numpy.random.normal(size=20)
+    l -= l.mean()
+    l /= l.std()
+    l.sort()
+    k = 0.0001
+
+    v = numpy.ones(20)
+    e = {}
+    for n1 in range(20):
+        for n2 in range(20):
+            if n1 != n2:
+                e[(n1, n2)] = 1.0 / (numpy.abs(l[n2] - l[n1]) + k)
+
+    exp_title = "Original linear SFA graph"
+    n = GSFANode(output_dim=5)
+    n.train(x, train_mode="graph", node_weights=v, edge_weights=e)
+    n.stop_training()
+
+    print("/" * 20, "Brute delta values of GSFA features (training/test):")
+    y = n.execute(x)
+    y2 = n.execute(x2)
+    if e != {}:
+        print(graph_delta_values(y, e))
+        print(graph_delta_values(y2, e))
+
+    D = numpy.zeros(20)
+    for (j1, j2) in e:
+        D[j1] += e[(j1, j2)] / 2.0
+        D[j2] += e[(j1, j2)] / 2.0
+
+    import matplotlib as mpl
+    mpl.use('Qt4Agg')
+    import matplotlib.pyplot as plt
+
+    plt.figure()
+    plt.title("Overfitted outputs on training data,v=" + str(v))
+    plt.xlabel(exp_title + "\n With D=" + str(D))
+    plt.xticks(numpy.arange(0, 20, 1))
+    plt.plot(y)
+    plt.plot(l, "*")
+    plt.show()
+
 
 if __name__ == "__main__":
     for experiment_number in range(0, 12):
-        test_pathological_outputs(experiment=experiment_number)
+        example_pathological_outputs(experiment=experiment_number)
+    example_continuous_edge_weights()
     example_clustered_graph()

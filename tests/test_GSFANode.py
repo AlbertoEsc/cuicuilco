@@ -16,7 +16,7 @@ import mdp
 from cuicuilco.gsfa_node import GSFANode, graph_delta_values, comp_delta
 
 
-def atest_GSFA_zero_mean_unit_variance_graph():
+def test_GSFA_zero_mean_unit_variance_graph():
     """ Test of GSFA for zero-mean unit variance constraints on random data and graph, edge dictionary mode
     """
     x = numpy.random.normal(size=(200, 15))
@@ -35,7 +35,7 @@ def atest_GSFA_zero_mean_unit_variance_graph():
     assert ((y**2).mean(axis=0) == pytest.approx(1.0)).all()
 
 
-def atest_basic_GSFA_edge_dict():
+def test_basic_GSFA_edge_dict():
     """ Basic test of GSFA on random data and graph, edge dictionary mode
     """
     x = numpy.random.normal(size=(200, 15))
@@ -65,14 +65,6 @@ def atest_basic_GSFA_edge_dict():
     # print("Graph delta values of test data (should be larger than for training)", graph_delta_values(y2, e))
 
 
-# SUMMARY:
-# Mirroring windows work fine in slow and fast versions
-# Truncating window does not work in optimized version, I need to clarify the algebraic optimization
-# Plain Sliding window (node-weight adjusting) seems to be broken in optimized version.
-# Is it worth it to have so many methods? I guess the mirroring windows are enough, they have constant node weights
-# and edge weights almost fulfill consistency
-
-
 def test_equivalence_SFA_GSFA_linear_graph():
     """ Tests the equivalence of Standard SFA and GSFA when trained using an appropriate linear graph (graph mode)
     """
@@ -80,11 +72,14 @@ def test_equivalence_SFA_GSFA_linear_graph():
     x2 = numpy.random.normal(size=(200, 15))
 
     v = numpy.ones(200)
+    # PENDING: Add an additional node without any edge to compensate no bias of SFA
+    # v[200] = -1.0
     e = {}
     for t in range(199):
         e[(t, t + 1)] = 1.0
     e[(0, 0)] = 0.5
     e[(199, 199)] = 0.5
+
     print("Training GSFA:")
     n = GSFANode(output_dim=5)
     n.train(x, train_mode="graph", node_weights=v, edge_weights=e)
@@ -116,16 +111,13 @@ def test_equivalence_SFA_GSFA_linear_graph():
     assert ((y2_sfa - y2) == pytest.approx(0.0)).all()
 
 
-def atest_fast_windows():
-    print("")
-    print("***********************************************************************")
-    print("Testing equivalence of slow and fast mirroring sliding windows for GSFA")
+# FUTURE: Is it worth it to have so many methods? I guess the mirroring windows are enough, they have constant
+# node weights and the edge weights almost fulfill consistency
+def test_equivalence_window3_fwindow3():
+    """Tests the equivalence of slow and fast mirroring sliding windows for GSFA
+    """
     x = numpy.random.normal(size=(200, 15))
-
-    training_modes = ("window3", "fwindow3", "smirror_window3", "mirror_window3")
-    # Other training modes: "truncate_window3", "ftruncate_window3")
-    #    training_modes = ("truncate_window3", "ftruncate_window3",)
-    #    training_modes = ("smirror_window32", "mirror_window32") #Test passed
+    training_modes = ("window3", "fwindow3")
 
     delta_values = []
     for training_mode in training_modes:
@@ -135,66 +127,50 @@ def atest_fast_windows():
 
         y = n.execute(x)
         delta = comp_delta(y)
-        print("**Brute Delta Values of mode %s are: " % training_mode, delta)
+        # print("**Brute Delta Values of mode %s are: " % training_mode, delta)
         delta_values.append(delta)
 
-    print(delta_values)
-    # quit()
+    # print(delta_values)
+    assert ((delta_values[1] - delta_values[0]) == pytest.approx(0.0)).all()
 
 
-def atest_continuous_edge_weights():
-    print("")
-    print("**************************************************************************")
-    print("*Testing continuous edge weigths w_{n,n'} = 1/(|l_n'-l_n|+k)")
-    x = numpy.random.normal(size=(20, 19))
-    x2 = numpy.random.normal(size=(20, 19))
+def test_equivalence_smirror_window3_mirror_window3():
+    """Tests the equivalence of slow and fast mirroring sliding windows for GSFA
+    """
+    x = numpy.random.normal(size=(200, 15))
+    training_modes = ("smirror_window3", "mirror_window3")
 
-    l = numpy.random.normal(size=20)
-    l -= l.mean()
-    l /= l.std()
-    l.sort()
-    k = 0.0001
+    delta_values = []
+    for training_mode in training_modes:
+        n = GSFANode(output_dim=5)
+        n.train(x, train_mode=training_mode)
+        n.stop_training()
 
-    v = numpy.ones(20)
-    e = {}
-    for n1 in range(20):
-        for n2 in range(20):
-            if n1 != n2:
-                e[(n1, n2)] = 1.0 / (numpy.abs(l[n2] - l[n1]) + k)
+        y = n.execute(x)
+        delta = comp_delta(y)
+        # print("**Brute Delta Values of mode %s are: " % training_mode, delta)
+        delta_values.append(delta)
 
-    exp_title = "Original linear SFA graph"
-    n = GSFANode(output_dim=5)
-    n.train(x, train_mode="graph", node_weights=v, edge_weights=e)
-    n.stop_training()
-
-    print("/" * 20, "Brute delta values of GSFA features (training/test):")
-    y = n.execute(x)
-    y2 = n.execute(x2)
-    if e != {}:
-        print(graph_delta_values(y, e))
-        print(graph_delta_values(y2, e))
-
-    D = numpy.zeros(20)
-    for (j1, j2) in e:
-        D[j1] += e[(j1, j2)] / 2.0
-        D[j2] += e[(j1, j2)] / 2.0
-
-    import matplotlib as mpl
-    mpl.use('Qt4Agg')
-    import matplotlib.pyplot as plt
-
-    plt.figure()
-    plt.title("Overfitted outputs on training data,v=" + str(v))
-    plt.xlabel(exp_title + "\n With D=" + str(D))
-    plt.xticks(numpy.arange(0, 20, 1))
-    plt.plot(y)
-    plt.plot(l, "*")
-    plt.show()
+    # print(delta_values)
+    assert ((delta_values[1] - delta_values[0]) == pytest.approx(0.0)).all()
 
 
-    #basic_test_GSFA_edge_dict()
-    #test_equivalence_SFA_GSFA_linear_graph()
-    #test_fast_windows()
-    #for experiment_number in range(0, 12):
-    #    test_pathological_outputs(experiment=experiment_number)
-    #test_continuous_edge_weights()
+def test_equivalence_smirror_window32_mirror_window32():
+    """Tests the equivalence of slow and fast mirroring sliding windows for GSFA
+    """
+    x = numpy.random.normal(size=(200, 15))
+    training_modes = ("smirror_window32", "mirror_window32")
+
+    delta_values = []
+    for training_mode in training_modes:
+        n = GSFANode(output_dim=5)
+        n.train(x, train_mode=training_mode)
+        n.stop_training()
+
+        y = n.execute(x)
+        delta = comp_delta(y)
+        # print("**Brute Delta Values of mode %s are: " % training_mode, delta)
+        delta_values.append(delta)
+
+    # print(delta_values)
+    assert ((delta_values[1] - delta_values[0]) == pytest.approx(0.0)).all()

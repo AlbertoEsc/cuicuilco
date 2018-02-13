@@ -5,7 +5,7 @@
 # Escalante-B., A.-N. and Wiskott, L., "Improved graph-based {SFA}: Information preservation complements the        #
 # slowness principle", e-print arXiv:1601.03945, http://arxiv.org/abs/1601.03945, 2017                              #
 #                                                                                                                   #
-# By Alberto Escalante. Alberto.Escalante@neuroinformatik.ruhr-uni-bochum.de                                        #
+# By Alberto Escalante. Alberto.Escalante@ini.ruhr-uni-bochum.de                                        #
 # Ruhr-University-Bochum, Institute for Neural Computation, Group of Prof. Dr. Wiskott                              #
 #####################################################################################################################
 
@@ -105,6 +105,7 @@ class iGSFANode(mdp.Node):
     def is_trainable():
         return True
 
+    # TODO: should train_mode be renamed training_mode?
     def _train(self, x, block_size=None, train_mode=None, node_weights=None, edge_weights=None, **argv):
         """Trains an iGSFA node on data 'x'
 
@@ -160,6 +161,7 @@ class iGSFANode(mdp.Node):
 
         # Apply SFA to expanded data
         self.sfa_node = GSFANode(output_dim=sfa_output_dim)
+        #TODO: train_params is only present if patch_mdp has been imported, is this a bug?
         self.sfa_node.train_params(exp_x, params={"block_size": block_size, "train_mode": train_mode,
                                                   "node_weights": node_weights,
                                                   "edge_weights": edge_weights})
