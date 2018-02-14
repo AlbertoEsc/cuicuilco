@@ -14,6 +14,7 @@ from __future__ import division
 import numpy
 import scipy
 import scipy.optimize
+from scipy.stats import ortho_group
 import copy
 import sys
 import inspect
@@ -33,14 +34,22 @@ class BasicAdaptiveCutoffNode(mdp.PreserveDimNode):
     This node is similar to CutoffNode, but the bounds are computed based on the training data. And it is
     also similar to AdaptiveCutoffNode, but no histograms are stored and the limits are hard.
 
-    This node does not have any have no effect on training data, only on test data and might improve generalization.
+    This node does not have any have no effect on training data but it corrects atypical variances in test data
+    and may improve generalization.
     """
 
-    def __init__(self, input_dim=None, output_dim=None, dtype=None):
+    def __init__(self, input_dim=None, output_dim=None, num_rotations=0, measure_corrections=False,
+                 only_measure=False, verbose=False, dtype=None):
         """Initialize node. """
         super(BasicAdaptiveCutoffNode, self).__init__(input_dim=input_dim, output_dim=output_dim, dtype=dtype)
-        self.lower_bound = None
-        self.upper_bound = None
+        self.lower_bounds = None
+        self.upper_bounds = None
+        self.rotations = None
+        self.num_rotations = num_rotations
+        self.measure_corrections = measure_corrections
+        self.corrections = None
+        self.only_measure = only_measure
+        self.verbose = verbose
 
     @staticmethod
     def is_trainable():
@@ -56,24 +65,62 @@ class BasicAdaptiveCutoffNode(mdp.PreserveDimNode):
                 mdp.utils.get_dtypes('AllInteger'))
 
     def _train(self, x):
-        """Training method updates the lower and upper bounds. """
-        if self.lower_bound is None:
-            self.lower_bound = x.min(axis=0)
-        else:
-            self.lower_bound = numpy.minimum(self.lower_bound, x)
+        # initialize rotations and arrays that store the bounds
+        dim = x.shape[1]
+        if self.rotations is None:
+            self.rotations = [None] * self.num_rotations
+            self.lower_bounds = [None] * self.num_rotations
+            self.upper_bounds = [None] * self.num_rotations
+            if self.num_rotations >= 1:
+                self.rotation_matrix[0] = numpy.eye(dim)
+            for i in range(1, self.num_rotations):
+                self.rotation_matrix[i] = ortho_group(dim)
 
-        if self.upper_bound is None:
-            self.upper_bound = x.max(axis=0)
-        else:
-            self.upper_bound = numpy.maxium(self.upper_bound, x)
+        # The training method updates the lower and upper bounds
+        for i in range(self.num_rotations):
+            rotated_data = numpy.dot(x, self.rotation_matrix[i])
+            if self.lower_bounds[i] is None:
+                self.lower_bounds[i] = rotated_data.min(axis=0)
+            else:
+                self.lower_bounds[i] = rotated_data.minimum(self.lower_bounds[i], rotated_data)
+
+            if self.upper_bounds[i] is None:
+                self.upper_bounds[i] = rotated_data.max(axis=0)
+            else:
+                self.upper_bounds[i] = numpy.maxium(self.upper_bounds[i], rotated_data)
 
     def _execute(self, x):
         """Return the clipped data."""
-        return numpy.clip(x, self.lower_bound, self.upper_bound)
+        num_samples = x.shape[0]
+        self.corrections = numpy.ones(num_samples)
+
+        if self.only_measure:
+            x_copy = x.copy()
+
+        for i in range(self.num_rotations):
+            data_rotated = numpy.dot(x, self.rotation_matrix[i])
+            data_rotated_clipped = numpy.clip(data_rotated, self.lower_bounds[i], self.upper_bounds[i])
+            if self.measure_corrections:
+                interval = numpy.abs(self.upper_bounds[i] - self.lower_bounds[i])
+                factors = interval ** 2 / ( numpy.abs(data_rotated_clipped - data_rotated) + interval) ** 2
+                self.corrections *= factors.prod(axis=1)
+                if self.verbose:
+                    print("Factors of BasicAdaptiveCutoffNode:", factors)
+            x = numpy.dot(data_rotated_clipped, self.rotation_matrix[i].T)  # Project back to original coordinates
+
+        if self.verbose:
+            print("Corrections of BasicAdaptiveCutoffNode:", self.corrections)
+            print("20 worst final corrections at indices:", numpy.argsort(self.corrections)[:-21:-1])
+            print("20 worst final corrections:", self.corrections[numpy.argsort(self.corrections)[:-21:-1]])
+
+        if self.only_measure:
+            return x_copy
+        else:
+            return x
 
     def _inverse(self, x):
-        """An approximate inverse. """
-        return x
+        """An approximate inverse applies the same clipping. """
+        return self.execute(x)
 
 
 class SFA_GaussianClassifier(mdp.ClassifierNode):
@@ -505,7 +552,7 @@ class PInvSwitchboard(mdp.hinet.Switchboard):
                     for j in output_indices:
                         self.output_scales[j] = (1.0 / multiplicity) ** 0.5
                         tt += 1
-                print ("connections in switchboard considered: ", tt, "output dimension=", self.output_dim())
+                print ("connections in switchboard considered: ", tt, "output dimension=", self.output_dim)
             elif self.inverse_connections is None and self.slow_inv:
                 print ("**B", end="")
                 err = "use of self.slow_inv = True is obsolete"
@@ -642,7 +689,7 @@ class RandomPermutationNode(mdp.Node):
             self.inv_permutation[self.permutation] = numpy.arange(self.input_dim)
             if verbose:
                 print ("Permutation=", self.permutation)
-                print ("Output dim is: ", self.output_dim())
+                print ("Output dim is: ", self.output_dim)
 
     def _execute(self, x, verbose=False):
         # print "RandomPermutationNode: About to excecute, with input x= ", x
