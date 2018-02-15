@@ -38,7 +38,7 @@ class BasicAdaptiveCutoffNode(mdp.PreserveDimNode):
     and may improve generalization.
     """
 
-    def __init__(self, input_dim=None, output_dim=None, num_rotations=0, measure_corrections=False,
+    def __init__(self, input_dim=None, output_dim=None, num_rotations=1, measure_corrections=False,
                  only_measure=False, verbose=False, dtype=None):
         """Initialize node. """
         super(BasicAdaptiveCutoffNode, self).__init__(input_dim=input_dim, output_dim=output_dim, dtype=dtype)
@@ -50,7 +50,8 @@ class BasicAdaptiveCutoffNode(mdp.PreserveDimNode):
         self.corrections = None
         self.only_measure = only_measure
         self.verbose = verbose
-
+        if self.verbose:
+            print("num_rotations:", num_rotations)
     @staticmethod
     def is_trainable():
         return True
