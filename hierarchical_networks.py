@@ -2253,10 +2253,12 @@ network.layers[8].pca_args["max_preserved_sfa"] = my_DT
 # WARNING. Experiment that attempts to increase robustness to new data
 for i in range(1, 8):
     network.layers[i].pca_node_class = mdp.nodes.BasicAdaptiveCutoffNode
-    network.layers[i].pca_node_args = {"num_rotations": 1, "measure_corrections": True, "verbose": True}
+    network.layers[i].pca_args = {"num_rotations": 1, "measure_corrections": True,
+                                  "only_measure":True, "verbose": True}
     network.layers[i].pca_out_dim = None
 
-network.layers[5].pca_node_args = {"num_rotations": 1, "measure_corrections": True, "verbose": True}
+network.layers[5].pca_args = {"num_rotations": 1, "measure_corrections": True,
+                              "only_measure":True, "verbose": True}
 
 
 HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96 = copy.deepcopy(HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels)
