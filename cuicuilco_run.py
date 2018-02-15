@@ -1562,6 +1562,7 @@ def main():
     more_nodes.describe_flow(flow)
     more_nodes.display_eigenvalues(flow, mode="Average")  # mode="FirstNodeInLayer", "Average", "All"
 
+
     hierarchy_out_dim = y.shape[1] - skip_num_signals
 
     print ("hierarchy_out_dim (real output data) =", hierarchy_out_dim)
@@ -2131,11 +2132,11 @@ def main():
         subimages_newid = numpy.concatenate((subimages_newid, additional_features_newid), axis=1)
 
     t_load_images1 = time.time()
-    print (num_images_newid, " Images loaded in %0.3f s" % (t_load_images1 - t_load_images0))
+    print(num_images_newid, " Images loaded in %0.3f s" % (t_load_images1 - t_load_images0))
 
     t_exec0 = time.time()
-    print ("Execution over New Id testing set...")
-    print ("Input Signal: New Id test images")
+    print("Execution over New Id testing set...")
+    print("Input Signal: New Id test images")
     sl_seq_newid = flow.execute(subimages_newid)
     sl_seq_newid = sl_seq_newid[:, skip_num_signals:]
     sl_seq_newid = numpy.nan_to_num(sl_seq_newid)
@@ -2153,8 +2154,12 @@ def main():
         print ("sl_seq_newid_max=", sl_seq_newid_max)
         sl_seq_newid = numpy.clip(sl_seq_newid, sl_seq_training_min, sl_seq_training_max)
 
+    # Corrections
+    corrections_newid = more_nodes.combine_correction_factors(flow)
+    print("Final correction factors (newid):", corrections_newid)
+
     corr_factor = 1.0
-    print (corr_factor)
+    print(corr_factor)
     sl_seq_newid[:, 0:reg_num_signals] = sl_seq_newid[:, 0:reg_num_signals] * corr_factor
 
     t_exec1 = time.time()
@@ -2542,6 +2547,7 @@ def main():
     numpy.savetxt("regression_Gauss_newid.txt", regression_Gauss_newid)
     numpy.savetxt("regression_svr_newid.txt", regression_svr_newid)
     numpy.savetxt("correct_labels_newid.txt", correct_labels_newid)
+    numpy.savetxt("corrections_newid.txt", corrections_newid)
 
     cs_list = {}
     if cumulative_scores:

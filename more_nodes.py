@@ -28,6 +28,42 @@ from .sfa_libs import select_rows_from_matrix, distance_squared_Euclidean
 from .histogram_equalization import *
 
 
+def add_corrections(initial_corrections, added_corrections):
+    if initial_correction is None:
+        return added_corrections
+    elif added_corrections is None:
+        return initial_corrections
+    else:
+        return initial_corrections * added_corrections
+
+
+def combine_correction_factors(flow_or_node):
+    """This function takes into account all corrections performed by the BasicAdaptiveCutoffNodes of
+    a flow (possibly a hierarchical network) and combines them into a single vector. The function also
+    works on standard nodes.
+    
+    The combined correction factor of each sample estimates the probability that it is not an outlier. That is,
+    correction=1.0 implies "not outlier", and smaller values increase the rareness of the sample.
+    """
+    final_corrections = None
+    if isinstance(flow_or_node, mdp.Flow):
+        for node in flow:
+            another_node_corrections = combine_correction_factors(node)
+            final_corrections = add_correction(final_corrections, another_node_corrections)
+
+    elif isinstance(flow_or_node, mdp.Node):
+        if isinstance(node, mdp.hinet.CloneLayer):
+            err = "CloneLayers not yet supported when computing/storing correction factors"
+            raise Exception(err)
+        elif isinstance(node, mdp.hinet.Layer):
+            for another_node in node.nodes:
+                another_node_corrections = combine_correction_factors(another_node)
+                final_corrections = add_correction(final_corrections, another_node_corrections)
+        elif isinstance(node, BasicAdaptiveCutoffNode):
+            final_corrections = add_correction(final_corrections, node.corrections)
+    return final_corrections
+
+
 class BasicAdaptiveCutoffNode(mdp.PreserveDimNode):
     """Node that allows to "cut off" values at bounds derived from the training data.
 
@@ -51,7 +87,10 @@ class BasicAdaptiveCutoffNode(mdp.PreserveDimNode):
         self.only_measure = only_measure
         self.verbose = verbose
         if self.verbose:
-            print("num_rotations:", num_rotations)
+            print("num_rotations:", num_rotations, "measure_corrections:", measure_corrections,
+                  "only_measure:", only_measure)
+        quit()
+
     @staticmethod
     def is_trainable():
         return True
@@ -114,6 +153,7 @@ class BasicAdaptiveCutoffNode(mdp.PreserveDimNode):
             print("20 worst final corrections at indices:", numpy.argsort(self.corrections)[:-21:-1])
             print("20 worst final corrections:", self.corrections[numpy.argsort(self.corrections)[:-21:-1]])
 
+        quit()
         if self.only_measure:
             return x_copy
         else:
