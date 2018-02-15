@@ -29,7 +29,7 @@ from .histogram_equalization import *
 
 
 def add_corrections(initial_corrections, added_corrections):
-    if initial_correction is None:
+    if initial_corrections is None:
         return added_corrections
     elif added_corrections is None:
         return initial_corrections
@@ -47,20 +47,22 @@ def combine_correction_factors(flow_or_node):
     """
     final_corrections = None
     if isinstance(flow_or_node, mdp.Flow):
-        for node in flow:
+        flow = flow_or_node
+	for node in flow:
             another_node_corrections = combine_correction_factors(node)
-            final_corrections = add_correction(final_corrections, another_node_corrections)
+            final_corrections = add_corrections(final_corrections, another_node_corrections)
 
     elif isinstance(flow_or_node, mdp.Node):
+	node = flow_or_node
         if isinstance(node, mdp.hinet.CloneLayer):
             err = "CloneLayers not yet supported when computing/storing correction factors"
             raise Exception(err)
         elif isinstance(node, mdp.hinet.Layer):
             for another_node in node.nodes:
                 another_node_corrections = combine_correction_factors(another_node)
-                final_corrections = add_correction(final_corrections, another_node_corrections)
+                final_corrections = add_corrections(final_corrections, another_node_corrections)
         elif isinstance(node, BasicAdaptiveCutoffNode):
-            final_corrections = add_correction(final_corrections, node.corrections)
+            final_corrections = add_corrections(final_corrections, node.corrections)
     return final_corrections
 
 
@@ -80,7 +82,7 @@ class BasicAdaptiveCutoffNode(mdp.PreserveDimNode):
         super(BasicAdaptiveCutoffNode, self).__init__(input_dim=input_dim, output_dim=output_dim, dtype=dtype)
         self.lower_bounds = None
         self.upper_bounds = None
-        self.rotations = None
+        self.rotation_matrices = None
         self.num_rotations = num_rotations
         self.measure_corrections = measure_corrections
         self.corrections = None
@@ -88,8 +90,7 @@ class BasicAdaptiveCutoffNode(mdp.PreserveDimNode):
         self.verbose = verbose
         if self.verbose:
             print("num_rotations:", num_rotations, "measure_corrections:", measure_corrections,
-                  "only_measure:", only_measure)
-        quit()
+                  "only_measure:", only_measure, "verbose:", verbose)
 
     @staticmethod
     def is_trainable():
@@ -107,18 +108,18 @@ class BasicAdaptiveCutoffNode(mdp.PreserveDimNode):
     def _train(self, x):
         # initialize rotations and arrays that store the bounds
         dim = x.shape[1]
-        if self.rotations is None:
-            self.rotations = [None] * self.num_rotations
+        if self.rotation_matrices is None:
+            self.rotation_matrices = [None] * self.num_rotations
             self.lower_bounds = [None] * self.num_rotations
             self.upper_bounds = [None] * self.num_rotations
             if self.num_rotations >= 1:
-                self.rotation_matrix[0] = numpy.eye(dim)
+                self.rotation_matrices[0] = numpy.eye(dim)
             for i in range(1, self.num_rotations):
-                self.rotation_matrix[i] = ortho_group(dim)
+                self.rotation_matrices[i] = ortho_group(dim)
 
         # The training method updates the lower and upper bounds
         for i in range(self.num_rotations):
-            rotated_data = numpy.dot(x, self.rotation_matrix[i])
+            rotated_data = numpy.dot(x, self.rotation_matrices[i])
             if self.lower_bounds[i] is None:
                 self.lower_bounds[i] = rotated_data.min(axis=0)
             else:
@@ -138,7 +139,7 @@ class BasicAdaptiveCutoffNode(mdp.PreserveDimNode):
             x_copy = x.copy()
 
         for i in range(self.num_rotations):
-            data_rotated = numpy.dot(x, self.rotation_matrix[i])
+            data_rotated = numpy.dot(x, self.rotation_matrices[i])
             data_rotated_clipped = numpy.clip(data_rotated, self.lower_bounds[i], self.upper_bounds[i])
             if self.measure_corrections:
                 interval = numpy.abs(self.upper_bounds[i] - self.lower_bounds[i])
@@ -146,14 +147,13 @@ class BasicAdaptiveCutoffNode(mdp.PreserveDimNode):
                 self.corrections *= factors.prod(axis=1)
                 if self.verbose:
                     print("Factors of BasicAdaptiveCutoffNode:", factors)
-            x = numpy.dot(data_rotated_clipped, self.rotation_matrix[i].T)  # Project back to original coordinates
+            x = numpy.dot(data_rotated_clipped, self.rotation_matrices[i].T)  # Project back to original coordinates
 
         if self.verbose:
             print("Corrections of BasicAdaptiveCutoffNode:", self.corrections)
             print("20 worst final corrections at indices:", numpy.argsort(self.corrections)[:-21:-1])
             print("20 worst final corrections:", self.corrections[numpy.argsort(self.corrections)[:-21:-1]])
 
-        quit()
         if self.only_measure:
             return x_copy
         else:
