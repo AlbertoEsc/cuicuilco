@@ -2157,6 +2157,9 @@ def main():
     # Corrections
     corrections_newid = more_nodes.combine_correction_factors(flow)
     print("Final correction factors (newid):", corrections_newid)
+    worst_correction_factors_indices_newid = numpy.argsort(corrections_newid)[0:20]
+    print("20 worst final corrections at indices:", worst_correction_factors_indices_newid)
+    print("20 worst final corrections:", corrections_newid[worst_correction_factors_indices_newid])
 
     corr_factor = 1.0
     print(corr_factor)

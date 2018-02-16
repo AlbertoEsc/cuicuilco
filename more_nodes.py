@@ -115,7 +115,7 @@ class BasicAdaptiveCutoffNode(mdp.PreserveDimNode):
             if self.num_rotations >= 1:
                 self.rotation_matrices[0] = numpy.eye(dim)
             for i in range(1, self.num_rotations):
-                self.rotation_matrices[i] = ortho_group(dim)
+                self.rotation_matrices[i] = ortho_group.rvs(dim=dim)
 
         # The training method updates the lower and upper bounds
         for i in range(self.num_rotations):
@@ -143,7 +143,7 @@ class BasicAdaptiveCutoffNode(mdp.PreserveDimNode):
             data_rotated_clipped = numpy.clip(data_rotated, self.lower_bounds[i], self.upper_bounds[i])
             if self.measure_corrections:
                 interval = numpy.abs(self.upper_bounds[i] - self.lower_bounds[i])
-                factors = interval ** 2 / ( numpy.abs(data_rotated_clipped - data_rotated) + interval) ** 2
+                factors = interval ** 2 / (numpy.abs(data_rotated_clipped - data_rotated) + interval) ** 2
                 self.corrections *= factors.prod(axis=1)
                 if self.verbose:
                     print("Factors of BasicAdaptiveCutoffNode:", factors)
@@ -151,8 +151,8 @@ class BasicAdaptiveCutoffNode(mdp.PreserveDimNode):
 
         if self.verbose:
             print("Corrections of BasicAdaptiveCutoffNode:", self.corrections)
-            print("20 worst final corrections at indices:", numpy.argsort(self.corrections)[:-21:-1])
-            print("20 worst final corrections:", self.corrections[numpy.argsort(self.corrections)[:-21:-1]])
+            print("20 worst final corrections at indices:", numpy.argsort(self.corrections)[0:20])
+            print("20 worst final corrections:", self.corrections[numpy.argsort(self.corrections)[0:20]])
 
         if self.only_measure:
             return x_copy
