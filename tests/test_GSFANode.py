@@ -15,6 +15,101 @@ import mdp
 
 from cuicuilco.gsfa_node import GSFANode, graph_delta_values, comp_delta
 
+def test_equivalence_SFA_GSFA_regular_mode():
+    """ Tests the equivalence of Standard SFA and GSFA when trained using the "regular" training mode
+    """
+    num_samples = 200
+    correction_factor_scale = ((num_samples - 1.0) / num_samples) ** 0.5
+    input_dim = 15
+    x = numpy.random.normal(size=(num_samples, input_dim))
+    x2 = numpy.random.normal(size=(num_samples, input_dim))
+
+    print("Training GSFA (regular mode):")
+    output_dim = 5
+    n = GSFANode(output_dim=output_dim)
+    n.train(x, train_mode="regular")
+    n.stop_training()
+
+    print("Training SFA:")
+    n_sfa = mdp.nodes.SFANode(output_dim=output_dim)
+    n_sfa.train(x)
+    n_sfa.stop_training()
+
+    y = n.execute(x)
+    y *= correction_factor_scale
+    assert y.shape[1] == output_dim, "Output dimensionality %d was supposed to be %d" % (y.shape[1], output_dim)
+    print("y[0]:", y[0])
+    print("y.mean:", y.mean(axis=0))
+    print("y.var:", (y**2).mean(axis=0))
+    y2 = n.execute(x2)
+    y2 *= correction_factor_scale
+
+    y_sfa = n_sfa.execute(x)
+    print("y_sfa[0]:", y_sfa[0])
+    print("y_sfa.mean:", y_sfa.mean(axis=0))
+    print("y_sfa.var:", (y_sfa**2).mean(axis=0))
+    y2_sfa = n_sfa.execute(x2)
+
+    signs_sfa = numpy.sign(y_sfa[0,:])
+    signs_gsfa = numpy.sign(y[0,:])
+    y = y * signs_gsfa * signs_sfa
+    y2 = y2 * signs_gsfa * signs_sfa
+
+    assert ((y_sfa - y) == pytest.approx(0.0)).all()
+    assert ((y2_sfa - y2) == pytest.approx(0.0)).all()
+
+
+def test_equivalence_GSFA_clustered_and_classification_modes():
+    """ Tests the equivalence of GSFA when trained using the "clustered" and "classification" training modes.
+
+    Notice that the clustered mode assumes the samples with the same labels are contiguous.
+    """
+    num_classes = 5
+    num_samples_per_class = numpy.array([numpy.random.randint(10, 30) for j in range(num_classes)])
+    num_samples = num_samples_per_class.sum()
+    classes = []
+    for i, j in enumerate(num_samples_per_class):
+        classes += [i] * j
+    classes = numpy.array(classes)
+    print("classes:", classes)
+    input_dim = 15
+    x = numpy.random.normal(size=(num_samples, input_dim))
+
+    print("Training GSFA (clustered mode):")
+    output_dim = num_classes - 1
+    n = GSFANode(output_dim=output_dim)
+    n.train(x, train_mode="clustered", block_size=num_samples_per_class)
+    n.stop_training()
+
+
+    sorting = numpy.arange(num_samples)
+    numpy.random.shuffle(sorting)
+    x_s = x[sorting]
+    classes_s = classes[sorting]
+    print("Training GSFA (classification mode):")
+    n2 = GSFANode(output_dim=output_dim)
+    n2.train(x_s, train_mode=("classification", classes_s, 1.0))
+    n2.stop_training()
+
+    y_clustered = n.execute(x)
+    print("reordering outputs of clustered mode")
+    y_clustered = y_clustered[sorting]
+    print("y_clustered[0]:", y_clustered[0])
+    print("y_clustered.mean:", y_clustered.mean(axis=0))
+    print("y_clustered.var:", (y_clustered**2).mean(axis=0))
+
+    y_classification = n2.execute(x_s)
+    print("y_classification[0]:", y_classification[0])
+    print("y_classification.mean:", y_classification.mean(axis=0))
+    print("y_classification.var:", (y_classification**2).mean(axis=0))
+
+
+    signs_gsfa_classification = numpy.sign(y_classification[0,:])
+    signs_gsfa_clustered = numpy.sign(y_clustered[0,:])
+    y_clustered = y_clustered * signs_gsfa_clustered * signs_gsfa_classification
+
+    assert ((y_clustered - y_classification) == pytest.approx(0.0)).all()
+
 
 def test_GSFA_zero_mean_unit_variance_graph():
     """ Test of GSFA for zero-mean unit variance constraints on random data and graph, edge dictionary mode
@@ -68,33 +163,38 @@ def test_basic_GSFA_edge_dict():
 def test_equivalence_SFA_GSFA_linear_graph():
     """ Tests the equivalence of Standard SFA and GSFA when trained using an appropriate linear graph (graph mode)
     """
-    x = numpy.random.normal(size=(200, 15))
-    x2 = numpy.random.normal(size=(200, 15))
+    num_samples = 200
+    correction_factor_scale = ((num_samples - 1.0) / num_samples) ** 0.5
+    input_dim = 15
+    x = numpy.random.normal(size=(num_samples, input_dim))
+    x2 = numpy.random.normal(size=(num_samples, input_dim))
 
-    v = numpy.ones(200)
-    # PENDING: Add an additional node without any edge to compensate no bias of SFA
-    # v[200] = -1.0
+    v = numpy.ones(num_samples)
     e = {}
-    for t in range(199):
+    for t in range(num_samples - 1):
         e[(t, t + 1)] = 1.0
     e[(0, 0)] = 0.5
-    e[(199, 199)] = 0.5
+    e[(num_samples - 1, num_samples - 1)] = 0.5
 
     print("Training GSFA:")
-    n = GSFANode(output_dim=5)
+    output_dim = 5
+    n = GSFANode(output_dim=output_dim)
     n.train(x, train_mode="graph", node_weights=v, edge_weights=e)
     n.stop_training()
 
     print("Training SFA:")
-    n_sfa = mdp.nodes.SFANode(output_dim=5)
+    n_sfa = mdp.nodes.SFANode(output_dim=output_dim)
     n_sfa.train(x)
     n_sfa.stop_training()
 
     y = n.execute(x)
+    y *= correction_factor_scale
+    assert y.shape[1] == output_dim, "Output dimensionality %d was supposed to be %d" % (y.shape[1], output_dim)
     print("y[0]:", y[0])
     print("y.mean:", y.mean(axis=0))
     print("y.var:", (y**2).mean(axis=0))
     y2 = n.execute(x2)
+    y2 *= correction_factor_scale
 
     y_sfa = n_sfa.execute(x)
     print("y_sfa[0]:", y_sfa[0])
@@ -109,6 +209,10 @@ def test_equivalence_SFA_GSFA_linear_graph():
 
     assert ((y_sfa - y) == pytest.approx(0.0)).all()
     assert ((y2_sfa - y2) == pytest.approx(0.0)).all()
+
+
+
+
 
 
 # FUTURE: Is it worth it to have so many methods? I guess the mirroring windows are enough, they have constant
@@ -174,3 +278,26 @@ def test_equivalence_smirror_window32_mirror_window32():
 
     # print(delta_values)
     assert ((delta_values[1] - delta_values[0]) == pytest.approx(0.0)).all()
+
+
+def test_equivalence_update_graph_and_update_graph_old():
+    """ Basic test of GSFA on random data and graph, edge dictionary mode
+    """
+    x = numpy.random.normal(size=(200, 15))
+    v = numpy.ones(200)
+    e = {}
+    for i in range(1500):
+        n1 = numpy.random.randint(200)
+        n2 = numpy.random.randint(200)
+        e[(n1, n2)] = numpy.random.normal() + 1.0
+    n = GSFANode(output_dim=5)
+    n.train(x, train_mode="graph", node_weights=v, edge_weights=e)
+    n.stop_training()
+    y = n.execute(x)
+
+    n2 = GSFANode(output_dim=5)
+    n2.train(x, train_mode="graph_old", node_weights=v, edge_weights=e)
+    n2.stop_training()
+    y2 = n2.execute(x)
+
+    assert ((y - y2) == pytest.approx(0.0)).all()
