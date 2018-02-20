@@ -1,5 +1,5 @@
 #####################################################################################################################
-# test_iGSFANode: Tests for the Information-Preserving Graph-Based SFA Node (GSFANode) as defined by                #
+# test_iGSFANode: Tests for the Information-Preserving Graph-Based SFA Node (iGSFANode) as defined by                #
 #                 the Cuicuilco framework                                                                           #
 #                                                                                                                   #
 # By Alberto-N Escalante-B. Alberto.Escalante@ini.rub.de                                                            #
@@ -19,6 +19,8 @@ from cuicuilco.gsfa_node import comp_delta
 from cuicuilco.igsfa_node import iGSFANode
 
 # TODO: *test_automatic_stop_training
+# what combinations of reconstruct_with_sfa and offsetting_mode are defined
+# TODO: rename offsetting_mode -> slow_feature_scaling_method
 #       *test_equivalence_GSFA_PCA_for_DT_m0.5
 #       test all offsetting_modes("QR_decomposition", "sensitivity_based_pure", "sensitivity_based_offset",
 #                                 "sensitivity_based_normalized", None, "data_dependent")
@@ -29,6 +31,46 @@ from cuicuilco.igsfa_node import iGSFANode
 #                 expansion_funcs=None, expansion_output_dim=None, expansion_starting_point=None,
 #                 max_lenght_slow_part=None, offsetting_mode="sensitivity_based_pure", max_preserved_sfa=1.9999,
 #                 reconstruct_with_sfa=True, **argv)
+
+def test_automatic_stop_training():
+    """ Test that verifies that iGSFA automatically calls stop training when trained on single batch mode
+    """
+    x = numpy.random.normal(size=(300, 15))
+
+    n = iGSFANode(output_dim=15, reconstruct_with_sfa=True, offsetting_mode=None)
+    n.train(x, train_mode="regular")
+    with pytest.raises(mdp.TrainingFinishedException):
+        n.train(x, train_mode="regular")
+
+    n = iGSFANode(output_dim=15, reconstruct_with_sfa=True, offsetting_mode="data_dependent")
+    n.train(x, train_mode="regular")
+    with pytest.raises(mdp.TrainingFinishedException):
+        n.train(x, train_mode="regular")
+
+    n = iGSFANode(output_dim=15, reconstruct_with_sfa=True, offsetting_mode="sensitivity_based_pure")
+    n.train(x, train_mode="regular")
+    with pytest.raises(mdp.TrainingFinishedException):
+        n.train(x, train_mode="regular")
+
+    n = iGSFANode(output_dim=15, reconstruct_with_sfa=True, offsetting_mode="QR_decomposition")
+    n.train(x, train_mode="regular")
+    with pytest.raises(mdp.TrainingFinishedException):
+        n.train(x, train_mode="regular")
+
+
+def test_no_automatic_stop_training():
+    """ Test that verifies that iGSFA does not call stop training when when multiple-train is used
+    """
+    x = numpy.random.normal(size=(300, 15))
+    n = iGSFANode(output_dim=5, reconstruct_with_sfa=False, offsetting_mode=None)
+    n.train(x, train_mode="regular")
+    n.train(x, train_mode="regular")
+    n.stop_training()
+
+    n = iGSFANode(output_dim=5, reconstruct_with_sfa=False, offsetting_mode="data_dependent")
+    n.train(x, train_mode="regular")
+    n.train(x, train_mode="regular")
+    n.stop_training()
 
 
 def test_equivalence_GSFA_iGSFA_for_DT_4_0():

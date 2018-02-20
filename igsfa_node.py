@@ -268,14 +268,14 @@ class iGSFANode(mdp.Node):
 
         print("training PCA...")
         pca_output_dim = self.output_dim - self.num_sfa_features_preserved
-        # if pca_output_dim == 0:
+        #if pca_output_dim == 0:
         #    self.pca_node = mdp.nodes.IdentityNode()
-        # else:
-        #
-        # WARNING: WHY WAS I EXTRACTING ALL PCA COMPONENTS!!?? INEFFICIENT!!!!
-        self.pca_node = mdp.nodes.PCANode(output_dim=pca_output_dim)  # reduce=True) #output_dim = pca_out_dim)
+        #else:
+        # This allows training of PCA when pca_out_dim is zero
+        self.pca_node = mdp.nodes.PCANode(output_dim=max(1, pca_output_dim))  # reduce=True) #output_dim = pca_out_dim)
         self.pca_node.train(sfa_removed_x)
         self.pca_node.stop_training()
+        PCANode_reduce_output_dim(self.pca_node, pca_output_dim, verbose=False)
 
         # TODO:check that pca_out_dim > 0
         print("executing PCA...")
@@ -396,7 +396,7 @@ class iGSFANode(mdp.Node):
                  "self.pca_node.output_dim=" + str(self.pca_node.output_dim) + ", self.num_sfa_features_preserved=" + \
                  str(self.num_sfa_features_preserved) + ", self.output_dim=" + str(self.output_dim)
             raise Exception(er)
-        PCANode_reduce_output_dim(self.pca_node, final_pca_node_output_dim)
+        PCANode_reduce_output_dim(self.pca_node, final_pca_node_output_dim, verbose=False)
 
         print("self.pca_node.d", self.pca_node.d)
         print("ranking method...")
@@ -642,19 +642,22 @@ def PCANode_reduce_output_dim(pca_node, new_output_dim, verbose=False):
         er = "Can only reduce output dimensionality of PCA node, not increase it"
         raise Exception(er)
     if verbose:
-        print("Before: pca_node.d.shape=", pca_node.d.shape, " pca_node.sf.shape=", pca_node.sf.shape)
-        print(" pca_node._bias.shape=", pca_node._bias.shape)
-    
+        print("Before: pca_node.d.shape=", pca_node.d.shape, " pca_node.v.shape=", pca_node.v.shape)
+        print(" pca_node.avg.shape=", pca_node.avg.shape)
+
+    #if new_output_dim > 0:
     original_total_variance = pca_node.d.sum()
     original_explained_variance = pca_node.explained_variance
     pca_node.d = pca_node.d[0:new_output_dim]
     pca_node.v = pca_node.v[:, 0:new_output_dim]
-    pca_node.avg = pca_node.avg[0:new_output_dim]
+    # pca_node.avg is not affected by this method!
     pca_node._output_dim = new_output_dim
     pca_node.explained_variance = original_explained_variance * pca_node.d.sum() / original_total_variance
+    #else:
+
     if verbose:
         print("After: pca_node.d.shape=", pca_node.d.shape, " pca_node.v.shape=", pca_node.v.shape)
-        print(" pca_node._bias.shape=", pca_node._bias.shape)
+        print(" pca_node.avg.shape=", pca_node.avg.shape)
 
 
 # Computes output errors dimension by dimension for a single sample: y - node.execute(x_app)
