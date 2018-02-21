@@ -15,6 +15,9 @@ import mdp
 
 from cuicuilco.gsfa_node import GSFANode, graph_delta_values, comp_delta
 
+#TODO: test invalid parameters (training mode, block size, etc)
+
+
 def test_equivalence_SFA_GSFA_regular_mode():
     """ Tests the equivalence of Standard SFA and GSFA when trained using the "regular" training mode
     """

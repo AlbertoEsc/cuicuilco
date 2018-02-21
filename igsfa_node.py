@@ -27,6 +27,7 @@ from .more_nodes import GeneralExpansionNode
 from .gsfa_node import GSFANode
 
 
+#TODO: add verbosity parameter to all/most methods
 class iGSFANode(mdp.Node):
     """This node implements "information-preserving graph-based SFA (iGSFA)", which is the main component of
     hierarchical iGSFA (HiGSFA). 
@@ -179,7 +180,6 @@ class iGSFANode(mdp.Node):
             self.num_sfa_features_preserved = self.max_preserved_sfa
         else:
             ex = "Cannot handle type of self.max_preserved_sfa"
-            print(ex)
             raise Exception(ex)
 
         if self.num_sfa_features_preserved > self.output_dim:
@@ -306,6 +306,8 @@ class iGSFANode(mdp.Node):
         # Only works because amplitudes of SFA are scaled to be equal to explained variance, because PCA is
         # a rotation, and because data has zero mean
         self.evar = (sfa_pca_x_truncated ** 2).sum() / (x_zm ** 2).sum()
+        print("s_n_sfa_x:", s_n_sfa_x, "pca_x:", pca_x)
+        print("sfa_pca_x_truncated:", sfa_pca_x_truncated, "x_zm:", x_zm)
         print("Variance(output) / Variance(input) is ", self.evar)
         self.stop_training()
 

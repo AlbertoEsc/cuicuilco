@@ -10,20 +10,16 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
 import numpy
+import copy
 
 import pytest
 import mdp
 
 import cuicuilco.patch_mdp
 from cuicuilco.gsfa_node import comp_delta
-from cuicuilco.igsfa_node import iGSFANode
+from cuicuilco.igsfa_node import iGSFANode, SFANode_reduce_output_dim, PCANode_reduce_output_dim
 
-# TODO: *test_automatic_stop_training
-# what combinations of reconstruct_with_sfa and offsetting_mode are defined
 # TODO: rename offsetting_mode -> slow_feature_scaling_method
-#       *test_equivalence_GSFA_PCA_for_DT_m0.5
-#       test all offsetting_modes("QR_decomposition", "sensitivity_based_pure", "sensitivity_based_offset",
-#                                 "sensitivity_based_normalized", None, "data_dependent")
 #       *test_SFANode_reduce_output_dim (extraction and inverse)
 #       *test_PCANode_reduce_output_dim (extraction and inverse)
 
@@ -71,6 +67,48 @@ def test_no_automatic_stop_training():
     n.train(x, train_mode="regular")
     n.train(x, train_mode="regular")
     n.stop_training()
+
+
+def test_slow_feature_scaling_methods():
+    """ Test that executes each feature scaling method and verifies that (most of them) only change the
+    scale of the slow features in the slow part but do not mix them.
+    """
+    x = numpy.random.normal(size=(300, 15))
+
+    all_slow_feature_scaling_methods = ["QR_decomposition", "sensitivity_based_pure", "sensitivity_based_offset",
+                                   "sensitivity_based_normalized", None, "data_dependent"]
+    num_slow_feature_scaling_methods = len(all_slow_feature_scaling_methods)
+    output_features = []
+    for slow_feature_scaling_method in all_slow_feature_scaling_methods:
+        n = iGSFANode(output_dim=15, reconstruct_with_sfa=True, offsetting_mode=slow_feature_scaling_method)
+        n.train(x, train_mode="regular")
+        if n.is_training():
+            n.stop_training()
+        output_features.append(n.execute(x))
+
+
+    size_slow_part = n.sfa_node.output_dim
+    print("size_slow_part:", size_slow_part)
+    for i in range(num_slow_feature_scaling_methods):
+        output_features[i] = output_features[i][:,:size_slow_part]
+    first_sample_y_data_dependent = output_features[num_slow_feature_scaling_methods-1][0]
+    for i in range(1, len(all_slow_feature_scaling_methods)-1):
+        print("checking feature equivalence between", all_slow_feature_scaling_methods[i], "and",
+              all_slow_feature_scaling_methods[num_slow_feature_scaling_methods-1])
+        first_sample_y_i = output_features[i][0]
+        y = output_features[i] * first_sample_y_data_dependent / first_sample_y_i
+        assert ((y - output_features[num_slow_feature_scaling_methods-1]) == pytest.approx(0.0)).all()
+
+
+def pending_test_SFANode_reduce_output_dim():
+    x = numpy.random.normal(size=(300, 15))
+    n = SFANode(output_dim=10, reconstruct_with_sfa=True, offsetting_mode=slow_feature_scaling_method)
+    n.train(x)
+    n.stop_training()
+
+    n2 = copy.deepcopy(n)
+    SFANode_reduce_output_dim(n2, 6)
+    output_features.append(n.execute(x))
 
 
 def test_equivalence_GSFA_iGSFA_for_DT_4_0():
