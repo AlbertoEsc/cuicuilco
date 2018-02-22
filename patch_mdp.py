@@ -19,7 +19,7 @@ from mdp import numx
 from mdp.utils import (mult, pinv)  # , symeig, CovarianceMatrix, SymeigException)
 
 from . import more_nodes
-from .gsfa_node import ComputeCovMatrix
+from .gsfa_node import compute_cov_matrix
 from . import gsfa_node
 from . import igsfa_node
 from . import histogram_equalization
