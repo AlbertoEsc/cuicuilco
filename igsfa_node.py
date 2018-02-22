@@ -268,11 +268,8 @@ class iGSFANode(mdp.Node):
 
         print("training PCA...")
         pca_output_dim = self.output_dim - self.num_sfa_features_preserved
-        #if pca_output_dim == 0:
-        #    self.pca_node = mdp.nodes.IdentityNode()
-        #else:
         # This allows training of PCA when pca_out_dim is zero
-        self.pca_node = mdp.nodes.PCANode(output_dim=max(1, pca_output_dim))  # reduce=True) #output_dim = pca_out_dim)
+        self.pca_node = mdp.nodes.PCANode(output_dim=max(1, pca_output_dim))  # reduce=True
         self.pca_node.train(sfa_removed_x)
         self.pca_node.stop_training()
         PCANode_reduce_output_dim(self.pca_node, pca_output_dim, verbose=False)
@@ -458,7 +455,8 @@ class iGSFANode(mdp.Node):
         if self.reconstruct_with_sfa and self.offsetting_mode == "QR_decomposition":
             s_n_sfa_x = numpy.dot(n_sfa_x, self.R.T)
         # AKA my method for feature scaling (no rotation)
-        elif self.reconstruct_with_sfa and (self.offsetting_mode in ("sensitivity_based_pure", "sensitivity_based_offset")):
+        elif self.reconstruct_with_sfa and (self.offsetting_mode in ("sensitivity_based_pure",
+                                                                     "sensitivity_based_offset")):
             s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x 
         # AKA alternative method for feature scaling (no rotation)
         elif self.reconstruct_with_sfa and self.offsetting_mode == "sensitivity_based_normalized":

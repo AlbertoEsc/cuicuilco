@@ -639,8 +639,8 @@ class CovDCovMatrix(object):
 
         # TODO:Add option to skip last sample from Cov part.
 
-    # Add unlabeled samples to Cov matrix (DCov remains unmodified)
     def update_unlabeled(self, x, weight=1.0):
+        """ Add unlabeled samples to Cov matrix (DCov remains unmodified) """
         num_samples, dim = x.shape
 
         sum_x = x.sum(axis=0)
@@ -896,7 +896,6 @@ class CovDCovMatrix(object):
         #            sum_prod_diffs = mdp.utils.mult(diffs.T, diffs)
         #            num_diffs = 2*(num_samples-offset)
         #            self.add_diffs(sum_prod_diffs, num_diffs, weight)
-
 
     # ################## Sliding window with node-weight correction #################
     def update_fast_sliding_window(self, x, weight=1.0, window_halfwidth=2):

@@ -28,6 +28,7 @@ from cuicuilco.igsfa_node import iGSFANode, SFANode_reduce_output_dim, PCANode_r
 #                 max_lenght_slow_part=None, offsetting_mode="sensitivity_based_pure", max_preserved_sfa=1.9999,
 #                 reconstruct_with_sfa=True, **argv)
 
+
 def test_automatic_stop_training():
     """ Test that verifies that iGSFA automatically calls stop training when trained on single batch mode
     """
