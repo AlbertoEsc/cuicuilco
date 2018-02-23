@@ -2,12 +2,12 @@
 # gsfa_node: This module implements the Graph-Based SFA Node and is part of the Cuicuilco framework                 #
 #                                                                                                                   #
 # See the following publication for details:                                                                        #
-# Escalante-B A.-N., Wiskott L, "How to solve classification and regression problems on high-dimensional data with   #
+# Escalante-B A.-N., Wiskott L, "How to solve classification and regression problems on high-dimensional data with  #
 # a supervised extension of Slow Feature Analysis". Journal of Machine Learning Research 14:3683-3719, 2013         #
 #                                                                                                                   #
 # An example of using GSFA is provided at the end of the file                                                       #
 #                                                                                                                   #
-# By Alberto Escalante. Alberto.Escalante@neuroinformatik.ruhr-uni-bochum.de                                        #
+# By Alberto Escalante. Alberto.Escalante@ini.ruhr-uni-bochum.de                                                    #
 # Ruhr-University-Bochum, Institute for Neural Computation, Group of Prof. Dr. Wiskott                              #
 #####################################################################################################################
 
@@ -596,15 +596,14 @@ class CovDCovMatrix(object):
     """Special purpose class to compute the covariance matrices used by GSFA.
        It supports efficiently training methods for various graphs: e.g., clustered, serial, mixed.
     """
-    def __init__(self, block_size=None):
+    def __init__(self, block_size=None, verbose=False):
         self.block_size = block_size
         self.sum_x = None
         self.sum_prod_x = None
         self.num_samples = 0
-        # self.sum_diffs = None
         self.sum_prod_diffs = None
         self.num_diffs = 0
-        # self.last_block = None
+        self.verbose = verbose
 
         # Variables used to store final results
         self.cov_mtx = None
@@ -697,7 +696,7 @@ class CovDCovMatrix(object):
         weighted_sum_x = weighted_x.sum(axis=0)
         weighted_sum_prod_x = mdp.utils.mult(x.T, weighted_x)
         weighted_num_samples = node_weights.sum()
-        # print "weighted_num_samples=",  weighted_num_samples
+        # print("weighted_num_samples=",  weighted_num_samples)
         self.add_samples(weighted_sum_prod_x, weighted_sum_x, weighted_num_samples, weight=weight)
 
         # Update DCov Matrix
@@ -758,7 +757,7 @@ class CovDCovMatrix(object):
         weighted_sum_x = weighted_x.sum(axis=0)
         weighted_sum_prod_x = mdp.utils.mult(x.T, weighted_x)
         weighted_num_samples = node_weights.sum()
-        # print "weighted_num_samples=",  weighted_num_samples
+        # print("weighted_num_samples=",  weighted_num_samples)
         self.add_samples(weighted_sum_prod_x, weighted_sum_x, weighted_num_samples, weight=weight)
 
         # Update DCov Matrix
@@ -801,8 +800,8 @@ class CovDCovMatrix(object):
         # Center part
         x_full = x
         sum_prod_x_full = mdp.utils.mult(x_full.T, x_full)
-        #        print "sum_prod_x_full[0]=", sum_prod_x_full[0]
-        #        print "(2*width+1)*sum_prod_x_full=", (2*width+1)*sum_prod_x_full[0:3,0:3]
+        #        print("sum_prod_x_full[0]=", sum_prod_x_full[0])
+        #        print("(2*width+1)*sum_prod_x_full=", (2*width+1)*sum_prod_x_full[0:3,0:3])
 
         Aacc123 = numpy.zeros((dim, dim))
         for i in range(0, 2 * width):  # [0, 2*width-1]
@@ -1111,7 +1110,8 @@ class CovDCovMatrix(object):
             counter_sample += block_size
 
     def update_clustered_homogeneous_block_sizes(self, x, weight=1.0, block_size=None, include_self_loops=True):
-        print("update_clustered_homogeneous_block_sizes ")
+        if self.verbose:
+            print("update_clustered_homogeneous_block_sizes ")
         if block_size is None:
             er = "error, block_size not specified!!!!"
             raise Exception(er)
@@ -1142,19 +1142,22 @@ class CovDCovMatrix(object):
         sum_prod_meds = mdp.utils.mult(media.T, media)
         # FIX1: AFTER DT in (0,4) normalization
         num_diffs = num_blocks * block_size  # ## * (block_size-1+1) / (block_size-1)
-        print("num_diffs in block:", num_diffs, " num_samples:", num_samples)
+        if self.verbose:
+            print("num_diffs in block:", num_diffs, " num_samples:", num_samples)
         if include_self_loops:
             sum_prod_diffs = 2.0 * block_size * (sum_prod_x - block_size * sum_prod_meds) / block_size
         else:
             sum_prod_diffs = 2.0 * block_size * (sum_prod_x - block_size * sum_prod_meds) / (block_size - 1)
 
         self.add_diffs(sum_prod_diffs, num_diffs, weight)
-        print("(Diag(complete)/num_diffs.avg)**0.5 =", ((numpy.diagonal(sum_prod_diffs) / num_diffs).mean()) ** 0.5)
+        if self.verbose:
+            print("(Diag(complete)/num_diffs.avg)**0.5 =", ((numpy.diagonal(sum_prod_diffs) / num_diffs).mean()) ** 0.5)
 
     def update_compact_classes(self, x, block_sizes=None, Jdes=None, weight=1.0):
         num_samples, dim = x.shape
 
-        print("block_sizes=", block_sizes, type(block_sizes))
+        if self.verbose:
+            print("block_sizes=", block_sizes, type(block_sizes))
         if isinstance(block_sizes, list):
             block_sizes = numpy.array(block_sizes)
 
@@ -1183,7 +1186,8 @@ class CovDCovMatrix(object):
             Jdes = J
         extra_label = Jdes - J  # 0, 1, 2
 
-        print("Besides J=%d labels, also adding %d labels" % (J, extra_label))
+        if self.verbose:
+            print("Besides J=%d labels, also adding %d labels" % (J, extra_label))
 
         if num_classes != 2 ** J:
             err = "Inconsistency error: num_clases %d does not appear to be a power of 2" % num_classes
@@ -1213,12 +1217,12 @@ class CovDCovMatrix(object):
 
         eigenvalues = numpy.array(eigenvalues)
 
-        print("Eigenvalues:", eigenvalues)
         eigenvalues /= eigenvalues.sum()
-        print("Eigenvalues normalized:", eigenvalues)
-
-        for j in range(J + extra_label):
-            print("labels[%d]=" % j, labels[:, j])
+        if self.verbose:
+            print("Eigenvalues:", eigenvalues)
+            print("Eigenvalues normalized:", eigenvalues)
+            for j in range(J + extra_label):
+                print("labels[%d]=" % j, labels[:, j])
 
         for j in range(J + extra_label):
             set10 = x[labels[:, j] == -1]
@@ -1242,8 +1246,8 @@ class CovDCovMatrix(object):
             self.sum_prod_diffs = self.sum_prod_diffs * own_weight + cov_dcov_mat.sum_prod_diffs * adding_weight
         self.num_diffs = self.num_diffs * own_weight + cov_dcov_mat.num_diffs * adding_weight
 
-    def fix(self, divide_by_num_samples_or_differences=True, verbose=False, center_dcov=False):  # include_tail=False,
-        if verbose:
+    def fix(self, divide_by_num_samples_or_differences=True, center_dcov=False):  # include_tail=False,
+        if self.verbose:
             print("Fixing CovDCovMatrix, with block_size=", self.block_size)
 
         avg_x = self.sum_x * (1.0 / self.num_samples)
@@ -1269,20 +1273,21 @@ class CovDCovMatrix(object):
         self.tlen = self.num_samples
         self.dcov_mtx = cov_dx
 
-        # Safely uncomment the following lines for debugging
-        # print "Finishing training CovDcovMtx: ",  self.num_samples, " num_samples, and ", self.num_diffs, " num_diffs"
-        # print "Avg[0:3] is", self.avg[0:4]
-        # print "Prod_avg_x[0:3,0:3] is", prod_avg_x[0:3,0:3]
-        # print "Cov[0:3,0:3] is", self.cov_mtx[0:3,0:3]
-        # print "DCov[0:3,0:3] is", self.dcov_mtx[0:3,0:3]
-        # print "AvgDiff[0:4] is", avg_diff[0:4]
-        # print "Prod_avg_diff[0:3,0:3] is", prod_avg_diff[0:3,0:3]
-        # print "Sum_prod_diffs[0:3,0:3] is", self.sum_prod_diffs[0:3,0:3]
-        # print "exp_prod_diffs[0:3,0:3] is", exp_prod_diffs[0:3,0:3]
+
+        if self.verbose:
+            print("Finishing training CovDcovMtx:", self.num_samples, "num_samples, and", self.num_diffs, "num_diffs")
+            print("Avg[0:3] is", self.avg[0:4])
+            print("Prod_avg_x[0:3,0:3] is", prod_avg_x[0:3,0:3])
+            print("Cov[0:3,0:3] is", self.cov_mtx[0:3,0:3])
+            print("DCov[0:3,0:3] is", self.dcov_mtx[0:3,0:3])
+            print("AvgDiff[0:4] is", avg_diff[0:4])
+            print("Prod_avg_diff[0:3,0:3] is", prod_avg_diff[0:3,0:3])
+            print("Sum_prod_diffs[0:3,0:3] is", self.sum_prod_diffs[0:3,0:3])
+            print("exp_prod_diffs[0:3,0:3] is", exp_prod_diffs[0:3,0:3])
         return self.cov_mtx, self.avg, self.dcov_mtx
 
-    # ####### Helper functions for parallel processing and CovDcovMatrices #########
 
+# ####### Helper functions for parallel processing and CovDcovMatrices #########
 
 # This function is used by patch_mdp
 def compute_cov_matrix(x, verbose=False):

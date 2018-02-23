@@ -2165,6 +2165,9 @@ for i in range(2, len(network.layers), 2):
     network.layers[i].x_field_spacing = 1
     network.layers[i].y_field_spacing = 2
 
+top_layer = system_parameters.ParamsSFASuperNode()
+network.layers[9] = top_layer
+
 if not LRec_use_RGB_images:
     HiGSFANet_out_dims = [18, 27, 37, 66, 79, 88, 88, 93, 95, 75, 75]  # New test
     # HiGSFANet_out_dims = [ 16, 24, 33, 60, 72, 80, 80, 85, 75, 75, 75 ] #Experiment with control2: Dt=1.9999
@@ -2229,7 +2232,7 @@ network.layers[8].sfa_args["expansion_funcs"] = [ch3s85, ch3o6s20u08, ch3o0s3QT]
 network.layers[8].sfa_args["max_preserved_sfa"] = 1.98  # T 1.97 #1.94 #! 1.97 # **1.81
 
 # WARNING, ADDING AN ADDITIONAL SFA NODE IN THE LAST LAYER, 80x80 resolution (Node 9)
-double_SFA_top_node = True  # and False
+double_SFA_top_node = True and False
 if double_SFA_top_node:
     print("adding additional top node (two nodes in layer 8)")
     layer = network.layers[8]
@@ -2241,33 +2244,36 @@ if double_SFA_top_node:
     layer.sfa_node_class = mdp.nodes.iGSFANode
     layer.sfa_out_dim = HiGSFANet_out_dims[9]
     layer.sfa_args = dict(layer.sfa_args)
-    layer.sfa_args["expansion_funcs"] = [s75, s34u08, o7s15QT,
-                                         s3QT]  # ** s75, s30u08ex, o5s15QT #s50u08ex, o4s18QT , s3QT
+    layer.sfa_args["expansion_funcs"] = [s75, s34u08, o7s15QT, s3QT]
+    # ** s75, s30u08ex, o5s15QT #s50u08ex, o4s18QT , s3QT
     layer.sfa_args["max_preserved_sfa"] = 1.9  # ! 1.81 # ** 1.81
+    last_layer = 9
+    network.layers[8].pca_args["max_preserved_sfa"] = my_DT
+else:
+    network.layers[9].sfa_args["expansion_funcs"] = [s75, s34u08, o7s15QT, s3QT]
+    # #identity, ch3s70u08, unsigned_08expo, ch3_s25_max
+    network.layers[9].sfa_args["max_preserved_sfa"] = 1.9  # T 1.97 #1.94 #! 1.97 # **1.81
+    last_layer = 10
 
 my_DT = 1.96  # =1.96, 3 Labels
-for i in range(2, 9):
+for i in range(2, last_layer):
     network.layers[i].sfa_args["max_preserved_sfa"] = my_DT
-network.layers[8].pca_args["max_preserved_sfa"] = my_DT
 
-# WARNING. Experiment that attempts to increase robustness to new data
-for i in range(1, 8):
+
+for i in range(1, last_layer):  #WARNING!!!
     network.layers[i].pca_node_class = mdp.nodes.BasicAdaptiveCutoffNode
-    network.layers[i].pca_args = {"num_rotations": 1, "measure_corrections": True,
+    network.layers[i].pca_args = {"num_rotations": 2, "measure_corrections": True,
                                   "only_measure": False, "verbose": False}
     network.layers[i].pca_out_dim = None
 
-# network.layers[5].pca_args = {"num_rotations": 1, "measure_corrections": True,
-#                               "only_measure":True, "verbose": False}
-
 
 HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96 = copy.deepcopy(HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels)
-HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96.layers = HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96.layers[0:9]
+HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96.layers = HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96.layers[0:10]
 
 HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_48x48 = copy.deepcopy(HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96)
 HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_48x48.layers = \
     HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96.layers[0:6] + \
-    HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96.layers[8:9]  # layers 0, 1, 2, 3, 4, 5, 8
+    HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96.layers[8:10]  # layers 0, 1, 2, 3, 4, 5, 8
 
 # ################## HiGSFA Network for FGNet generalization ##############
 network = HiGSFANetworkU11L_Overlap6x6L0_Generalization_3Labels_96x96 = copy.deepcopy(

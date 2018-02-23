@@ -102,8 +102,7 @@ class BasicAdaptiveCutoffNode(mdp.PreserveDimNode):
 
     @staticmethod
     def _get_supported_dtypes():
-        return (mdp.utils.get_dtypes('Float') +
-                mdp.utils.get_dtypes('AllInteger'))
+        return (mdp.utils.get_dtypes('Float'))
 
     def _train(self, x):
         # initialize rotations and arrays that store the bounds
@@ -867,7 +866,7 @@ def display_node_eigenvalues(node, i, mode="All"):
                 evar_avg /= len(node.nodes)
                 avg_num_sfa_features /= len(node.nodes)
                 print ("Node %d" % i, "is a Layer that contains iGSFANodes containing SFANodes with " +
-                       "avg(num_sfa_features_preserved)=%f" % avg_num_sfa_features, "and avg(d)=%s" + str(d_avg) +
+                       "avg(num_sfa_features_preserved)=%f" % avg_num_sfa_features, "and avg(d)=%s" % str(d_avg) +
                        "and avg(evar)=%f" % evar_avg)
             elif mode == "All":
                 print ("Node %d is a Layer that contains iGSFANodeRecNodes:" % i)
