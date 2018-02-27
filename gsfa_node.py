@@ -43,7 +43,7 @@ class GSFANode(mdp.nodes.SFANode):
         self.train_mode = train_mode
 
         self._covdcovmtx = CovDCovMatrix()
-        # Parameters accepted during training
+        # The following parameters are accepted during training
         self.list_train_params = ["scheduler", "n_parallel", "train_mode", "block_size"]
 
     def _train_without_scheduler(self, x, block_size=None, train_mode=None, node_weights=None, edge_weights=None,
@@ -169,7 +169,7 @@ class GSFANode(mdp.nodes.SFANode):
                     window_halfwidth = int(train_mode[6:])
                     if verbose:
                         print("Window (%d)" % window_halfwidth)
-                    self._covdcovmtx.update__sliding_window(x, weight=1.0, window_halfwidth=window_halfwidth)
+                    self._covdcovmtx.update_sliding_window(x, weight=1.0, window_halfwidth=window_halfwidth)
                 elif train_mode[0:7] == 'fwindow':
                     window_halfwidth = int(train_mode[7:])
                     if verbose:
@@ -496,9 +496,8 @@ class GSFANode(mdp.nodes.SFANode):
             for covdcovmtx in results:
                 self._covdcovmtx.add_cov_dcov_matrix(covdcovmtx)
 
-    # TODO: consider removing pca_term and pca_exp
-    def _stop_training(self, debug=False, verbose=False, pca_term=0.995, pca_exp=2.0):
-        if verbose or True:
+    def _stop_training(self, debug=False, verbose=False):
+        if verbose:
             print("stop_training: self.block_size=", self.block_size)
             print("self._covdcovmtx.num_samples = ", self._covdcovmtx.num_samples)
             print("self._covdcovmtx.num_diffs= ", self._covdcovmtx.num_diffs)
@@ -509,27 +508,15 @@ class GSFANode(mdp.nodes.SFANode):
             print(" num_samples, and ", self._covdcovmtx.num_diffs, " num_diffs")
             print("DCov[0:3,0:3] is", self.dcov_mtx[0:3, 0:3])
 
-        if pca_term != 0.0 and False:
-            signs = numpy.sign(self.dcov_mtx)
-            self.dcov_mtx = ((1.0 - pca_term) * signs * numpy.abs(self.dcov_mtx) ** (1.0 / pca_exp) +
-                             pca_term * numpy.identity(self.dcov_mtx.shape[0])) ** pca_exp
-            self.dcov_mtx = numpy.identity(self.dcov_mtx.shape[0])
         rng = self._set_range()
 
         # Solve the generalized eigenvalue problem
         # the eigenvalues are already ordered in ascending order
-        # WARNING, moved dcov to the second argument!!!
-        # self.d, self.sf = self._symeig(self.dcov_mtx, self.cov_mtx, range=rng, overwrite=(not debug))
         # TODO: Only remove first eigenvalue and ignore negative eigenvalues (now there are features with
         # negative delta value)
         try:
             if verbose:
                 print("***Range used=", rng)
-            # ##            if self.sfa_expo != None and self.pca_expo!=None:
-            # ##                self.d, self.sf = _symeig_fake_regularized(self.dcov_mtx, self.cov_mtx, range=rng,
-            # overwrite=(not debug), sfa_expo=self.sfa_expo, pca_expo=self.pca_expo,
-            # magnitude_sfa_biasing=self.magnitude_sfa_biasing)
-            # ##            else:
             self.d, self.sf = self._symeig(self.dcov_mtx, self.cov_mtx, range=rng, overwrite=(not debug))
             d = self.d
             # check that we get only *positive* eigenvalues
@@ -544,7 +531,7 @@ class GSFANode(mdp.nodes.SFANode):
         del self.dcov_mtx
         self.cov_mtx = self.dcov_mtx = self._covdcovmtx = None
         self._bias = mult(self.avg, self.sf)
-        if verbose or True:
+        if verbose:
             print("shape of GSFANode.sf is=", self.sf.shape)
 
 
@@ -696,7 +683,6 @@ class CovDCovMatrix(object):
         weighted_sum_x = weighted_x.sum(axis=0)
         weighted_sum_prod_x = mdp.utils.mult(x.T, weighted_x)
         weighted_num_samples = node_weights.sum()
-        # print("weighted_num_samples=",  weighted_num_samples)
         self.add_samples(weighted_sum_prod_x, weighted_sum_x, weighted_num_samples, weight=weight)
 
         # Update DCov Matrix
@@ -757,7 +743,6 @@ class CovDCovMatrix(object):
         weighted_sum_x = weighted_x.sum(axis=0)
         weighted_sum_prod_x = mdp.utils.mult(x.T, weighted_x)
         weighted_num_samples = node_weights.sum()
-        # print("weighted_num_samples=",  weighted_num_samples)
         self.add_samples(weighted_sum_prod_x, weighted_sum_x, weighted_num_samples, weight=weight)
 
         # Update DCov Matrix
@@ -776,22 +761,20 @@ class CovDCovMatrix(object):
         weighted_sum_prod_diffs = mdp.utils.mult(diffs.T, weighted_diffs)
         self.add_diffs(weighted_sum_prod_diffs, weighted_num_diffs, weight=weight)
 
-    # Note: this method makes sense according to the consistency restriction for "larger" windows.
     def update_mirroring_sliding_window(self, x, weight=1.0, window_halfwidth=2):
+        """ Note: this method makes sense according to the consistency restriction for "larger" windows. """
         num_samples, dim = x.shape
         width = window_halfwidth  # window_halfwidth is way too long to write it
         if 2 * width >= num_samples:
             ex = "window_halfwidth %d not supported for %d samples!" % (width, num_samples)
             raise Exception(ex)
 
-        # Update Cov Matrix
-        # All samples have same weight
+        # Update Cov Matrix. All samples have same weight
         sum_x = x.sum(axis=0)
         sum_prod_x = mdp.utils.mult(x.T, x)
         self.add_samples(sum_prod_x, sum_x, num_samples, weight)
 
-        # Update DCov Matrix
-        # First mirror the borders
+        # Update DCov Matrix. First mirror the borders
         x_mirror = numpy.zeros((num_samples + 2 * width, dim))
         x_mirror[width:-width] = x  # center part
         x_mirror[0:width, :] = x[0:width, :][::-1, :]  # first end
@@ -800,8 +783,6 @@ class CovDCovMatrix(object):
         # Center part
         x_full = x
         sum_prod_x_full = mdp.utils.mult(x_full.T, x_full)
-        #        print("sum_prod_x_full[0]=", sum_prod_x_full[0])
-        #        print("(2*width+1)*sum_prod_x_full=", (2*width+1)*sum_prod_x_full[0:3,0:3])
 
         Aacc123 = numpy.zeros((dim, dim))
         for i in range(0, 2 * width):  # [0, 2*width-1]
@@ -809,50 +790,38 @@ class CovDCovMatrix(object):
 
         for i in range(num_samples, num_samples + 2 * width):  # [num_samples-width, num_samples-1]
             Aacc123 += (num_samples + 2 * width - i) * mdp.utils.mult(x_mirror[i:i + 1, :].T, x_mirror[i:i + 1, :])
-        #            print (num_samples+2*width-i)
-        # Warning [-1,0] does not work!!!
-        # for i in range(0, 2*width): # [0, 2*width-1]
-        #    Aacc123 += (i+1)*mdp.utils.mult(x_mirror[-(i+1):-i,:].T, x_mirror[-(i+1):-i,:]) #(i+1)=1,2,3..., 2*width
         x_middle = x_mirror[2 * width:-2 * width, :]  # intermediate values of x, which are connected 2*width+1 times
         Aacc123 += (2 * width + 1) * mdp.utils.mult(x_middle.T, x_middle)
-        #        print "Aacc123[0:3,0:3]=", Aacc123[0:3,0:3]
 
         b = numpy.zeros((num_samples + 1 + 2 * width, dim))
         b[1:] = x_mirror.cumsum(axis=0)
         B = b[2 * width + 1:] - b[0:-2 * width - 1]
         Bprod = mdp.utils.mult(x_full.T, B)
-        #        print "Bprod[0:3,0:3]=", Bprod[0:3,0:3]
 
         sum_prod_diffs_full = (2 * width + 1) * sum_prod_x_full + Aacc123 - Bprod - Bprod.T
         num_diffs = num_samples * (2 * width)  # removed zero differences
-        #         print "N3=", num_diffs
         self.add_diffs(sum_prod_diffs_full, num_diffs, weight)
 
-        # Note: this method makes sense according to the consistency restriction for "larger" windows.
 
-    # This is an unoptimized version of update_mirroring_sliding_window
     def update_slow_mirroring_sliding_window(self, x, weight=1.0, window_halfwidth=2):
+        """ This is an unoptimized version of update_mirroring_sliding_window. """
         num_samples, dim = x.shape
         width = window_halfwidth  # window_halfwidth is way too long to write it
         if 2 * width >= num_samples:
             ex = "window_halfwidth %d not supported for %d samples!" % (width, num_samples)
             raise Exception(ex)
 
-        # Update Cov Matrix
-        # All samples have same weight
+        # Update Cov Matrix. All samples have same weight
         sum_x = x.sum(axis=0)
         sum_prod_x = mdp.utils.mult(x.T, x)
         self.add_samples(sum_prod_x, sum_x, num_samples, weight)
 
-        # Update DCov Matrix
-        # window = numpy.ones(2*width+1) # Rectangular window
+        # Update DCov Matrix. window = numpy.ones(2*width+1) # Rectangular window
         x_mirror = numpy.zeros((num_samples + 2 * width, dim))
         x_mirror[width:-width] = x  # center part
         x_mirror[0:width, :] = x[0:width, :][::-1, :]  # first end
         x_mirror[-width:, :] = x[-width:, :][::-1, :]  # second end
 
-        # diffs = numpy.zeros((num_samples, dim))
-        # print "width=", width
         for offset in range(-width, width + 1):
             if offset == 0:
                 pass
@@ -863,41 +832,33 @@ class CovDCovMatrix(object):
                 num_diffs = len(diffs)
                 self.add_diffs(sum_prod_diffs, num_diffs, weight)
 
-                # ################# Truncating Window ####################
 
     def update_slow_truncating_sliding_window(self, x, weight=1.0, window_halfwidth=2):
+        """ Truncating Window (original slow/reference version). """
         num_samples, dim = x.shape
         width = window_halfwidth  # window_halfwidth is way too long to write it
         if 2 * width >= num_samples:
             ex = "window_halfwidth %d not supported for %d samples!" % (width, num_samples)
             raise Exception(ex)
 
-        # Update Cov Matrix
-        # All samples have same weight
+        # Update Cov Matrix. All samples have same weight
         sum_x = x.sum(axis=0)
         sum_prod_x = mdp.utils.mult(x.T, x)
         self.add_samples(sum_prod_x, sum_x, num_samples, weight)
 
-        # Update DCov Matrix
-        # window = numpy.ones(2*width+1) # Rectangular window
+        # Update DCov Matrix. window = numpy.ones(2*width+1) # Rectangular window
         x_extended = numpy.zeros((num_samples + 2 * width, dim))
         x_extended[width:-width] = x  # center part is preserved, extreme samples are zero
 
-        # diffs = numpy.zeros((num_samples, dim))
-        # print "width=", width
         # Negative offset is not considered because it is equivalent to the positive one, thereore the factor 2
         for offset in range(1, width + 1):
             diffs = x_extended[offset + width:width + num_samples, :] - x[0:-offset, :]
             sum_prod_diffs = 2 * mdp.utils.mult(diffs.T, diffs)
             num_diffs = 2 * (num_samples - offset)
             self.add_diffs(sum_prod_diffs, num_diffs, weight)
-        #            diffs = x_extended[offset+width:offset+width+num_samples,:]-x
-        #            sum_prod_diffs = mdp.utils.mult(diffs.T, diffs)
-        #            num_diffs = 2*(num_samples-offset)
-        #            self.add_diffs(sum_prod_diffs, num_diffs, weight)
 
-    # ################## Sliding window with node-weight correction #################
     def update_fast_sliding_window(self, x, weight=1.0, window_halfwidth=2):
+        """ Sliding window with node-weight correction. """
         num_samples, dim = x.shape
         width = window_halfwidth
         if 2 * width >= num_samples:
@@ -917,8 +878,7 @@ class CovDCovMatrix(object):
         sum_prod_x = mdp.utils.mult(x_sel.T, x)  # There was a bug here, x_sel used twice!!!
         self.add_samples(sum_prod_x, sum_x, num_samples - (0.5 * window_halfwidth - 0.5), weight)
 
-        # Update DCov Matrix
-        # First we compute the borders.
+        # Update DCov Matrix. First we compute the borders
         # Left border
         for i in range(0, width):  # [0, width -1]
             diffs = x[0:width + i + 1, :] - x[i, :]
@@ -939,7 +899,6 @@ class CovDCovMatrix(object):
         # Center part
         x_full = x[width:num_samples - width, :]
         sum_prod_x_full = mdp.utils.mult(x_full.T, x_full)
-        #        print "sum_prod_x_full[0]=", sum_prod_x_full[0]
 
         Aacc123 = numpy.zeros((dim, dim))
         for i in range(0, 2 * width):  # [0, 2*width-1]
@@ -961,29 +920,17 @@ class CovDCovMatrix(object):
         #        A = a[2*width+1:]-a[0:-2*width-1]
         B = b[2 * width + 1:] - b[0:-2 * width - 1]
         #        Aacc = A.sum(axis=0)
-        #        print "Aacc[0]=", Aacc[0]
         Bprod = mdp.utils.mult(x_full.T, B)
-        #        print "Bprod[0]=", Bprod[0]
-        #        print sum_prod_x_full.shape, Aacc.shape, Bprod.shape
         sum_prod_diffs_full = (2 * width + 1) * sum_prod_x_full + Aacc123 - Bprod - Bprod.T
         num_diffs = (num_samples - 2 * width) * (2 * width)  # removed zero differences
-        #         print "N3=", num_diffs
         self.add_diffs(sum_prod_diffs_full, num_diffs, weight)
 
-    def update__sliding_window(self, x, weight=1.0, window_halfwidth=2):
+    def update_sliding_window(self, x, weight=1.0, window_halfwidth=2):
         num_samples, dim = x.shape
         width = window_halfwidth
         if 2 * width >= num_samples:
             ex = "window_halfwidth %d not supported for %d samples!" % (width, num_samples)
             raise Exception(ex)
-
-        # Update Cov Matrix
-        # Warning, truncating samples to avoid edge problems
-        # TRUNCATED VERSION
-        #        x_sel = x[window_halfwidth:-window_halfwidth,:]
-        #        sum_x = x_sel.sum(axis=0)
-        #        sum_prod_x = mdp.utils.mult(x_sel.T, x_sel)
-        #        self.add_samples(sum_prod_x, sum_x, num_samples-2*window_halfwidth, weight)
 
         # MOST CORRECT VERSION
         x_sel = x + 0.0
@@ -995,15 +942,12 @@ class CovDCovMatrix(object):
         x_sel[-width:, :] = x_sel[-width:, :] * w_down
 
         sum_x = x_sel.sum(axis=0)
-        # print "F:)",
         sum_prod_x = mdp.utils.mult(x_sel.T, x)  # Bug fixed!!! computing w * X^T * X, with X=(x1,..xN)^T
         self.add_samples(sum_prod_x, sum_x, num_samples - (0.5 * window_halfwidth - 0.5), weight)  # weights verified
 
         # Update DCov Matrix
         # window = numpy.ones(2*width+1) # Rectangular window, used always here!
-
         # diffs = numpy.zeros((num_samples - 2 * width, dim))
-        # print "width=", width
         # This can be made faster (twice) due to symmetry
         for offset in range(-width, width + 1):
             if offset == 0:
@@ -1011,9 +955,6 @@ class CovDCovMatrix(object):
             else:
                 if offset > 0:
                     diffs = x[offset:, :] - x[0:num_samples - offset, :]
-                    #                else: #offset < 0, only makes sense if window asymmetric!
-                    #                    abs_offset = -1 * offset
-                    #                    diffs = x[0:num_samples-abs_offset,:] - x[abs_offset:,:]
                     sum_prod_diffs = mdp.utils.mult(diffs.T, diffs)
                     num_diffs = len(diffs)
                     self.add_diffs(sum_prod_diffs, num_diffs, weight)
@@ -1052,7 +993,6 @@ class CovDCovMatrix(object):
         x_b_end = x[num_samples - block_size:]
         sum_x = x_b_ini.sum(axis=0) + 2 * xp.sum(axis=0) + x_b_end.sum(axis=0)
 
-        #            print "Sum_x[0:3] is ", sum_x[0:3]
         sum_prod_x = mdp.utils.mult(x_b_ini.T, x_b_ini) + 2 * mdp.utils.mult(xp.T, xp) + mdp.utils.mult(x_b_end.T,
                                                                                                         x_b_end)
         num_samples = 2 * block_size + 2 * (num_samples - 2 * block_size)
@@ -1075,13 +1015,8 @@ class CovDCovMatrix(object):
         #       WARNING? why did I remove one factor block_size?
         num_diffs = block_size * (num_blocks - 1)
 
-        # warning with factors!!!! they should be 2.0, 1.0, -1.0
-        #        sum_prod_diffs = block_size * (2.0 * sum_prod_x + 2.0 * prod_last_block - 0.0 *prod_first_block) -
-        # (block_size * block_size) * sum_prod_mixed_meds
         sum_prod_diffs = (block_size * sum_prod_x -
                           (block_size * block_size) * sum_prod_mixed_meds) * (1.0 / block_size)
-        #        sum_prod_diffs = block_size * (2.0 * sum_prod_x + 2.0 * prod_last_block + 0.0 *prod_first_block) -
-        # (block_size * block_size) * sum_prod_mixed_meds
         self.add_diffs(2 * sum_prod_diffs, 2 * num_diffs, weight)  # NEW: Factor 2 to account for both directions
 
     # Weight should refer to node weights
@@ -1196,7 +1131,6 @@ class CovDCovMatrix(object):
         for j in range(J):
             labels[:, j] = (numpy.arange(N) // block_size // (2 ** (J - j - 1)) % 2) * 2 - 1
         eigenvalues = numpy.concatenate(([1.0] * (J - 1), numpy.arange(1.0, 0.0, -1.0 / (extra_label + 1))))
-        #        eigenvalues = numpy.concatenate(([1.0]*(J-1), 0.98**numpy.arange(0, extra_label+1)))
 
         n_taken = [2 ** k for k in range(J)]
         n_free = list(set(range(num_classes)) - set(n_taken))
@@ -1348,9 +1282,8 @@ def compute_cov_dcov_matrix_mixed(params, verbose=False):
 
 
 #########################################################################################################
-#                      AN EXAMPLE:                                                                      #
+#                      A FEW EXAMPLES                                                                   #
 #########################################################################################################
-
 
 def example_clustered_graph():
     print("")
