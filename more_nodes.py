@@ -142,7 +142,10 @@ class BasicAdaptiveCutoffNode(mdp.PreserveDimNode):
             data_rotated_clipped = numpy.clip(data_rotated, self.lower_bounds[i], self.upper_bounds[i])
             if self.measure_corrections:
                 interval = numpy.abs(self.upper_bounds[i] - self.lower_bounds[i])
-                factors = interval ** 2 / (numpy.abs(data_rotated_clipped - data_rotated) + interval) ** 2
+                delta = numpy.abs(data_rotated_clipped - data_rotated)
+                # factors = interval ** 2 / (delta + interval) ** 2
+                norm_delta = delta / interval
+                factors = 1.0 - (norm_delta / (norm_delta + 0.15)) ** 2
                 self.corrections *= factors.prod(axis=1)
                 if self.verbose:
                     print("Factors of BasicAdaptiveCutoffNode:", factors)
