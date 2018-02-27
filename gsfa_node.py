@@ -42,7 +42,7 @@ class GSFANode(mdp.nodes.SFANode):
         self.block_size = block_size
         self.train_mode = train_mode
 
-        self._covdcovmtx = CovDCovMatrix(block_size=block_size)  # why block_size and not input_dim???
+        self._covdcovmtx = CovDCovMatrix()
         # Parameters accepted during training
         self.list_train_params = ["scheduler", "n_parallel", "train_mode", "block_size"]
 
@@ -596,8 +596,8 @@ class CovDCovMatrix(object):
     """Special purpose class to compute the covariance matrices used by GSFA.
        It supports efficiently training methods for various graphs: e.g., clustered, serial, mixed.
     """
-    def __init__(self, block_size=None, verbose=False):
-        self.block_size = block_size
+    def __init__(self, verbose=False):
+        # self.block_size = block_size
         self.sum_x = None
         self.sum_prod_x = None
         self.num_samples = 0
@@ -1024,7 +1024,7 @@ class CovDCovMatrix(object):
         if block_size is None:
             er = "block_size must be specified"
             raise Exception(er)
-            block_size = self.block_size
+
         if isinstance(block_size, numpy.ndarray):
             err = "Inhomogeneous block sizes not yet supported in update_serial"
             raise Exception(err)
@@ -1095,7 +1095,6 @@ class CovDCovMatrix(object):
         if block_sizes is None:
             er = "error, block_size not specified!!!!"
             raise Exception(er)
-            # block_sizes = self.block_size
 
         if num_samples != numpy.array(block_sizes).sum():
             err = "Inconsistency error: num_samples (%d) is not equal to sum of block_sizes:" % num_samples, block_sizes
@@ -1115,7 +1114,6 @@ class CovDCovMatrix(object):
         if block_size is None:
             er = "error, block_size not specified!!!!"
             raise Exception(er)
-            # block_size = self.block_size
 
         if isinstance(block_size, numpy.ndarray):
             er = "Error: inhomogeneous block sizes not supported by this function"
@@ -1248,7 +1246,7 @@ class CovDCovMatrix(object):
 
     def fix(self, divide_by_num_samples_or_differences=True, center_dcov=False):  # include_tail=False,
         if self.verbose:
-            print("Fixing CovDCovMatrix, with block_size=", self.block_size)
+            print("Fixing CovDCovMatrix")
 
         avg_x = self.sum_x * (1.0 / self.num_samples)
 
@@ -1309,7 +1307,7 @@ def compute_cov_dcov_matrix_clustered(params, verbose=False):
         print("Computation Began!!! **********************************************************")
         sys.stdout.flush()
     x, block_size, weight = params
-    covdcovmtx = CovDCovMatrix(block_size)
+    covdcovmtx = CovDCovMatrix()
     covdcovmtx.update_clustered_homogeneous_block_sizes(x, block_size=block_size, weight=weight)
     if verbose:
         print("Computation Ended!!! **********************************************************")
@@ -1323,7 +1321,7 @@ def compute_cov_dcov_matrix_serial(params, verbose=False):
         print("Computation Began!!! **********************************************************")
         sys.stdout.flush()
     x, block_size = params
-    covdcovmtx = CovDCovMatrix(block_size)
+    covdcovmtx = CovDCovMatrix()
     covdcovmtx.update_serial(x, block_size=block_size)
     if verbose:
         print("Computation Ended!!! **********************************************************")
@@ -1338,7 +1336,7 @@ def compute_cov_dcov_matrix_mixed(params, verbose=False):
         sys.stdout.flush()
     x, block_size = params
     bs = block_size
-    covdcovmtx = CovDCovMatrix(block_size)
+    covdcovmtx = CovDCovMatrix()
     covdcovmtx.update_clustered_homogeneous_block_sizes(x[0:bs], block_size=block_size, weight=0.5)
     covdcovmtx.update_clustered_homogeneous_block_sizes(x[bs:-bs], block_size=block_size, weight=1.0)
     covdcovmtx.update_clustered_homogeneous_block_sizes(x[-bs:], block_size=block_size, weight=0.5)
