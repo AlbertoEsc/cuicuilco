@@ -183,7 +183,7 @@ def compute_quadratic_indices(dim):
     return indices1, indices2
 
 
-# This dictionary speeds up the repeated computation of quadratic expansions on arrays of the same lenght
+# This dictionary speeds up the repeated computation of quadratic expansions on arrays of the same length
 quadratic_indices_dict = {}
 
 

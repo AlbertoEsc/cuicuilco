@@ -37,30 +37,57 @@ def add_corrections(initial_corrections, added_corrections):
         return initial_corrections * added_corrections
 
 
-def combine_correction_factors(flow_or_node):
+def combine_correction_factors(flow_or_node, average_over_layers = True, average_inside_layers=False):
     """This function takes into account all corrections performed by the BasicAdaptiveCutoffNodes of
     a flow (possibly a hierarchical network) and combines them into a single vector. The function also
     works on standard nodes.
-    
-    The combined correction factor of each sample estimates the probability that it is not an outlier. That is,
-    correction=1.0 implies "not outlier", and smaller values increase the rareness of the sample.
+
+    average_over_layers: if True, the combined corrections are the average of the corrections of each
+        node in the flow, otherwise they are multiplied (omitting nodes without corrections)
+    average_inside_layers: if True, the combined corrections of Layers are computed as the average of
+        the corrections of each node in the layer, otherwise they are multiplied
+
+    The combined correction factor of each sample estimates the probability that it is not an anomaly. That is,
+    correction=1.0 implies "not anomaly", and smaller values increase the rareness of the sample.
     """
     final_corrections = None
     if isinstance(flow_or_node, mdp.Flow):
         flow = flow_or_node
-	for node in flow:
-            another_node_corrections = combine_correction_factors(node)
-            final_corrections = add_corrections(final_corrections, another_node_corrections)
-
+        if average_over_layers:
+            corrections = []
+            for node in flow:
+                another_node_corrections = combine_correction_factors(node, average_over_layers)
+                if another_node_corrections is not None:
+                    corrections.append(another_node_corrections)
+            if len(corrections) > 0:
+                corrections = numpy.array(another_node_corrections)
+                final_corrections = corrections.mean()
+            else:
+                final_corrections = None
+        else:
+            for node in flow:
+                another_node_corrections = combine_correction_factors(node)
+                final_corrections = add_corrections(final_corrections, another_node_corrections)
     elif isinstance(flow_or_node, mdp.Node):
-	node = flow_or_node
+        node = flow_or_node
         if isinstance(node, mdp.hinet.CloneLayer):
             err = "CloneLayers not yet supported when computing/storing correction factors"
             raise Exception(err)
         elif isinstance(node, mdp.hinet.Layer):
-            for another_node in node.nodes:
-                another_node_corrections = combine_correction_factors(another_node)
-                final_corrections = add_corrections(final_corrections, another_node_corrections)
+            if average_inside_layers:
+                corrections = []
+                for another_node in node.nodes:
+                    another_node_corrections = combine_correction_factors(another_node)
+                    corrections.append(another_node_corrections)
+                if len(corrections) > 0:
+                    corrections = numpy.array(another_node_corrections)
+                    final_corrections = corrections.mean()
+                else:
+                    final_corrections = None
+            else:
+                for another_node in node.nodes:
+                    another_node_corrections = combine_correction_factors(another_node)
+                    final_corrections = add_corrections(final_corrections, another_node_corrections)
         elif isinstance(node, BasicAdaptiveCutoffNode):
             final_corrections = add_corrections(final_corrections, node.corrections)
     return final_corrections
@@ -2760,7 +2787,7 @@ def map_class_numbers_to_avg_label(all_classes, avg_labels, class_numbers):
         er = "SEVERE WARNING! Array of labels should be monotonically increasing:" + str(avg_labels)
         raise Exception(er)
     if len(all_classes) != len(avg_labels):
-        er = "SEVERE WARNING! Array of classes should have the same lenght as the array of labels: %d vs. %d" % \
+        er = "SEVERE WARNING! Array of classes should have the same length as the array of labels: %d vs. %d" % \
             (len(all_classes), len(avg_labels))
         raise Exception(er)
     indices = numpy.searchsorted(all_classes, class_numbers)
@@ -2775,7 +2802,7 @@ def map_labels_to_class_number(all_classes, avg_labels, labels):
         er = "Array of labels should be monotonically increasing:", avg_labels
         raise Exception(er)
     if len(all_classes) != len(avg_labels):
-        er = "Array of classes should have the same lenght as the array of labels:" + str(len(all_classes)) + \
+        er = "Array of classes should have the same length as the array of labels:" + str(len(all_classes)) + \
              " vs. " + str(len(avg_labels))
         raise Exception(er)
     interval_midpoints = (avg_labels[1:] + avg_labels[:-1]) / 2.0

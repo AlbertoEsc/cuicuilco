@@ -25,7 +25,7 @@ from cuicuilco.igsfa_node import iGSFANode, SFANode_reduce_output_dim, PCANode_r
 
 #iGSFANode(input_dim=None, output_dim=None, pre_expansion_node_class=None, pre_expansion_out_dim=None,
 #                 expansion_funcs=None, expansion_output_dim=None, expansion_starting_point=None,
-#                 max_lenght_slow_part=None, offsetting_mode="sensitivity_based_pure", max_preserved_sfa=1.9999,
+#                 max_length_slow_part=None, offsetting_mode="sensitivity_based_pure", max_preserved_sfa=1.9999,
 #                 reconstruct_with_sfa=True, **argv)
 
 

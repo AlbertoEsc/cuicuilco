@@ -4228,7 +4228,7 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
                 orig_labels = [orig_labels[i] for i in selected]
 
             if len(files_subdirs) != len(orig_labels):
-                print("Wrong cluster files and orig labels lenghts")
+                print("Wrong cluster files and orig labels lengths")
                 print(len(files_subdirs))
                 print(len(orig_labels))
 

@@ -37,7 +37,7 @@ class iGSFANode(mdp.Node):
     """
     def __init__(self, input_dim=None, output_dim=None, pre_expansion_node_class=None, pre_expansion_out_dim=None,
                  expansion_funcs=None, expansion_output_dim=None, expansion_starting_point=None,
-                 max_lenght_slow_part=None, offsetting_mode="sensitivity_based_pure", max_preserved_sfa=1.9999,
+                 max_length_slow_part=None, offsetting_mode="sensitivity_based_pure", max_preserved_sfa=1.9999,
                  reconstruct_with_sfa=True, verbose=False, **argv):
         """Initializes the iGSFA node.
 
@@ -47,7 +47,7 @@ class iGSFANode(mdp.Node):
         expansion_funcs: a list of expansion functions to be applied before GSFA.
         expansion_output_dim: this parameter is used to specify an output dimensionality for some expansion functions.
         expansion_starting_point: this parameter is also used by some specific expansion functions.
-        max_lenght_slow_part: fixes an upper bound to the size of the slow part, which is convenient for
+        max_length_slow_part: fixes an upper bound to the size of the slow part, which is convenient for
                               computational reasons.
         offsetting_mode: the method used to scale the slow features. Valid entries are: None, "sensitivity_based_pure"
                          (default), "data_dependent", and "QR_decomposition".
@@ -79,7 +79,7 @@ class iGSFANode(mdp.Node):
         self.sfa_node = None
         self.pca_node = None
         self.lr_node = None
-        self.max_lenght_slow_part = max_lenght_slow_part  # upper limit to the size of the slow part
+        self.max_length_slow_part = max_length_slow_part  # upper limit to the size of the slow part
 
         # Factor that prevents the amplitude of the features from growing too much through the layers of the network
         self.feature_scaling_factor = 0.5
@@ -154,10 +154,10 @@ class iGSFANode(mdp.Node):
 
         self.expanded_dim = exp_x.shape[1]
 
-        if self.max_lenght_slow_part is None:
+        if self.max_length_slow_part is None:
             sfa_output_dim = min(self.expanded_dim, self.output_dim)
         else:
-            sfa_output_dim = min(self.max_lenght_slow_part, self.expanded_dim, self.output_dim)
+            sfa_output_dim = min(self.max_length_slow_part, self.expanded_dim, self.output_dim)
 
         # Apply SFA to expanded data
         self.sfa_node = GSFANode(output_dim=sfa_output_dim)
@@ -172,10 +172,10 @@ class iGSFANode(mdp.Node):
         # Decide how many slow features are preserved (either use Delta_T=max_preserved_sfa when
         # max_preserved_sfa is a float, or preserve max_preserved_sfa features when max_preserved_sfa is an integer)
         if isinstance(self.max_preserved_sfa, float):
-            # here self.max_lenght_slow_part should be considered
+            # here self.max_length_slow_part should be considered
             self.num_sfa_features_preserved = (self.sfa_node.d <= self.max_preserved_sfa).sum()
         elif isinstance(self.max_preserved_sfa, int):
-            # here self.max_lenght_slow_part should be considered
+            # here self.max_length_slow_part should be considered
             self.num_sfa_features_preserved = self.max_preserved_sfa
         else:
             ex = "Cannot handle type of self.max_preserved_sfa"
@@ -348,10 +348,10 @@ class iGSFANode(mdp.Node):
 
         self.expanded_dim = exp_x.shape[1]
 
-        if self.max_lenght_slow_part is None:
+        if self.max_length_slow_part is None:
             sfa_output_dim = min(self.expanded_dim, self.output_dim)
         else:
-            sfa_output_dim = min(self.max_lenght_slow_part, self.expanded_dim, self.output_dim)
+            sfa_output_dim = min(self.max_length_slow_part, self.expanded_dim, self.output_dim)
 
         # Apply SFA to expanded data
         if self.sfa_node is None:
@@ -386,10 +386,10 @@ class iGSFANode(mdp.Node):
         # Decide how many slow features are preserved (either use Delta_T=max_preserved_sfa when
         # max_preserved_sfa is a float, or preserve max_preserved_sfa features when max_preserved_sfa is an integer)
         if isinstance(self.max_preserved_sfa, float):
-            # here self.max_lenght_slow_part should be considered
+            # here self.max_length_slow_part should be considered
             self.num_sfa_features_preserved = (self.sfa_node.d <= self.max_preserved_sfa).sum()
         elif isinstance(self.max_preserved_sfa, int):
-            # here self.max_lenght_slow_part should be considered
+            # here self.max_length_slow_part should be considered
             self.num_sfa_features_preserved = self.max_preserved_sfa
         else:
             ex = "Cannot handle type of self.max_preserved_sfa"
