@@ -2162,14 +2162,14 @@ def main():
     best_correction_factors_indices_newid = numpy.argsort(corrections_newid)[:-num_interesting_samples-1:-1]
     print(num_interesting_samples, "worst final corrections at indices:", worst_correction_factors_indices_newid)
     print(num_interesting_samples, "worst final corrections:", corrections_newid[worst_correction_factors_indices_newid])
-    print(num_interesting_samples, "images with worst corrections:", end='')
+    print(num_interesting_samples, "images with worst corrections:", end=' ')
     for i in range(num_interesting_samples):
-        print(seq.input_files[worst_correction_factors_indices_newid[i]], end='')
+        print(seq.input_files[worst_correction_factors_indices_newid[i]], end=' ')
     print(num_interesting_samples, "best final corrections at indices:", best_correction_factors_indices_newid)
     print(num_interesting_samples, "best final corrections:", corrections_newid[best_correction_factors_indices_newid])
-    print(num_interesting_samples, "images with best corrections:", end='')
+    print(num_interesting_samples, "images with best corrections:", end=' ')
     for i in range(num_interesting_samples):
-        print(seq.input_files[best_correction_factors_indices_newid[i]], end='')
+        print(seq.input_files[best_correction_factors_indices_newid[i]], end=' ')
 
     corr_factor = 1.0
     print(corr_factor)

@@ -60,8 +60,8 @@ def combine_correction_factors(flow_or_node, average_over_layers = True, average
                 if another_node_corrections is not None:
                     corrections.append(another_node_corrections)
             if len(corrections) > 0:
-                corrections = numpy.array(another_node_corrections)
-                final_corrections = corrections.mean()
+                corrections = numpy.stack(corrections, axis=1)
+                final_corrections = corrections.mean(axis=1)
             else:
                 final_corrections = None
         else:
@@ -80,8 +80,8 @@ def combine_correction_factors(flow_or_node, average_over_layers = True, average
                     another_node_corrections = combine_correction_factors(another_node)
                     corrections.append(another_node_corrections)
                 if len(corrections) > 0:
-                    corrections = numpy.array(another_node_corrections)
-                    final_corrections = corrections.mean()
+                    corrections = numpy.stack(corrections, axis=1)
+                    final_corrections = corrections.mean(axis=1)
                 else:
                     final_corrections = None
             else:
