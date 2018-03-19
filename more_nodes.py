@@ -14,6 +14,7 @@ from __future__ import division
 import numpy
 import scipy
 import scipy.optimize
+import scipy.stats
 from scipy.stats import ortho_group
 import copy
 import sys
@@ -51,23 +52,32 @@ def combine_correction_factors(flow_or_node, average_over_layers = True, average
     correction=1.0 implies "not anomaly", and smaller values increase the rareness of the sample.
     """
     final_corrections = None
+    final_gauss_corrections = None
     if isinstance(flow_or_node, mdp.Flow):
         flow = flow_or_node
         if average_over_layers:
             corrections = []
+            gauss_corrections = []
             for node in flow:
-                another_node_corrections = combine_correction_factors(node, average_over_layers)
+                another_node_corrections, another_node_gauss_corrections = combine_correction_factors(node, average_over_layers)
                 if another_node_corrections is not None:
                     corrections.append(another_node_corrections)
+                if another_node_gauss_corrections is not None:
+                    gauss_corrections.append(another_node_gauss_corrections)
             if len(corrections) > 0:
                 corrections = numpy.stack(corrections, axis=1)
                 final_corrections = corrections.mean(axis=1)
+                gauss_corrections = numpy.stack(gauss_corrections, axis=1)
+                final_gauss_corrections = gauss_corrections.mean(axis=1)
+
             else:
                 final_corrections = None
+                final_gauss_corrections = None
         else:
             for node in flow:
-                another_node_corrections = combine_correction_factors(node)
+                another_node_corrections, another_node_gauss_corrections = combine_correction_factors(node)
                 final_corrections = add_corrections(final_corrections, another_node_corrections)
+                final_gauss_corrections = add_corrections(final_gauss_corrections, another_node_gauss_corrections)
     elif isinstance(flow_or_node, mdp.Node):
         node = flow_or_node
         if isinstance(node, mdp.hinet.CloneLayer):
@@ -76,21 +86,28 @@ def combine_correction_factors(flow_or_node, average_over_layers = True, average
         elif isinstance(node, mdp.hinet.Layer):
             if average_inside_layers:
                 corrections = []
+                gauss_corrections = []
                 for another_node in node.nodes:
-                    another_node_corrections = combine_correction_factors(another_node)
+                    another_node_corrections, another_node_gauss_corrections = combine_correction_factors(another_node)
                     corrections.append(another_node_corrections)
+                    gauss_corrections.append(another_node_gauss_corrections)
                 if len(corrections) > 0:
                     corrections = numpy.stack(corrections, axis=1)
                     final_corrections = corrections.mean(axis=1)
+                    gauss_corrections = numpy.stack(gauss_corrections, axis=1)
+                    final_gauss_corrections = gauss_corrections.mean(axis=1)
                 else:
                     final_corrections = None
+                    final_gauss_corrections = None
             else:
                 for another_node in node.nodes:
-                    another_node_corrections = combine_correction_factors(another_node)
+                    another_node_corrections, another_node_gauss_corrections = combine_correction_factors(another_node)
                     final_corrections = add_corrections(final_corrections, another_node_corrections)
+                    final_gauss_corrections = add_corrections(final_gauss_corrections, another_node_gauss_corrections)
         elif isinstance(node, BasicAdaptiveCutoffNode):
             final_corrections = add_corrections(final_corrections, node.corrections)
-    return final_corrections
+            final_gauss_corrections = add_corrections(final_gauss_corrections, node.gauss_corrections)
+    return final_corrections, final_gauss_corrections
 
 
 class BasicAdaptiveCutoffNode(mdp.PreserveDimNode):
@@ -104,7 +121,7 @@ class BasicAdaptiveCutoffNode(mdp.PreserveDimNode):
     """
 
     def __init__(self, input_dim=None, output_dim=None, num_rotations=1, measure_corrections=False,
-                 only_measure=False, verbose=False, dtype=None):
+                 only_measure=False, verbose=True, dtype=None):
         """Initialize node. """
         super(BasicAdaptiveCutoffNode, self).__init__(input_dim=input_dim, output_dim=output_dim, dtype=dtype)
         self.lower_bounds = None
@@ -113,8 +130,13 @@ class BasicAdaptiveCutoffNode(mdp.PreserveDimNode):
         self.num_rotations = num_rotations
         self.measure_corrections = measure_corrections
         self.corrections = None
+        self.gauss_corrections = None
         self.only_measure = only_measure
         self.verbose = verbose
+        self._avg_x = None
+        self._avg_x_squared = None
+        self._num_samples = 0
+        self._std_x = None
         if self.verbose:
             print("num_rotations:", num_rotations, "measure_corrections:", measure_corrections,
                   "only_measure:", only_measure, "verbose:", verbose)
@@ -156,10 +178,27 @@ class BasicAdaptiveCutoffNode(mdp.PreserveDimNode):
             else:
                 self.upper_bounds[i] = numpy.maxium(self.upper_bounds[i], rotated_data)
 
+        if self._avg_x is None:
+            self._avg_x = x.sum(axis=0)
+            self._avg_x_squared = (x**2).sum(axis=0)
+        else:
+            self._avg_x += x.sum(axis=0)
+            self._avg_x_squared += (x ** 2).sum(axis=0)
+        self._num_samples += x.shape[0]
+
+    def _stop_training(self):
+        self._avg_x /= self._num_samples
+        self._avg_x_squared /= self._num_samples
+        self._std_x = (self._avg_x_squared - self._avg_x **2) ** 0.5
+        print("self._avg_x", self._avg_x)
+        print("self._avg_x_squared", self._avg_x_squared)
+        print("self._std_x", self._std_x)
+
     def _execute(self, x):
         """Return the clipped data."""
         num_samples = x.shape[0]
         self.corrections = numpy.ones(num_samples)
+        self.gauss_corrections = numpy.ones(num_samples)
 
         if self.only_measure:
             x_copy = x.copy()
@@ -173,15 +212,29 @@ class BasicAdaptiveCutoffNode(mdp.PreserveDimNode):
                 # factors = interval ** 2 / (delta + interval) ** 2
                 norm_delta = delta / interval
                 factors = 1.0 - (norm_delta / (norm_delta + 0.15)) ** 2
-                self.corrections *= factors.prod(axis=1)
+                self.corrections *= factors.prod(axis=1)  # consider using here and below the mean instead of the product
                 if self.verbose:
                     print("Factors of BasicAdaptiveCutoffNode:", factors)
+
+                # Computation of Gaussian probabilities
+                factors = scipy.stats.norm.pdf(x, loc=self._avg_x, scale=4*self._std_x)
+                if self.verbose or True:
+                    print("Factors of BasicAdaptiveCutoffNode (gauss):", factors)
+                    print("x.mean(axis=0):", x.mean(axis=0))
+                    print("x.std(axis=0):", x.std(axis=0))
+                self.gauss_corrections *= factors.prod(axis=1)
+
             x = numpy.dot(data_rotated_clipped, self.rotation_matrices[i].T)  # Project back to original coordinates
 
-        if self.verbose:
+        if self.verbose or True:
             print("Corrections of BasicAdaptiveCutoffNode:", self.corrections)
             print("20 worst final corrections at indices:", numpy.argsort(self.corrections)[0:20])
             print("20 worst final corrections:", self.corrections[numpy.argsort(self.corrections)[0:20]])
+
+            print("Gaussian corrections of BasicAdaptiveCutoffNode:", self.gauss_corrections)
+            print("20 worst final Gaussian corrections at indices:", numpy.argsort(self.gauss_corrections)[0:20])
+            print("20 worst final Gaussian corrections:",
+                  self.corrections[numpy.argsort(self.gauss_corrections)[0:20]])
 
         if self.only_measure:
             return x_copy
@@ -372,7 +425,7 @@ class GeneralExpansionNode(mdp.Node):
             for i, func in enumerate(self.funcs):
                 outx = func(x)
                 sizes[i] = outx.shape[1]
-                print ("SS", end="")
+                print ("S", end="")
         return sizes
 
     def is_trainable(self):
@@ -543,7 +596,7 @@ class PairwiseAbsoluteExpansionNode(mdp.Node):
 class PInvSwitchboard(mdp.hinet.Switchboard):
     """This node is a variation of the RectangularSwitchboard that facilitates (approximate) inverse operations. """
     def __init__(self, input_dim, connections, slow_inv=False, type_inverse="average", output_scaling=True,
-                 additive_noise_std=0.00004):
+                 additive_noise_std=0.00004, verbose=False):
         super(PInvSwitchboard, self).__init__(input_dim=input_dim, connections=connections)
         self.pinv = None
         self.mat2 = None
@@ -552,10 +605,14 @@ class PInvSwitchboard(mdp.hinet.Switchboard):
         self.output_dim = len(connections)
         self.output_scales = None
         self.additive_noise_std = additive_noise_std
-        print ("self.inverse_connections=", self.inverse_connections, "self.slow_inv=", self.slow_inv)
+        self.verbose = verbose
+
+        if verbose:
+            print ("self.inverse_connections=", self.inverse_connections, "self.slow_inv=", self.slow_inv)
         # WARNING! IF/ELIF doesn't make any sense! what are the semantics of inverse_connections
         if self.inverse_connections is None:
-            print ("type(connections)", type(connections))
+            if verbose:
+                print ("type(connections)", type(connections))
             all_outputs = numpy.arange(self.output_dim)
 
             self.inverse_indices = [[]] * self.input_dim
@@ -575,10 +632,12 @@ class PInvSwitchboard(mdp.hinet.Switchboard):
                     self.inverse_indices[i] = []
                 else:
                     self.inverse_indices[i] = index_array[value_range[i][0]: value_range[i][1]]
-            print ("inverse_indices computed in PINVSB")
+            if verbose:
+                print ("inverse_indices computed in PINVSB")
 
         elif self.inverse_connections is None and self.slow_inv:
-            print ("warning using slow inversion in PInvSwitchboard!!!")
+            if verbose:
+                print ("warning using slow inversion in PInvSwitchboard!!!")
             # find input variables not used by connections:
             used_inputs = numpy.unique(connections)
             used_inputs_set = set(used_inputs)
@@ -599,18 +658,20 @@ class PInvSwitchboard(mdp.hinet.Switchboard):
             for i in range(len(unused_inputs)):
                 mat[i + len(connections), unused_inputs[i]] = 1
             #
-            print ("extended matrix is:")
-            print (mat)
+            if verbose:
+                    print ("extended matrix is:", mat)
             # compute pseudoinverse
             mat2 = numpy.matrix(mat)
             self.mat2 = mat2
             self.pinv = (mat2.T * mat2).I * mat2.T
         else:
-            print ("Inverse connections already given, in PInvSwitchboard")
+            if verbose:
+                print ("Inverse connections already given, in PInvSwitchboard")
 
         if output_scaling:
             if self.inverse_connections is None and not self.slow_inv:
-                print ("**A", end="")
+                if verbose:
+                    print ("**A", end="")
                 if self.type_inverse != "average":
                     err = "self.type_inverse not supported " + self.type_inverse
                     raise Exception(err)
@@ -622,20 +683,25 @@ class PInvSwitchboard(mdp.hinet.Switchboard):
                     for j in output_indices:
                         self.output_scales[j] = (1.0 / multiplicity) ** 0.5
                         tt += 1
-                print ("connections in switchboard considered: ", tt, "output dimension=", self.output_dim)
+                if verbose:
+                    print ("connections in switchboard considered: ", tt, "output dimension=", self.output_dim)
             elif self.inverse_connections is None and self.slow_inv:
-                print ("**B", end="")
+                if verbose:
+                    print ("**B", end="")
                 err = "use of self.slow_inv = True is obsolete"
                 raise Exception(err)
             else:  # inverse connections are unique, mapping bijective
-                print ("**C", end="")
+                if verbose:
+                    print ("**C", end="")
                 self.output_scales = numpy.ones(self.output_dim)
         else:
-            print ("**D", end="")
+            if verbose:
+                print ("**D", end="")
             self.output_scales = numpy.ones(self.output_dim)
-        print ("PINVSB output_scales =", self.output_scales)
-        print ("SUM output_scales/len(output_scales)=", self.output_scales.sum() / len(self.output_scales))
-        print ("output_scales.min()", self.output_scales.min())
+        if verbose:
+            print ("PINVSB output_scales =", self.output_scales)
+            print ("SUM output_scales/len(output_scales)=", self.output_scales.sum() / len(self.output_scales))
+            print ("output_scales.min()", self.output_scales.min())
 
     # PInvSwitchboard is always invertible
     def is_invertible(self):
@@ -657,20 +723,24 @@ class PInvSwitchboard(mdp.hinet.Switchboard):
         if self.additive_noise_std > 0.0:
             n, dim = y.shape
             steps = int(n / 9000 + 1)
-            print ("PInvSwitchboard is adding noise to the output features with std", self.additive_noise_std, end="")
-            print (" computation in %d steps" % steps)
+            if self.verbose:
+                print ("PInvSwitchboard is adding noise to the output features with std", self.additive_noise_std,
+                       end="")
+                print (" computation in %d steps" % steps)
             step_size = int(n / steps)
             for s in range(steps):
                 y[step_size * s:step_size * (s + 1)] += numpy.random.uniform(low=-(3 ** 0.5) * self.additive_noise_std,
                                                                              high=(3 ** 0.5) * self.additive_noise_std,
                                                                              size=(step_size, dim))
-                print ("noise block %d added" % s)
+                if self.verbose:
+                    print ("noise block %d added" % s)
             if step_size * steps < n:
                 rest = n - step_size * steps
                 y[step_size * steps:step_size * steps + rest] += numpy.random.uniform(
                     low=-(3 ** 0.5) * self.additive_noise_std, high=(3 ** 0.5) * self.additive_noise_std,
                     size=(rest, dim))
-                print ("remaining noise block added")
+                if self.verbose:
+                    print ("remaining noise block added")
         return y
 
     # If true inverse is present, just use it, otherwise compute it by means of the pseudoinverse
@@ -691,15 +761,17 @@ class PInvSwitchboard(mdp.hinet.Switchboard):
                         raise Exception(err)
             output = mat2
         elif self.inverse_connections is None and self.slow_inv:
-            print ("x=", x)
             height_x = x.shape[0]
             full_x = numpy.concatenate((x, 255 * numpy.ones((height_x, self.num_unused_inputs))), axis=1)
             data2 = numpy.matrix(full_x)
-            print ("data2=", data2)
-            print ("PINV=", self.pinv)
+            if self.verbose:
+                print ("x=", x)
+                print ("data2=", data2)
+                print ("PINV=", self.pinv)
             output = (self.pinv * data2.T).T
         else:
-            print ("using inverse_connections in PInvSwitchboard")
+            if self.verbose:
+                print ("using inverse_connections in PInvSwitchboard")
             # return apply_permutation_to_signal(x, self.inverse_connections, self.input_dim)
             output = select_rows_from_matrix(x, self.inverse_connections)
         return output
