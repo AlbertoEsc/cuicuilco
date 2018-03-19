@@ -31,7 +31,7 @@ class GSFANode(mdp.nodes.SFANode):
     problems on high-dimensional data with a supervised extension of Slow Feature Analysis". Journal of Machine
     Learning Research 14:3683-3719, 2013
     """
-    def __init__(self, input_dim=None, output_dim=None, dtype=None, block_size=None, train_mode=None):
+    def __init__(self, input_dim=None, output_dim=None, dtype=None, block_size=None, train_mode=None, verbose=False):
         """Initializes the GSFA node, which is a subclass of the SFA node.
 
         The parameters block_size and train_mode are not necessary and it is better to provide them during training.
@@ -41,13 +41,14 @@ class GSFANode(mdp.nodes.SFANode):
         self.pinv = None
         self.block_size = block_size
         self.train_mode = train_mode
+        self.verbose = verbose
 
         self._covdcovmtx = CovDCovMatrix()
         # The following parameters are accepted during training
         self.list_train_params = ["scheduler", "n_parallel", "train_mode", "block_size"]
 
     def _train_without_scheduler(self, x, block_size=None, train_mode=None, node_weights=None, edge_weights=None,
-                                 verbose=0):
+                                 verbose=None):
         """ This is the main training function of GSFA. It is called internally by _train.
         
         x: training data (each sample is a row)
@@ -75,6 +76,8 @@ class GSFANode(mdp.nodes.SFANode):
         """
         if train_mode is None:
             train_mode = self.train_mode
+        if verbose is None:
+           verbose = self.verbose
         if block_size is None:
             if verbose:
                 print("parameter block_size was not provided, using default value self.block_size")
@@ -370,7 +373,7 @@ class GSFANode(mdp.nodes.SFANode):
     # TODO: check integer vs float arguments in parallelization
     # TODO: This function could also be called _train_with_scheduler
     def _train(self, x, block_size=None, train_mode=None, node_weights=None, edge_weights=None, scheduler=None,
-               n_parallel=None, verbose=False):
+               n_parallel=None, verbose=None):
         """ This code is the training funcion when an mdp scheduler is provided (otherwise it resorts to the
         _train_without_scheduler version).
 
@@ -380,6 +383,8 @@ class GSFANode(mdp.nodes.SFANode):
         self._train_phase_started = True
         if train_mode is None:
             train_mode = self.train_mode
+        if verbose is None:
+           verbose = self.verbose
         if block_size is None:
             block_size = self.block_size
         if scheduler is None or n_parallel is None or train_mode is None:
@@ -496,7 +501,9 @@ class GSFANode(mdp.nodes.SFANode):
             for covdcovmtx in results:
                 self._covdcovmtx.add_cov_dcov_matrix(covdcovmtx)
 
-    def _stop_training(self, debug=False, verbose=False):
+    def _stop_training(self, debug=False, verbose=None):
+        if verbose is None:
+           verbose = self.verbose
         if verbose:
             print("stop_training: self.block_size=", self.block_size)
             print("self._covdcovmtx.num_samples = ", self._covdcovmtx.num_samples)
