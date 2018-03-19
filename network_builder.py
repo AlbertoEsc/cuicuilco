@@ -30,7 +30,7 @@ from . import system_parameters
 
 # def CreateNetwork(Network, subimage_width, subimage_height, block_size, train_mode, benchmark, in_channel_dim=1,
 def create_network(network, subimage_width, subimage_height, benchmark, in_channel_dim=1,
-                   num_features_appended_to_input=0):
+                   num_features_appended_to_input=0, verbose=False):
     """ This function creates a hierarchical network according to the description
     stored in the object 'network'.
 
@@ -53,27 +53,28 @@ def create_network(network, subimage_width, subimage_height, benchmark, in_chann
         if i > 0:
             layers[i].in_channel_dim = layers[i - 1].sfa_out_dim
 
-    print("Layers: ", layers)
+    if verbose:
+        print("Layers: ", layers)
 
     t1 = time.time()
 
-    print("layers =", layers)
     node_list = []
     previous_layer = None
     for i, layer in enumerate(layers):
         if i == 0:
             layer = create_layer(None, layer, i, subimage_height, subimage_width, num_features_appended_to_input)
         else:
-            layer = create_layer(previous_layer, layer, i)
+            layer = create_layer(previous_layer, layer, i, verbose=verbose)
         previous_layer = layer
-        print("L=", layer)
-        print("L.node_list=", layer.node_list)
+        if verbose:
+            print("L=", layer)
+            print("L.node_list=", layer.node_list)
         node_list.extend(layer.node_list)
 
     node_list = remove_Nones(node_list)
     print("Flow.node_list=", node_list)
 
-    flow = mdp.Flow(node_list, verbose=True)
+    flow = mdp.Flow(node_list, verbose=verbose)
     t2 = time.time()
 
     print("Finished hierarchy construction, with total time %0.3f ms" % ((t2 - t1) * 1000.0))
@@ -84,7 +85,7 @@ def create_network(network, subimage_width, subimage_height, benchmark, in_chann
 
 
 def create_layer(prev_layer, layer, num_layer, prev_layer_height=None, prev_layer_width=None,
-                 num_features_appended_to_input=0):
+                 num_features_appended_to_input=0, verbose=False):
     """Creates a new layer according to the specifications of 'layer'.
 
     'layer' is of type system_parameters.ParamsSFASuperNode or ParamsSFALayer.
@@ -103,8 +104,9 @@ def create_layer(prev_layer, layer, num_layer, prev_layer_height=None, prev_laye
             er = "Error, prev_layer, prev_layer_height and prev_layer_width are None"
             raise Exception(er)
 
-        print("*********************    Creating Layer *************************")
-        print("Creating ParamsSFALayer L%d" % num_layer)
+        if verbose:
+            print("*********************    Creating Layer *************************")
+            print("Creating ParamsSFALayer L%d" % num_layer)
 
         layer.v1 = [layer.x_field_spacing, 0]
         layer.v2 = [layer.x_field_spacing, layer.y_field_spacing]
@@ -113,13 +115,15 @@ def create_layer(prev_layer, layer, num_layer, prev_layer_height=None, prev_laye
             lattice.compute_lsrf_preserve_masks(layer.x_field_channels, layer.y_field_channels,
                                                 layer.nx_value, layer.ny_value, layer.in_channel_dim)
 
-        print("About to create (lattice based) intermediate layer width=%d, height=%d" % (layer.x_field_channels,
-                                                                                          layer.y_field_channels))
-        print("With a spacing of horiz=%d, vert=%d, and %d channels" % (layer.x_field_spacing, layer.y_field_spacing,
-                                                                        layer.in_channel_dim))
+        if verbose:
+            print("About to create (lattice based) intermediate layer width=%d, height=%d" % (layer.x_field_channels,
+                                                                                              layer.y_field_channels))
+            print("With a spacing of horiz=%d, vert=%d, and %d channels" % (layer.x_field_spacing, layer.y_field_spacing,
+                                                                            layer.in_channel_dim))
         layer.y_in_channels = previous_layer_height
         layer.x_in_channels = previous_layer_width
-        print("layer.x_in_channels, layer.y_in_channels = ", layer.x_in_channels, layer.y_in_channels)
+        if verbose:
+            print("layer.x_in_channels, layer.y_in_channels = ", layer.x_in_channels, layer.y_in_channels)
         # switchboard_La = mdp.hinet.Rectangular2dSwitchboard(12, 6, x_field_channels_La, y_field_channels_La,
         # x_field_spacing_La,y_field_spacing_La,in_channel_dim_La)
         (layer.mat_connections, layer.lat_mat) = \
@@ -127,12 +131,14 @@ def create_layer(prev_layer, layer, num_layer, prev_layer_height=None, prev_laye
                                                                    layer.preserve_mask_sparse, layer.x_in_channels,
                                                                    layer.y_in_channels, layer.in_channel_dim)
         # print "matrix connections La:"
-        print(layer.mat_connections)
+        if verbose:
+            print("layer.mat_connections:", layer.mat_connections)
         orig_input_dim = layer.x_in_channels * layer.y_in_channels * layer.in_channel_dim
         if num_features_appended_to_input > 0:
             # Assuming the receptive fields have size layer.x_field_channels * layer.y_field_channels *
             # layer.in_channel_dim
-            print("specifying %d appended features to the switchboard")
+            if verbose:
+                print("specifying %d appended features to the switchboard")
             orig_node_input_dim = layer.x_field_channels * layer.y_field_channels * layer.in_channel_dim
             layer.mat_connections = add_additional_features_to_connections(layer.mat_connections, orig_node_input_dim,
                                                                            orig_input_dim,
@@ -145,7 +151,8 @@ def create_layer(prev_layer, layer, num_layer, prev_layer_height=None, prev_laye
 
         if layer.pca_node_class:
             if layer.cloneLayer:
-                print("Layer L%d with " % num_layer, layer.num_nodes, " cloned PCA nodes will be created")
+                if verbose:
+                    print("Layer L%d with " % num_layer, layer.num_nodes, " cloned PCA nodes will be created")
                 # print "Warning!!! layer L%d using cloned PCA instead of several independent copies!!!"%num_layer
                 layer.pca_node = layer.pca_node_class(input_dim=layer.preserve_mask_sparse.sum() +
                                                                 num_features_appended_to_input,
@@ -154,8 +161,9 @@ def create_layer(prev_layer, layer, num_layer, prev_layer_height=None, prev_laye
                 # Create array of sfa_nodes (just one node, but cloned)
                 layer.pca_layer = mdp.hinet.CloneLayer(layer.pca_node, n_nodes=layer.num_nodes)
             else:
-                print("Layer L%d with " % num_layer, layer.num_nodes)
-                print(" independent PCA nodes will be created, with arguments ", layer.pca_args)
+                if verbose:
+                    print("Layer L%d with " % num_layer, layer.num_nodes)
+                    print(" independent PCA nodes will be created, with arguments ", layer.pca_args)
                 layer.PCA_nodes = list(range(layer.num_nodes))
                 for i in range(layer.num_nodes):
                     layer.PCA_nodes[i] = layer.pca_node_class(input_dim=layer.preserve_mask_sparse.sum(),
@@ -166,14 +174,16 @@ def create_layer(prev_layer, layer, num_layer, prev_layer_height=None, prev_laye
 
         if layer.ord_node_class:
             if layer.cloneLayer:
-                print("Ord_node will be created")
-                print("Layer L%d with " % num_layer, layer.num_nodes, " cloned ORD nodes will be created")
+                if verbose:
+                    print("Ord_node will be created")
+                    print("Layer L%d with " % num_layer, layer.num_nodes, " cloned ORD nodes will be created")
                 # print "Warning!!! layer L%d using cloned ORD instead of several independent copies!!!"%num_layer
                 layer.ord_node = layer.ord_node_class(**layer.ord_args)
                 # Create array of sfa_nodes (just one node, but cloned)
                 layer.ord_layer = mdp.hinet.CloneLayer(layer.ord_node, n_nodes=layer.num_nodes)
             else:
-                print("Layer L%d with " % num_layer, layer.num_nodes, " independent ORD nodes will be created")
+                if verbose:
+                    print("Layer L%d with " % num_layer, layer.num_nodes, " independent ORD nodes will be created")
                 layer.ORD_nodes = list(range(layer.num_nodes))
                 for i in range(layer.num_nodes):
                     layer.ORD_nodes[i] = layer.ord_node_class(**layer.ord_args)
@@ -194,7 +204,8 @@ def create_layer(prev_layer, layer, num_layer, prev_layer_height=None, prev_laye
                 layer.red_node = layer.red_node_class(output_dim=layer.red_out_dim, **layer.red_args)
                 layer.red_layer = mdp.hinet.CloneLayer(layer.red_node, n_nodes=layer.num_nodes)
             else:
-                print("Layer L%d with " % num_layer, layer.num_nodes, " independent RED nodes will be created")
+                if verbose:
+                    print("Layer L%d with " % num_layer, layer.num_nodes, " independent RED nodes will be created")
                 layer.RED_nodes = list(range(layer.num_nodes))
                 for i in range(layer.num_nodes):
                     layer.RED_nodes[i] = layer.red_node_class(output_dim=layer.red_out_dim, **layer.red_args)
@@ -216,8 +227,9 @@ def create_layer(prev_layer, layer, num_layer, prev_layer_height=None, prev_laye
                 # !!! aniadir el atributo output_channels al more_nodes.PInvSwitchboard
                 layer.sfa_layer = mdp.hinet.CloneLayer(layer.sfa_node, n_nodes=layer.num_nodes)
             else:
-                print("Layer L%d with " % num_layer, layer.num_nodes)
-                print(" independent SFA nodes will be created, with arguments ", layer.sfa_args)
+                if verbose:
+                    print("Layer L%d with " % num_layer, layer.num_nodes)
+                    print(" independent SFA nodes will be created, with arguments ", layer.sfa_args)
                 layer.SFA_nodes = list(range(layer.num_nodes))
                 for i in range(layer.num_nodes):
                     layer.SFA_nodes[i] = layer.sfa_node_class(output_dim=layer.sfa_out_dim, **layer.sfa_args)
@@ -232,17 +244,20 @@ def create_layer(prev_layer, layer, num_layer, prev_layer_height=None, prev_laye
     elif isinstance(layer, system_parameters.ParamsSFASuperNode):
         # Note, there was a bug in MDP SFA Node, in which the output dimension is ignored if the input dimension
         # is unknown. See function "_set_range()".
-        print("************ Creating Layer *******")
-        print("Creating ParamsSFASuperNode L%d" % num_layer)
+        if verbose:
+            print("************ Creating Layer *******")
+            print("Creating ParamsSFASuperNode L%d" % num_layer)
         if layer.pca_node_class:
-            print("PCA_node will be created")
+            if verbose:
+                print("PCA_node will be created")
             layer.pca_node = layer.pca_node_class(output_dim=layer.pca_out_dim, **layer.pca_args)
         else:
             layer.pca_node = None
             # (input_dim=layer.preserve_mask_sparse.sum(), output_dim=layer.pca_out_dim, **layer.pca_args)
 
         if layer.ord_node_class:
-            print("Ord_node will be created")
+            if verbose:
+                print("Ord_node will be created")
             layer.ord_node = layer.ord_node_class(**layer.ord_args)
         else:
             layer.ord_node = None
@@ -267,11 +282,13 @@ def create_layer(prev_layer, layer, num_layer, prev_layer_height=None, prev_laye
             layer.clip_node = None
 
         if layer.sfa_node_class:
-            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-            print("layer.sfa_out_dim= ", layer.sfa_out_dim)
+            if verbose:
+                print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                print("layer.sfa_out_dim= ", layer.sfa_out_dim)
 
             layer.sfa_node = layer.sfa_node_class(output_dim=layer.sfa_out_dim, **layer.sfa_args)
-            print("layer.sfa_node= ", layer.sfa_node)
+            if verbose:
+                print("layer.sfa_node= ", layer.sfa_node)
 
         layer.node_list = ([layer.pca_node, layer.ord_node, layer.exp_node, layer.red_node, layer.clip_node,
                             layer.sfa_node])
