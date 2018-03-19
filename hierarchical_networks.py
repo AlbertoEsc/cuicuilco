@@ -62,9 +62,9 @@ pSFALayerL0.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
 pSFALayerL0.sfa_out_dim = 9 + 35
 pSFALayerL0.sfa_args = {"expansion_funcs": [identity, unsigned_08expo],
                         "max_length_slow_part": 9,
-                        "offsetting_mode": "data_dependent",
+                        "slow_feature_scaling_method": "data_dependent",
                         "reconstruct_with_sfa": False,
-                        "max_preserved_sfa": 9}
+                        "delta_threshold": 9}
 pSFALayerL0.cloneLayer = True
 
 pSFALayerL1H = system_parameters.ParamsSFALayer()
@@ -77,9 +77,9 @@ pSFALayerL1H.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
 pSFALayerL1H.sfa_out_dim = 9 + 65
 pSFALayerL1H.sfa_args = {"expansion_funcs": [identity, ch3s30u08],
                          "max_length_slow_part": 9,
-                         "offsetting_mode": "data_dependent",
+                         "slow_feature_scaling_method": "data_dependent",
                          "reconstruct_with_sfa": False,
-                         "max_preserved_sfa": 9}
+                         "delta_threshold": 9}
 pSFALayerL1H.cloneLayer = True
 
 pSFALayerL1V = system_parameters.ParamsSFALayer()
@@ -92,9 +92,9 @@ pSFALayerL1V.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
 pSFALayerL1V.sfa_out_dim = 9 + 120
 pSFALayerL1V.sfa_args = {"expansion_funcs": [identity, ch3s50u08],
                          "max_length_slow_part": 9,
-                         "offsetting_mode": "data_dependent",
+                         "slow_feature_scaling_method": "data_dependent",
                          "reconstruct_with_sfa": False,
-                         "max_preserved_sfa": 9}
+                         "delta_threshold": 9}
 pSFALayerL1V.cloneLayer = True
 
 pSFALayerL2H = system_parameters.ParamsSFALayer()
@@ -107,9 +107,9 @@ pSFALayerL2H.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
 pSFALayerL2H.sfa_out_dim = 9 + 300  # 200
 pSFALayerL2H.sfa_args = {"expansion_funcs": [identity, ch3s60u08],
                          "max_length_slow_part": 9,
-                         "offsetting_mode": "data_dependent",
+                         "slow_feature_scaling_method": "data_dependent",
                          "reconstruct_with_sfa": False,
-                         "max_preserved_sfa": 9}
+                         "delta_threshold": 9}
 pSFALayerL2H.cloneLayer = True
 
 pSFALayerL2V = system_parameters.ParamsSFALayer()
@@ -122,9 +122,9 @@ pSFALayerL2V.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
 pSFALayerL2V.sfa_out_dim = 9 + 550  # 300
 pSFALayerL2V.sfa_args = {"expansion_funcs": [identity, ch3s70u08],
                          "max_length_slow_part": 9,
-                         "offsetting_mode": "data_dependent",
+                         "slow_feature_scaling_method": "data_dependent",
                          "reconstruct_with_sfa": False,
-                         "max_preserved_sfa": 9}
+                         "delta_threshold": 9}
 pSFALayerL2V.cloneLayer = True
 
 pSFALayerL3H = system_parameters.ParamsSFALayer()
@@ -137,9 +137,9 @@ pSFALayerL3H.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
 pSFALayerL3H.sfa_out_dim = 9 + 700 # 400
 pSFALayerL3H.sfa_args = {"expansion_funcs": [identity, ch2s300u08],
                          "max_length_slow_part": 9,
-                         "offsetting_mode": "data_dependent",
+                         "slow_feature_scaling_method": "data_dependent",
                          "reconstruct_with_sfa": False,
-                         "max_preserved_sfa": 9}
+                         "delta_threshold": 9}
 pSFALayerL3H.cloneLayer = True
 
 pSFALayerL3V = system_parameters.ParamsSFALayer()
@@ -152,9 +152,9 @@ pSFALayerL3V.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
 pSFALayerL3V.sfa_out_dim = 9 + 850  # 450
 pSFALayerL3V.sfa_args = {"expansion_funcs": [identity, ch2s300u08],
                          "max_length_slow_part": 9,
-                         "offsetting_mode": "data_dependent",
+                         "slow_feature_scaling_method": "data_dependent",
                          "reconstruct_with_sfa": False,
-                         "max_preserved_sfa": 9}
+                         "delta_threshold": 9}
 pSFALayerL3V.cloneLayer = True
 
 # pSFALayerL4H = system_parameters.ParamsSFALayer()
@@ -167,9 +167,9 @@ pSFALayerL3V.cloneLayer = True
 # pSFALayerL4H.sfa_out_dim = 9 + 560
 # pSFALayerL4H.sfa_args = {"expansion_funcs": [identity, unsigned_08expo],
 #                          "max_length_slow_part": 9,
-#                          "offsetting_mode": None,
+#                          "slow_feature_scaling_method": None,
 #                          "reconstruct_with_sfa": False,
-#                          "max_preserved_sfa": 9}
+#                          "delta_threshold": 9}
 # pSFALayerL4H.cloneLayer = Tru1e
 #
 # pSFALayerL4V = system_parameters.ParamsSFALayer()
@@ -182,9 +182,9 @@ pSFALayerL3V.cloneLayer = True
 # pSFALayerL4V.sfa_out_dim = 9 + 784
 # pSFALayerL4V.sfa_args = {"expansion_funcs": [identity, unsigned_08expo],
 #                          "max_length_slow_part": 9,
-#                          "offsetting_mode": None,
+#                          "slow_feature_scaling_method": None,
 #                          "reconstruct_with_sfa": False,
-#                          "max_preserved_sfa": 9}
+#                          "delta_threshold": 9}
 # pSFALayerL4V.cloneLayer = True
 
 pSFALayerL5 = system_parameters.ParamsSFALayer()
@@ -197,9 +197,9 @@ pSFALayerL5.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
 pSFALayerL5.sfa_out_dim = 9 + 1200
 pSFALayerL5.sfa_args = {"expansion_funcs": [identity, ch4s300u08],
                          "max_length_slow_part": 9,
-                         "offsetting_mode": None,
+                         "slow_feature_scaling_method": None,
                          "reconstruct_with_sfa": False,
-                         "max_preserved_sfa": 9}
+                         "delta_threshold": 9}
 pSFALayerL5.cloneLayer = False
 
 network = HiGSFA_CIFAR10_Network_11L = system_parameters.ParamsNetwork()
@@ -560,7 +560,7 @@ GTSRBNetwork.L0.exp_funcs = [identity, QT]
 GTSRBNetwork.L0.sfa_node_class = mdp.nodes.GSFANode  # SFANode
 GTSRBNetwork.L0.sfa_args = {}
 # GTSRBNetwork.L0.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":expansion,"max_length_slow_part":10,
-# "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.999}
+# "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":1.999}
 GTSRBNetwork.L0.sfa_out_dim = 75  # WW 26*3 # 17*3 = 51 ## FOR RGB 26, for L/HOG/SFA
 GTSRBNetwork.layers = [GTSRBNetwork.L0]
 
@@ -596,7 +596,7 @@ pSFALayerL0.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
 pSFALayerL0.sfa_out_dim = 60
 pSFALayerL0.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": "RandomSigmoids",
                         "expansion_starting_point": None, "max_length_slow_part": None,
-                        "offsetting_mode": "sensitivity_based_pure", "max_preserved_sfa": 1.99999,
+                        "slow_feature_scaling_method": "sensitivity_based", "delta_threshold": 1.99999,
                         "expansion_output_dim": 300}
 
 pSFALayerL0.cloneLayer = False
@@ -621,7 +621,7 @@ pSFALayerL1.sfa_out_dim = 9
 expansion_output_dim = 1000  # int(tuning_parameter)
 pSFALayerL1.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": "RandomSigmoids",
                         "expansion_starting_point": None, "max_length_slow_part": None,
-                        "offsetting_mode": "sensitivity_based_pure", "max_preserved_sfa": 1.99999,
+                        "slow_feature_scaling_method": "sensitivity_based", "delta_threshold": 1.99999,
                         "expansion_output_dim": expansion_output_dim}
 pSFALayerL1.cloneLayer = False
 pSFALayerL1.name = comp_supernode_name(pSFALayerL1.exp_funcs, pSFALayerL1.pca_out_dim, pSFALayerL1.sfa_out_dim)
@@ -658,8 +658,8 @@ pSFALayerL0.red_args = {}
 pSFALayerL0.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
 pSFALayerL0.sfa_out_dim = 16
 pSFALayerL0.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": [identity, unsigned_08expo],
-                        "max_length_slow_part": 10, "offsetting_mode": "sensitivity_based_pure",
-                        "max_preserved_sfa": 1.9999}
+                        "max_length_slow_part": 10, "slow_feature_scaling_method": "sensitivity_based",
+                        "delta_threshold": 1.9999}
 
 pSFALayerL0.cloneLayer = False
 pSFALayerL0.name = comp_layer_name(pSFALayerL0.cloneLayer, pSFALayerL0.exp_funcs, pSFALayerL0.x_field_channels,
@@ -684,8 +684,8 @@ pSFALayerL2H.red_args = {}
 pSFALayerL2H.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
 pSFALayerL2H.sfa_out_dim = 16
 pSFALayerL2H.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": [identity, unsigned_08expo],
-                         "max_length_slow_part": 10, "offsetting_mode": "sensitivity_based_pure",
-                         "max_preserved_sfa": 1.99999}
+                         "max_length_slow_part": 10, "slow_feature_scaling_method": "sensitivity_based",
+                         "delta_threshold": 1.99999}
 
 # pSFALayerL0.sfa_args = {"block_size": -1, "train_mode": -1}
 pSFALayerL2H.cloneLayer = False
@@ -711,8 +711,8 @@ pSFALayerL2V.red_args = {}
 pSFALayerL2V.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
 pSFALayerL2V.sfa_out_dim = 16
 pSFALayerL2V.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": [identity, unsigned_08expo],
-                         "max_length_slow_part": 10, "offsetting_mode": "sensitivity_based_pure",
-                         "max_preserved_sfa": 1.99999}
+                         "max_length_slow_part": 10, "slow_feature_scaling_method": "sensitivity_based",
+                         "delta_threshold": 1.99999}
 
 pSFALayerL2V.cloneLayer = False
 pSFALayerL2V.name = comp_layer_name(pSFALayerL2V.cloneLayer, pSFALayerL2V.exp_funcs, pSFALayerL2V.x_field_channels,
@@ -735,12 +735,12 @@ pSFALayerL3H.sfa_out_dim = 160  # 2*9 + 35
 pSFALayerL3V.sfa_out_dim = 329  # 2*9 + 40
 pSFALayerL3V.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": [identity, unsigned_08expo],
                          "expansion_starting_point": None, "max_length_slow_part": 10,
-                         "offsetting_mode": "sensitivity_based_pure", "max_preserved_sfa": 1.99999,
+                         "slow_feature_scaling_method": "sensitivity_based", "delta_threshold": 1.99999,
                          "expansion_output_dim": None}
 # THIS CODE IMPLEMENTS A NEW TYPE OF EXPANSION
 # pSFALayerL3V.sfa_args = {"pre_expansion_node_class":none, "expansion_funcs":"RandomSigmoids",
-# "expansion_starting_point":"08Exp", "max_length_slow_part":10,   "offsetting_mode":"sensitivity_based_pure",
-# "max_preserved_sfa":1.99999, "expansion_output_dim":800}
+# "expansion_starting_point":"08Exp", "max_length_slow_part":10,   "slow_feature_scaling_method":"sensitivity_based",
+# "delta_threshold":1.99999, "expansion_output_dim":800}
 
 
 network = HiGSFA_MNISTNetwork_24x24_7L = system_parameters.ParamsNetwork()
@@ -759,8 +759,8 @@ network = HiGSFA_MNISTNetwork_24x24_WeightSharing_7L = copy.deepcopy(HiGSFA_MNIS
 L0 = network.layers[0]
 L0.cloneLayer = True
 L0.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": [identity, unsigned_08expo],
-               "max_length_slow_part": 9, "reconstruct_with_sfa": False, "offsetting_mode": None,
-               "max_preserved_sfa": 9}
+               "max_length_slow_part": 9, "reconstruct_with_sfa": False, "slow_feature_scaling_method": None,
+               "delta_threshold": 9}
 L0.sfa_out_dim = 17
 L1 = network.layers[1]
 L1.sfa_out_dim = 40
@@ -779,8 +779,8 @@ pSFALayerL0_4x4.x_field_spacing = 2  # 2 for 24x24and 28x28, 3 for 29x29
 pSFALayerL0_4x4.y_field_spacing = 2
 pSFALayerL0_4x4.pca_out_dim = 13  # 12 for 24x24and 28x28, 20 for 29x29
 pSFALayerL0_4x4.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": [identity, unsigned_08expo, ],
-                            "max_length_slow_part": 10, "offsetting_mode": "sensitivity_based_pure",
-                            "max_preserved_sfa": 1.99999}
+                            "max_length_slow_part": 10, "slow_feature_scaling_method": "sensitivity_based",
+                            "delta_threshold": 1.99999, "verbose":True}
 
 pSFALayerL1H_S3_D2 = copy.deepcopy(pSFALayerL1H)  # L2
 pSFALayerL1H_S3_D2.name = "Homogeneous Linear Layer L1H S=3x1 D=2x1"
@@ -790,10 +790,10 @@ pSFALayerL1H_S3_D2.x_field_spacing = 2
 pSFALayerL1H_S3_D2.y_field_spacing = 1
 # pSFALayerL1H_S3_D2.sfa_args = {"pre_expansion_node_class":None,
 # "expansion_funcs":[identity, unsigned_08expo, QT_3Split_15], "max_length_slow_part":10,
-# "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999}
+# "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":1.99999}
 pSFALayerL1H_S3_D2.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": [identity, unsigned_08expo, ],
-                               "max_length_slow_part": 10, "offsetting_mode": "sensitivity_based_pure",
-                               "max_preserved_sfa": 1.99999}
+                               "max_length_slow_part": 10, "slow_feature_scaling_method": "sensitivity_based",
+                               "delta_threshold": 1.99999, "verbose":True}
 
 pSFALayerL2H_S3_D2 = copy.deepcopy(pSFALayerL1H)  # L4
 pSFALayerL2H_S3_D2.name = "Homogeneous Linear Layer L2H S=3x1 D=2x1"
@@ -803,32 +803,32 @@ pSFALayerL2H_S3_D2.x_field_spacing = 2  # 2 for 24x24, 1 for 29x29
 pSFALayerL2H_S3_D2.y_field_spacing = 1
 # pSFALayerL2H_S3_D2.sfa_args = {"pre_expansion_node_class":None,
 # "expansion_funcs":[identity, unsigned_08expo, QT_3Split_25, CT_3Split_20], "max_length_slow_part":10,
-# "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999}
+# "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":1.99999}
 # pSFALayerL2H_S3_D2.sfa_args = {"pre_expansion_node_class":None,
 # "expansion_funcs":[identity, unsigned_08expo,  QT_2Split_15_AP08], "max_length_slow_part":10,
-# "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999}
+# "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":1.99999}
 pSFALayerL2H_S3_D2.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": [identity, unsigned_08expo, ],
-                               "max_length_slow_part": 10, "offsetting_mode": "sensitivity_based_pure",
-                               "max_preserved_sfa": 1.99999}
+                               "max_length_slow_part": 10, "slow_feature_scaling_method": "sensitivity_based",
+                               "delta_threshold": 1.99999, "verbose":True}
 
 pSFALayerL3H_S2_D1 = copy.deepcopy(pSFALayerL1H)  # L6
 pSFALayerL3H_S2_D1.name = "Homogeneous Linear Layer L3H S=2x1 D=1x1"
-pSFALayerL3H_S2_D1.x_field_channels = 3  # 2 for 24x24 and 29x29, 3 for 28x28
+pSFALayerL3H_S2_D1.x_field_channels = 2  # 2 for 24x24 and 29x29, 3 for 28x28
 pSFALayerL3H_S2_D1.y_field_channels = 1
 pSFALayerL3H_S2_D1.x_field_spacing = 1
 pSFALayerL3H_S2_D1.y_field_spacing = 1
 # sfa_args = {"pre_expansion_node_class":None,
 # "expansion_funcs":[identity, unsigned_08expo, QT_2Split_25, CT_2Split_20], "max_length_slow_part":10,
-# "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999}
+# "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":1.99999}
 # pSFALayerL3H_S2_D1.sfa_args = {"pre_expansion_node_class":None,
 # "expansion_funcs":[identity, unsigned_08expo, QT_2Split_50], "max_length_slow_part":10,
-# "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999}
+# "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":1.99999}
 # pSFALayerL3H_S2_D1.sfa_args = {"pre_expansion_node_class":None,
 # "expansion_funcs":[identity, unsigned_08expo,  QT_3Split_35_AP08], "max_length_slow_part":10,
-# "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999}
+# "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":1.99999}
 pSFALayerL3H_S2_D1.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": [identity, unsigned_08expo, ],
-                               "max_length_slow_part": 10, "offsetting_mode": "sensitivity_based_pure",
-                               "max_preserved_sfa": 1.99999}
+                               "max_length_slow_part": 10, "slow_feature_scaling_method": "sensitivity_based",
+                               "delta_threshold": 1.99999, "verbose":True}
 
 # ***************************************************************************
 pSFALayerL1V_S3_D2 = copy.deepcopy(pSFALayerL1H)  # L3
@@ -839,39 +839,39 @@ pSFALayerL1V_S3_D2.x_field_spacing = 1
 pSFALayerL1V_S3_D2.y_field_spacing = 2
 # sfa_args = {"pre_expansion_node_class":None,
 # "expansion_funcs":[identity, unsigned_08expo, QT_3Split_20, CT_3Split_15], "max_length_slow_part":10,
-# "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999}
+# "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":1.99999}
 pSFALayerL1V_S3_D2.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": [identity, unsigned_08expo, ],
-                               "max_length_slow_part": 10, "offsetting_mode": "sensitivity_based_pure",
-                               "max_preserved_sfa": 1.99999}
+                               "max_length_slow_part": 10, "slow_feature_scaling_method": "sensitivity_based",
+                               "delta_threshold": 1.99999, "verbose":True}
 
 pSFALayerL2V_S3_D2 = copy.deepcopy(pSFALayerL1H)  # L5
 pSFALayerL2V_S3_D2.name = "Homogeneous Linear Layer L2V S=1x3 D=1x2"
 pSFALayerL2V_S3_D2.x_field_channels = 1
-pSFALayerL2V_S3_D2.y_field_channels = 2
+pSFALayerL2V_S3_D2.y_field_channels = 3
 pSFALayerL2V_S3_D2.x_field_spacing = 1
 pSFALayerL2V_S3_D2.y_field_spacing = 2  # 2 for 24x24, 1 for 29x29
 # sfa_args = {"pre_expansion_node_class":None,
 # "expansion_funcs":[identity, unsigned_08expo, QT_3Split_25, CT_3Split_20], "max_length_slow_part":10,
-# "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999}
+# "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":1.99999}
 pSFALayerL2V_S3_D2.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": [identity, unsigned_08expo, ],
-                               "max_length_slow_part": 10, "offsetting_mode": "sensitivity_based_pure",
-                               "max_preserved_sfa": 1.99999}
+                               "max_length_slow_part": 10, "slow_feature_scaling_method": "sensitivity_based",
+                               "delta_threshold": 1.99999, "verbose":True}
 
 pSFALayerL3V_S2_D1 = copy.deepcopy(pSFALayerL1H)  # L7
 pSFALayerL3V_S2_D1.name = "Homogeneous Linear Layer L3V S=1x2 D=1x1"
 pSFALayerL3V_S2_D1.x_field_channels = 1
-pSFALayerL3V_S2_D1.y_field_channels = 3
+pSFALayerL3V_S2_D1.y_field_channels = 2
 pSFALayerL3V_S2_D1.x_field_spacing = 1
 pSFALayerL3V_S2_D1.y_field_spacing = 1
 # sfa_args = {"pre_expansion_node_class":None,
 # "expansion_funcs":[identity, unsigned_08expo, QT_2Split_25, CT_2Split_20], "max_length_slow_part":10,
-# "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999}
+# "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":1.99999}
 # pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None,
 # "expansion_funcs":[identity, unsigned_08expo, QT_2Split_35, CT_2Split_25], "max_length_slow_part":10,
-# "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999}
+# "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":1.99999}
 pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": [identity, unsigned_08expo, ],
-                               "max_length_slow_part": 1, "offsetting_mode": "sensitivity_based_pure",
-                               "max_preserved_sfa": 1.99999}
+                               "max_length_slow_part": 10, "slow_feature_scaling_method": "sensitivity_based",
+                               "delta_threshold": 1.99999, "verbose":True}
 
 pSFALayerL0_4x4.sfa_out_dim = 13  # Was 15 #Usually 16 L1 # 9 + 5
 pSFALayerL1H_S3_D2.sfa_out_dim = 20  # Was 28 #Usually 30 L2 # 2*9 + 10
@@ -882,20 +882,20 @@ pSFALayerL3H_S2_D1.sfa_out_dim = 120  # L6 #70 #44 #265 # 2*9 + 35
 pSFALayerL3V_S2_D1.sfa_out_dim = 160  # L7 #130 #150 # 2*9 + 40
 # pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None,
 # "expansion_funcs":[identity, unsigned_08expo], "max_length_slow_part":10,
-# "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999}
+# "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":1.99999}
 # pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None,
 # "expansion_funcs":"RandomSigmoids", "expansion_starting_point":"08Exp", "max_length_slow_part":10,
-# "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999, "expansion_output_dim":2000}
+# "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":1.99999, "expansion_output_dim":2000}
 # pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None,
 # "expansion_funcs":[identity, QT, CT], "max_length_slow_part":10,
-# "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999}
-pSFALayerL0_4x4.sfa_args["max_preserved_sfa"] = 4
-pSFALayerL1H_S3_D2.sfa_args["max_preserved_sfa"] = 4
-pSFALayerL1V_S3_D2.sfa_args["max_preserved_sfa"] = 4
-pSFALayerL2H_S3_D2.sfa_args["max_preserved_sfa"] = 4
-pSFALayerL2V_S3_D2.sfa_args["max_preserved_sfa"] = 4
-pSFALayerL3H_S2_D1.sfa_args["max_preserved_sfa"] = 4
-pSFALayerL3V_S2_D1.sfa_args["max_preserved_sfa"] = 9
+# "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":1.99999}
+pSFALayerL0_4x4.sfa_args["delta_threshold"] = 4
+pSFALayerL1H_S3_D2.sfa_args["delta_threshold"] = 4
+pSFALayerL1V_S3_D2.sfa_args["delta_threshold"] = 4
+pSFALayerL2H_S3_D2.sfa_args["delta_threshold"] = 4
+pSFALayerL2V_S3_D2.sfa_args["delta_threshold"] = 4
+pSFALayerL3H_S2_D1.sfa_args["delta_threshold"] = 4
+pSFALayerL3V_S2_D1.sfa_args["delta_threshold"] = 9
 
 pSFALayerSupernode = system_parameters.ParamsSFASuperNode()  # L8
 pSFALayerSupernode.name = "SFA Super Node Layer"
@@ -911,10 +911,10 @@ pSFALayerSupernode.sfa_node_class = mdp.nodes.GSFANode
 # pSFALayerSupernode.sfa_node_class = mdp.nodes.iGSFANode #mdp.nodes.GSFANode
 # pSFALayerSupernode.sfa_args = {"pre_expansion_node_class":None,
 # "expansion_funcs":[identity, unsigned_08expo, QT_50, CT_30],
-# "max_length_slow_part":1, ,  "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999}
+# "max_length_slow_part":1, ,  "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":1.99999}
 # pSFALayerSupernode.sfa_args = {"pre_expansion_node_class":None,
 # "expansion_funcs":[identity, unsigned_08expo_75],
-# "max_length_slow_part":1, ,  "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999}
+# "max_length_slow_part":1, ,  "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":1.99999}
 pSFALayerSupernode.sfa_out_dim = 80
 
 # ######################################### New Improved Network for MNIST ############################
@@ -942,8 +942,8 @@ network.L0.pca_node_class = mdp.nodes.PCANode
 network.L0.pca_args = {}
 network.L0.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
 network.L0.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": [identity, unsigned_08expo, s7QT],
-                       "max_length_slow_part": 9, "offsetting_mode": "sensitivity_based_pure",
-                       "max_preserved_sfa": 1.99999}
+                       "max_length_slow_part": 9, "slow_feature_scaling_method": "sensitivity_based",
+                       "delta_threshold": 1.99999}
 network.L0.cloneLayer = False
 
 network.L1 = system_parameters.ParamsSFALayer()
@@ -956,7 +956,7 @@ network.L1.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
 network.L1.sfa_out_dim = 35
 network.L1.sfa_args = {"pre_expansion_node_class": None,
                        "expansion_funcs": [identity, unsigned_08expo, ch3o3s3QT, ch3o0s3QT], "max_length_slow_part": 9,
-                       "offsetting_mode": "sensitivity_based_pure", "max_preserved_sfa": 1.99999}
+                       "slow_feature_scaling_method": "sensitivity_based", "delta_threshold": 1.99999}
 network.L1.cloneLayer = False
 
 network.L2 = system_parameters.ParamsSFALayer()
@@ -969,36 +969,36 @@ network.L2.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
 network.L2.sfa_out_dim = 45
 network.L2.sfa_args = {"pre_expansion_node_class": None,
                        "expansion_funcs": [identity, unsigned_08expo, ch3o4s9QT, ch3o0s4QT], "max_length_slow_part": 9,
-                       "offsetting_mode": "sensitivity_based_pure", "max_preserved_sfa": 1.99999}
+                       "slow_feature_scaling_method": "sensitivity_based", "delta_threshold": 1.99999}
 network.L2.cloneLayer = False
 
 network.L3 = copy.deepcopy(network.L1)
 network.L3.sfa_args = {"pre_expansion_node_class": None,
                        "expansion_funcs": [identity, unsigned_08expo, ch3o6s16QT, ch3o0s4QT], "max_length_slow_part": 9,
-                       "offsetting_mode": "sensitivity_based_pure", "max_preserved_sfa": 1.99999}
+                       "slow_feature_scaling_method": "sensitivity_based", "delta_threshold": 1.99999}
 
 network.L4 = copy.deepcopy(network.L2)
 network.L4.sfa_args = {"pre_expansion_node_class": None,
                        "expansion_funcs": [identity, unsigned_08expo, ch3o9s24QT, ch3o9s13CT],
-                       "max_length_slow_part": 9, "offsetting_mode": "sensitivity_based_pure",
-                       "max_preserved_sfa": 1.99999}
+                       "max_length_slow_part": 9, "slow_feature_scaling_method": "sensitivity_based",
+                       "delta_threshold": 1.99999}
 
 network.layers = [network.L0, network.L1, network.L2, network.L3, network.L4]  # ,network.L5,network.L6]
 network.L0.pca_out_dim = 30
 HiGSFANet_out_dims = [30, 45, 60, 75, 75]  # [39, 50, 60, 75, 75]
 
-max_preserved_sfas = [3, 4, 6, 9, 9]
+delta_thresholds = [3, 4, 6, 9, 9]
 for i in range(len(network.layers)):
     network.layers[i].sfa_out_dim = HiGSFANet_out_dims[i]
-    network.layers[i].sfa_args["max_preserved_sfa"] = max_preserved_sfas[i]
+    network.layers[i].sfa_args["delta_threshold"] = delta_thresholds[i]
 
 # Experimental MNIST network with overlap, and weight sharing in the first layer
 network = MNISTNetwork_24x24_5L_WeightSharing_OverlapNew = copy.deepcopy(MNISTNetwork_24x24_5L_OverlapNew)
 L0 = network.layers[0]
 L0.cloneLayer = True
 L0.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": [identity, unsigned_08expo, s7QT],
-               "max_length_slow_part": 9, "reconstruct_with_sfa": False, "offsetting_mode": None,
-               "max_preserved_sfa": 4}
+               "max_length_slow_part": 9, "reconstruct_with_sfa": False, "slow_feature_scaling_method": None,
+               "delta_threshold": 4}
 
 # Experimental MNIST network with overlap, and weight sharing in the first layer
 network = MNISTNetwork_24x24_5L_WeightSharing_Basic_OverlapNew = copy.deepcopy(MNISTNetwork_24x24_5L_OverlapNew)
@@ -1008,31 +1008,31 @@ for layer in network.layers:
 L0 = network.layers[0]
 L0.cloneLayer = True
 L0.sfa_args["reconstruct_with_sfa"] = False
-L0.sfa_args["offsetting_mode"] = None
-L0.sfa_args["max_preserved_sfa"] = 9
+L0.sfa_args["slow_feature_scaling_method"] = None
+L0.sfa_args["delta_threshold"] = 9
 
 L1 = network.layers[1]
 L1.cloneLayer = True
 L1.sfa_args["reconstruct_with_sfa"] = False
-L1.sfa_args["offsetting_mode"] = None
-L1.sfa_args["max_preserved_sfa"] = 9
+L1.sfa_args["slow_feature_scaling_method"] = None
+L1.sfa_args["delta_threshold"] = 9
 L1.sfa_args["expansion_funcs"] = [identity, unsigned_08expo, ]
 
 L2 = network.layers[2]
 # L2.cloneLayer = True
 L2.sfa_args["reconstruct_with_sfa"] = False
-L2.sfa_args["offsetting_mode"] = None  # "data_dependent"
-L2.sfa_args["max_preserved_sfa"] = 9
+L2.sfa_args["slow_feature_scaling_method"] = None  # "data_dependent"
+L2.sfa_args["delta_threshold"] = 9
 L2.sfa_args["expansion_funcs"] = [identity, unsigned_08expo]  # DEBUG, ch3o0s9QT, ch3o9s10QT]
 
 L3 = network.layers[3]
 # L3.sfa_args["reconstruct_with_sfa"] = False
-# L3.sfa_args["offsetting_mode"] = None #"data_dependent"
+# L3.sfa_args["slow_feature_scaling_method"] = None #"data_dependent"
 L3.sfa_args["expansion_funcs"] = [identity, unsigned_08expo]  # DEBUG, ch3o9s10QT] #ch3o0s20QT, unsigned_08expo,
 
 L4 = network.layers[4]
 # L4.sfa_args["reconstruct_with_sfa"] = False
-# L4.sfa_args["offsetting_mode"] = "data_dependent" # None, "data_dependent", "sensitivity_based_pure"
+# L4.sfa_args["slow_feature_scaling_method"] = "data_dependent" # None, "data_dependent", "sensitivity_based"
 L4.sfa_args["expansion_funcs"] = [identity, unsigned_08expo]  # DEBUG ch3o9s32QT] #, ch3o9s13CT], unsigned_08expo,
 # ch3o4s9QT, ch3o0s4QT
 # ch3o6s16QT, ch3o0s4QT]
@@ -2097,19 +2097,17 @@ for i, layer in enumerate(network.layers):
     layer.sfa_out_dim = HiGSFANet_out_dims[i]
     # QT_AP_L(k=nan, d=0.8), Q_AN_exp
     # layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_length_slow_part":10, ,
-    # "max_preserved_sfa":2.0}
+    # "delta_threshold":2.0}
     #    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_length_slow_part":1, ,
-    # "offsetting_mode":"sensitivity_based", "max_preserved_sfa":2.0}
+    # "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":2.0}
     #    layer.sfa_args = {"pre_expansion_node_class":mdp.nodes.GSFANode,
     # "expansion_funcs":[identity, unsigned_08expo], "max_length_slow_part":10,
-    # "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":2.0}
+    # "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":2.0}
     layer.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": [identity, unsigned_08expo],
-                      "max_length_slow_part": None, "offsetting_mode": "sensitivity_based_pure",
-                      "max_preserved_sfa": 1.9999}  # AGE ARTICLE: 1.99999 official, 1.99999, 2.0. Control2: 1.9999
+                      "max_length_slow_part": None, "slow_feature_scaling_method": "sensitivity_based",
+                      "delta_threshold": 1.9999}  # AGE ARTICLE: 1.99999 official, 1.99999, 2.0. Control2: 1.9999
     # sel60_unsigned_08expo sel_exp(60, unsigned_08expo), unsigned_08expo
 
-    # "offsetting_mode": "QR_decomposition", "sensitivity_based_pure", "sensitivity_based_normalized", "max_comp
-    # features"
 # layer.sfa_args = {"expansion_funcs":None, "use_pca":True, "operation":"lin_app", ""max_length_slow_part"":10,
 # "max_num_samples_for_ev":1200, "max_test_samples_for_ev":1200, "k":200} layer.sfa_args = {"expansion_funcs":None,
 # "use_pca":True, "max_length_slow_part":6, "max_num_samples_for_ev":600, "max_test_samples_for_ev":600,
@@ -2122,17 +2120,17 @@ if double_SFA_top_node:
     layer.pca_node_class = mdp.nodes.iGSFANode
     layer.pca_out_dim = HiGSFANet_out_dims[8]
     layer.pca_args = {"pre_expansion_node_class": None, "expansion_funcs": [identity, div2_sel75_unsigned_08expo],
-                      "max_length_slow_part": None, "offsetting_mode": "sensitivity_based_pure",
-                      "max_preserved_sfa": 1.99999}  # 2.0
+                      "max_length_slow_part": None, "slow_feature_scaling_method": "sensitivity_based",
+                      "delta_threshold": 1.99999}  # 2.0
     layer.sfa_node_class = mdp.nodes.iGSFANode
     layer.sfa_out_dim = HiGSFANet_out_dims[8]
     layer.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": [identity, sel8_04QT],
-                      "max_length_slow_part": None, "offsetting_mode": "sensitivity_based_pure",
-                      "max_preserved_sfa": 1.99999}  # 2.0
+                      "max_length_slow_part": None, "slow_feature_scaling_method": "sensitivity_based",
+                      "delta_threshold": 1.99999}  # 2.0
 
 # WARNING, EXPERIMENTAL CODE TO TEST OTHER EXPANSIONS
 # network.layers[10].sfa_node_class = mdp.nodes.GSFANode
-# network.layers[6].sfa_args = {"expansion_funcs":[Q_exp], "max_length_slow_part":10,   "max_preserved_sfa":2.0}
+# network.layers[6].sfa_args = {"expansion_funcs":[Q_exp], "max_length_slow_part":10,   "delta_threshold":2.0}
 
 # Networks for AGE estimation MORPH-II
 # ################# NETWORK FOR TESTING ACCORDING TO GUO ET AL, USES 3 LABELS ######################################
@@ -2182,54 +2180,54 @@ else:
 print("HiGSFANetworkU11L_Overlap6x6L0 L0-10_SFA_out_dim = ", HiGSFANet_out_dims)
 
 # WARNING, experimental values
-offsetting_mode = "data_dependent"  # "sensitivity_based_pure"
+slow_feature_scaling_method = "data_dependent"  # "sensitivity_based"
 reconstruct_with_sfa = False
 for i, layer in enumerate(network.layers):
     layer.sfa_node_class = mdp.nodes.iGSFANode
     layer.sfa_out_dim = HiGSFANet_out_dims[i]
     layer.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": [identity, unsigned_08expo],
-                      "max_length_slow_part": None, "offsetting_mode": offsetting_mode,
-                      "reconstruct_with_sfa": reconstruct_with_sfa, "max_preserved_sfa": 1.91}
+                      "max_length_slow_part": None, "slow_feature_scaling_method": slow_feature_scaling_method,
+                      "reconstruct_with_sfa": reconstruct_with_sfa, "delta_threshold": 1.91}
                       # 1.85, 1.91 #only for tuning/experimentation, official is below
 
 network.layers[0].sfa_args["expansion_funcs"] = [s18, s15u08ex, s17Max, s10QT]  # ** s18, s15u08ex, s17Max, s10QT]
 # #identity, s14u08ex, s14Max, s1QT, QT, s14u08ex, unsigned_08expo, s14QT, maximum_mix1_ex, s16QT, s10Max
-network.layers[0].sfa_args["max_preserved_sfa"] = 3  # T 2 #1 #! 2 # **1 #1 3
+network.layers[0].sfa_args["delta_threshold"] = 3  # T 2 #1 #! 2 # **1 #1 3
 
 network.layers[1].sfa_args["expansion_funcs"] = [ch3s20, ch3s20u08, ch3s20max, ch3o3s4QT, ch3o0s3QT]
 # ** ch3s16, ch3s16u08, ch3s16max, ch3o1s4QT
 # #unsigned_08expo, ch3_O2_s3_QT, ch3_O3_s3_QT
-network.layers[1].sfa_args["max_preserved_sfa"] = 4  # T 3 #2 #! 3 # ** 2 #3
+network.layers[1].sfa_args["delta_threshold"] = 4  # T 3 #2 #! 3 # ** 2 #3
 
 network.layers[2].sfa_args["expansion_funcs"] = [ch3s28, ch3s28u08, ch3s16max, ch3o4s6QT, ch3o0s3QT]
 # ** ch3s24, ch3s24u08, ch3s12max, ch3o2s6QT
 network.layers[2].sfa_args[
-    "max_preserved_sfa"] = 1.933 + 0.003 + 0.0015  # T 1.9 #1.81 #! 1.9 # ** 1.81 1.91 #1.93 #(nothing) 3# (nothing)4
+    "delta_threshold"] = 1.933 + 0.003 + 0.0015  # T 1.9 #1.81 #! 1.9 # ** 1.81 1.91 #1.93 #(nothing) 3# (nothing)4
 
 network.layers[3].sfa_args["expansion_funcs"] = [ch3s37, ch3s37u08, ch3s19max, ch3o4s6QT, ch3o0s3QT]
 # ** ch3s33, ch3s33u08, ch3s15max, ch3o2s6QT  # maximum_mix1_exp
 network.layers[3].sfa_args[
-    "max_preserved_sfa"] = 1.933 + 0.005 + 0.0015  # T 1.9 #1.81 #! 1.9  # ** 1.81 #1.91 #1.92 # (nothing) 5
+    "delta_threshold"] = 1.933 + 0.005 + 0.0015  # T 1.9 #1.81 #! 1.9  # ** 1.81 #1.91 #1.92 # (nothing) 5
 
 network.layers[4].sfa_args["expansion_funcs"] = [ch3s60, ch3s49u08, ch3s19max, ch3o4s6QT, ]
 # ** ch3s60, ch3s45u08, ch3s15max, ch3o2s6QT #ch3o3s5QT, maximum_mix1_ex,unsigned_08expo] #unsigned_08expo
-network.layers[4].sfa_args["max_preserved_sfa"] = 1.933 + 0.005 + 0.0023  # T 1.9 #1.81 #! 1.9 # **1.81
+network.layers[4].sfa_args["delta_threshold"] = 1.933 + 0.005 + 0.0023  # T 1.9 #1.81 #! 1.9 # **1.81
 
 network.layers[5].sfa_args["expansion_funcs"] = [ch3s72, ch3s40u08, ch3s11max, ch3o5s6QT, ch3o0s3QT]
 # ** ch3s72, ch3s35u08, ch3s6max, ch3o3s6QT #identity, ch3s50u08, ch3o3s3QT #maximum_mix1_ex,unsigned_08expo]
-network.layers[5].sfa_args["max_preserved_sfa"] = 1.953 + 0.005 + 0.0031  # T 1.93 #1.86 #! 1.93 # ** 1.81
+network.layers[5].sfa_args["delta_threshold"] = 1.953 + 0.005 + 0.0031  # T 1.93 #1.86 #! 1.93 # ** 1.81
 
 network.layers[6].sfa_args["expansion_funcs"] = [ch3s80, ch3s25u08, ch3s15max,
                                                  ch3o6s4QT, ]  # ** ch3s80, ch3s20u08, ch3s10max, ch3o4s4QT
-network.layers[6].sfa_args["max_preserved_sfa"] = 1.973 + 0.000  # T 1.96 #1.89 #! 1.96 # ** 1.89
+network.layers[6].sfa_args["delta_threshold"] = 1.973 + 0.000  # T 1.96 #1.89 #! 1.96 # ** 1.89
 
 network.layers[7].sfa_args["expansion_funcs"] = [ch3s80, ch3o6s20u08, ]
 # ** ch3s80, ch3o5s20u08 # ch3o4s5QT #unsigned_08expo, ch3o5s4QT
-network.layers[7].sfa_args["max_preserved_sfa"] = 1.98  # T 1.97 #1.94 #! 1.97 # ** 1.81
+network.layers[7].sfa_args["delta_threshold"] = 1.98  # T 1.97 #1.94 #! 1.97 # ** 1.81
 
 network.layers[8].sfa_args["expansion_funcs"] = [ch3s85, ch3o6s20u08, ch3o0s3QT]  # ** ch3s85, ch3o4s20u08, #ch3o4s4QT
 # #identity, ch3s70u08, unsigned_08expo, ch3_s25_max
-network.layers[8].sfa_args["max_preserved_sfa"] = 1.98  # T 1.97 #1.94 #! 1.97 # **1.81
+network.layers[8].sfa_args["delta_threshold"] = 1.98  # T 1.97 #1.94 #! 1.97 # **1.81
 
 # WARNING, ADDING AN ADDITIONAL SFA NODE IN THE LAST LAYER, 80x80 resolution (Node 9)
 double_SFA_top_node = True and False
@@ -2246,18 +2244,18 @@ if double_SFA_top_node:
     layer.sfa_args = dict(layer.sfa_args)
     layer.sfa_args["expansion_funcs"] = [s75, s34u08, o7s15QT, s3QT]
     # ** s75, s30u08ex, o5s15QT #s50u08ex, o4s18QT , s3QT
-    layer.sfa_args["max_preserved_sfa"] = 1.9  # ! 1.81 # ** 1.81
+    layer.sfa_args["delta_threshold"] = 1.9  # ! 1.81 # ** 1.81
     last_layer = 9
-    network.layers[8].pca_args["max_preserved_sfa"] = my_DT
+    network.layers[8].pca_args["delta_threshold"] = my_DT
 else:
     network.layers[9].sfa_args["expansion_funcs"] = [s75, s34u08, o7s15QT, s3QT]
     # #identity, ch3s70u08, unsigned_08expo, ch3_s25_max
-    network.layers[9].sfa_args["max_preserved_sfa"] = 1.9  # T 1.97 #1.94 #! 1.97 # **1.81
+    network.layers[9].sfa_args["delta_threshold"] = 1.9  # T 1.97 #1.94 #! 1.97 # **1.81
     last_layer = 10
 
 my_DT = 1.96  # =1.96, 3 Labels
 for i in range(2, last_layer):
-    network.layers[i].sfa_args["max_preserved_sfa"] = my_DT
+    network.layers[i].sfa_args["delta_threshold"] = my_DT
 
 
 for i in range(1, last_layer):  #WARNING!!!
@@ -2279,35 +2277,35 @@ HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_48x48.layers = \
 network = HiGSFANetworkU11L_Overlap6x6L0_Generalization_3Labels_96x96 = copy.deepcopy(
     HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96)
 network.layers[0].sfa_args["expansion_funcs"] = [s18, s15u08ex, s17Max, s9QT]  # s9QT #[s18, s15u08ex, s17Max, s10QT]
-network.layers[0].sfa_args["max_preserved_sfa"] = 3
+network.layers[0].sfa_args["delta_threshold"] = 3
 network.layers[1].sfa_args["expansion_funcs"] = [ch3s20, ch3s20u08, ch3s20max, ch3o3s3QT, ch3o0s3QT]
 # ch3o3s3QT #[ch3s20, ch3s20u08, ch3s20max, ch3o3s4QT, ch3o0s3QT]
-network.layers[1].sfa_args["max_preserved_sfa"] = 3
+network.layers[1].sfa_args["delta_threshold"] = 3
 network.layers[2].sfa_args["expansion_funcs"] = [ch3s28, ch3s28u08, ch3s16max, ch3o3s5QT, ]
 # ch3o3s5QT #ch3o0s3QT #[ch3s28, ch3s28u08, ch3s16max, ch3o4s6QT, ch3o0s3QT]
-network.layers[2].sfa_args["max_preserved_sfa"] = 3
+network.layers[2].sfa_args["delta_threshold"] = 3
 network.layers[3].sfa_args["expansion_funcs"] = [ch3s37, ch3s37u08, ch3s19max, ch3o3s4QT]
 # ch3o3s5QT, ch3o0s3QT #[ch3s37,ch3s37u08, ch3s19max, ch3o4s6QT, ch3o0s3QT]
-network.layers[3].sfa_args["max_preserved_sfa"] = 4
+network.layers[3].sfa_args["delta_threshold"] = 4
 network.layers[4].sfa_args["expansion_funcs"] = [ch3s60, ch3s49u08, ch3s19max, ch3o4s4QT]
 # ch3o4s5QT #ch3s19max, ch3o4s5QT #[ch3s60, ch3s49u08, ch3s19max, ch3o4s6QT]
-network.layers[4].sfa_args["max_preserved_sfa"] = 4
+network.layers[4].sfa_args["delta_threshold"] = 4
 network.layers[5].sfa_args["expansion_funcs"] = [ch3s72, ch3o4s40u08, ch3o4s11max, ch3o4s4QT, ]
 # ch3s40u08, ch3s11max, ch3o4s5QT #[ch3s72, ch3s40u08, ch3s11max, ch3o5s6QT, ch3o0s3QT]
-network.layers[5].sfa_args["max_preserved_sfa"] = 5
+network.layers[5].sfa_args["delta_threshold"] = 5
 network.layers[6].sfa_args["expansion_funcs"] = [ch3s80, ch3o5s25u08, ch3o5s15max, ]
 # ch3s25u08, ch3o5s4QT, ch3s15max, #[ch3s80, ch3s25u08, ch3s15max, ch3o6s4QT]
-network.layers[6].sfa_args["max_preserved_sfa"] = 5
+network.layers[6].sfa_args["delta_threshold"] = 5
 network.layers[7].sfa_args["expansion_funcs"] = [ch3s80, ch3o5s20u08, ]  # [ch3s80, ch3o6s20u08,]
-network.layers[7].sfa_args["max_preserved_sfa"] = 6
+network.layers[7].sfa_args["delta_threshold"] = 6
 network.layers[8].sfa_args["expansion_funcs"] = [ch3s85, ch3o6s20u08, ]  # ch3s20u08 #[ch3s85, ch3o6s20u08, ch3o0s3QT]
-network.layers[8].sfa_args["max_preserved_sfa"] = 8
+network.layers[8].sfa_args["delta_threshold"] = 8
 network.layers[8].pca_node_class = None
 
 print("############################ Genrealization network #######################")
 for i, layer in enumerate(network.layers):
     print("GENERALIZATION:Layer %i has expansion" % i, layer.sfa_args["expansion_funcs"])
-# layer.sfa_args["offsetting_mode"]=None
+# layer.sfa_args["slow_feature_scaling_method"]=None
 #    layer.sfa_args["reconstruct_with_sfa"]=False
 
 # ################## HSFA Network for age estimation ######################
@@ -2316,14 +2314,14 @@ network = HSFANetworkU11L_Overlap6x6L0_GUO_3Labels_96x96 = copy.deepcopy(
 HSFANet_out_dims = [14, 20, 27, 49, 60, 61, 65, 65, 75, 75, 70]  # [ 39, 51, 65,70,70,70,70,70,70,70,70 ]
 for i, layer in enumerate(network.layers):
     # layer.sfa_node_class = mdp.nodes.SFANode
-    layer.sfa_args["max_preserved_sfa"] = HSFANet_out_dims[i]
-    layer.sfa_args["offsetting_mode"] = None
+    layer.sfa_args["delta_threshold"] = HSFANet_out_dims[i]
+    layer.sfa_args["slow_feature_scaling_method"] = None
     layer.sfa_args["reconstruct_with_sfa"] = False
     layer.sfa_args["expansion_funcs"] = [identity, unsigned_08expo]
     layer.sfa_out_dim = HSFANet_out_dims[i]
 # network.layers[8].pca_node_class = None
-network.layers[8].pca_args["max_preserved_sfa"] = 66
-network.layers[8].pca_args["offsetting_mode"] = None
+network.layers[8].pca_args["delta_threshold"] = 66
+network.layers[8].pca_args["slow_feature_scaling_method"] = None
 network.layers[8].pca_args["reconstruct_with_sfa"] = False
 network.layers[8].pca_args["expansion_funcs"] = [identity, unsigned_08expo]
 network.layers[8].pca_out_dim = 66
@@ -2373,41 +2371,41 @@ print("HiGSFANetworkU11L_Overlap6x6L0_GUO_1Label L0-10_SFA_out_dim = ", HiGSFANe
 
 network.layers[0].sfa_args["expansion_funcs"] = [s18, s15u08ex, s17Max, s10QT]  # ** s18, s15u08ex, s17Max, s10QT]
 # #identity, s14u08ex, s14Max, s1QT, QT, s14u08ex, unsigned_08expo, s14QT, maximum_mix1_ex, s16QT, s10Max
-network.layers[0].sfa_args["max_preserved_sfa"] = 1  # T 2 #1 #! 2 # **1 #1 3
+network.layers[0].sfa_args["delta_threshold"] = 1  # T 2 #1 #! 2 # **1 #1 3
 
 network.layers[1].sfa_args["expansion_funcs"] = [ch3s20, ch3s20u08, ch3s20max, ch3o1s4QT]
 # ** ch3s16, ch3s16u08, ch3s16max, ch3o1s4QT #unsigned_08expo, ch3_O2_s3_QT, ch3_O3_s3_QT
-network.layers[1].sfa_args["max_preserved_sfa"] = 2  # T 3 #2 #! 3 # ** 2 #3
+network.layers[1].sfa_args["delta_threshold"] = 2  # T 3 #2 #! 3 # ** 2 #3
 
 network.layers[2].sfa_args["expansion_funcs"] = [ch3s28, ch3s28u08, ch3s16max, ch3o2s6QT]
 # ** ch3s24, ch3s24u08, ch3s12max, ch3o2s6QT
 network.layers[2].sfa_args[
-    "max_preserved_sfa"] = 1.933 + 0.003 + 0.0015  # T 1.9 #1.81 #! 1.9 # ** 1.81 1.91 #1.93 #(nothing) 3# (nothing)4
+    "delta_threshold"] = 1.933 + 0.003 + 0.0015  # T 1.9 #1.81 #! 1.9 # ** 1.81 1.91 #1.93 #(nothing) 3# (nothing)4
 
 network.layers[3].sfa_args["expansion_funcs"] = [ch3s37, ch3s37u08, ch3s19max, ch3o2s6QT]
 # ** ch3s33, ch3s33u08, ch3s15max, ch3o2s6QT  # maximum_mix1_exp
 network.layers[3].sfa_args[
-    "max_preserved_sfa"] = 1.933 + 0.005 + 0.0015  # T 1.9 #1.81 #! 1.9  # ** 1.81 #1.91 #1.92 # (nothing) 5
+    "delta_threshold"] = 1.933 + 0.005 + 0.0015  # T 1.9 #1.81 #! 1.9  # ** 1.81 #1.91 #1.92 # (nothing) 5
 
 network.layers[4].sfa_args["expansion_funcs"] = [ch3s60, ch3s49u08, ch3s19max, ch3o2s6QT, ]
 # ** ch3s60, ch3s45u08, ch3s15max, ch3o2s6QT #ch3o3s5QT, maximum_mix1_ex,unsigned_08expo] #unsigned_08expo
-network.layers[4].sfa_args["max_preserved_sfa"] = 1.933 + 0.005 + 0.0023  # T 1.9 #1.81 #! 1.9 # **1.81
+network.layers[4].sfa_args["delta_threshold"] = 1.933 + 0.005 + 0.0023  # T 1.9 #1.81 #! 1.9 # **1.81
 
 network.layers[5].sfa_args["expansion_funcs"] = [ch3s72, ch3s40u08, ch3s11max, ch3o3s6QT]
 # ** ch3s72, ch3s35u08, ch3s6max, ch3o3s6QT #identity, ch3s50u08, ch3o3s3QT #maximum_mix1_ex,unsigned_08expo]
-network.layers[5].sfa_args["max_preserved_sfa"] = 1.953 + 0.005 + 0.0031  # T 1.93 #1.86 #! 1.93 # ** 1.81
+network.layers[5].sfa_args["delta_threshold"] = 1.953 + 0.005 + 0.0031  # T 1.93 #1.86 #! 1.93 # ** 1.81
 
 network.layers[6].sfa_args["expansion_funcs"] = [ch3s80, ch3s25u08, ch3s15max, ch3o4s4QT, ]
 # ** ch3s80, ch3s20u08, ch3s10max, ch3o4s4QT
-network.layers[6].sfa_args["max_preserved_sfa"] = 1.973 + 0.000  # T 1.96 #1.89 #! 1.96 # ** 1.89
+network.layers[6].sfa_args["delta_threshold"] = 1.973 + 0.000  # T 1.96 #1.89 #! 1.96 # ** 1.89
 
 network.layers[7].sfa_args["expansion_funcs"] = [ch3s80, ch3o6s20u08, ]
 # ** ch3s80, ch3o5s20u08 # ch3o4s5QT #unsigned_08expo, ch3o5s4QT
-network.layers[7].sfa_args["max_preserved_sfa"] = 1.98  # T 1.97 #1.94 #! 1.97 # ** 1.81
+network.layers[7].sfa_args["delta_threshold"] = 1.98  # T 1.97 #1.94 #! 1.97 # ** 1.81
 
 network.layers[8].sfa_args["expansion_funcs"] = [ch3s85, ch3o6s20u08, ]
 # ** ch3s85, ch3o4s20u08, #ch3o4s4QT #identity, ch3s70u08, unsigned_08expo, ch3_s25_max
-network.layers[8].sfa_args["max_preserved_sfa"] = 1.98  # T 1.97 #1.94 #! 1.97 # **1.81
+network.layers[8].sfa_args["delta_threshold"] = 1.98  # T 1.97 #1.94 #! 1.97 # **1.81
 
 # WARNING, ADDING AN ADDITIONAL SFA NODE IN THE LAST LAYER, 80x80 resolution (Node 9)
 double_SFA_top_node = True  # and False
@@ -2423,12 +2421,12 @@ if double_SFA_top_node:
     layer.sfa_out_dim = HiGSFANet_out_dims[9]
     layer.sfa_args = dict(layer.sfa_args)
     layer.sfa_args["expansion_funcs"] = [s75, s34u08, o7s15QT, ]  # ** s75, s30u08ex, o5s15QT #s50u08ex, o4s18QT , s3QT
-    layer.sfa_args["max_preserved_sfa"] = 1.9  # ! 1.81 # ** 1.81
+    layer.sfa_args["delta_threshold"] = 1.9  # ! 1.81 # ** 1.81
 
 my_DT = 1.91  # Definitive, 1 Label
 for i in range(2, 9):
-    network.layers[i].sfa_args["max_preserved_sfa"] = my_DT
-network.layers[8].pca_args["max_preserved_sfa"] = my_DT
+    network.layers[i].sfa_args["delta_threshold"] = my_DT
+network.layers[8].pca_args["delta_threshold"] = my_DT
 
 # #####################      SFANetworkU11L_Overlap6x6L0_GUO_3Labels          ######################################
 # SFANet_out_dims = [ 18, 27, 37, 66, 79, 88, 88, 93, 95, 75, 75 ]
@@ -2450,10 +2448,10 @@ DT = [3, 4, 1.96, 1.96, 1.96, 1.96, 1.96, 1.96, 1.96, 1.96, 1.96]  # last entry 
 network = SFANetworkU11L_Overlap6x6L0_GUO_3Labels = copy.deepcopy(HiGSFANetworkU11L_Overlap6x6L0_GUO_3Labels)
 for i, layer in enumerate(network.layers):
     if use_sfapc_nodes:
-        layer.sfa_args["max_preserved_sfa"] = DT[i]
+        layer.sfa_args["delta_threshold"] = DT[i]
     else:
-        layer.sfa_args["max_preserved_sfa"] = 4.0  # Preserve all slow features
-        layer.sfa_args["offsetting_mode"] = None
+        layer.sfa_args["delta_threshold"] = 4.0  # Preserve all slow features
+        layer.sfa_args["slow_feature_scaling_method"] = None
         layer.sfa_args["reconstruct_with_sfa"] = False
     layer.sfa_out_dim = int(SFANet_out_dims[i] * factor_out_dim)
 
@@ -2461,12 +2459,12 @@ network.layers[8].pca_out_dim = int(SFANet_out_dims[8] * factor_out_dim)
 network.layers[8].sfa_out_dim = int(SFANet_out_dims[9] * factor_out_dim)
 
 if not use_sfapc_nodes:
-    layer.pca_args["max_preserved_sfa"] = 4.0  # Preserve all slow features
-    layer.pca_args["offsetting_mode"] = None
+    layer.pca_args["delta_threshold"] = 4.0  # Preserve all slow features
+    layer.pca_args["slow_feature_scaling_method"] = None
     layer.pca_args["reconstruct_with_sfa"] = False
 else:
-    network.layers[8].pca_args["max_preserved_sfa"] = DT[8]
-    network.layers[8].sfa_args["max_preserved_sfa"] = DT[9]
+    network.layers[8].pca_args["delta_threshold"] = DT[8]
+    network.layers[8].sfa_args["delta_threshold"] = DT[9]
 
 network.layers[0].sfa_args["expansion_funcs"] = [s17, s20u08ex, s17Max, s10QT, ]  # s17, s20u08ex, s17Max, s10QT
 network.layers[1].sfa_args["expansion_funcs"] = [ch3s8, ch3s12u08, ch3s10max,
@@ -2560,60 +2558,60 @@ for i, layer in enumerate(network.layers):
     layer.sfa_out_dim = HiGSFANet_out_dims[i]
     # QT_AP_L(k=nan, d=0.8), Q_AN_exp
     # layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_length_slow_part":10,
-    # "max_preserved_sfa":2.0}
+    # "delta_threshold":2.0}
     #    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_length_slow_part":1,
-    # "offsetting_mode":"sensitivity_based", "max_preserved_sfa":2.0}
+    # "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":2.0}
     #    layer.sfa_args = {"pre_expansion_node_class":mdp.nodes.GSFANode,
     # "expansion_funcs":[identity, unsigned_08expo], "max_length_slow_part":10,
-    # "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":2.0}
+    # "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":2.0}
     layer.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": [identity, unsigned_08expo],
-                      "max_length_slow_part": None, "offsetting_mode": "sensitivity_based_pure",
-                      "max_preserved_sfa": 1.91}  # only for tuning/experimentation, official is below
+                      "max_length_slow_part": None, "slow_feature_scaling_method": "sensitivity_based",
+                      "delta_threshold": 1.91}  # only for tuning/experimentation, official is below
     # layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, unsigned_08expo],
-    # "max_length_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99}
+    # "max_length_slow_part":10,   "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":1.99}
     # #AGE ARTICLE: 1.99999 official, 1.99999, 2.0. Control2: 1.9999
     # sel60_unsigned_08expo sel_exp(60, unsigned_08expo), unsigned_08expos14u08ex
 
 # network.layers[0].sfa_args["expansion_funcs"]= [identity, s14u08ex, s17Max, s9QT]
 # #identity, s14u08ex, s14Max, s10QT, QT, s14u08ex, unsigned_08expo, s14QT, maximum_mix1_ex, s16QT, s10Max
 network.layers[0].sfa_args["expansion_funcs"] = [identity, s14u08ex, s12Max]  # WARNING, EXPERIMENT Delta Values!
-network.layers[0].sfa_args["max_preserved_sfa"] = 40  # 1#1 3
+network.layers[0].sfa_args["delta_threshold"] = 40  # 1#1 3
 # network.layers[0].sfa_args["expansion_funcs"]= [identity, QT] #unsigned_08expo
 
 # network.layers[0].sfa_args["expansion_funcs"]= [identity, maximum_mix1_ex,unsigned_08expo] #unsigned_08expo
 network.layers[1].sfa_args["expansion_funcs"] = [identity, ch3s16u08, ch3s10max, ch3o1s5QT]
 # ch3o1s3QT, ch3o1s5QT, unsigned_08expo, ch3_O2_s3_QT, ch3_O3_s3_QT
-network.layers[1].sfa_args["max_preserved_sfa"] = 2  # 2 #3
+network.layers[1].sfa_args["delta_threshold"] = 2  # 2 #3
 # network.layers[1].sfa_args["expansion_funcs"]= [identity, maximum_mix1_ex,unsigned_08expo] #unsigned_08expo
 
 network.layers[2].sfa_args["expansion_funcs"] = [identity, ch3s24u08, ch3s12max, ch3o2s3QT]
 # identity, ch3o2s3QT, ch3s16u08, ch3s12max, unsigned_08expo, ch3s20u08, ch3s12max, ch3o3s3QT
-network.layers[2].sfa_args["max_preserved_sfa"] = 1.91  # 1.93 #(nothing) 3# (nothing)4
+network.layers[2].sfa_args["delta_threshold"] = 1.91  # 1.93 #(nothing) 3# (nothing)4
 
 network.layers[3].sfa_args["expansion_funcs"] = [identity, ch3s33u08, ch3o3s3QT]
 # ch3o3s4QT, ch3o3s26u08, ch3o3s12max, unsigned_08expo, maximum_mix1_ex,
 # network.layers[3].sfa_args["expansion_funcs"]= [identity, ch3o3s26u08, ch3o3s16max,]
 # #ch3o3s26u08, ch3o3s12max, unsigned_08expo, maximum_mix1_ex,
-network.layers[3].sfa_args["max_preserved_sfa"] = 1.91  # 1.92 # (nothing) 5
+network.layers[3].sfa_args["delta_threshold"] = 1.91  # 1.92 # (nothing) 5
 
 network.layers[4].sfa_args["expansion_funcs"] = [identity, ch3s45u08, ch3o3s4QT]
 # ch3o3s5QT, maximum_mix1_ex,unsigned_08expo] #unsigned_08expo
-# network.layers[4].sfa_args["max_preserved_sfa"]= 6 #8
+# network.layers[4].sfa_args["delta_threshold"]= 6 #8
 
 network.layers[5].sfa_args["expansion_funcs"] = [identity, ch3s50u08, ch3o3s3QT]
 # maximum_mix1_ex,unsigned_08expo] #unsigned_08expo
-# network.layers[5].sfa_args["max_preserved_sfa"]= 7 #9
+# network.layers[5].sfa_args["delta_threshold"]= 7 #9
 
 network.layers[6].sfa_args["expansion_funcs"] = [identity, ch3s40u08, ch3o3s5QT]
 # ch3s40u08, ch3o3s5QT]  #unsigned_08expo, ch3o3s5QT
-# network.layers[6].sfa_args["max_preserved_sfa"]= 7 #(nothing) 10
+# network.layers[6].sfa_args["delta_threshold"]= 7 #(nothing) 10
 
 network.layers[7].sfa_args["expansion_funcs"] = [identity, ch3s40u08, ch3o4s5QT]  # unsigned_08expo, ch3o5s4QT
-# network.layers[7].sfa_args["max_preserved_sfa"]= 9 # 11
+# network.layers[7].sfa_args["delta_threshold"]= 9 # 11
 
 network.layers[8].sfa_args["expansion_funcs"] = [identity, ch3s30u08,
                                                  ch3o4s4QT]  # identity, ch3s70u08, unsigned_08expo, ch3_s25_max
-# network.layers[8].sfa_args["max_preserved_sfa"]= 5
+# network.layers[8].sfa_args["delta_threshold"]= 5
 
 # noise_addition=0.000004
 # network.layers[1].ord_node_class = mdp.nodes.NoiseNode(noise_func=numpy.random.uniform,
@@ -2679,40 +2677,40 @@ def delta_map(delta):
 
 network.layers[0].sfa_args["expansion_funcs"] = [s18, s14u08ex, s17Max, s10_d1_Q_N]
 # identity, s14u08ex, s17Max, s10QT/s10_d1_Q_N
-network.layers[0].sfa_args["max_preserved_sfa"] = 3  # 3
+network.layers[0].sfa_args["delta_threshold"] = 3  # 3
 
 network.layers[1].sfa_args["expansion_funcs"] = [ch3s18, ch3s16u08, ch3s10max, ch3_o3_s5_d1_Q_N, ch3_o0_s3_d1_Q_N]
 # identity, ch3s16u08, ch3s10max, ch3o3s5QT, ch3o0s3QT
-network.layers[1].sfa_args["max_preserved_sfa"] = 4  # 4
+network.layers[1].sfa_args["delta_threshold"] = 4  # 4
 
 # network.layers[2].sfa_args["expansion_funcs"]= [ch3s26, ch3s24u08, ch3s12max, ch3_o4_s3_d1_Q_N, ch3_o0_s3_d1_Q_N]
 # #identity, ch3s24u08, ch3s12max, ch3o4s3QT, ch3o0s3QT
 network.layers[2].sfa_args["expansion_funcs"] = [ch3s27, ch3s27u08, ch3s12max, ch3_o4_s3_d1_Q_N, ch3_o0_s3_d1_Q_N]
 # Experiment changed o4s5 to o4s3
-network.layers[2].sfa_args["max_preserved_sfa"] = delta_map(1.96)  # 1.97
+network.layers[2].sfa_args["delta_threshold"] = delta_map(1.96)  # 1.97
 
 network.layers[3].sfa_args["expansion_funcs"] = [ch3s35, ch3s33u08, ch3_o5_s3_d1_Q_N,
                                                  ch3_o0_s3_d1_Q_N]  # identity, ch3s33u08, ch3o5s3QT, ch3o0s3QT
 # network.layers[3].sfa_args["expansion_funcs"]= [ch3s35, ch3s33u08, ch3o5s5QT, ch3_o0_s3_d1_Q_N] #Experiment
-network.layers[3].sfa_args["max_preserved_sfa"] = delta_map(1.96)  # 1.97
+network.layers[3].sfa_args["delta_threshold"] = delta_map(1.96)  # 1.97
 
 network.layers[4].sfa_args["expansion_funcs"] = [ch3s62, ch3s45u08,
                                                  ch3_o5_s4_d1_Q_N, ]  # identity, ch3s45u08, ch3o5s4QT
-network.layers[4].sfa_args["max_preserved_sfa"] = delta_map(1.96)  # 1.975
+network.layers[4].sfa_args["delta_threshold"] = delta_map(1.96)  # 1.975
 
 network.layers[5].sfa_args["expansion_funcs"] = [ch3s74, ch3s50u08, ch3_o5_s3_d1_Q_N]  # identity, ch3s50u08, ch3o5s3QT
-network.layers[5].sfa_args["max_preserved_sfa"] = delta_map(1.97)  # 1.975
+network.layers[5].sfa_args["delta_threshold"] = delta_map(1.97)  # 1.975
 
 network.layers[6].sfa_args["expansion_funcs"] = [ch3s82, ch3s40u08, ch3_o5_s5_d1_Q_N]  # identity, ch3s40u08, ch3o5s5QT
-network.layers[6].sfa_args["max_preserved_sfa"] = delta_map(1.97)  # 1.975
+network.layers[6].sfa_args["delta_threshold"] = delta_map(1.97)  # 1.975
 
 network.layers[7].sfa_args["expansion_funcs"] = [ch3s82, ch3s40u08, ch3_o6_s5_d1_Q_N, ]
 # identity, ch3s40u08, ch3o6s5QT/ch3_o6_s5_Q_N,
-network.layers[7].sfa_args["max_preserved_sfa"] = delta_map(1.97)  # 1.975
+network.layers[7].sfa_args["delta_threshold"] = delta_map(1.97)  # 1.975
 
 network.layers[8].sfa_args["expansion_funcs"] = [ch3s87, ch3s30u08, ch3_o6_s4_d1_Q_N, ch3_o0_s3_d1_Q_N]
 # identity, ch3s30u08, ch3o6s4QT/ch3_o6_s4_d1_Q_N, ch3o0s3QT/ch3_o0_s3_d1_Q_N
-network.layers[8].sfa_args["max_preserved_sfa"] = delta_map(1.97)  # 1.975
+network.layers[8].sfa_args["delta_threshold"] = delta_map(1.97)  # 1.975
 
 double_SFA_top_node = True  # and False
 if double_SFA_top_node:
@@ -2753,37 +2751,37 @@ print("HiGSFANetworkU11L_Overlap6x6L0_3Labels L0-10_SFA_out_dim = ", HiGSFANet_o
 
 network.layers[0].sfa_args["expansion_funcs"] = [identity, s14u08ex, s17Max, s10_d1_Q_N]
 # identity, s14u08ex, s17Max, s10QT/s10_d1_Q_N
-network.layers[0].sfa_args["max_preserved_sfa"] = 2  # 2
+network.layers[0].sfa_args["delta_threshold"] = 2  # 2
 
 network.layers[1].sfa_args["expansion_funcs"] = [identity, ch3s16u08, ch3s10max, ch3_o2_s5_d1_Q_N, ch3_o0_s2_d1_Q_N]
 # identity, ch3s16u08, ch3s10max, ch3o3s5QT, ch3o0s3QT
-network.layers[1].sfa_args["max_preserved_sfa"] = 3  # 3
+network.layers[1].sfa_args["delta_threshold"] = 3  # 3
 
 network.layers[2].sfa_args["expansion_funcs"] = [identity, ch3s24u08, ch3s12max, ch3_o3_s3_d1_Q_N, ch3_o0_s2_d1_Q_N]
 # identity, ch3s24u08, ch3s12max, ch3o4s3QT, ch3o0s3QT
-network.layers[2].sfa_args["max_preserved_sfa"] = 1.95  # 1.95
+network.layers[2].sfa_args["delta_threshold"] = 1.95  # 1.95
 
 network.layers[3].sfa_args["expansion_funcs"] = [identity, ch3s33u08, ch3_o4_s3_d1_Q_N, ch3_o0_s2_d1_Q_N]
 # identity, ch3s33u08, ch3o5s3QT, ch3o0s3QT
-network.layers[3].sfa_args["max_preserved_sfa"] = 1.96  # 1.955
+network.layers[3].sfa_args["delta_threshold"] = 1.96  # 1.955
 
 network.layers[4].sfa_args["expansion_funcs"] = [identity, ch3s45u08, ch3_o4_s4_d1_Q_N, ]
 # identity, ch3s45u08, ch3o5s4QT
-network.layers[4].sfa_args["max_preserved_sfa"] = 1.9625  # 1.9625
+network.layers[4].sfa_args["delta_threshold"] = 1.9625  # 1.9625
 
 network.layers[5].sfa_args["expansion_funcs"] = [identity, ch3s50u08, ch3o4s3QT]  # identity, ch3s50u08, ch3o5s3QT
-network.layers[5].sfa_args["max_preserved_sfa"] = 1.9625  # 1.9625
+network.layers[5].sfa_args["delta_threshold"] = 1.9625  # 1.9625
 
 network.layers[6].sfa_args["expansion_funcs"] = [identity, ch3s40u08, ch3o4s5QT, ]  # identity, ch3s40u08, ch3o5s5QT
-network.layers[6].sfa_args["max_preserved_sfa"] = 1.9625  # 1.9625
+network.layers[6].sfa_args["delta_threshold"] = 1.9625  # 1.9625
 
 network.layers[7].sfa_args["expansion_funcs"] = [identity, ch3s40u08,
                                                  ch3_o5_s5_d1_Q_N, ]  # identity, ch3s40u08, ch3o6s5QT/ch3_o6_s5_Q_N,
-network.layers[7].sfa_args["max_preserved_sfa"] = 1.9625  # 1.9625
+network.layers[7].sfa_args["delta_threshold"] = 1.9625  # 1.9625
 
 network.layers[8].sfa_args["expansion_funcs"] = [identity, ch3s30u08, ch3_o5_s4_d1_Q_N, ch3_o0_s2_d1_Q_N]
 # identity, ch3s30u08, ch3o6s4QT/ch3_o6_s4_d1_Q_N, ch3o0s3QT/ch3_o0_s3_d1_Q_N
-network.layers[8].sfa_args["max_preserved_sfa"] = 1.9625  # 1.9625
+network.layers[8].sfa_args["delta_threshold"] = 1.9625  # 1.9625
 
 double_SFA_top_node = True  # and False
 if double_SFA_top_node:
@@ -2812,8 +2810,8 @@ HiGSFANet4x4_out_dims = [16, 24, 33, 60, 72, 80, 80, 75, 75, 50, 75]
 for i, layer in enumerate(network.layers):
     layer.sfa_out_dim = HiGSFANet4x4_out_dims[i]
     layer.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": [identity, unsigned_08expo],
-                      "max_length_slow_part": None, "offsetting_mode": "sensitivity_based_pure",
-                      "max_preserved_sfa": 1.9999}
+                      "max_length_slow_part": None, "slow_feature_scaling_method": "sensitivity_based",
+                      "delta_threshold": 1.9999}
 
 network = IEMNetworkU11L = copy.deepcopy(linearPCANetworkU11L)
 # IEMNet_out_dims = [13, 20, 35, 60, 60, 60, 60, 60, 60, 60, 60]
@@ -2834,18 +2832,18 @@ for i, layer in enumerate(network.layers):
     # "max_length_slow_part":10, "max_num_samples_for_ev":600, "max_test_samples_for_ev":600, "k":92}
     # #    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "use_pca":True, "use_sfa":True,
     # "operation":"average", "max_length_slow_part":10, "max_num_samples_for_ev":400,
-    # "max_test_samples_for_ev":400, "k":48, "max_preserved_sfa":2.0}
+    # "max_test_samples_for_ev":400, "k":48, "delta_threshold":2.0}
     # ################# Default:
     #    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "use_pca":True, "use_sfa":True,
     # "operation":"average", "max_length_slow_part":10, "max_num_samples_for_ev":600,
-    # "max_test_samples_for_ev":600, "k":48, "max_preserved_sfa":2.0, "out_sfa_filter":False}
+    # "max_test_samples_for_ev":600, "k":48, "delta_threshold":2.0, "out_sfa_filter":False}
     # ################# Reconstruction only
     layer.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": [identity, unsigned_08expo],
-                      "max_length_slow_part": None, "offsetting_mode": "sensitivity_based_pure",
-                      "max_preserved_sfa": 1.99}  # 2.0
+                      "max_length_slow_part": None, "slow_feature_scaling_method": "sensitivity_based",
+                      "delta_threshold": 1.99}  # 2.0
 # layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "use_pca":True, "use_sfa":False,
 # "operation":"average", "max_length_slow_part":20, "max_num_samples_for_ev":1200,
-# "max_test_samples_for_ev":1200, "k":92, "max_preserved_sfa":1.99, "out_sfa_filter":False}
+# "max_test_samples_for_ev":1200, "k":92, "delta_threshold":1.99, "out_sfa_filter":False}
 #    layer.sfa_args = {"expansion_funcs":None, "use_pca":True, "operation":"lin_app",
 # "max_length_slow_part":10, "max_num_samples_for_ev":1200, "max_test_samples_for_ev":1200, "k":200}
 #    layer.sfa_args = {"expansion_funcs":None, "use_pca":True, "max_length_slow_part":6,
@@ -2997,28 +2995,28 @@ expanded_dims = [180, 350, 423, 492, 552, 582, 435, 400, 400, 350, 1, 1]  # TEST
 # expanded_dims = [ 50, 150, 200, 250, 250, 300, 250, 150, 200, 200, 1, 1]  # Test
 # expanded_dims = [ 25,  70, 100, 125, 130, 140, 110,  75, 110, 100, 1, 1]  # Test
 
-offsetting_mode = "data_dependent"  # "sensitivity_based_offset", "sensitivity_based_pure" or "data_dependent"
+slow_feature_scaling_method = "data_dependent"  # "sensitivity_based" or "data_dependent"
 reconstruct_with_sfa = False  # True or False
 for i, layer in enumerate(network.layers):
     layer.sfa_node_class = mdp.nodes.iGSFANode
     layer.sfa_out_dim = HiGSFANet_out_dims[i]
     layer.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": "RandomSigmoids",
-                      "max_length_slow_part": 16, "offsetting_mode": offsetting_mode,
-                      "max_preserved_sfa": 1.91, "expansion_output_dim": expanded_dims[i],
+                      "max_length_slow_part": 16, "slow_feature_scaling_method": slow_feature_scaling_method,
+                      "delta_threshold": 1.91, "expansion_output_dim": expanded_dims[i],
                       "expansion_starting_point": "Pseudo-Identity", 
                       "reconstruct_with_sfa": reconstruct_with_sfa}  # 1.85, 1.91
     # #only for tuning/experimentation, official is below
 
-max_preserved_sfa = [3, 4, 4, 4, 5, 6, 6, 6, 7, 8]
-network.layers[0].sfa_args["max_preserved_sfa"] = max_preserved_sfa[0]
-network.layers[1].sfa_args["max_preserved_sfa"] = max_preserved_sfa[1]
-# network.layers[2].sfa_args["max_preserved_sfa"] = 1.933 + 0.003 + 0.0015
-# network.layers[3].sfa_args["max_preserved_sfa"] = 1.933 + 0.005 + 0.0015
-# network.layers[4].sfa_args["max_preserved_sfa"] = 1.933 + 0.005 + 0.0023
-# network.layers[5].sfa_args["max_preserved_sfa"] = 1.953 + 0.005 + 0.0031
-# network.layers[6].sfa_args["max_preserved_sfa"] = 1.973
-# network.layers[7].sfa_args["max_preserved_sfa"] = 1.98
-# network.layers[8].sfa_args["max_preserved_sfa"] = 1.98
+delta_threshold = [3, 4, 4, 4, 5, 6, 6, 6, 7, 8]
+network.layers[0].sfa_args["delta_threshold"] = delta_threshold[0]
+network.layers[1].sfa_args["delta_threshold"] = delta_threshold[1]
+# network.layers[2].sfa_args["delta_threshold"] = 1.933 + 0.003 + 0.0015
+# network.layers[3].sfa_args["delta_threshold"] = 1.933 + 0.005 + 0.0015
+# network.layers[4].sfa_args["delta_threshold"] = 1.933 + 0.005 + 0.0023
+# network.layers[5].sfa_args["delta_threshold"] = 1.953 + 0.005 + 0.0031
+# network.layers[6].sfa_args["delta_threshold"] = 1.973
+# network.layers[7].sfa_args["delta_threshold"] = 1.98
+# network.layers[8].sfa_args["delta_threshold"] = 1.98
 
 # WARNING, ADDING AN ADDITIONAL SFA NODE IN THE LAST LAYER, 80x80 resolution (Node 9)
 double_SFA_top_node = True and False
@@ -3033,14 +3031,14 @@ if double_SFA_top_node:
     layer.sfa_node_class = mdp.nodes.iGSFANode
     layer.sfa_out_dim = HiGSFANet_out_dims[9]
     layer.sfa_args = dict(layer.sfa_args)
-    layer.sfa_args["max_preserved_sfa"] = 3
+    layer.sfa_args["delta_threshold"] = 3
     layer.sfa_args["expansion_output_dim"] = expanded_dims[9]
 
 my_DT = 1.985  # TEST B # 1.98 # 1.96  # =1.96, 3 Labels
 for i in range(2, 9):
-    network.layers[i].sfa_args["max_preserved_sfa"] = max_preserved_sfa[i]
-network.layers[8].pca_args["max_preserved_sfa"] = max_preserved_sfa[8]
-#network.layers[8].sfa_args["max_preserved_sfa"] = max_preserved_sfa[9]
+    network.layers[i].sfa_args["delta_threshold"] = delta_threshold[i]
+network.layers[8].pca_args["delta_threshold"] = delta_threshold[8]
+#network.layers[8].sfa_args["delta_threshold"] = delta_threshold[9]
 
 HiGSFANetworkU11L_Overlap6x6L0_Sigmoids_GUO_3Labels_96x96 = \
     copy.deepcopy(HiGSFANetworkU11L_Overlap6x6L0_Sigmoids_GUO_3Labels)
@@ -3483,35 +3481,35 @@ for i, layer in enumerate(network.layers):
     #    layer.sfa_out_dim = iGSFANet_out_dims[i]
     # QT_AP_L(k=nan, d=0.8), Q_AN_exp
     # layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_length_slow_part":10,
-    # "max_preserved_sfa":2.0}
+    # "delta_threshold":2.0}
     #    layer.sfa_args = {"expansion_funcs":[identity, unsigned_08expo], "max_length_slow_part":1,
-    # "offsetting_mode":"sensitivity_based", "max_preserved_sfa":2.0}
+    # "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":2.0}
     #    layer.sfa_args = {"pre_expansion_node_class":mdp.nodes.GSFANode,
     # "expansion_funcs":[identity, unsigned_08expo], "max_length_slow_part":10,
-    # "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":2.0}
+    # "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":2.0}
     layer.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": [identity, unsigned_08expo],
-                      "max_length_slow_part": None, "offsetting_mode": "sensitivity_based_pure",
-                      "max_preserved_sfa": 1.999}
+                      "max_length_slow_part": None, "slow_feature_scaling_method": "sensitivity_based",
+                      "delta_threshold": 1.999}
 
 delta_thresholds = [1.998, 1.996, 1.995, 1.99, 1.9855, 1.976, 1.97, 1.95, 1.94, 1.93, 1.92, 1.91]
 output_dims = [16, 28, 50, 75, 75, 75, 75, 75, 75, 75, 80, 80]
 network = HiGSFANetworkU11L_NoOverlap_4x4L0_mod = copy.deepcopy(HiGSFANetworkU11L_NoOverlap_4x4L0)
 for i, layer in enumerate(network.layers):
-    layer.sfa_args["max_preserved_sfa"] = delta_thresholds[i]
+    layer.sfa_args["delta_threshold"] = delta_thresholds[i]
     layer.sfa_out_dim = output_dims[i]
 
 delta_thresholds = [2, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4]
 output_dims = [15, 28, 50, 75, 75, 75, 75, 75, 75, 75, 80, 80]
 network = HiGSFANetworkU11L_NoOverlap_4x4L0_mod2 = copy.deepcopy(HiGSFANetworkU11L_NoOverlap_4x4L0)
 for i, layer in enumerate(network.layers):
-    layer.sfa_args["max_preserved_sfa"] = delta_thresholds[i]
+    layer.sfa_args["delta_threshold"] = delta_thresholds[i]
     layer.sfa_out_dim = output_dims[i]
 
 delta_thresholds = [3, 5, 8, 9, 9, 9, 9, 9, 9, 9, 9, 9]
 output_dims = [15, 28, 50, 75, 75, 75, 75, 75, 75, 75, 80, 80]
 network = HiGSFANetworkU11L_NoOverlap_4x4L0_mod4 = copy.deepcopy(HiGSFANetworkU11L_NoOverlap_4x4L0)
 for i, layer in enumerate(network.layers):
-    layer.sfa_args["max_preserved_sfa"] = delta_thresholds[i]
+    layer.sfa_args["delta_threshold"] = delta_thresholds[i]
     layer.sfa_out_dim = output_dims[i]
 
 # ###################### Networks FOR POS X, POS Y, SCALE, ANGLE WITHOUT OVERLAP #######################
@@ -3520,7 +3518,7 @@ delta_thresholds = [4, 6, 10, 14, 20, 20, 25, 30, 30, 30, 30, 30]
 output_dims = [16, 28, 50, 75, 75, 75, 75, 75, 75, 75, 80, 80]
 network = HiGSFANetworkU11L_NoOverlap_4x4L0_PosXPosYScaleAngle = copy.deepcopy(HiGSFANetworkU11L_NoOverlap_4x4L0)
 for i, layer in enumerate(network.layers):
-    layer.sfa_args["max_preserved_sfa"] = delta_thresholds[i]
+    layer.sfa_args["delta_threshold"] = delta_thresholds[i]
     layer.sfa_out_dim = output_dims[i]
 
 HiGSFANetworkU11L_NoOverlap_4x4L0_PosXPosYScaleAngle_128x128 = copy.deepcopy(
@@ -3541,7 +3539,7 @@ delta_thresholds = [7, 8, 10, 14, 20, 20, 20, 20, 20, 20, 20, 20]
 output_dims = [13, 20, 35, 60, 60, 60, 60, 60, 60, 60, 60, 60]
 network = HiGSFANetworkU11L_NoOverlap_4x4L0_Basic_PosXPosYScaleAngle = copy.deepcopy(HiGSFANetworkU11L_NoOverlap_4x4L0)
 for i, layer in enumerate(network.layers):
-    layer.sfa_args["max_preserved_sfa"] = delta_thresholds[i]
+    layer.sfa_args["delta_threshold"] = delta_thresholds[i]
     layer.sfa_out_dim = output_dims[i]
 
 HiGSFANetworkU11L_NoOverlap_4x4L0_Basic_PosXPosYScaleAngle_128x128 = copy.deepcopy(
@@ -3563,7 +3561,7 @@ delta_thresholds = [3, 8, 14, 24, 24, 24, 24, 24, 24, 24, 24, 24]  # changed 24 
 output_dims = [16, 28, 50, 75, 75, 75, 75, 75, 75, 75, 80, 80]
 network = HiGSFANetworkU11L_NoOverlap_4x4L0_EyeL = copy.deepcopy(HiGSFANetworkU11L_NoOverlap_4x4L0)
 for i, layer in enumerate(network.layers):
-    layer.sfa_args["max_preserved_sfa"] = delta_thresholds[i]
+    layer.sfa_args["delta_threshold"] = delta_thresholds[i]
     layer.sfa_out_dim = output_dims[i]
 
 HiGSFANetworkU11L_NoOverlap_4x4L0_EyeL_128x128 = copy.deepcopy(HiGSFANetworkU11L_NoOverlap_4x4L0_EyeL)
@@ -3615,11 +3613,11 @@ HiGSFANetworkSpecial11L_Overlap_4x4L0_EyeL_64x64.layers[-1].sfa_args["expansion_
 #    layer.pca_out_dim = HiGSFANet_out_dims[8]
 #    layer.pca_args = {"pre_expansion_node_class":None,
 # "expansion_funcs":[identity, div2_sel75_unsigned_08expo], "max_length_slow_part":10,
-# "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} #2.0
+# "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":1.99999} #2.0
 #    layer.sfa_node_class = mdp.nodes.iGSFANode
 #    layer.sfa_out_dim = HiGSFANet_out_dims[8]
 #    layer.sfa_args = {"pre_expansion_node_class":None, "expansion_funcs":[identity, sel8_04QT],
-# "max_length_slow_part":10,   "offsetting_mode":"sensitivity_based_pure", "max_preserved_sfa":1.99999} #2.0
+# "max_length_slow_part":10,   "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":1.99999} #2.0
 
 #
 # print "******** Setting Layer L3 k-adj-prod Parameters *********************"
@@ -3796,16 +3794,16 @@ network.layers = [network.L0, network.L1, network.L2]
 
 for i, layer in enumerate(network.layers):
     # layer.sfa_node_class = mdp.nodes.SFANode
-    layer.pca_args["offsetting_mode"] = "data_dependent"  # None
+    layer.pca_args["slow_feature_scaling_method"] = "data_dependent"  # None
     layer.pca_args["reconstruct_with_sfa"] = False
     layer.pca_args["expansion_funcs"] = None
-    layer.pca_args["max_preserved_sfa"] = 6  # 4.0 #4.0 => preserves only SFA components; 16 => half of the computed
+    layer.pca_args["delta_threshold"] = 6  # 4.0 #4.0 => preserves only SFA components; 16 => half of the computed
     # features are slow, and the remaining reconstructive
 
-    layer.sfa_args["offsetting_mode"] = "data_dependent"  # None
+    layer.sfa_args["slow_feature_scaling_method"] = "data_dependent"  # None
     layer.sfa_args["reconstruct_with_sfa"] = False
     layer.sfa_args["expansion_funcs"] = [identity, QT]
-    layer.sfa_args["max_preserved_sfa"] = 6  # 4.0 #4.0 => preserves only SFA components; 16 => half of the computed
+    layer.sfa_args["delta_threshold"] = 6  # 4.0 #4.0 => preserves only SFA components; 16 => half of the computed
     # features are slow, and the remaining reconstructive
 
 
