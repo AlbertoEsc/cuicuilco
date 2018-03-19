@@ -70,7 +70,7 @@ def new_signed_nl_func(data, expo1=2.0, expo2=0.5):
     return res
 
 
-# def sgn_expo(x, expo):
+# def signed_expo(x, expo):
 #     s = numpy.sign(x)
 #     y = s * numpy.abs(x) ** expo
 #     return y
@@ -530,7 +530,7 @@ def C_AE(x, k=1.0, d=0.73):
 # Note: don't know why I called it asymmetric, this transformation seems symmetric to me
 # AE=(Asymmetric) Polynomial Normalize: x-> x**d (signed exponentiation)
 def QT_AP(x, d=0.4):
-    xx = sgn_expo(x, d)
+    xx = signed_expo(x, d)
     return QT(xx)
 
 
