@@ -37,7 +37,7 @@ class iGSFANode(mdp.Node):
     """
     def __init__(self, input_dim=None, output_dim=None, pre_expansion_node_class=None, pre_expansion_out_dim=None,
                  expansion_funcs=None, expansion_output_dim=None, expansion_starting_point=None,
-                 max_length_slow_part=None, offsetting_mode="sensitivity_based_pure", max_preserved_sfa=1.9999,
+                 max_length_slow_part=None, slow_feature_scaling_method="sensitivity_based", delta_threshold=1.9999,
                  reconstruct_with_sfa=True, verbose=False, **argv):
         """Initializes the iGSFA node.
 
@@ -49,17 +49,20 @@ class iGSFANode(mdp.Node):
         expansion_starting_point: this parameter is also used by some specific expansion functions.
         max_length_slow_part: fixes an upper bound to the size of the slow part, which is convenient for
                               computational reasons.
-        offsetting_mode: the method used to scale the slow features. Valid entries are: None, "sensitivity_based_pure"
+        slow_feature_scaling_method: the method used to scale the slow features. Valid entries are: None, "sensitivity_based"
                          (default), "data_dependent", and "QR_decomposition".
-        max_preserved_sfa: this parameter has two different meanings depending on its type. If it is integer, it
-                           specifies the exact size of the slow part. If it is real valued, it determines the
-                           parameter \Delta_threshold, which is used to decide how many slow features are preserved,
-                           depending on their delta values.
+        delta_threshold: this parameter has two different meanings depending on its type. If it is real valued (e.g.,
+                         1.99), it determines the parameter \Delta_threshold, which is used to decide how many slow
+                         features are preserved, depending on their delta values. If it is integer (e.g., 20), it
+                         directly specifies the exact size of the slow part.
         reconstruct_with_sfa: this Boolean parameter indicates whether the slow part is removed from the input before
                               PCA is applied.
 
+        More information about parameters 'expansion_funcs' and 'expansion_starting_point' can be found in the
+            documentation of GeneralExpansionNode.
+
         Note: Training is finished after a single call to the train method, unless multi-train is enabled, which
-              is done by using reconstruct_with_sfa=False and offsetting_mode in [None, "data_dependent"]. This
+              is done by using reconstruct_with_sfa=False and slow_feature_scaling_method in [None, "data_dependent"]. This
               is necessary to support weight sharing in iGSFA layers (convolutional iGSFA layers).
         """
         super(iGSFANode, self).__init__(input_dim=input_dim, output_dim=output_dim, **argv)
@@ -83,16 +86,14 @@ class iGSFANode(mdp.Node):
 
         # Factor that prevents the amplitude of the features from growing too much through the layers of the network
         self.feature_scaling_factor = 0.5
-        self.exponent_variance = 0.5
         # Parameter that defines the size of the slow part. Its meaning depnds on wheather it is an integer or a float
-        self.max_preserved_sfa = max_preserved_sfa
+        self.delta_threshold = delta_threshold
         # Indicates whether (nonlinear) SFA components are used for reconstruction
         self.reconstruct_with_sfa = reconstruct_with_sfa
-        # Indicates whether a PCA pre-processing step is applied to the input data
-        self.compress_input_with_pca = False
-        # Indicates how much variance is preserved in case compress_input_with_pca is enabled.
-        self.compression_out_dim = 0.99
-        self.offsetting_mode = offsetting_mode  # Indicates how to scale the slow part
+        # Indicates how to scale the slow part
+        self.slow_feature_scaling_method = slow_feature_scaling_method
+
+        self.verbose = verbose
 
         self.x_mean = None
         self.sfa_x_mean = None
@@ -104,13 +105,15 @@ class iGSFANode(mdp.Node):
         return True
 
     # TODO: should train_mode be renamed training_mode?
-    def _train(self, x, block_size=None, train_mode=None, node_weights=None, edge_weights=None, verbose=False, **argv):
+    def _train(self, x, block_size=None, train_mode=None, node_weights=None, edge_weights=None, verbose=None, **argv):
         """Trains an iGSFA node on data 'x'
 
         The parameters:  block_size, train_mode, node_weights, and edge_weights are passed to the training function of
         the corresponding gsfa node inside iGSFA (node.gsfa_node).
         """
         self.input_dim = x.shape[1]
+        if verbose is None:
+           verbose = self.verbose
 
         if self.output_dim is None:
             self.output_dim = self.input_dim
@@ -118,14 +121,14 @@ class iGSFANode(mdp.Node):
         if verbose:
             print("Training iGSFANode...")
 
-        if (not self.reconstruct_with_sfa) and (self.offsetting_mode in [None, "data_dependent"]):
+        if (not self.reconstruct_with_sfa) and (self.slow_feature_scaling_method in [None, "data_dependent"]):
             self.multiple_train(x, block_size=block_size, train_mode=train_mode, node_weights=node_weights,
-                                edge_weights=edge_weights, verbose=verbose)
+                                edge_weights=edge_weights)
             return
 
-        if (not self.reconstruct_with_sfa) and (self.offsetting_mode not in [None, "data_dependent"]):
+        if (not self.reconstruct_with_sfa) and (self.slow_feature_scaling_method not in [None, "data_dependent"]):
             er = "'reconstruct_with_sfa' (" + str(self.reconstruct_with_sfa) + ") must be True when the scaling" + \
-                 "method (" + str(self.offsetting_mode) + ") is neither 'None' not 'data_dependent'"
+                 "method (" + str(self.slow_feature_scaling_method) + ") is neither 'None' not 'data_dependent'"
             raise Exception(er)
         # else continue using the regular method:
 
@@ -160,7 +163,7 @@ class iGSFANode(mdp.Node):
             sfa_output_dim = min(self.max_length_slow_part, self.expanded_dim, self.output_dim)
 
         # Apply SFA to expanded data
-        self.sfa_node = GSFANode(output_dim=sfa_output_dim)
+        self.sfa_node = GSFANode(output_dim=sfa_output_dim, verbose=verbose)
         #TODO: train_params is only present if patch_mdp has been imported, is this a bug?
         self.sfa_node.train_params(exp_x, params={"block_size": block_size, "train_mode": train_mode,
                                                   "node_weights": node_weights,
@@ -169,16 +172,16 @@ class iGSFANode(mdp.Node):
         if verbose:
             print("self.sfa_node.d", self.sfa_node.d)
 
-        # Decide how many slow features are preserved (either use Delta_T=max_preserved_sfa when
-        # max_preserved_sfa is a float, or preserve max_preserved_sfa features when max_preserved_sfa is an integer)
-        if isinstance(self.max_preserved_sfa, float):
+        # Decide how many slow features are preserved (either use Delta_T=delta_threshold when
+        # delta_threshold is a float, or preserve delta_threshold features when delta_threshold is an integer)
+        if isinstance(self.delta_threshold, float):
             # here self.max_length_slow_part should be considered
-            self.num_sfa_features_preserved = (self.sfa_node.d <= self.max_preserved_sfa).sum()
-        elif isinstance(self.max_preserved_sfa, int):
+            self.num_sfa_features_preserved = (self.sfa_node.d <= self.delta_threshold).sum()
+        elif isinstance(self.delta_threshold, int):
             # here self.max_length_slow_part should be considered
-            self.num_sfa_features_preserved = self.max_preserved_sfa
+            self.num_sfa_features_preserved = self.delta_threshold
         else:
-            ex = "Cannot handle type of self.max_preserved_sfa"
+            ex = "Cannot handle type of self.delta_threshold"
             raise Exception(ex)
 
         if self.num_sfa_features_preserved > self.output_dim:
@@ -201,16 +204,7 @@ class iGSFANode(mdp.Node):
         n_sfa_x = (sfa_x - self.sfa_x_mean) / self.sfa_x_std
 
         if self.reconstruct_with_sfa:
-            # Compress input, if enabled
-            if self.compress_input_with_pca:
-                self.compress_node = mdp.nodes.PCANode(output_dim=self.compression_out_dim)
-                self.compress_node.train(x_zm)
-                x_pca = self.compress_node.execute(x_zm)
-                if verbose:
-                    print("compress: %d components out of %d sufficed for the desired compression_out_dim" %
-                          (x_pca.shape[1], x_zm.shape[1]), self.compression_out_dim)
-            else:
-                x_pca = x_zm
+            x_pca = x_zm
 
             # approximate input linearly, done inline to preserve node for future use
             if verbose:
@@ -220,11 +214,7 @@ class iGSFANode(mdp.Node):
             self.lr_node.train(n_sfa_x, x_pca)
             self.lr_node.stop_training()
             x_pca_app = self.lr_node.execute(n_sfa_x)
-
-            if self.compress_input_with_pca:
-                x_app = self.compress_node.inverse(x_pca_app)
-            else:
-                x_app = x_pca_app
+            x_app = x_pca_app
         else:
             x_app = numpy.zeros_like(x_zm)
 
@@ -235,7 +225,7 @@ class iGSFANode(mdp.Node):
         if verbose:
             print("ranking method...")
         # AKA Laurenz method for feature scaling( +rotation)
-        if self.reconstruct_with_sfa and self.offsetting_mode == "QR_decomposition":
+        if self.reconstruct_with_sfa and self.slow_feature_scaling_method == "QR_decomposition":
             M = self.lr_node.beta[1:, :].T  # bias is used by default, we do not need to consider it
             Q, R = numpy.linalg.qr(M)
             self.Q = Q
@@ -243,31 +233,23 @@ class iGSFANode(mdp.Node):
             self.Rpinv = pinv(R)
             s_n_sfa_x = numpy.dot(n_sfa_x, R.T)
         # AKA my method for feature scaling (no rotation)
-        elif self.reconstruct_with_sfa and (self.offsetting_mode in ("sensitivity_based_pure", "sensitivity_based_offset")):
+        elif self.reconstruct_with_sfa and (self.slow_feature_scaling_method == "sensitivity_based"):
             beta = self.lr_node.beta[1:, :]  # bias is used by default, we do not need to consider it
             sens = (beta ** 2).sum(axis=1)
-            self.magn_n_sfa_x = sens ** self.exponent_variance
+            self.magn_n_sfa_x = sens ** 0.5
             s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x
             if verbose:
-                print("method: sensitivity_based_pure enforced / sensitivity_based_offset")
-        # AKA alternative method for feature scaling (no rotation)
-        elif self.reconstruct_with_sfa and self.offsetting_mode == "sensitivity_based_normalized":
-            beta = self.lr_node.beta[1:, :]  # bias is used by default, we do not need to consider it
-            sens = (beta ** 2).sum(axis=1)
-            self.magn_n_sfa_x = sens * ((x_pca_app ** 2).sum(axis=1).mean() / sens.sum())
-            s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x ** self.exponent_variance
-            if verbose:
-                print("method: sensitivity_based_normalized enforced")
-        elif self.offsetting_mode is None:
+                print("method: sensitivity_based enforced")
+        elif self.slow_feature_scaling_method is None:
             self.magn_n_sfa_x = 1.0
             s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x
             if verbose:
                 print("method: constant amplitude for all slow features")
-        elif self.offsetting_mode == "data_dependent":
+        elif self.slow_feature_scaling_method == "data_dependent":
             if verbose:
                 print("skiped data_dependent")
         else:
-            er = "unknown feature offsetting mode=" + str(self.offsetting_mode) + "for reconstruct_with_sfa=" + \
+            er = "unknown feature offsetting mode=" + str(self.slow_feature_scaling_method) + "for reconstruct_with_sfa=" + \
                  str(self.reconstruct_with_sfa)
             raise Exception(er)
 
@@ -285,16 +267,14 @@ class iGSFANode(mdp.Node):
 
         pca_x = self.pca_node.execute(sfa_removed_x)
 
-        if self.offsetting_mode == "data_dependent":
-            self.magn_n_sfa_x = 5.0 * numpy.median(self.pca_node.d) ** 0.5
-            s_n_sfa_x = n_sfa_x ** self.magn_n_sfa_x  # Scale according to ranking
+        if self.slow_feature_scaling_method == "data_dependent":
+            if pca_output_dim > 0:
+               self.magn_n_sfa_x = 1.0 * numpy.median(self.pca_node.d) ** 0.5    # WARNING, why did I have 5.0 there? it is supposed to be 1.0
+            else:
+               self.magn_n_sfa_x = 1.0
+            s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x  # Scale according to ranking
             if verbose:
                 print("method: data dependent")
-        elif self.offsetting_mode == "sensitivity_based_offset":
-            self.magn_n_sfa_x = numpy.maximum(self.magn_n_sfa_x, numpy.median(self.pca_node.d) ** 0.5)
-            s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x  # Scale according to updated ranking
-            if verbose:
-                print("method: sensitivity_based_offset")
 
         if self.pca_node.output_dim + self.num_sfa_features_preserved < self.output_dim:
             er = "Error, the number of features computed is SMALLER than the output dimensionality of the node: " + \
@@ -318,11 +298,13 @@ class iGSFANode(mdp.Node):
         self.stop_training()
 
     def multiple_train(self, x, block_size=None, train_mode=None, node_weights=None,
-                       edge_weights=None, verbose=False):  # scheduler = None, n_parallel=None
+                       edge_weights=None, verbose=None):  # scheduler = None, n_parallel=None
         """This function should not be called directly. Use instead the train method, which will decide whether
         multiple-training is enabled, and call this function if needed. """
         # TODO: is the following line needed? or also self.set_input_dim? or self._input_dim?
         self.input_dim = x.shape[1]
+        if verbose is None:
+           verbose = self.verbose
 
         if verbose:
             print("Training iGSFANode (multiple train method)...")
@@ -355,7 +337,7 @@ class iGSFANode(mdp.Node):
 
         # Apply SFA to expanded data
         if self.sfa_node is None:
-            self.sfa_node = GSFANode(output_dim=sfa_output_dim)
+            self.sfa_node = GSFANode(output_dim=sfa_output_dim, verbose=verbose)
         self.sfa_x_mean = 0
         self.sfa_x_std = 1.0
 
@@ -372,8 +354,10 @@ class iGSFANode(mdp.Node):
         sfa_removed_x = x
         self.pca_node.train(sfa_removed_x)
 
-    def _stop_training(self, verbose=False):
-        if self.reconstruct_with_sfa or (self.offsetting_mode not in [None, "data_dependent"]):
+    def _stop_training(self, verbose=None):
+        if verbose is None:
+           verbose = self.verbose
+        if self.reconstruct_with_sfa or (self.slow_feature_scaling_method not in [None, "data_dependent"]):
             return
         # else, special case multi-training:
 
@@ -383,16 +367,16 @@ class iGSFANode(mdp.Node):
         self.pca_node.stop_training()
         # print "self.pca_node.d", self.pca_node.d
 
-        # Decide how many slow features are preserved (either use Delta_T=max_preserved_sfa when
-        # max_preserved_sfa is a float, or preserve max_preserved_sfa features when max_preserved_sfa is an integer)
-        if isinstance(self.max_preserved_sfa, float):
+        # Decide how many slow features are preserved (either use Delta_T=delta_threshold when
+        # delta_threshold is a float, or preserve delta_threshold features when delta_threshold is an integer)
+        if isinstance(self.delta_threshold, float):
             # here self.max_length_slow_part should be considered
-            self.num_sfa_features_preserved = (self.sfa_node.d <= self.max_preserved_sfa).sum()
-        elif isinstance(self.max_preserved_sfa, int):
+            self.num_sfa_features_preserved = (self.sfa_node.d <= self.delta_threshold).sum()
+        elif isinstance(self.delta_threshold, int):
             # here self.max_length_slow_part should be considered
-            self.num_sfa_features_preserved = self.max_preserved_sfa
+            self.num_sfa_features_preserved = self.delta_threshold
         else:
-            ex = "Cannot handle type of self.max_preserved_sfa"
+            ex = "Cannot handle type of self.delta_threshold"
             raise Exception(ex)
 
         if self.num_sfa_features_preserved > self.output_dim:
@@ -413,13 +397,16 @@ class iGSFANode(mdp.Node):
         if verbose:
             print("self.pca_node.d", self.pca_node.d)
             print("ranking method...")
-        if self.offsetting_mode is None:
+        if self.slow_feature_scaling_method is None:
             self.magn_n_sfa_x = 1.0
             if verbose:
                 print("method: constant amplitude for all slow features")
-        elif self.offsetting_mode == "data_dependent":
+        elif self.slow_feature_scaling_method == "data_dependent":
             # SFA components have an std equal to that of the least significant principal component
-            self.magn_n_sfa_x = 5.0 * numpy.median(self.pca_node.d) ** 0.5  # 100.0 * self.pca_node.d[-1] ** 0.5 + 0.0
+            if self.pca_node.d.shape[0] > 0:
+               self.magn_n_sfa_x = 1.0 * numpy.median(self.pca_node.d) ** 0.5  # 100.0 * self.pca_node.d[-1] ** 0.5 + 0.0 # WARNING, had 5.0 instead of 1.0!!!
+            else:
+               self.magn_n_sfa_x = 1.0
             if verbose:
                 print("method: data dependent")
         else:
@@ -449,18 +436,10 @@ class iGSFANode(mdp.Node):
 
         n_sfa_x = (sfa_x - self.sfa_x_mean) / self.sfa_x_std
 
-        #        if self.compress_input_with_pca:
-        #            x_pca = self.compress_node.execute(x_zm)
-        #        else:
-        #            x_pca = x_zm
         if self.reconstruct_with_sfa:
             # approximate input linearly, done inline to preserve node
             x_pca_app = self.lr_node.execute(n_sfa_x)
-
-            if self.compress_input_with_pca:
-                x_app = self.compress_node.inverse(x_pca_app)
-            else:
-                x_app = x_pca_app
+            x_app = x_pca_app
         else:
             x_app = numpy.zeros_like(x_zm)
 
@@ -468,19 +447,15 @@ class iGSFANode(mdp.Node):
         sfa_removed_x = x_zm - x_app
 
         # AKA Laurenz method for feature scaling( +rotation)
-        if self.reconstruct_with_sfa and self.offsetting_mode == "QR_decomposition":
+        if self.reconstruct_with_sfa and self.slow_feature_scaling_method == "QR_decomposition":
             s_n_sfa_x = numpy.dot(n_sfa_x, self.R.T)
         # AKA my method for feature scaling (no rotation)
-        elif self.reconstruct_with_sfa and (self.offsetting_mode in ("sensitivity_based_pure",
-                                                                     "sensitivity_based_offset")):
+        elif self.reconstruct_with_sfa and self.slow_feature_scaling_method == "sensitivity_based":
             s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x 
-        # AKA alternative method for feature scaling (no rotation)
-        elif self.reconstruct_with_sfa and self.offsetting_mode == "sensitivity_based_normalized":
-            s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x ** self.exponent_variance
-        elif self.offsetting_mode is None:
+        elif self.slow_feature_scaling_method is None:
             s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x 
         # Scale according to ranking
-        elif self.offsetting_mode == "data_dependent":
+        elif self.slow_feature_scaling_method == "data_dependent":
             s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x 
         else:
             er = "unknown feature scaling method"
@@ -523,8 +498,10 @@ class iGSFANode(mdp.Node):
         else:
             return self.non_linear_inverse(y)
 
-    def non_linear_inverse(self, y, verbose=False):
+    def non_linear_inverse(self, y, verbose=None):
         """Non-linear inverse approximation method. """
+        if verbose is None:
+           verbose = self.verbose
         x_lin = self.linear_inverse(y)
         rmse_lin = ((y - self.execute(x_lin)) ** 2).sum(axis=1).mean() ** 0.5
         # scipy.optimize.leastsq(func, x0, args=(), Dfun=None, full_output=0, col_deriv=0, ftol=1.49012e-08,
@@ -559,8 +536,10 @@ class iGSFANode(mdp.Node):
         print("rmse_lin(all samples)=", rmse_lin, "rmse_nl(all samples)=", rmse_nl)
         return x_nl
 
-    def linear_inverse(self, y, verbose=False):
+    def linear_inverse(self, y, verbose=None):
         """Linear inverse approximation method. """
+        if verbose is None:
+           verbose = self.verbose
         num_samples = y.shape[0]
         if y.shape[1] != self.output_dim:
             er = "Serious dimensionality inconsistency:", y.shape[0], self.output_dim
@@ -579,7 +558,7 @@ class iGSFANode(mdp.Node):
             sfa_removed_x = numpy.zeros((num_samples, self.input_dim))
 
         # AKA Laurenz method for feature scaling( +rotation)
-        if self.reconstruct_with_sfa and self.offsetting_mode == "QR_decomposition":
+        if self.reconstruct_with_sfa and self.slow_feature_scaling_method == "QR_decomposition":
             n_sfa_x = numpy.dot(s_n_sfa_x, self.Rpinv.T)
         else:
             n_sfa_x = s_n_sfa_x / self.magn_n_sfa_x
@@ -587,11 +566,7 @@ class iGSFANode(mdp.Node):
         # sfa_x = n_sfa_x * self.sfa_x_std + self.sfa_x_mean
         if self.reconstruct_with_sfa:
             x_pca_app = self.lr_node.execute(n_sfa_x)
-
-            if self.compress_input_with_pca:
-                x_app = self.compress_node.inverse(x_pca_app)
-            else:
-                x_app = x_pca_app
+            x_app = x_pca_app
         else:
             x_app = numpy.zeros_like(sfa_removed_x)
 
@@ -620,7 +595,7 @@ class iGSFANode(mdp.Node):
 def SFANode_reduce_output_dim(sfa_node, new_output_dim, verbose=False):
     """ This function modifies an already trained SFA node (or GSFA node), 
     reducing the number of preserved SFA features to new_output_dim features.
-    The modification takes place in place
+    The modification is done in place
     """
     if verbose:
         print("Updating the output dimensionality of SFA node")
@@ -643,7 +618,7 @@ def SFANode_reduce_output_dim(sfa_node, new_output_dim, verbose=False):
 def PCANode_reduce_output_dim(pca_node, new_output_dim, verbose=False):
     """ This function modifies an already trained PCA node, 
     reducing the number of preserved SFA features to new_output_dim features.
-    The modification takes place in place. Also the explained variance field is updated
+    The modification is done in place. Also the explained variance field is updated
     """
     if verbose:
         print("Updating the output dimensionality of PCA node")
@@ -711,9 +686,10 @@ def example_iGSFA():
     from cuicuilco.gsfa_node import comp_delta
     from cuicuilco.sfa_libs import zero_mean_unit_var
     print("Node creation and training")
-    n = iGSFANode(output_dim=15, reconstruct_with_sfa=False, offsetting_mode="data_dependent")
-    n.train(x, train_mode="regular", verbose=verbose)
-    n.stop_training(verbose=verbose)
+    n = iGSFANode(output_dim=15, reconstruct_with_sfa=False, slow_feature_scaling_method="data_dependent",
+                  verbose=verbose)
+    n.train(x, train_mode="regular")
+    n.stop_training()
 
     y = n.execute(x)
     y_test = n.execute(x_test)
