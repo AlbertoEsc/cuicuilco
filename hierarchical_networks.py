@@ -770,6 +770,11 @@ print("*****   Creating 7L MMNIST Network  MNISTNetwork_24x24_7L_B *********")
 print("*******************************************************************")
 
 
+slow_feature_scaling_method = "data_dependent"
+reconstruct_with_sfa = False
+max_length_slow_part = 30
+# delta_threshold = 1.9
+
 print("******** Setting Layer L0 Parameters          *********************")
 pSFALayerL0_4x4 = copy.deepcopy(pSFALayerL0)  # L1
 pSFALayerL0_4x4.name = "Homogeneous Linear Layer L0 S=4x4 D=2x2"
@@ -779,8 +784,11 @@ pSFALayerL0_4x4.x_field_spacing = 2  # 2 for 24x24and 28x28, 3 for 29x29
 pSFALayerL0_4x4.y_field_spacing = 2
 pSFALayerL0_4x4.pca_out_dim = 13  # 12 for 24x24and 28x28, 20 for 29x29
 pSFALayerL0_4x4.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": [identity, unsigned_08expo, ],
-                            "max_length_slow_part": 10, "slow_feature_scaling_method": "sensitivity_based",
-                            "delta_threshold": 1.99999, "verbose":True}
+                            "max_length_slow_part": max_length_slow_part,
+                            "slow_feature_scaling_method": slow_feature_scaling_method,
+                            "delta_threshold": 1.99999, "verbose":True, "reconstruct_with_sfa":reconstruct_with_sfa}
+pSFALayerL0_4x4.cloneLayer = True
+#TODO: rename cloneLayer to clone_layer
 
 pSFALayerL1H_S3_D2 = copy.deepcopy(pSFALayerL1H)  # L2
 pSFALayerL1H_S3_D2.name = "Homogeneous Linear Layer L1H S=3x1 D=2x1"
@@ -792,8 +800,27 @@ pSFALayerL1H_S3_D2.y_field_spacing = 1
 # "expansion_funcs":[identity, unsigned_08expo, QT_3Split_15], "max_length_slow_part":10,
 # "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":1.99999}
 pSFALayerL1H_S3_D2.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": [identity, unsigned_08expo, ],
-                               "max_length_slow_part": 10, "slow_feature_scaling_method": "sensitivity_based",
-                               "delta_threshold": 1.99999, "verbose":True}
+                               "max_length_slow_part": max_length_slow_part,
+                               "slow_feature_scaling_method": slow_feature_scaling_method,
+                               "delta_threshold": 1.99999, "verbose":True, "reconstruct_with_sfa":reconstruct_with_sfa}
+pSFALayerL1H_S3_D2.cloneLayer = True
+
+
+pSFALayerL1V_S3_D2 = copy.deepcopy(pSFALayerL1H)  # L3
+pSFALayerL1V_S3_D2.name = "Homogeneous Linear Layer L1V S=1x3 D=1x2"
+pSFALayerL1V_S3_D2.x_field_channels = 1
+pSFALayerL1V_S3_D2.y_field_channels = 3
+pSFALayerL1V_S3_D2.x_field_spacing = 1
+pSFALayerL1V_S3_D2.y_field_spacing = 2
+# sfa_args = {"pre_expansion_node_class":None,
+# "expansion_funcs":[identity, unsigned_08expo, QT_3Split_20, CT_3Split_15], "max_length_slow_part":10,
+# "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":1.99999}
+pSFALayerL1V_S3_D2.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": [identity, unsigned_08expo, ],
+                               "max_length_slow_part": max_length_slow_part,
+                               "slow_feature_scaling_method": slow_feature_scaling_method,
+                               "delta_threshold": 1.99999, "verbose":True, "reconstruct_with_sfa":reconstruct_with_sfa}
+pSFALayerL1V_S3_D2.cloneLayer = True
+
 
 pSFALayerL2H_S3_D2 = copy.deepcopy(pSFALayerL1H)  # L4
 pSFALayerL2H_S3_D2.name = "Homogeneous Linear Layer L2H S=3x1 D=2x1"
@@ -801,6 +828,7 @@ pSFALayerL2H_S3_D2.x_field_channels = 2  # 3 for 24x24 and 29x29, 2 for 28x28
 pSFALayerL2H_S3_D2.y_field_channels = 1
 pSFALayerL2H_S3_D2.x_field_spacing = 2  # 2 for 24x24, 1 for 29x29
 pSFALayerL2H_S3_D2.y_field_spacing = 1
+max_length_slow_part = 30
 # pSFALayerL2H_S3_D2.sfa_args = {"pre_expansion_node_class":None,
 # "expansion_funcs":[identity, unsigned_08expo, QT_3Split_25, CT_3Split_20], "max_length_slow_part":10,
 # "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":1.99999}
@@ -808,8 +836,31 @@ pSFALayerL2H_S3_D2.y_field_spacing = 1
 # "expansion_funcs":[identity, unsigned_08expo,  QT_2Split_15_AP08], "max_length_slow_part":10,
 # "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":1.99999}
 pSFALayerL2H_S3_D2.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": [identity, unsigned_08expo, ],
-                               "max_length_slow_part": 10, "slow_feature_scaling_method": "sensitivity_based",
-                               "delta_threshold": 1.99999, "verbose":True}
+                               "max_length_slow_part": max_length_slow_part,
+                               "slow_feature_scaling_method": slow_feature_scaling_method,
+                               "delta_threshold": 1.99999, "verbose":True, "reconstruct_with_sfa":reconstruct_with_sfa}
+pSFALayerL2H_S3_D2.cloneLayer = True
+
+
+pSFALayerL2V_S3_D2 = copy.deepcopy(pSFALayerL1H)  # L5
+pSFALayerL2V_S3_D2.name = "Homogeneous Linear Layer L2V S=1x3 D=1x2"
+pSFALayerL2V_S3_D2.x_field_channels = 1
+pSFALayerL2V_S3_D2.y_field_channels = 3
+pSFALayerL2V_S3_D2.x_field_spacing = 1
+pSFALayerL2V_S3_D2.y_field_spacing = 2  # 2 for 24x24, 1 for 29x29
+# sfa_args = {"pre_expansion_node_class":None,
+# "expansion_funcs":[identity, unsigned_08expo, QT_3Split_25, CT_3Split_20], "max_length_slow_part":10,
+# "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":1.99999}
+pSFALayerL2V_S3_D2.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": [identity, unsigned_08expo, ],
+                               "max_length_slow_part": max_length_slow_part,
+                               "slow_feature_scaling_method": slow_feature_scaling_method,
+                               "delta_threshold": 1.99999, "verbose":True, "reconstruct_with_sfa":reconstruct_with_sfa}
+pSFALayerL2V_S3_D2.cloneLayer = True
+
+slow_feature_scaling_method = "sensitivity_based"
+reconstruct_with_sfa = True
+max_length_slow_part = 15
+
 
 pSFALayerL3H_S2_D1 = copy.deepcopy(pSFALayerL1H)  # L6
 pSFALayerL3H_S2_D1.name = "Homogeneous Linear Layer L3H S=2x1 D=1x1"
@@ -827,36 +878,11 @@ pSFALayerL3H_S2_D1.y_field_spacing = 1
 # "expansion_funcs":[identity, unsigned_08expo,  QT_3Split_35_AP08], "max_length_slow_part":10,
 # "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":1.99999}
 pSFALayerL3H_S2_D1.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": [identity, unsigned_08expo, ],
-                               "max_length_slow_part": 10, "slow_feature_scaling_method": "sensitivity_based",
-                               "delta_threshold": 1.99999, "verbose":True}
+                               "max_length_slow_part": max_length_slow_part,
+                               "slow_feature_scaling_method": slow_feature_scaling_method,
+                               "delta_threshold": 1.99999, "verbose":True, "reconstruct_with_sfa":reconstruct_with_sfa}
 
 # ***************************************************************************
-pSFALayerL1V_S3_D2 = copy.deepcopy(pSFALayerL1H)  # L3
-pSFALayerL1V_S3_D2.name = "Homogeneous Linear Layer L1V S=1x3 D=1x2"
-pSFALayerL1V_S3_D2.x_field_channels = 1
-pSFALayerL1V_S3_D2.y_field_channels = 3
-pSFALayerL1V_S3_D2.x_field_spacing = 1
-pSFALayerL1V_S3_D2.y_field_spacing = 2
-# sfa_args = {"pre_expansion_node_class":None,
-# "expansion_funcs":[identity, unsigned_08expo, QT_3Split_20, CT_3Split_15], "max_length_slow_part":10,
-# "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":1.99999}
-pSFALayerL1V_S3_D2.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": [identity, unsigned_08expo, ],
-                               "max_length_slow_part": 10, "slow_feature_scaling_method": "sensitivity_based",
-                               "delta_threshold": 1.99999, "verbose":True}
-
-pSFALayerL2V_S3_D2 = copy.deepcopy(pSFALayerL1H)  # L5
-pSFALayerL2V_S3_D2.name = "Homogeneous Linear Layer L2V S=1x3 D=1x2"
-pSFALayerL2V_S3_D2.x_field_channels = 1
-pSFALayerL2V_S3_D2.y_field_channels = 3
-pSFALayerL2V_S3_D2.x_field_spacing = 1
-pSFALayerL2V_S3_D2.y_field_spacing = 2  # 2 for 24x24, 1 for 29x29
-# sfa_args = {"pre_expansion_node_class":None,
-# "expansion_funcs":[identity, unsigned_08expo, QT_3Split_25, CT_3Split_20], "max_length_slow_part":10,
-# "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":1.99999}
-pSFALayerL2V_S3_D2.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": [identity, unsigned_08expo, ],
-                               "max_length_slow_part": 10, "slow_feature_scaling_method": "sensitivity_based",
-                               "delta_threshold": 1.99999, "verbose":True}
-
 pSFALayerL3V_S2_D1 = copy.deepcopy(pSFALayerL1H)  # L7
 pSFALayerL3V_S2_D1.name = "Homogeneous Linear Layer L3V S=1x2 D=1x1"
 pSFALayerL3V_S2_D1.x_field_channels = 1
@@ -870,12 +896,13 @@ pSFALayerL3V_S2_D1.y_field_spacing = 1
 # "expansion_funcs":[identity, unsigned_08expo, QT_2Split_35, CT_2Split_25], "max_length_slow_part":10,
 # "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":1.99999}
 pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs": [identity, unsigned_08expo, ],
-                               "max_length_slow_part": 10, "slow_feature_scaling_method": "sensitivity_based",
-                               "delta_threshold": 1.99999, "verbose":True}
+                               "max_length_slow_part": max_length_slow_part,
+                               "slow_feature_scaling_method": slow_feature_scaling_method,
+                               "delta_threshold": 1.99999, "verbose":True, "reconstruct_with_sfa":reconstruct_with_sfa}
 
-pSFALayerL0_4x4.sfa_out_dim = 13  # Was 15 #Usually 16 L1 # 9 + 5
-pSFALayerL1H_S3_D2.sfa_out_dim = 20  # Was 28 #Usually 30 L2 # 2*9 + 10
-pSFALayerL1V_S3_D2.sfa_out_dim = 50  # L3 # 2*9 + 28
+pSFALayerL0_4x4.sfa_out_dim = 20  # A: 13  # Was 15 #Usually 16 L1 # 9 + 5
+pSFALayerL1H_S3_D2.sfa_out_dim = 28  # A: 20 Was 28 #Usually 30 L2 # 2*9 + 10
+pSFALayerL1V_S3_D2.sfa_out_dim = 50  # A: 50 L3 # 2*9 + 28
 pSFALayerL2H_S3_D2.sfa_out_dim = 70  # L4 #60 # 2*9 + 25
 pSFALayerL2V_S3_D2.sfa_out_dim = 90  # L5 #70 # 2*9 + 30
 pSFALayerL3H_S2_D1.sfa_out_dim = 120  # L6 #70 #44 #265 # 2*9 + 35
@@ -889,26 +916,27 @@ pSFALayerL3V_S2_D1.sfa_out_dim = 160  # L7 #130 #150 # 2*9 + 40
 # pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None,
 # "expansion_funcs":[identity, QT, CT], "max_length_slow_part":10,
 # "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":1.99999}
-pSFALayerL0_4x4.sfa_args["delta_threshold"] = 4
-pSFALayerL1H_S3_D2.sfa_args["delta_threshold"] = 4
-pSFALayerL1V_S3_D2.sfa_args["delta_threshold"] = 4
-pSFALayerL2H_S3_D2.sfa_args["delta_threshold"] = 4
-pSFALayerL2V_S3_D2.sfa_args["delta_threshold"] = 4
-pSFALayerL3H_S2_D1.sfa_args["delta_threshold"] = 4
-pSFALayerL3V_S2_D1.sfa_args["delta_threshold"] = 9
+pSFALayerL0_4x4.sfa_args["delta_threshold"] = 9  # 1.9  # A: 4
+pSFALayerL1H_S3_D2.sfa_args["delta_threshold"] = 19  # 1.9  # A: 4
+pSFALayerL1V_S3_D2.sfa_args["delta_threshold"] = 10  # 1.2  # A: 4
+pSFALayerL2H_S3_D2.sfa_args["delta_threshold"] = 26  # 1.9  # A: 4
+pSFALayerL2V_S3_D2.sfa_args["delta_threshold"] = 6  # 6
+pSFALayerL3H_S2_D1.sfa_args["delta_threshold"] = 6  # 6 # 5
+pSFALayerL3V_S2_D1.sfa_args["delta_threshold"] = 9  # A: 9
 
 pSFALayerSupernode = system_parameters.ParamsSFASuperNode()  # L8
 pSFALayerSupernode.name = "SFA Super Node Layer"
 pSFALayerSupernode.pca_node_class = None
 pSFALayerSupernode.ord_node_class = mdp.nodes.HeadNode
-pSFALayerSupernode.ord_args = {"output_dim": 115}
+pSFALayerSupernode.ord_args = {"output_dim": 135}  # A: 115
 # pSFALayerSupernode.exp_funcs = [identity, unsigned_08expo, unsigned_08expo_p15, unsigned_08expo_m15,
 # signed_08expo, QT_90_AP08, CT_30_AP08,] #signed_08expo
-pSFALayerSupernode.exp_funcs = [identity, unsigned_08expo, signed_08expo, QT_90_AP08, CT_30_AP08, ]  # signed_08expo
+pSFALayerSupernode.exp_funcs = [identity, unsigned_08expo, signed_08expo, QT_130_AP08, CT_26_AP08, ]  # signed_08expo
 # pSFALayerSupernode.exp_funcs = [identity, QT, CT]
 # pSFALayerSupernode.red_node_class = None
 pSFALayerSupernode.sfa_node_class = mdp.nodes.GSFANode
 # pSFALayerSupernode.sfa_node_class = mdp.nodes.iGSFANode #mdp.nodes.GSFANode
+pSFALayerSupernode.sfa_args = {"verbose":True}
 # pSFALayerSupernode.sfa_args = {"pre_expansion_node_class":None,
 # "expansion_funcs":[identity, unsigned_08expo, QT_50, CT_30],
 # "max_length_slow_part":1, ,  "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":1.99999}
@@ -916,6 +944,7 @@ pSFALayerSupernode.sfa_node_class = mdp.nodes.GSFANode
 # "expansion_funcs":[identity, unsigned_08expo_75],
 # "max_length_slow_part":1, ,  "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":1.99999}
 pSFALayerSupernode.sfa_out_dim = 80
+
 
 # ######################################### New Improved Network for MNIST ############################
 network = MNISTNetwork_24x24_7L_Overlap = system_parameters.ParamsNetwork()
@@ -929,6 +958,14 @@ network.L5 = copy.deepcopy(pSFALayerL3H_S2_D1)
 network.L6 = copy.deepcopy(pSFALayerL3V_S2_D1)
 network.L7 = copy.deepcopy(pSFALayerSupernode)
 network.layers = [network.L0, network.L1, network.L2, network.L3, network.L4, network.L5, network.L6, network.L7]
+
+# Adding basic adaptive cutoff nodes to suitable layers
+for i in range(1, 8):
+    network.layers[i].pca_node_class = mdp.nodes.BasicAdaptiveCutoffNode
+    network.layers[i].pca_args = {"num_rotations": 1, "measure_corrections": True,
+                                  "only_measure": False, "verbose": True}
+    network.layers[i].pca_out_dim = None
+
 # network.L1 = network.L2 = network.L3 = network.L4 = network.L5 = network.L6 = None
 # network.layers = [network.L0, None, None, None, None, None, None]
 

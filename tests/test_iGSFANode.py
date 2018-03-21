@@ -25,7 +25,7 @@ from cuicuilco.igsfa_node import iGSFANode, SFANode_reduce_output_dim, PCANode_r
 
 #iGSFANode(input_dim=None, output_dim=None, pre_expansion_node_class=None, pre_expansion_out_dim=None,
 #                 expansion_funcs=None, expansion_output_dim=None, expansion_starting_point=None,
-#                 max_length_slow_part=None, offsetting_mode="sensitivity_based_pure", max_preserved_sfa=1.9999,
+#                 max_length_slow_part=None, slow_feature_scaling_method="sensitivity_based_pure", delta_threshold=1.9999,
 #                 reconstruct_with_sfa=True, **argv)
 
 
@@ -34,22 +34,22 @@ def test_automatic_stop_training():
     """
     x = numpy.random.normal(size=(300, 15))
 
-    n = iGSFANode(output_dim=15, reconstruct_with_sfa=True, offsetting_mode=None)
+    n = iGSFANode(output_dim=15, reconstruct_with_sfa=True, slow_feature_scaling_method=None)
     n.train(x, train_mode="regular")
     with pytest.raises(mdp.TrainingFinishedException):
         n.train(x, train_mode="regular")
 
-    n = iGSFANode(output_dim=15, reconstruct_with_sfa=True, offsetting_mode="data_dependent")
+    n = iGSFANode(output_dim=15, reconstruct_with_sfa=True, slow_feature_scaling_method="data_dependent")
     n.train(x, train_mode="regular")
     with pytest.raises(mdp.TrainingFinishedException):
         n.train(x, train_mode="regular")
 
-    n = iGSFANode(output_dim=15, reconstruct_with_sfa=True, offsetting_mode="sensitivity_based_pure")
+    n = iGSFANode(output_dim=15, reconstruct_with_sfa=True, slow_feature_scaling_method="sensitivity_based")
     n.train(x, train_mode="regular")
     with pytest.raises(mdp.TrainingFinishedException):
         n.train(x, train_mode="regular")
 
-    n = iGSFANode(output_dim=15, reconstruct_with_sfa=True, offsetting_mode="QR_decomposition")
+    n = iGSFANode(output_dim=15, reconstruct_with_sfa=True, slow_feature_scaling_method="QR_decomposition")
     n.train(x, train_mode="regular")
     with pytest.raises(mdp.TrainingFinishedException):
         n.train(x, train_mode="regular")
@@ -59,12 +59,12 @@ def test_no_automatic_stop_training():
     """ Test that verifies that iGSFA does not call stop training when when multiple-train is used
     """
     x = numpy.random.normal(size=(300, 15))
-    n = iGSFANode(output_dim=5, reconstruct_with_sfa=False, offsetting_mode=None)
+    n = iGSFANode(output_dim=5, reconstruct_with_sfa=False, slow_feature_scaling_method=None)
     n.train(x, train_mode="regular")
     n.train(x, train_mode="regular")
     n.stop_training()
 
-    n = iGSFANode(output_dim=5, reconstruct_with_sfa=False, offsetting_mode="data_dependent")
+    n = iGSFANode(output_dim=5, reconstruct_with_sfa=False, slow_feature_scaling_method="data_dependent")
     n.train(x, train_mode="regular")
     n.train(x, train_mode="regular")
     n.stop_training()
@@ -76,12 +76,11 @@ def test_slow_feature_scaling_methods():
     """
     x = numpy.random.normal(size=(300, 15))
 
-    all_slow_feature_scaling_methods = ["QR_decomposition", "sensitivity_based_pure", "sensitivity_based_offset",
-                                   "sensitivity_based_normalized", None, "data_dependent"]
+    all_slow_feature_scaling_methods = ["QR_decomposition", "sensitivity_based", None, "data_dependent"]
     num_slow_feature_scaling_methods = len(all_slow_feature_scaling_methods)
     output_features = []
     for slow_feature_scaling_method in all_slow_feature_scaling_methods:
-        n = iGSFANode(output_dim=15, reconstruct_with_sfa=True, offsetting_mode=slow_feature_scaling_method)
+        n = iGSFANode(output_dim=15, reconstruct_with_sfa=True, slow_feature_scaling_method=slow_feature_scaling_method)
         n.train(x, train_mode="regular")
         if n.is_training():
             n.stop_training()
@@ -103,7 +102,7 @@ def test_slow_feature_scaling_methods():
 
 def pending_test_SFANode_reduce_output_dim():
     x = numpy.random.normal(size=(300, 15))
-    n = SFANode(output_dim=10, reconstruct_with_sfa=True, offsetting_mode=slow_feature_scaling_method)
+    n = SFANode(output_dim=10, reconstruct_with_sfa=True, slow_feature_scaling_method=slow_feature_scaling_method)
     n.train(x)
     n.stop_training()
 
@@ -117,7 +116,7 @@ def test_equivalence_GSFA_iGSFA_for_DT_4_0():
     """
     x = numpy.random.normal(size=(300, 15))
 
-    n = iGSFANode(output_dim=5, offsetting_mode=None, max_preserved_sfa=4.10)
+    n = iGSFANode(output_dim=5, slow_feature_scaling_method=None, delta_threshold=4.10)
     n.train(x, train_mode="regular")
     # n.stop_training() has been automatically called
 
@@ -138,7 +137,7 @@ def test_equivalence_GSFA_PCA_for_DT_0():
     """
     x = numpy.random.normal(size=(300, 15))
 
-    n = iGSFANode(output_dim=5, offsetting_mode=None, max_preserved_sfa=0.0)
+    n = iGSFANode(output_dim=5, slow_feature_scaling_method=None, delta_threshold=0.0)
     n.train(x, train_mode="regular")
     # n.stop_training() has been automatically called
 

@@ -49,8 +49,8 @@ class iGSFANode(mdp.Node):
         expansion_starting_point: this parameter is also used by some specific expansion functions.
         max_length_slow_part: fixes an upper bound to the size of the slow part, which is convenient for
                               computational reasons.
-        slow_feature_scaling_method: the method used to scale the slow features. Valid entries are: None, "sensitivity_based"
-                         (default), "data_dependent", and "QR_decomposition".
+        slow_feature_scaling_method: the method used to scale the slow features. Valid entries are: None,
+                         "sensitivity_based" (default), "data_dependent", and "QR_decomposition".
         delta_threshold: this parameter has two different meanings depending on its type. If it is real valued (e.g.,
                          1.99), it determines the parameter \Delta_threshold, which is used to decide how many slow
                          features are preserved, depending on their delta values. If it is integer (e.g., 20), it
@@ -249,8 +249,8 @@ class iGSFANode(mdp.Node):
             if verbose:
                 print("skiped data_dependent")
         else:
-            er = "unknown feature offsetting mode=" + str(self.slow_feature_scaling_method) + "for reconstruct_with_sfa=" + \
-                 str(self.reconstruct_with_sfa)
+            er = "unknown slow feature scaling method= " + str(self.slow_feature_scaling_method) + \
+                 " for reconstruct_with_sfa= " + str(self.reconstruct_with_sfa)
             raise Exception(er)
 
         print("training PCA...")
@@ -410,7 +410,7 @@ class iGSFANode(mdp.Node):
             if verbose:
                 print("method: data dependent")
         else:
-            er = "Unknown feature scaling method"
+            er = "Unknown slow feature scaling method" + str(self.slow_feature_scaling_method)
             raise Exception(er)
         self.evar = self.pca_node.explained_variance
 
@@ -458,7 +458,7 @@ class iGSFANode(mdp.Node):
         elif self.slow_feature_scaling_method == "data_dependent":
             s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x 
         else:
-            er = "unknown feature scaling method"
+            er = "unknown feature scaling method" + str(self.slow_feature_scaling_method)
             raise Exception(er)
 
         # Apply PCA to sfa removed data
