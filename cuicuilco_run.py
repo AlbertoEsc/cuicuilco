@@ -1356,7 +1356,8 @@ def main():
                                                                 benchmark=benchmark,
                                                                 in_channel_dim=in_channel_dim,
                                                                 num_features_appended_to_input = \
-                                                                    num_features_to_append_to_input)
+                                                                    num_features_to_append_to_input,
+                                                                verbose=True)
 
         print ("Making sure the first switchboard does not add any noise (noise added during image loading)")
         if isinstance(flow[0], mdp.nodes.PInvSwitchboard):
@@ -1405,7 +1406,8 @@ def main():
                 # TODO: f train_data_sets is func() or [[func()]], use instead loaded images!!!!
             sl_seq = sl_seq_training = flow.special_train_cache_scheduler_sets(train_data_sets,
                                                                                params_sets=train_params_sets,
-                                                                               verbose=True, benchmark=benchmark,
+                                                                               verbose=True, very_verbose=True,
+                                                                               benchmark=benchmark,
                                                                                node_cache_read=node_cache_read,
                                                                                signal_cache_read=signal_cache_read,
                                                                                node_cache_write=node_cache_write,
@@ -2155,21 +2157,28 @@ def main():
         sl_seq_newid = numpy.clip(sl_seq_newid, sl_seq_training_min, sl_seq_training_max)
 
     # Corrections
-    corrections_newid = more_nodes.combine_correction_factors(flow)
+    corrections_newid, corrections_gauss_newid = more_nodes.combine_correction_factors(flow)
     print("Final correction factors (newid):", corrections_newid)
-    num_interesting_samples = 40
-    worst_correction_factors_indices_newid = numpy.argsort(corrections_newid)[0:num_interesting_samples]
-    best_correction_factors_indices_newid = numpy.argsort(corrections_newid)[:-num_interesting_samples-1:-1]
-    print(num_interesting_samples, "worst final corrections at indices:", worst_correction_factors_indices_newid)
-    print(num_interesting_samples, "worst final corrections:", corrections_newid[worst_correction_factors_indices_newid])
-    print(num_interesting_samples, "images with worst corrections:", end=' ')
-    for i in range(num_interesting_samples):
-        print(seq.input_files[worst_correction_factors_indices_newid[i]], end=' ')
-    print(num_interesting_samples, "best final corrections at indices:", best_correction_factors_indices_newid)
-    print(num_interesting_samples, "best final corrections:", corrections_newid[best_correction_factors_indices_newid])
-    print(num_interesting_samples, "images with best corrections:", end=' ')
-    for i in range(num_interesting_samples):
-        print(seq.input_files[best_correction_factors_indices_newid[i]], end=' ')
+    if corrections_newid is None:
+        print("Corrections are not available")
+    else:
+        num_interesting_samples = 40
+        worst_correction_factors_indices_newid = numpy.argsort(corrections_newid)[0:num_interesting_samples]
+        best_correction_factors_indices_newid = numpy.argsort(corrections_newid)[:-num_interesting_samples-1:-1]
+        print(num_interesting_samples, "worst final corrections at indices:", worst_correction_factors_indices_newid)
+        print(num_interesting_samples, "worst final corrections:", corrections_newid[worst_correction_factors_indices_newid])
+        print(num_interesting_samples, "respective gauss corrections:", corrections_gauss_newid[worst_correction_factors_indices_newid])
+        print(num_interesting_samples, "images with worst corrections:", end=' ')
+        for i in range(num_interesting_samples):
+            print(seq.input_files[worst_correction_factors_indices_newid[i]], end=' ')
+        worst_gauss_correction_factors_indices_newid = numpy.argsort(corrections_gauss_newid)[0:num_interesting_samples]
+        best_gauss_correction_factors_indices_newid = numpy.argsort(corrections_gauss_newid)[:-num_interesting_samples-1:-1]
+	print(num_interesting_samples, "best final gauss_corrections at indices:", best_gauss_correction_factors_indices_newid)
+        print(num_interesting_samples, "best final gauss_corrections:", corrections_gauss_newid[best_gauss_correction_factors_indices_newid])
+	print(num_interesting_samples, "respective corrections:", corrections_newid[worst_gauss_correction_factors_indices_newid])
+        print(num_interesting_samples, "images with best gauss_corrections:", end=' ')
+        for i in range(num_interesting_samples):
+            print(seq.input_files[best_gauss_correction_factors_indices_newid[i]], end=' ')
 
     corr_factor = 1.0
     print(corr_factor)
@@ -2560,7 +2569,8 @@ def main():
     numpy.savetxt("regression_Gauss_newid.txt", regression_Gauss_newid)
     numpy.savetxt("regression_svr_newid.txt", regression_svr_newid)
     numpy.savetxt("correct_labels_newid.txt", correct_labels_newid)
-    numpy.savetxt("corrections_newid.txt", corrections_newid)
+    if corrections_newid is not None:
+        numpy.savetxt("corrections_newid.txt", corrections_newid)
 
     cs_list = {}
     if cumulative_scores:

@@ -105,28 +105,29 @@ mdp.nodes.HistogramEqualizationNode.list_train_params = ["num_pivots"]
 
 # It extracts the relevant parameters from params according to Node.list_train_params (if available)
 # and passes it to train
-def extract_params_relevant_for_node_train(node, params):
+def extract_params_relevant_for_node_train(node, params, verbose=False):
     if isinstance(params, list):
-        return [extract_params_relevant_for_node_train(node, param) for param in params]
+        return [extract_params_relevant_for_node_train(node, param, verbose) for param in params]
 
     if params is None:
         return {}
 
     if isinstance(node, (mdp.hinet.Layer, mdp.hinet.CloneLayer)):
-        add_list_train_params_to_layer_or_node(node)
+        add_list_train_params_to_layer_or_node(node, verbose)
 
     all_params = {}
-    print("node=", node)
     if "list_train_params" in dir(node):
         # list_train_params = self.list_train_params
         for par, val in params.items():
             if par in node.list_train_params:
                 all_params[par] = val
-    print("all_params extracted:", all_params, "for node:", node, "with params:", params)
+    if verbose:
+        print("node:", node)
+        print("all_params extracted:", all_params, "for node:", node, "with params:", params)
     return all_params
 
 
-def add_list_train_params_to_layer_or_node(node):
+def add_list_train_params_to_layer_or_node(node, verbose=False):
     if isinstance(node, mdp.hinet.CloneLayer):
         add_list_train_params_to_layer_or_node(node.nodes[0])
         node.list_train_params = node.nodes[0].list_train_params
@@ -138,7 +139,8 @@ def add_list_train_params_to_layer_or_node(node):
         node.list_train_params = list_all_train_params
     else:  # Not Layer or CloneLayer
         if "list_train_params" not in dir(node):
-            print("list_train_params was not present in node!!!")
+            if verbose:
+                print("list_train_params was not present in node!!!")
             node.list_train_params = []
 
 
@@ -147,9 +149,10 @@ def node_train_params(self, data, params=None, verbose=False):
         er = "Should never reach this point, we do not specify here the train_params method for Layers..."
         raise Exception(er)
     elif "list_train_params" in dir(self):
-        all_params = extract_params_relevant_for_node_train(self, params)
-        print("NODE: ", self)
-        print("with args: ", inspect.getargspec(self.train))
+        all_params = extract_params_relevant_for_node_train(self, params, verbose)
+        if verbose:
+            print("NODE: ", self)
+            print("with args: ", inspect.getargspec(self.train))
         # print "and doc:", self.train.__doc__
         # WARNING!!!
         # WARNING, this should be self.train, however an incompatibility was introduced in a newer MDP
@@ -160,7 +163,7 @@ def node_train_params(self, data, params=None, verbose=False):
         self._train_phase_started = True
         # this var is False if the complete training is finished
         #        self._training = False
-        if verbose or True:
+        if verbose:
             # quit()
             print("params=", params)
             print("; list_train_params=", self.list_train_params)
@@ -168,7 +171,7 @@ def node_train_params(self, data, params=None, verbose=False):
         return self._train(data, **all_params)
     else:
         # if isinstance(self, mdp.nodes.SFANode):
-        print("suspicious condition reached. No node.list_train_params found. Using default train", dir(self))
+        print("Warning, suspicious condition reached: no node.list_train_params found, using default train", dir(self))
         # quit()
         # print(self)
         # print("wrong wrong 2...", dir(self))
@@ -204,16 +207,16 @@ for node_str in dir(mdp.hinet):
 
 # Execute preserving structure of input (data vector) (and in the future passing exec_params)
 # Note: exec_params not yet supported
-def node_execute_data_vec(self, data_vec, exec_params=None):
+def node_execute_data_vec(self, data_vec, exec_params=None, verbose=False):
     if isinstance(data_vec, numx.ndarray):
         return self.execute(data_vec)  # **exec_params)
 
     res = []
-    print("data_vect is:", data_vec)
+    if verbose:
+        print("data_vect is:", data_vec)
     for i, data in enumerate(data_vec):
-        # print "data=", data
-        print("data.shape=", data.shape)
-        # print "self=", self
+        if verbose:
+            print("data.shape=", data.shape)
         res.append(self.execute(data))  # **exec_params)
     return res
 
@@ -240,38 +243,6 @@ for node_str in dir(mdp.hinet):
     else:
         pass
         # print "Not a node:", node_str
-
-
-# def ParallelSFANode_join(self, forked_node):
-#     print("_joining ParallelSFANode")
-#     """Combine the covariance matrices."""
-#     print("old _myvar=", self._myvar)
-#     if self._myvar is None:
-#         self._myvar = forked_node._myvar
-#     else:
-#         self._myvar = self._myvar + forked_node._myvar
-#     print("new _myvar=", self._myvar)
-#
-#     if self.block_size is None:
-#         if self._cov_mtx._cov_mtx is None:
-#             self.set_dtype(forked_node._cov_mtx._dtype)
-#             self._cov_mtx = forked_node._cov_mtx
-#             self._dcov_mtx = forked_node._dcov_mtx
-#         else:
-#             self._cov_mtx._cov_mtx += forked_node._cov_mtx._cov_mtx
-#             self._cov_mtx._avg += forked_node._cov_mtx._avg
-#             self._cov_mtx._tlen += forked_node._cov_mtx._tlen
-#             self._dcov_mtx._cov_mtx += forked_node._dcov_mtx._cov_mtx
-#             self._dcov_mtx._avg += forked_node._dcov_mtx._avg
-#             self._dcov_mtx._tlen += forked_node._dcov_mtx._tlen
-#     else:
-#         if self._covdcovmtx is None:
-#             self._covdcovmtx = forked_node._covdcovmtx
-#         else:
-#             self._covdcovmtx.addCovDCovMatrix(forked_node._covdcovmtx)
-#
-#
-# mdp.parallel.ParallelSFANode._join = ParallelSFANode_join
 
 
 def PCANode_train_scheduler(self, x, scheduler=None, n_parallel=None):
@@ -676,7 +647,7 @@ if patch_layer:
             stop_index += node.input_dim
             #           print "stop_index = ", stop_index
             if node.is_training():
-                if verbose or True:
+                if verbose:
                     print("Layer_new_train_params. params=", params)
                     print("Here computation is fine!!! start_index = ", start_index, "stop_index=", stop_index)
                 node.train_params(x[:, start_index: stop_index], params)
@@ -705,8 +676,9 @@ if patch_layer:
                 self.set_input_dim(layer_input_dim)
                 num_nodes = len(self.nodes)
 
-                print("Pre_Execution of homogeneous layer with",
-                      "input_dim %d and %d nodes" % (layer_input_dim, num_nodes))
+                if verbose:
+                    print("Pre_Execution of homogeneous layer with",
+                          "input_dim %d and %d nodes" % (layer_input_dim, num_nodes))
                 for node in self.nodes:
                     node.set_input_dim(layer_input_dim // num_nodes)
                 input_dim = 0
@@ -773,14 +745,19 @@ def HiNetParallelTranslator_translate_layer(self, layer):
 # not needed now: signal_read_enabled=False, signal_write_enabled=False
 patch_flow = True
 if patch_flow:
-    def flow_special_train_cache_scheduler(self, data, verbose=False, benchmark=None, node_cache_read=None,
+    def flow_special_train_cache_scheduler(self, data, verbose=None, benchmark=None, node_cache_read=None,
                                            signal_cache_read=None, node_cache_write=None, signal_cache_write=None,
                                            scheduler=None, n_parallel=None):
         # train each Node successively
         min_input_size_for_parallel = 45
 
-        print(data.__class__, data.dtype, data.shape)
-        print(data)
+
+        if verbose is None:
+            verbose = self.verbose
+
+        if verbose:
+            print(data.__class__, data.dtype, data.shape)
+            print(data)
 
         data_loaded = True
         for i in range(len(self.flow)):
@@ -789,7 +766,7 @@ if patch_flow:
 
             if benchmark is not None:
                 ttrain0 = time.time()
-            if self.verbose:
+            if verbose:
                 print("*****************************************************************")
                 print("Training node #%d (%s)..." % (i, str(self.flow[i])))
                 if isinstance(self.flow[i], mdp.hinet.Layer):
@@ -799,27 +776,31 @@ if patch_flow:
 
             hash_verbose = True  # and False
             if str(self.flow[i]) == "CloneLayer":
-                if str(self.flow[i].nodes[0]) == "RandomPermutationNode":
-                    print("BINGO, RandomPermutationNode Found!")
+                if str(self.flow[i].nodes[0]) == "RandomPermutationNode" and verbose:
+                    print("RandomPermutationNode Found")
                     # hash_verbose=False
 
             if node_cache_write or node_cache_read or signal_cache_write or signal_cache_read:
                 untrained_node_hash = misc.hash_object(self.flow[i], verbose=hash_verbose).hexdigest()
-                print("untrained_node_hash[%d]=" % i, untrained_node_hash)
+                if verbose:
+                    print("untrained_node_hash[%d]=" % i, untrained_node_hash)
                 node_ndim = str(data.shape[1])
                 data_in_hash = misc.hash_object(data).hexdigest()
-                print("data_in_hash[%d]=" % i, data_in_hash)
+                if verbose:
+                    print("data_in_hash[%d]=" % i, data_in_hash)
 
             if self.flow[i].is_trainable():
                 # look for trained node in cache
                 if node_cache_read:
                     node_base_filename = "node_%s_%s_%s" % (node_ndim, untrained_node_hash, data_in_hash)
-                    print("Searching for Trained Node:", node_base_filename)
+                    if verbose:
+                        print("Searching for Trained Node:", node_base_filename)
                     if node_cache_read.is_file_in_filesystem(base_filename=node_base_filename):
-                        print("Trained node FOUND in cache...")
+                        if verbose:
+                            print("Trained node FOUND in cache...")
                         self.flow[i] = node_cache_read.load_obj_from_cache(base_filename=node_base_filename)
                         trained_node_in_cache = True
-                    else:
+                    elif verbose:
                         print("Trained node NOT found in cache...")
 
                 if not trained_node_in_cache:
@@ -836,32 +817,38 @@ if patch_flow:
                         # WARNING: REMOVED scheduler & n_parallel
                         self.flow[i].train(data, scheduler=scheduler, n_parallel=n_parallel)
                     else:
-                        print("Input_dim was: ", self.flow[
-                            i].input_dim, "or unknown parallel method, thus I didn't go parallel")
+                        if verbose:
+                            print("Input_dim was: ", self.flow[i].input_dim,
+                                  "or unknown parallel method, thus I didn't go parallel")
                         self.flow[i].train(data)
                     self.flow[i].stop_training()
-                    if isinstance(self.flow[i], mdp.nodes.SFANode):
+                    if isinstance(self.flow[i], mdp.nodes.SFANode) and verbose:
                         print("trained SFANode.d is", self.flow[i].d)
             ttrain1 = time.time()
 
             if node_cache_write or node_cache_read or signal_cache_write or signal_cache_read:
                 trained_node_hash = misc.hash_object(self.flow[i], verbose=hash_verbose).hexdigest()
-                print("trained_node_hash[%d]=" % i, trained_node_hash)
+                if verbose:
+                    print("trained_node_hash[%d]=" % i, trained_node_hash)
 
-            print("++++++++++++++++++++++++++++++++++++ Executing...")
+            if verbose:
+                print("++++++++++++++++++++++++++++++++++++ Executing...")
             if signal_cache_read:
                 signal_base_filename = "signal_%s_%s_%s" % (node_ndim, data_in_hash, trained_node_hash)
-                print("Searching for Executed Signal: ", signal_base_filename)
+                if verbose:
+                    print("Searching for Executed Signal: ", signal_base_filename)
                 if signal_cache_read.is_splitted_file_in_filesystem(base_filename=signal_base_filename):
-                    print("Executed signal FOUND in cache...")
+                    if verbose:
+                        print("Executed signal FOUND in cache...")
                     data = signal_cache_read.load_array_from_cache(base_filename=signal_base_filename, verbose=True)
                     exec_signal_in_cache = True
-                else:
+                elif verbose:
                     print("Executed signal NOT found in cache...")
 
-            print(data.__class__, data.dtype, data.shape)
-            print("supported types:", self.flow[i].get_supported_dtypes())
-            print(data)
+            if verbose:
+                print(data.__class__, data.dtype, data.shape)
+                print("supported types:", self.flow[i].get_supported_dtypes())
+                print(data)
 
             if not exec_signal_in_cache:
                 data = self.flow[i].execute(data)
@@ -869,21 +856,21 @@ if patch_flow:
             ttrain2 = time.time()
             if verbose:
                 print("Training finished in %0.3f s, execution in %0.3f s" % (ttrain1 - ttrain0, ttrain2 - ttrain1))
-            else:
-                print("Training finished")
             if benchmark is not None:
                 benchmark.append(("Train node #%d (%s)" % (i, str(self.flow[i])), ttrain1 - ttrain0))
                 benchmark.append(("Execute node #%d (%s)" % (i, str(self.flow[i])), ttrain2 - ttrain1))
 
             # Add to Cache Memory: Executed Signal
             if node_cache_write and not trained_node_in_cache and self.flow[i].is_trainable():
-                print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Caching Trained Node...")
+                if verbose:
+                    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Caching Trained Node...")
                 node_base_filename = "node_%s_%s_%s" % (node_ndim, untrained_node_hash, data_in_hash)
                 node_cache_write.update_cache(self.flow[i], base_filename=node_base_filename, overwrite=True,
                                               verbose=True)
 
             if signal_cache_write and not exec_signal_in_cache:
-                print("####################################### Caching Executed Signal...")
+                if verbose:
+                    print("####################################### Caching Executed Signal...")
                 data_ndim = node_ndim
                 data_base_filename = "signal_%s_%s_%s" % (data_ndim, data_in_hash, trained_node_hash)
                 signal_cache_write.update_cache(data, base_filename=data_base_filename, overwrite=True, verbose=True)
@@ -900,7 +887,7 @@ if patch_flow:
     # which means that the data/parameters from the previous node is used
     # The output is the data functions and parameters needed to train a particular node
     # Add logic for data_params
-    def extract_node_funcs(funcs_sets, param_sets, nodenr, verbose=False):
+    def extract_node_funcs(funcs_sets, param_sets, nodenr, verbose=None):
         # print "funcs_sets is:", funcs_sets
         # print "param_sets is:", param_sets
         if isinstance(funcs_sets, list):
@@ -940,8 +927,9 @@ if patch_flow:
 
     # If the input is a list of functions, execute them to generate the data_vect, otherwise use node_funcs directly as
     # array data
-    def extract_data_from_funcs(node_funcs):
-        print("node_funcs is:", node_funcs)
+    def extract_data_from_funcs(node_funcs, verbose=None):
+        if verbose:
+            print("node_funcs is:", node_funcs)
         if isinstance(node_funcs, list):
             node_data = []
             for func in node_funcs:
@@ -966,10 +954,12 @@ if patch_flow:
     # Perhaps the data should be loaded dynamically???
     # TODO: find nicer name!
     # In theory, there should  be a data_in_hash for data & another for (data, params), however we only use the last one
-    def flow_special_train_cache_scheduler_sets(self, funcs_sets, params_sets=None, verbose=True, very_verbose=True,
+    def flow_special_train_cache_scheduler_sets(self, funcs_sets, params_sets=None, verbose=None, very_verbose=False,
                                                 benchmark=None, node_cache_read=None, signal_cache_read=None,
                                                 node_cache_write=None, signal_cache_write=None, scheduler=None,
                                                 n_parallel=None, memory_save=False, immediate_stop_training=False):
+        if verbose is None:
+            verbose = self.verbose
         # train each Node successively
         # Set smalles dimensionality for which parallel training is worth doing
         min_input_size_for_parallel = 45
@@ -994,7 +984,8 @@ if patch_flow:
             # Extract data and data_params, integrity check
             # if not data_loaded:
             new_node_funcs, new_node_params = extract_node_funcs(funcs_sets, params_sets, nodenr=i)
-            print("new_node_funcs = ", new_node_funcs)
+            if verbose:
+                print("new_node_funcs = ", new_node_funcs)
             # quit()"list_train_params" in dir(self)
             execute_node_data = False
             if isinstance(new_node_funcs, numpy.ndarray):
@@ -1012,7 +1003,8 @@ if patch_flow:
             # data should be extracted from new_node_funcs and propagated just before the current node
             if execute_node_data:
                 node_data = extract_data_from_funcs(new_node_funcs)
-                print("node_data is:", node_data)
+                if verbose:
+                    print("node_data is:", node_data)
                 data_vec = self.execute_data_vec(node_data, nodenr=i - 1)
                 # else:
             # data_vec already contains valid data
@@ -1031,7 +1023,7 @@ if patch_flow:
 
             # if benchmark is not None:
             ttrain0 = time.time()
-            if self.verbose:
+            if verbose:
                 print("*****************************************************************")
                 print("Training node #%d (%s)..." % (i, str(self.flow[i])))
                 if isinstance(self.flow[i], mdp.hinet.Layer):
@@ -1041,8 +1033,8 @@ if patch_flow:
 
             hash_verbose = False
             if str(self.flow[i]) == "CloneLayer":
-                if str(self.flow[i].nodes[0]) == "RandomPermutationNode":
-                    print("BINGO, RandomPermutationNode Found!")
+                if str(self.flow[i].nodes[0]) == "RandomPermutationNode" and verbose:
+                    print("RandomPermutationNode Found")
                     hash_verbose = False
 
             # Compute hash of Node and Training Data if needed
@@ -1051,24 +1043,28 @@ if patch_flow:
             effective_node_params = extract_params_relevant_for_node_train(self.flow[i], node_params)
             if node_cache_write or node_cache_read or signal_cache_write or signal_cache_read:
                 untrained_node_hash = misc.hash_object(self.flow[i], verbose=hash_verbose).hexdigest()
-                print("untrained_node_hash[%d]=" % i, untrained_node_hash)
+                if verbose:
+                    print("untrained_node_hash[%d]=" % i, untrained_node_hash)
                 node_ndim = str(data_vec_ndim(data_vec))
                 # hash data and node parameters for handling the data!
                 if verbose:  # and False:
                     print("effective_node_params to be hashed: ", effective_node_params)
                 data_in_hash = misc.hash_object((data_vec, effective_node_params)).hexdigest()
-                print("data_in_hash[%d]=" % i, data_in_hash)
+                if verbose:
+                    print("data_in_hash[%d]=" % i, data_in_hash)
 
             if self.flow[i].is_trainable():
                 # look for trained node in cache
                 if node_cache_read:
                     node_base_filename = "node_%s_%s_%s" % (node_ndim, untrained_node_hash, data_in_hash)
-                    print("Searching for Trained Node:", node_base_filename)
+                    if verbose:
+                        print("Searching for Trained Node:", node_base_filename)
                     if node_cache_read.is_file_in_filesystem(base_filename=node_base_filename):
-                        print("Trained node FOUND in cache...")
+                        if verbose:
+                            print("Trained node FOUND in cache...")
                         self.flow[i] = node_cache_read.load_obj_from_cache(base_filename=node_base_filename)
                         trained_node_in_cache = True
-                    else:
+                    elif verbose:
                         print("Trained node NOT found in cache...")
                         # else:
                         # er = "What happened here???"
@@ -1079,28 +1075,31 @@ if patch_flow:
                 if not trained_node_in_cache:
                     # Not in cache, then train the node
                     if isinstance(self.flow[i], (mdp.hinet.CloneLayer, mdp.hinet.Layer)):
-                        print("First step")
+                        # print("First step")
                         if isinstance(data_vec, list):
-                            print("First step 2")
+                            #  print("First step 2")
                             for j, data in enumerate(data_vec):
-                                print("j=", j)
+                                if very_verbose:
+                                    print("j=", j)
                                 # Here some logic is expected (list of train parameters on each node???)
                                 self.flow[i].train(data, params=effective_node_params[j],
                                                    immediate_stop_training=immediate_stop_training)
                         else:
-                            print("First step 3")
+                            if very_verbose:
+                                print("PointA")
                             self.flow[i].train(data_vec, params=effective_node_params,
                                                immediate_stop_training=immediate_stop_training)
 
                     elif isinstance(self.flow[i], (mdp.nodes.SFANode, mdp.nodes.PCANode, mdp.nodes.WhiteningNode)):
-                        print("Second Step")
+                        # print("Second Step")
                         if isinstance(data_vec, list):
                             for j, data in enumerate(data_vec):
                                 if verbose and very_verbose:  #
                                     print("Parameters used for training node (L)=", effective_node_params)
                                     print("Pre self.flow[i].output_dim=", self.flow[i].output_dim)
                                 self.flow[i].train_params(data, params=effective_node_params[j])
-                                print("Post self.flow[i].output_dim=", self.flow[i].output_dim)
+                                if verbose:
+                                    print("Post self.flow[i].output_dim=", self.flow[i].output_dim)
                         else:
                             if verbose and very_verbose:
                                 print("Parameters used for training node=", effective_node_params)
@@ -1116,8 +1115,9 @@ if patch_flow:
                     print("Finishing training of node %d:" % i, self.flow[i])
                     if self.flow[i].is_training():
                         self.flow[i].stop_training()
-                    print("Post2 self.flow[%d].output_dim=" % i, self.flow[i].output_dim)
-                    if isinstance(self.flow[i], mdp.nodes.SFANode):
+                    if verbose:
+                        print("Post2 self.flow[%d].output_dim=" % i, self.flow[i].output_dim)
+                    if isinstance(self.flow[i], mdp.nodes.SFANode) and verbose:
                         print("SFANode.d is ", self.flow[i].d)
 
             ttrain1 = time.time()
@@ -1125,18 +1125,22 @@ if patch_flow:
             # is hash of trained node needed??? of course, this is redundant if no training
             if node_cache_write or node_cache_read or signal_cache_write or signal_cache_read:
                 trained_node_hash = misc.hash_object(self.flow[i], verbose=hash_verbose).hexdigest()
-                print("trained_node_hash[%d]=" % i, trained_node_hash)
+                if verbose:
+                    print("trained_node_hash[%d]=" % i, trained_node_hash)
 
-            print("++++++++++++++++++++++++++++++++++++ Executing...")
+            if verbose:
+                print("++++++++++++++++++++++++++++++++++++ Executing...")
             # Look for excecuted signal in cache
             if signal_cache_read:
                 signal_base_filename = "signal_%s_%s_%s" % (node_ndim, data_in_hash, trained_node_hash)
-                print("Searching for Executed Signal: ", signal_base_filename)
+                if verbose:
+                    print("Searching for Executed Signal: ", signal_base_filename)
                 if signal_cache_read.is_splitted_file_in_filesystem(base_filename=signal_base_filename):
-                    print("Executed signal FOUND in cache...")
+                    if verbose:
+                        print("Executed signal FOUND in cache...")
                     data_vec = signal_cache_read.load_array_from_cache(base_filename=signal_base_filename, verbose=True)
                     exec_signal_in_cache = True
-                else:
+                elif verbose:
                     print("Executed signal NOT found in cache...")
 
             # print data.__class__, data.dtype, data.shape
@@ -1146,23 +1150,23 @@ if patch_flow:
             # However, excecute should preserve shape here!
             if not exec_signal_in_cache:
                 data_vec = self.flow[i].execute_data_vec(data_vec)
-                print("Post3 self.flow[%d].output_dim=" % i, self.flow[i].output_dim)
-                print("data_vec", data_vec)
-                print("len(data_vec)", len(data_vec))
-                print("data_vec[0].shape", data_vec[0].shape)
+                if verbose and very_verbose:
+                    print("PointB self.flow[%d].output_dim=" % i, self.flow[i].output_dim)
+                    print("data_vec:", data_vec)
+                    print("len(data_vec):", len(data_vec))
+                    print("data_vec[0].shape:", data_vec[0].shape)
 
             ttrain2 = time.time()
             if verbose:
                 print("Training finished in %0.3f s, execution in %0.3f s" % ((ttrain1 - ttrain0), (ttrain2 - ttrain1)))
-            else:
-                print("Training finished")
             if benchmark is not None:
                 benchmark.append(("Train node #%d (%s)" % (i, str(self.flow[i])), ttrain1 - ttrain0))
                 benchmark.append(("Execute node #%d (%s)" % (i, str(self.flow[i])), ttrain2 - ttrain1))
 
             # Add to Cache Memory: Trained Node
             if node_cache_write and (not trained_node_in_cache) and self.flow[i].is_trainable():
-                print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Caching Trained Node...")
+                if verbose:
+                    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Caching Trained Node...")
                 node_base_filename = "node_%s_%s_%s" % (node_ndim, untrained_node_hash, data_in_hash)
                 node_cache_write.update_cache(self.flow[i], base_filename=node_base_filename, overwrite=True,
                                               verbose=True)
@@ -1170,7 +1174,8 @@ if patch_flow:
             # Add to Cache Memory: Executed Signal
             if signal_cache_write and (not exec_signal_in_cache):
                 # T: Perhaps data should be written based on mdp.array, not on whole data.
-                print("####################################### Caching Executed Signal...")
+                if verbose:
+                    print("####################################### Caching Executed Signal...")
                 data_ndim = node_ndim
                 data_base_filename = "signal_%s_%s_%s" % (data_ndim, data_in_hash, trained_node_hash)
                 signal_cache_write.update_cache(data_vec, base_filename=data_base_filename, overwrite=True,
@@ -1206,7 +1211,7 @@ if patch_flow:
     # Supports single array data but also iterator
     # However result is concatenated! Not PowerTraining Compatible???
     # Thus this function is usually called for each single chunk
-    def flow_execute(self, iterable, nodenr=None, benchmark=None):
+    def flow_execute(self, iterable, nodenr=None, benchmark=None, verbose=None):
         """Process the data through all nodes in the flow.
             
         'iterable' is an iterable or iterator (note that a list is also an
@@ -1232,7 +1237,8 @@ if patch_flow:
             #        raise mdp.MDPException(errstr)
             raise mdp.linear_flows.FlowException(errstr)
         res = numx.concatenate(res)
-        print("result shape is:", res.shape)
+        if verbose:
+            print("result shape is:", res.shape)
         return numx.concatenate(res)
 
     # Supports single array data but also iterator/list

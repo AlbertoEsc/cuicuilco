@@ -534,17 +534,104 @@ def QT_AP(x, d=0.4):
     return QT(xx)
 
 
+def QT_70_AP08(x):
+    return QT_AP(x[:, 0:70], d=0.8)
+
+
+def QT_75_AP08(x):
+    return QT_AP(x[:, 0:75], d=0.8)
+
+
+def QT_80_AP08(x):
+    return QT_AP(x[:, 0:80], d=0.8)
+
+
+def QT_85_AP08(x):
+    return QT_AP(x[:, 0:85], d=0.8)
+
+
 def QT_90_AP08(x):
     return QT_AP(x[:, 0:90], d=0.8)
+
+
+def QT_95_AP08(x):
+    return QT_AP(x[:, 0:95], d=0.8)
+
+
+def QT_100_AP08(x):
+    return QT_AP(x[:, 0:100], d=0.8)
+
+
+def QT_105_AP08(x):
+    return QT_AP(x[:, 0:105], d=0.8)
+
+
+def QT_110_AP08(x):
+    return QT_AP(x[:, 0:110], d=0.8)
+
+
+def QT_115_AP08(x):
+    return QT_AP(x[:, 0:115], d=0.8)
+
+
+def QT_120_AP08(x):
+    return QT_AP(x[:, 0:120], d=0.8)
+
+
+def QT_125_AP08(x):
+    return QT_AP(x[:, 0:125], d=0.8)
+
+
+def QT_130_AP08(x):
+    return QT_AP(x[:, 0:130], d=0.8)
+
+
+def QT_135_AP08(x):
+    return QT_AP(x[:, 0:135], d=0.8)
+
+
+def QT_140_AP08(x):
+    return QT_AP(x[:, 0:140], d=0.8)
+
+
+def QT_145_AP08(x):
+    return QT_AP(x[:, 0:145], d=0.8)
 
 
 def CT_AP(x, d=0.3):
     xx = signed_expo(x, d)
     return CT(xx)
 
+def CT_24_AP08(x):
+    return CT_AP(x[:, 0:24], d=0.8)
+
+
+def CT_25_AP08(x):
+    return CT_AP(x[:, 0:25], d=0.8)
+
+
+def CT_26_AP08(x):
+    return CT_AP(x[:, 0:26], d=0.8)
+
+
+def CT_27_AP08(x):
+    return CT_AP(x[:, 0:27], d=0.8)
+
+
+def CT_28_AP08(x):
+    return CT_AP(x[:, 0:28], d=0.8)
+
+
+def CT_29_AP08(x):
+    return CT_AP(x[:, 0:29], d=0.8)
+
 
 def CT_30_AP08(x):
     return CT_AP(x[:, 0:30], d=0.8)
+
+
+def CT_31_AP08(x):
+    return CT_AP(x[:, 0:31], d=0.8)
 
 
 def pairwise_adjacent_expansion_subset(x, adj, func, reflexive=True, k=10):
