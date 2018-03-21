@@ -150,7 +150,7 @@ def create_layer(prev_layer, layer, num_layer, prev_layer_height=None, prev_laye
         layer.num_nodes = layer.lat_mat.size // 2
 
         if layer.pca_node_class:
-            if layer.cloneLayer:
+            if layer.clone_layer:
                 if verbose:
                     print("Layer L%d with " % num_layer, layer.num_nodes, " cloned PCA nodes will be created")
                 # print "Warning!!! layer L%d using cloned PCA instead of several independent copies!!!"%num_layer
@@ -173,7 +173,7 @@ def create_layer(prev_layer, layer, num_layer, prev_layer_height=None, prev_laye
             layer.pca_layer = None
 
         if layer.ord_node_class:
-            if layer.cloneLayer:
+            if layer.clone_layer:
                 if verbose:
                     print("Ord_node will be created")
                     print("Layer L%d with " % num_layer, layer.num_nodes, " cloned ORD nodes will be created")
@@ -199,7 +199,7 @@ def create_layer(prev_layer, layer, num_layer, prev_layer_height=None, prev_laye
             layer.exp_layer = None
 
         if layer.red_node_class:
-            if layer.cloneLayer:
+            if layer.clone_layer:
                 # print "Warning!!! layer L%d using cloned RED instead of several independent copies!!!"%num_layer
                 layer.red_node = layer.red_node_class(output_dim=layer.red_out_dim, **layer.red_args)
                 layer.red_layer = mdp.hinet.CloneLayer(layer.red_node, n_nodes=layer.num_nodes)
@@ -219,7 +219,7 @@ def create_layer(prev_layer, layer, num_layer, prev_layer_height=None, prev_laye
             layer.clip_node = None
 
         if layer.sfa_node_class:
-            if layer.cloneLayer:
+            if layer.clone_layer:
                 # print "Warning!!! layer L%d using cloned SFA instead of several independent copies!!!"%num_layer
                 # sfa_node_La = mdp.nodes.SFANode(input_dim=switchboard_layer.out_channel_dim,
                 # output_dim=sfa_out_dim_La)

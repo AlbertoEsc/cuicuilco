@@ -114,7 +114,7 @@ class ParamsSFALayer(ParamsSFASuperNode):
         self.y_field_spacing = 3
         self.nx_value = None
         self.ny_value = None
-        self.cloneLayer = True
+        self.clone_layer = True
         self.layer_number = None
 
 
