@@ -82,7 +82,10 @@ def combine_correction_factors(flow_or_node, average_over_layers = True, average
         node = flow_or_node
         if isinstance(node, mdp.hinet.CloneLayer):
             err = "CloneLayers not yet supported when computing/storing correction factors"
-            raise Exception(err)
+            print(err)
+            final_corrections = None
+            final_gauss_corrections = None
+            # raise Exception(err)
         elif isinstance(node, mdp.hinet.Layer):
             if average_inside_layers:
                 corrections = []
@@ -133,10 +136,12 @@ class BasicAdaptiveCutoffNode(mdp.PreserveDimNode):
         self.gauss_corrections = None
         self.only_measure = only_measure
         self.verbose = verbose
+
         self._avg_x = None
         self._avg_x_squared = None
         self._num_samples = 0
         self._std_x = None
+
         if self.verbose:
             print("num_rotations:", num_rotations, "measure_corrections:", measure_corrections,
                   "only_measure:", only_measure, "verbose:", verbose)
@@ -171,12 +176,12 @@ class BasicAdaptiveCutoffNode(mdp.PreserveDimNode):
             if self.lower_bounds[i] is None:
                 self.lower_bounds[i] = rotated_data.min(axis=0)
             else:
-                self.lower_bounds[i] = rotated_data.minimum(self.lower_bounds[i], rotated_data)
+                self.lower_bounds[i] = numpy.minimum(self.lower_bounds[i], rotated_data.min(axis=0))
 
             if self.upper_bounds[i] is None:
                 self.upper_bounds[i] = rotated_data.max(axis=0)
             else:
-                self.upper_bounds[i] = numpy.maxium(self.upper_bounds[i], rotated_data)
+                self.upper_bounds[i] = numpy.maximum(self.upper_bounds[i], rotated_data.max(axis=0))
 
         if self._avg_x is None:
             self._avg_x = x.sum(axis=0)
@@ -190,9 +195,10 @@ class BasicAdaptiveCutoffNode(mdp.PreserveDimNode):
         self._avg_x /= self._num_samples
         self._avg_x_squared /= self._num_samples
         self._std_x = (self._avg_x_squared - self._avg_x **2) ** 0.5
-        print("self._avg_x", self._avg_x)
-        print("self._avg_x_squared", self._avg_x_squared)
-        print("self._std_x", self._std_x)
+        if self.verbose:
+            print("self._avg_x", self._avg_x)
+            print("self._avg_x_squared", self._avg_x_squared)
+            print("self._std_x", self._std_x)
 
     def _execute(self, x):
         """Return the clipped data."""
@@ -218,7 +224,7 @@ class BasicAdaptiveCutoffNode(mdp.PreserveDimNode):
 
                 # Computation of Gaussian probabilities
                 factors = scipy.stats.norm.pdf(x, loc=self._avg_x, scale=4*self._std_x)
-                if self.verbose or True:
+                if self.verbose:
                     print("Factors of BasicAdaptiveCutoffNode (gauss):", factors)
                     print("x.mean(axis=0):", x.mean(axis=0))
                     print("x.std(axis=0):", x.std(axis=0))
@@ -226,7 +232,7 @@ class BasicAdaptiveCutoffNode(mdp.PreserveDimNode):
 
             x = numpy.dot(data_rotated_clipped, self.rotation_matrices[i].T)  # Project back to original coordinates
 
-        if self.verbose or True:
+        if self.verbose:
             print("Corrections of BasicAdaptiveCutoffNode:", self.corrections)
             print("20 worst final corrections at indices:", numpy.argsort(self.corrections)[0:20])
             print("20 worst final corrections:", self.corrections[numpy.argsort(self.corrections)[0:20]])
@@ -385,7 +391,7 @@ class RandomizedMaskNode(mdp.Node):
 class GeneralExpansionNode(mdp.Node):
     def __init__(self, funcs, input_dim=None, dtype=None, \
                  use_pseudoinverse=True, use_hint=False, output_dim=None, starting_point=None, use_special_features=False, max_steady_factor=1.5,
-                 delta_factor=0.6, min_delta=0.00001):
+                 delta_factor=0.6, min_delta=0.00001, verbose=False):
         self.funcs = funcs
         self.exp_output_dim = output_dim
         self.expanded_dims = None
@@ -400,6 +406,11 @@ class GeneralExpansionNode(mdp.Node):
         self.max_steady_factor = max_steady_factor
         self.delta_factor = delta_factor
         self.min_delta = min_delta
+        self.verbose = verbose
+
+        if self.verbose:
+            print("GeneralExpansionNode with expansion functions:", funcs)
+
         self.rs_coefficients = None
         self.rs_offsets = None
         self.rs_data_training_std = None
@@ -434,7 +445,10 @@ class GeneralExpansionNode(mdp.Node):
         else:
             return False
 
-    def _train(self, x):
+    def _train(self, x, verbose=None):
+        if verbose is None:
+            verbose = self.verbose
+
         if self.input_dim is None:
             self.set_input_dim(x.shape[1])
 
@@ -444,33 +458,38 @@ class GeneralExpansionNode(mdp.Node):
         self.rs_data_training_mean = x.mean(axis=0)
         self.rs_data_training_std = x.std(axis=0)
 
-        print ("GeneralExpansionNode: output_dim=", self.output_dim, end="")
+        if verbose:
+            print ("GeneralExpansionNode: output_dim=", self.output_dim, end="")
         starting_point = self.starting_point
         c1, l1 = generate_random_sigmoid_weights(self.input_dim, self.output_dim)
         if starting_point == "Identity":
-            print ("starting_point: adding (encoded) identity coefficients to expansion")
+            if verbose:
+                print ("starting_point: adding (encoded) identity coefficients to expansion")
             c1[0:input_dim, 0:input_dim] = numpy.identity(input_dim)
             l1[0:input_dim] = numpy.ones(input_dim) * 1.0  # Code identity
         elif starting_point == "Sigmoids":
-            print ("starting_point: adding sigmoid of coefficients to expansion")
+            if verbose:
+                print ("starting_point: adding sigmoid of coefficients to expansion")
             c1[0:input_dim, 0:input_dim] = 4.0 * numpy.identity(input_dim)
             l1[0:input_dim] = numpy.ones(input_dim) * 0.0
         elif starting_point == "08Exp":
-            print ("starting_point: adding (encoded) 08Exp coefficients to expansion")
+            if verbose:
+                print ("starting_point: adding (encoded) 08Exp coefficients to expansion")
             c1[0:input_dim, 0:input_dim] = numpy.identity(input_dim)
             c1[0:input_dim, input_dim:2 * input_dim] = numpy.identity(input_dim)
 
             l1[0:input_dim] = numpy.ones(input_dim) * 1.0  # Code identity
             l1[input_dim:2 * input_dim] = numpy.ones(input_dim) * 0.8  # Code abs(x)**0.8
         elif starting_point == "Pseudo-Identity":
-            print ("starting_point: adding pseudo-identity coefficients to expansion")
+            if verbose:
+                print ("starting_point: adding pseudo-identity coefficients to expansion")
             c1[0:input_dim, 0:input_dim] = 0.1 * numpy.identity(input_dim)
             l1[0:input_dim] = numpy.zeros(input_dim)  # nothig is encoded
         elif starting_point is None:
-            print ("starting_point: no starting point")
+            if verbose:
+                print ("starting_point: no starting point")
         else:
             er = "Unknown starting_point", starting_point
-            print (er)
             raise Exception(er)
         self.rs_coefficients = c1
         self.rs_offsets = l1
@@ -893,12 +912,12 @@ def display_node_eigenvalues(node, i, mode="All"):
         #         print ("num_sfa_features_preserved=%d" % node.nodes[0].num_sfa_features_preserved, end="")
         #         print ("and d=", node.nodes[0].sfa_node.d)
         elif isinstance(node.nodes[0], mdp.nodes.iGSFANode):
-            print ("Node %d is a CloneLayer that contains an iGSFANode containing an SFA node with" % i, end="")
-            print ("num_sfa_features_preserved=%d" % node.nodes[0].num_sfa_features_preserved, end="")
-            print ("and d=", node.nodes[0].sfa_node.d, end="")
+            print ("Node %d is a CloneLayer that contains an iGSFANode containing an SFA node with " % i, end="")
+            print ("num_sfa_features_preserved=%d " % node.nodes[0].num_sfa_features_preserved, end="")
+            print ("and d=", node.nodes[0].sfa_node.d, end=" ")
             print ("and evar=", node.nodes[0].evar)
         elif isinstance(node.nodes[0], mdp.nodes.PCANode):
-            print ("Node %d is a CloneLayer that contains a PCANode with d=" % i, node.nodes[0].d, end="")
+            print ("Node %d is a CloneLayer that contains a PCANode with d=" % i, node.nodes[0].d, end=" ")
             print ("and evar=", node.nodes[0].explained_variance)
 
     elif isinstance(node, mdp.hinet.Layer):
@@ -907,53 +926,15 @@ def display_node_eigenvalues(node, i, mode="All"):
                 out = 0.0
                 for n in node.nodes:
                     out += n.d
-                print ("Node %d is a Layer that contains SFANodes with avg(d)=" % i, out / len(node.nodes))
+                print ("Node %d is a Layer that contains %d SFANodes with avg(d)= " % (i, len(node.nodes)), out / len(node.nodes))
             elif mode == "All":
                 for n in node.nodes:
-                    print ("Node %d is a Layer that contains an SFANode with d=" % i, n.d)
+                    print ("Node %d is a Layer that contains an SFANode with d= " % i, n.d)
             elif mode == "FirstNodeInLayer":
-                print ("Node %d is a Layer, and its first SFANode has d=" % i, node.nodes[0].d)
+                print ("Node %d is a Layer, and its first SFANode has d= " % i, node.nodes[0].d)
             else:
                 er = 'Unknown mode in display_eigenvalues, try "FirstNodeInLayer", "Average" or "All"'
                 raise Exception(er)
-        # elif isinstance(node.nodes[0], mdp.nodes.IEVMNode) and (node.nodes[0].use_sfa or node.nodes[0].out_sfa_filter):
-        #     use_sfa = node.nodes[0].use_sfa
-        #     out_sfa_filter = node.nodes[0].out_sfa_filter
-        #     if mode == "Average":
-        #         out = 0.0
-        #         num_sfa_features = 0.0
-        #         filter_out = 0.0
-        #         for n in node.nodes:
-        #             if use_sfa:
-        #                 out += n.sfa_node.d
-        #                 num_sfa_features += n.num_sfa_features_preserved
-        #             if out_sfa_filter:
-        #                 filter_out += n.out_sfa_node.d
-        #         print ("Node %d is a Layer that contains IEVMNodes containing SFANodes" % i,
-        #                "with avg(num_sfa_features_preserved)=%f"%node.nodes[0].num_sfa_features_preserved,
-        #                "and avg(d)=" % out / len(node.nodes))
-        #         if out_sfa_filter:
-        #             print ("and output SFA filter with avg(out_sfa_node.d)=", filter_out / len(node.nodes))
-        #
-        #     elif mode == "All":
-        #         for n in node.nodes:
-        #             print ("Node %d is a Layer that contains an IEVMNode" % i, end="")
-        #             if use_sfa:
-        #                 print ("containing an SFANode with num_sfa_features_preserved=%f and d=" %
-        #                        n.num_sfa_features_preserved, n.sfa_node.d)
-        #             if out_sfa_filter:
-        #                 print ("and output SFA filter with out_sfa_node.d=", n.out_sfa_node.d)
-        #
-        #     elif mode == "FirstNodeInLayer":
-        #         print ("Node %d is a Layer, and its first IEVMNode" % i)
-        #         if use_sfa:
-        #             print ("contains an SFANode with num_sfa_features_preserved)=%f and d=" % node.nodes[
-        #                 0].num_sfa_features_preserved, node.nodes[0].sfa_node.d)
-        #             if out_sfa_filter:
-        #                 print ("and Output SFA filter with out_sfa_node.d=", node.nodes[0].out_sfa_node.d)
-        #         else:
-        #             er = 'Unknown mode in display_eigenvalues, try "FirstNodeInLayer", "Average" or "All"'
-        #             raise Exception(er)
         elif isinstance(node.nodes[0], mdp.nodes.iGSFANode):
             if mode == "Average":
                 evar_avg = 0.0
@@ -967,8 +948,8 @@ def display_node_eigenvalues(node, i, mode="All"):
                 d_avg /= len(node.nodes)
                 evar_avg /= len(node.nodes)
                 avg_num_sfa_features /= len(node.nodes)
-                print ("Node %d" % i, "is a Layer that contains iGSFANodes containing SFANodes with " +
-                       "avg(num_sfa_features_preserved)=%f" % avg_num_sfa_features, "and avg(d)=%s" % str(d_avg) +
+                print ("Node %d" % i, "is a Layer that contains", len(node.nodes), "iGSFANodes containing SFANodes with " +
+                       "avg(num_sfa_features_preserved)=%f " % avg_num_sfa_features, "and avg(d)=%s" % str(d_avg) +
                        "and avg(evar)=%f" % evar_avg)
             elif mode == "All":
                 print ("Node %d is a Layer that contains iGSFANodeRecNodes:" % i)
@@ -976,7 +957,7 @@ def display_node_eigenvalues(node, i, mode="All"):
                     print ("  iGSFANode containing an SFANode with num_sfa_features_preserved=%f, d=%s and evar=%f" %
                            (n.num_sfa_features_preserved, str(n.sfa_node.d), n.evar))
             elif mode == "FirstNodeInLayer":
-                print ("Node %d is a Layer, and its first iGSFANode" % i)
+                print ("Node %d is a Layer, and its first iGSFANode " % i, end="")
                 print ("contains an SFANode with num_sfa_features_preserved)=%f, d=%s and evar=%f" %
                        (node.nodes[0].num_sfa_features_preserved, str(node.nodes[0].sfa_node.d), node.nodes[0].evar))
             else:
@@ -1021,17 +1002,12 @@ def display_node_eigenvalues(node, i, mode="All"):
             else:
                 er = 'Unknown mode in display_eigenvalues, try "FirstNodeInLayer", "Average" or "All"'
                 raise Exception(er)
-    elif isinstance(node, mdp.nodes.SFANode):
-        print ("Node %d is an SFANode with d=" % i, node.d)
-    # elif isinstance(node, mdp.nodes.IEVMNode):
-    #     if node.use_sfa:
-    #         print ("Node %d is an IEVMNode containing an SFA node with num_sfa_features_preserved=%d" %
-    #                (i, node.num_sfa_features_preserved), end="")
-    #         print ("and d=", node.sfa_node.d)
     elif isinstance(node, mdp.nodes.iGSFANode):
         print ("Node %d is an iGSFANode containing an SFA node with num_sfa_features_preserved=%d" %
                (i, node.num_sfa_features_preserved), end="")
         print ("and d=", node.sfa_node.d)
+    elif isinstance(node, mdp.nodes.SFANode):
+        print ("Node %d is an SFANode with d=" % i, node.d)
     elif isinstance(node, mdp.nodes.PCANode):
         print ("Node %d is a PCANode with d=%s and evar=%f" % (i, str(node.d), node.explained_variance))
     else:
