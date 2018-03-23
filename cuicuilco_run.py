@@ -151,6 +151,7 @@ compute_input_information = True
 convert_labels_days_to_years = False
 sfa_gc_reduced_dim = 0
 
+transfer_learning_feature_normalization = False
 clip_seenid_newid_to_training = False
 add_noise_to_seenid = False
 
@@ -284,6 +285,7 @@ if __name__ == "__main__":  # ############## Parse  command line arguments #####
                                                           "HierarchicalNetwork=", "ExperimentalDataset=",
                                                           "SFAGCReducedDim=", "ObjectiveLabel=",
                                                           "ImportNetworksFromFile=", "ImportDatasetsFromFile=",
+                                                          "TransferLearningFeatureNormalization=",
                                                           "help"])
                 print ("opts=", opts)
                 print ("args=", args)
@@ -601,7 +603,10 @@ if __name__ == "__main__":  # ############## Parse  command line arguments #####
                                     available_experiments[obj_name] = obj_value
                         except ImportError:
                             raise ImportError("It was not possible to import the provided filename:" + arg)
-
+                    elif opt in ('--TransferLearningFeatureNormalization',):
+                        transfer_learning_feature_normalization = bool(int(arg))
+                        print ("Setting transfer_learning_feature_normalization to",
+                               transfer_learning_feature_normalization)
                     elif opt in ('--help',):
                         txt = \
                             """Cuicuilco: displaying help information
@@ -691,6 +696,8 @@ if __name__ == "__main__":  # ############## Parse  command line arguments #####
             --FeaturesResidualInformation=N, --ComputeInputInformation={1/0},
             --ComputeSlowFeaturesNewidAcrossNet={1/0}, --DatasetForDisplayTrain=N, --DatasetForDisplayNewid=N   
         **Other options
+            --TransferLearningFeatureNormalization){1/0} Removes the mean and normalizes the variance (to 1.0) of the 
+                features extracted from the training, supervised, and test data independently (three separate models).        
             --help Displays this help information
     """
                         print (txt)
@@ -1520,7 +1527,13 @@ def main():
 
     if feature_cut_off_level != 0.0:
         sl_seq = sl_seq_training = numpy.clip(sl_seq_training, min_cutoff, max_cutoff)
-    print ("After cutoff: min val: ", sl_seq_training.min(axis=0), "max val: ", sl_seq_training.max(axis=0))
+        print ("After cutoff: min val: ", sl_seq_training.min(axis=0), "max val: ", sl_seq_training.max(axis=0))
+
+    if transfer_learning_feature_normalization:
+        sl_seq_training_mean = sl_seq_training.mean(axis=0)
+        sl_seq_training_std = sl_seq_training.std(axis=0)
+        sl_seq_training = sfa_libs.normalize_mean_std(sl_seq_training, sl_seq_training_mean, sl_seq_training_std)
+        print("Removed mean and data of training data (transfer learning)")
 
     num_pixels_per_image = numpy.ones(subimage_shape, dtype=int).sum()
     print ("taking into account objective_label=%d" % objective_label)
@@ -1660,13 +1673,13 @@ def main():
     sl_seq_seenid = flow.execute(subimages_seenid)
     sl_seq_seenid = sl_seq_seenid[:, skip_num_signals:]
 
-    print ("min value: ", sl_seq_seenid.min(axis=0), "max value: ", sl_seq_seenid.max(axis=0))
+    print ("Knownid min value: ", sl_seq_seenid.min(axis=0), "max value: ", sl_seq_seenid.max(axis=0))
     sl_seq_seenid = numpy.nan_to_num(sl_seq_seenid)
 
     if feature_cut_off_level != 0.0:
         print ("before cutoff sl_seq_seenid= ", sl_seq_seenid)
         sl_seq_seenid = numpy.clip(sl_seq_seenid, min_cutoff, max_cutoff)
-    print ("After cutoff, min value: ", sl_seq_seenid.min(axis=0), "max value: ", sl_seq_seenid.max(axis=0))
+        print ("After cutoff, Knownid min value: ", sl_seq_seenid.min(axis=0), "max value: ", sl_seq_seenid.max(axis=0))
 
     sl_seq_training_min = sl_seq_training.min(axis=0)
     sl_seq_training_max = sl_seq_training.max(axis=0)
@@ -1685,6 +1698,12 @@ def main():
         noise_amplitude = (3 ** 0.5) * 0.5  # standard deviation 0.00005
         print ("adding noise to sl_seq_seenid, with noise_amplitude:", noise_amplitude)
         sl_seq_seenid += noise_amplitude * numpy.random.uniform(-1.0, 1.0, size=sl_seq_seenid.shape)
+
+    if transfer_learning_feature_normalization:
+        sl_seq_seenid_mean = sl_seq_seenid.mean(axis=0)
+        sl_seq_seenid_std = sl_seq_seenid.std(axis=0)
+        sl_seq_seenid = sfa_libs.normalize_mean_std(sl_seq_seenid, sl_seq_seenid_mean, sl_seq_seenid_std)
+        print("Removed mean and data of seenid data (transfer learning)")
 
     t_exec1 = time.time()
     print ("Execution over Known Id in %0.3f s" % (t_exec1 - t_exec0))
@@ -2156,6 +2175,13 @@ def main():
         print ("sl_seq_newid_max=", sl_seq_newid_max)
         sl_seq_newid = numpy.clip(sl_seq_newid, sl_seq_training_min, sl_seq_training_max)
 
+
+    if transfer_learning_feature_normalization:
+        sl_seq_newid_mean = sl_seq_newid.mean(axis=0)
+        sl_seq_newid_std = sl_seq_newid.std(axis=0)
+        sl_seq_newid = sfa_libs.normalize_mean_std(sl_seq_newid, sl_seq_newid_mean, sl_seq_newid_std)
+        print("Removed mean and data of newid data (transfer learning)")
+
     # Corrections
     corrections_newid, corrections_gauss_newid = more_nodes.combine_correction_factors(flow)
     print("Final correction factors (newid):", corrections_newid)
@@ -2181,7 +2207,7 @@ def main():
             print(seq.input_files[best_gauss_correction_factors_indices_newid[i]], end=' ')
 
     corr_factor = 1.0
-    print(corr_factor)
+    print("using corr_factor (feature scale)", corr_factor)
     sl_seq_newid[:, 0:reg_num_signals] = sl_seq_newid[:, 0:reg_num_signals] * corr_factor
 
     t_exec1 = time.time()
@@ -2965,17 +2991,17 @@ def main():
         d1 = numpy.array(correct_classes_newid, dtype="int")
         d2 = numpy.array(classes_Gauss_newid, dtype="int")
 
-        incorrect_Gauss_newid = (d1 == d2)
-        sorting_incorrect_Gauss_newid = incorrect_Gauss_newid.argsort()
-
+        # TODO: improve this code, why saving everything? why image was not correct for some samples?
+        incorrect_Gauss_newid_indices = numpy.arange(len(classes_Gauss_newid), dtype="int")[d1 != d2]
+        print("incorrect_Gauss_newid_indices:", incorrect_Gauss_newid_indices)
         save_images_sorted_incorrect_class_Gauss_newid_base_dir = \
             "/local/tmp/escalafl/Alberto/saved_images_sorted_incorrect_class_Gauss_newid"
         print ("saving images to directory:", save_images_sorted_incorrect_class_Gauss_newid_base_dir)
         decimate = 1
         num_signals_per_image = subimage_shape[0] * subimage_shape[1] * in_channel_dim
-        for i, i_x in enumerate(sorting_incorrect_Gauss_newid):
-            x = subimages_newid[i_x][0:num_signals_per_image]
+        for i, i_x in ennumerate(incorrect_Gauss_newid_indices):
             if i % decimate == 0:
+                x = subimages_newid[i_x][0:num_signals_per_image]
                 if seq.convert_format == "L":
                     im_raw = numpy.reshape(x, (sNewid.subimage_width, sNewid.subimage_height))
                     im = scipy.misc.toimage(im_raw, mode=seq.convert_format)
@@ -2986,7 +3012,7 @@ def main():
                     im = scipy.misc.toimage(im_raw, mode="L")
 
                 fullname = os.path.join(save_images_sorted_incorrect_class_Gauss_newid_base_dir,
-                                        "image%05d_gt%03d_c%03d.png" % (i // decimate, correct_classes_newid[i_x],
+                                        "image%05d_gt%03d_c%03d.png" % (i_x, correct_classes_newid[i_x],
                                                                         classes_Gauss_newid[i_x]))
                 im.save(fullname)
 

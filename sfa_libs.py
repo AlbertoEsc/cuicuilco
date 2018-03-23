@@ -338,6 +338,18 @@ def ndarray_to_string(x, prefix="", col_sep=", ", row_sep="\n", out_filename=Non
         fileobj.close()
     return s
 
+
+def normalize_mean_std(data, data_mean=None, data_std=None):
+    """Normalizes the data by removing the mean and scaling the features to unit variance (or std).
+
+    If data_mean or data_std are None, one or both of these values are computed from the given data.
+    """
+    if data_mean is None:
+        data_mean = data.mean(axis=0)
+    if data_std is None:
+        data_std = data.std(axis=0)
+    return (data - data_mean) / data_std
+
 # # Obsolete, there is a method that does this... (with t-1 as denominator)
 # def comp_variance(x):
 #     t, num_vars = x.shape
