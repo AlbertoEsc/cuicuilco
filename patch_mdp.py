@@ -19,9 +19,8 @@ from mdp import numx
 from mdp.utils import (mult, pinv)  # , symeig, CovarianceMatrix, SymeigException)
 
 from . import more_nodes
-from .gsfa_node import compute_cov_matrix
-from . import gsfa_node
-from . import igsfa_node
+from . import gsfa_nodes
+from .gsfa_nodes import compute_cov_matrix
 from . import histogram_equalization
 from .sfa_libs import select_rows_from_matrix
 from . import inversion
@@ -37,8 +36,8 @@ mdp.nodes.HeadNode = more_nodes.HeadNode
 # mdp.nodes.IEVMNode = more_nodes.IEVMNode
 # mdp.nodes.IEVMLRecNode = more_nodes.IEVMLRecNode
 mdp.nodes.SFAAdaptiveNLNode = more_nodes.SFAAdaptiveNLNode
-mdp.nodes.GSFANode = gsfa_node.GSFANode
-mdp.nodes.iGSFANode = igsfa_node.iGSFANode
+mdp.nodes.GSFANode = gsfa_nodes.GSFANode
+mdp.nodes.iGSFANode = gsfa_nodes.iGSFANode
 
 mdp.nodes.NLIPCANode = histogram_equalization.NLIPCANode
 mdp.nodes.NormalizeABNode = histogram_equalization.NormalizeABNode
@@ -87,17 +86,14 @@ mdp.nodes.SFANode._inverse = SFANode_inverse
 # def SFANode_train(self, x, block_size=None, train_mode=None, node_weights=None, edge_weights=None):
 #     print("obsolete code reached... quitting")
 
-# The SFANode is no longer being modified/monkey patched
-#mdp.nodes.SFAPCANode.list_train_params = ["scheduler", "n_parallel", "train_mode",
+# SFANode is no longer being modified/monkey patched
+# mdp.nodes.SFAPCANode.list_train_params = ["scheduler", "n_parallel", "train_mode",
 #                                          "block_size"]  # "sfa_expo", "pca_expo", "magnitude_sfa_biasing"
 mdp.nodes.PCANode.list_train_params = ["scheduler", "n_parallel"]
-#mdp.nodes.IEVMNode.list_train_params = ["scheduler", "n_parallel", "train_mode", "block_size"]
-#mdp.nodes.IEVMLRecNode.list_train_params = ["scheduler", "n_parallel", "train_mode", "block_size", "node_weights",
-#                                            "edge_weights"]
 mdp.nodes.GSFANode.list_train_params = ["scheduler", "n_parallel", "train_mode", "block_size", "node_weights",
-                                        "edge_weights"]
+                                        "edge_weights", "verbose"]
 mdp.nodes.iGSFANode.list_train_params = ["scheduler", "n_parallel", "train_mode", "block_size", "node_weights",
-                                         "edge_weights"]
+                                         "edge_weights", "verbose"]
 mdp.nodes.SFAAdaptiveNLNode.list_train_params = ["scheduler", "n_parallel", "train_mode", "block_size"]
 mdp.nodes.NLIPCANode.list_train_params = ["exp_func", "norm_class"]
 mdp.nodes.HistogramEqualizationNode.list_train_params = ["num_pivots"]

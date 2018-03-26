@@ -15,9 +15,9 @@ import copy
 import pytest
 import mdp
 
-import cuicuilco.patch_mdp
-from cuicuilco.gsfa_node import comp_delta
-from cuicuilco.igsfa_node import iGSFANode, SFANode_reduce_output_dim, PCANode_reduce_output_dim
+
+import cuicuilco.patch_mdp  # Is this necessary???
+from cuicuilco.gsfa_nodes import comp_delta, GSFANode, iGSFANode, SFANode_reduce_output_dim, PCANode_reduce_output_dim
 
 # TODO: rename offsetting_mode -> slow_feature_scaling_method
 #       *test_SFANode_reduce_output_dim (extraction and inverse)
@@ -123,7 +123,7 @@ def test_equivalence_GSFA_iGSFA_for_DT_4_0():
     y = n.execute(x)
     deltas_igsfa = comp_delta(y)
 
-    n2 = cuicuilco.gsfa_node.GSFANode(output_dim=5)
+    n2 = GSFANode(output_dim=5)
     n2.train(x, train_mode="regular")
     n2.stop_training()
 

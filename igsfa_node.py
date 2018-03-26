@@ -15,19 +15,15 @@ from __future__ import division
 import numpy
 import scipy
 import scipy.optimize
-import copy
-import sys
 
 import mdp
 from mdp.utils import pinv
 
 from .sfa_libs import select_rows_from_matrix, distance_squared_Euclidean
-from . import more_nodes
 from .more_nodes import GeneralExpansionNode
 from .gsfa_node import GSFANode
 
 
-#TODO: add verbosity parameter to all/most methods
 class iGSFANode(mdp.Node):
     """This node implements "information-preserving graph-based SFA (iGSFA)", which is the main component of
     hierarchical iGSFA (HiGSFA). 
@@ -84,8 +80,6 @@ class iGSFANode(mdp.Node):
         self.lr_node = None
         self.max_length_slow_part = max_length_slow_part  # upper limit to the size of the slow part
 
-        # Factor that prevents the amplitude of the features from growing too much through the layers of the network
-        self.feature_scaling_factor = 0.5
         # Parameter that defines the size of the slow part. Its meaning depnds on wheather it is an integer or a float
         self.delta_threshold = delta_threshold
         # Indicates whether (nonlinear) SFA components are used for reconstruction
@@ -93,12 +87,16 @@ class iGSFANode(mdp.Node):
         # Indicates how to scale the slow part
         self.slow_feature_scaling_method = slow_feature_scaling_method
 
+        # Default verbose value if none is explicity provided to the class methods
         self.verbose = verbose
 
+        # Dimensionality of the data after the expansion function
+        self.expanded_dim = None
+
+        # The following variables are for internal use only (available after training on a single batch only)
         self.x_mean = None
         self.sfa_x_mean = None
         self.sfa_x_std = None
-        self.expanded_dim = None
 
     @staticmethod
     def is_trainable():
@@ -309,8 +307,9 @@ class iGSFANode(mdp.Node):
         if verbose:
             print("Training iGSFANode (multiple train method)...")
 
-        # Data mean is ignored
-        self.x_mean = numpy.zeros(self.input_dim)
+        # Data mean is ignored by the multiple train method
+        if self.x_mean is None:
+            self.x_mean = numpy.zeros(self.input_dim)
         x_zm = x
 
         # Reorder or pre-process the data before it is expanded, but only if there is really an expansion.
@@ -359,13 +358,12 @@ class iGSFANode(mdp.Node):
            verbose = self.verbose
         if self.reconstruct_with_sfa or (self.slow_feature_scaling_method not in [None, "data_dependent"]):
             return
-        # else, special case multi-training:
+        # else, continue with multi-train method
 
         self.sfa_node.stop_training()
         if verbose:
             print("self.sfa_node.d", self.sfa_node.d)
         self.pca_node.stop_training()
-        # print "self.pca_node.d", self.pca_node.d
 
         # Decide how many slow features are preserved (either use Delta_T=delta_threshold when
         # delta_threshold is a float, or preserve delta_threshold features when delta_threshold is an integer)
@@ -376,7 +374,7 @@ class iGSFANode(mdp.Node):
             # here self.max_length_slow_part should be considered
             self.num_sfa_features_preserved = self.delta_threshold
         else:
-            ex = "Cannot handle type of self.delta_threshold"
+            ex = "Cannot handle type of self.delta_threshold:"+str(type(self.delta_threshold))
             raise Exception(ex)
 
         if self.num_sfa_features_preserved > self.output_dim:
@@ -404,7 +402,8 @@ class iGSFANode(mdp.Node):
         elif self.slow_feature_scaling_method == "data_dependent":
             # SFA components have an std equal to that of the least significant principal component
             if self.pca_node.d.shape[0] > 0:
-               self.magn_n_sfa_x = 1.0 * numpy.median(self.pca_node.d) ** 0.5  # 100.0 * self.pca_node.d[-1] ** 0.5 + 0.0 # WARNING, had 5.0 instead of 1.0!!!
+               self.magn_n_sfa_x = 1.0 * numpy.median(self.pca_node.d) ** 0.5
+               # 100.0 * self.pca_node.d[-1] ** 0.5 + 0.0 # Experiment: use 5.0 instead of 1.0
             else:
                self.magn_n_sfa_x = 1.0
             if verbose:
@@ -471,22 +470,7 @@ class iGSFANode(mdp.Node):
         # Finally output is the concatenation of scaled slow features and remaining pca components
         sfa_pca_x = numpy.concatenate((s_n_sfa_x, pca_x), axis=1)
 
-
         return sfa_pca_x  # sfa_pca_x_truncated
-
-    #        verbose=False
-    #        if verbose:
-    #            print "x[0]=",x_orig[0]
-    #            print "x_zm[0]=", x[0]
-    #            print "exp_x[0]=", exp_x[0]
-    #            print "s_x_1[0]=", s_x_1[0]
-    #            print "sfa_removed_x[0]=", sfa_removed_x[0]
-    #            print "proj_sfa_x[0]=", proj_sfa_x[0]
-    #            print "pca_x[0]=", pca_x[0]
-    #            print "n_pca_x[0]=", n_pca_x[0]
-    #            print "sfa_x[0]=", sfa_x[0] + self.sfa_x_mean
-    #            print "s_x_2_truncated[0]=", s_x_2_truncated[0]
-    #            print "sfa_filtered[0]=", sfa_filtered[0]
 
     def _inverse(self, y, linear_inverse=True):
         """This method approximates an inverse function to the feature extraction.
@@ -530,10 +514,12 @@ class iGSFANode(mdp.Node):
                 print("Quitting: plsq[1]=", plsq[1])
                 # quit()
             x_nl[i] = x_nl_i
-            print("|E_lin(%d)|=" % i, ((y_i - self.execute(x_lin[i].reshape((1, -1)))) ** 2).sum() ** 0.5)
-            print("|E_nl(%d)|=" % i, ((y_i - self.execute(x_nl_i.reshape((1, -1)))) ** 2).sum() ** 0.5)
+            if verbose:
+                print("|E_lin(%d)|=" % i, ((y_i - self.execute(x_lin[i].reshape((1, -1)))) ** 2).sum() ** 0.5)
+                print("|E_nl(%d)|=" % i, ((y_i - self.execute(x_nl_i.reshape((1, -1)))) ** 2).sum() ** 0.5)
         rmse_nl = ((y - self.execute(x_nl)) ** 2).sum(axis=1).mean() ** 0.5
-        print("rmse_lin(all samples)=", rmse_lin, "rmse_nl(all samples)=", rmse_nl)
+        if verbose:
+            print("rmse_lin(all samples)=", rmse_lin, "rmse_nl(all samples)=", rmse_nl)
         return x_nl
 
     def linear_inverse(self, y, verbose=None):
@@ -557,7 +543,7 @@ class iGSFANode(mdp.Node):
         else:
             sfa_removed_x = numpy.zeros((num_samples, self.input_dim))
 
-        # AKA Laurenz method for feature scaling( +rotation)
+        # AKA Laurenz method for feature scaling (+rotation)
         if self.reconstruct_with_sfa and self.slow_feature_scaling_method == "QR_decomposition":
             n_sfa_x = numpy.dot(s_n_sfa_x, self.Rpinv.T)
         else:
@@ -629,7 +615,7 @@ def PCANode_reduce_output_dim(pca_node, new_output_dim, verbose=False):
         print("Before: pca_node.d.shape=", pca_node.d.shape, " pca_node.v.shape=", pca_node.v.shape)
         print(" pca_node.avg.shape=", pca_node.avg.shape)
 
-    #if new_output_dim > 0:
+    # if new_output_dim > 0:
     original_total_variance = pca_node.d.sum()
     original_explained_variance = pca_node.explained_variance
     pca_node.d = pca_node.d[0:new_output_dim]
@@ -637,7 +623,7 @@ def PCANode_reduce_output_dim(pca_node, new_output_dim, verbose=False):
     # pca_node.avg is not affected by this method!
     pca_node._output_dim = new_output_dim
     pca_node.explained_variance = original_explained_variance * pca_node.d.sum() / original_total_variance
-    #else:
+    # else:
 
     if verbose:
         print("After: pca_node.d.shape=", pca_node.d.shape, " pca_node.v.shape=", pca_node.v.shape)
@@ -647,27 +633,20 @@ def PCANode_reduce_output_dim(pca_node, new_output_dim, verbose=False):
 # Computes output errors dimension by dimension for a single sample: y - node.execute(x_app)
 # The library fails when dim(x_app) > dim(y), thus filling of x_app with zeros is recommended
 def f_residual(x_app_i, node, y_i):
-    # print "%",
-    # print "f_residual: x_appi_i=", x_app_i, "node.execute=", node.execute, "y_i=", y_i
     res_long = numpy.zeros_like(y_i)
     y_i = y_i.reshape((1, -1))
     y_i_short = y_i[:, 0:node.output_dim]
-    #    x_app_i = x_app_i[0:node.input_dim]
     res = (y_i_short - node.execute(x_app_i.reshape((1, -1)))).flatten()
-    # print "res_long=", res_long, "y_i=", y_i, "res", res
     res_long[0:len(res)] = res
-    #    res = (y_i - node.execute(x_app_i))
-    # print "returning resudial res=", res
     return res_long
 
 
 ########################################################################################
-#   AN EXAMPLE OF iGSFA                                                                #
+#   AN EXAMPLE OF HOW iGSFA CAN BE USED                                                #
 ########################################################################################
 
 def example_iGSFA():
-    print("")
-    print("**************************************************************************")
+    print("\n\n**************************************************************************")
     print("*Example of training iGSFA on random data")
     num_samples = 1000
     dim = 20
@@ -702,7 +681,6 @@ def example_iGSFA():
     y_test_norm = zero_mean_unit_var(y_test)
     print("Standard delta values of output features y after constraint enforcement:", comp_delta(y_norm))
     print("Standard delta values of output features y_test after constraint enforcement:", comp_delta(y_test_norm))
-
 
 
 if __name__ == "__main__":

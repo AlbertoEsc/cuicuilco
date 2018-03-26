@@ -13,7 +13,7 @@ import numpy
 import pytest
 import mdp
 
-from cuicuilco.gsfa_node import GSFANode, graph_delta_values, comp_delta
+from cuicuilco.gsfa_nodes import GSFANode, graph_delta_values, comp_delta
 
 #TODO: test invalid parameters (training mode, block size, etc)
 
