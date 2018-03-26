@@ -58,8 +58,9 @@ def test_equivalence_SFA_GSFA_regular_mode():
     y = y * signs_gsfa * signs_sfa
     y2 = y2 * signs_gsfa * signs_sfa
 
-    assert ((y_sfa - y) == pytest.approx(0.0)).all()
-    assert ((y2_sfa - y2) == pytest.approx(0.0)).all()
+    print("y_sfa:", y_sfa, "y:", y)
+    assert (y_sfa - y) == pytest.approx(0.0)
+    assert (y2_sfa - y2) == pytest.approx(0.0)
 
 
 def test_equivalence_GSFA_clustered_and_classification_modes():
@@ -111,7 +112,7 @@ def test_equivalence_GSFA_clustered_and_classification_modes():
     signs_gsfa_clustered = numpy.sign(y_clustered[0,:])
     y_clustered = y_clustered * signs_gsfa_clustered * signs_gsfa_classification
 
-    assert ((y_clustered - y_classification) == pytest.approx(0.0)).all()
+    assert (y_clustered - y_classification) == pytest.approx(0.0)
 
 
 def test_GSFA_zero_mean_unit_variance_graph():
@@ -129,8 +130,8 @@ def test_GSFA_zero_mean_unit_variance_graph():
     n.stop_training()
 
     y = n.execute(x)
-    assert (y.mean(axis=0) == pytest.approx(0.0)).all()
-    assert ((y**2).mean(axis=0) == pytest.approx(1.0)).all()
+    assert y.mean(axis=0) == pytest.approx(0.0)
+    assert (y**2).mean(axis=0) == pytest.approx(1.0)
 
 
 def test_basic_GSFA_edge_dict():
@@ -210,8 +211,8 @@ def test_equivalence_SFA_GSFA_linear_graph():
     y = y * signs_gsfa * signs_sfa
     y2 = y2 * signs_gsfa * signs_sfa
 
-    assert ((y_sfa - y) == pytest.approx(0.0)).all()
-    assert ((y2_sfa - y2) == pytest.approx(0.0)).all()
+    assert (y_sfa - y) == pytest.approx(0.0)
+    assert (y2_sfa - y2) == pytest.approx(0.0)
 
 
 
@@ -238,7 +239,7 @@ def test_equivalence_window3_fwindow3():
         delta_values.append(delta)
 
     # print(delta_values)
-    assert ((delta_values[1] - delta_values[0]) == pytest.approx(0.0)).all()
+    assert (delta_values[1] - delta_values[0]) == pytest.approx(0.0)
 
 
 def test_equivalence_smirror_window3_mirror_window3():
@@ -259,7 +260,7 @@ def test_equivalence_smirror_window3_mirror_window3():
         delta_values.append(delta)
 
     # print(delta_values)
-    assert ((delta_values[1] - delta_values[0]) == pytest.approx(0.0)).all()
+    assert (delta_values[1] - delta_values[0]) == pytest.approx(0.0)
 
 
 def test_equivalence_smirror_window32_mirror_window32():
@@ -280,7 +281,7 @@ def test_equivalence_smirror_window32_mirror_window32():
         delta_values.append(delta)
 
     # print(delta_values)
-    assert ((delta_values[1] - delta_values[0]) == pytest.approx(0.0)).all()
+    assert (delta_values[1] - delta_values[0]) == pytest.approx(0.0)
 
 
 def test_equivalence_update_graph_and_update_graph_old():
@@ -303,4 +304,4 @@ def test_equivalence_update_graph_and_update_graph_old():
     n2.stop_training()
     y2 = n2.execute(x)
 
-    assert ((y - y2) == pytest.approx(0.0)).all()
+    assert (y - y2) == pytest.approx(0.0)
