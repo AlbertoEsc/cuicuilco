@@ -1,18 +1,18 @@
-#####################################################################################################################
-# gsfa_nodes: This module implements the Graph-Based SFA Node (GSFANode), and the Information-Preserving GSFANode   #
-#             (iGSFANode) and is part of the Cuicuilco framework                                                    #
-#                                                                                                                   #
-# See the following publication for details on GSFA and iGSFA:                                                      #
-# Escalante-B A.-N., Wiskott L, "How to solve classification and regression problems on high-dimensional data with  #
-# a supervised extension of Slow Feature Analysis". Journal of Machine Learning Research 14:3683-3719, 2013         #
-# Escalante-B., A.-N. and Wiskott, L., "Improved graph-based {SFA}: Information preservation complements the        #
-# slowness principle", e-print arXiv:1601.03945, http://arxiv.org/abs/1601.03945, 2017                              #
-#                                                                                                                   #
-# An example of using GSFA and iGSFA is provided at the end of the file                                             #
-#                                                                                                                   #
-# By Alberto Escalante. Alberto.Escalante@ini.ruhr-uni-bochum.de                                                    #
-# Ruhr-University-Bochum, Institute for Neural Computation, Group of Prof. Dr. Wiskott                              #
-#####################################################################################################################
+######################################################################################################################
+# gsfa_nodes: This module implements the Graph-Based SFA Node (GSFANode) and the Information-Preserving GSFANode     #
+#             (iGSFANode), and it belongs of the Cuicuilco framework                                                 #
+#                                                                                                                    #
+# See the following publications for details on GSFA and iGSFA:                                                      #
+# * Escalante-B A.-N., Wiskott L, "How to solve classification and regression problems on high-dimensional data with #
+# a supervised extension of Slow Feature Analysis". Journal of Machine Learning Research 14:3683-3719, 2013          #
+# * Escalante-B., A.-N. and Wiskott, L., "Improved graph-based {SFA}: Information preservation complements the       #
+# slowness principle", e-print arXiv:1601.03945, http://arxiv.org/abs/1601.03945, 2017                               #
+#                                                                                                                    #
+# Example of using GSFA and iGSFA are provided at the end of the file                                              #
+#                                                                                                                    #
+# By Alberto Escalante. Alberto.Escalante@ini.ruhr-uni-bochum.de                                                     #
+# Ruhr-University-Bochum, Institute for Neural Computation, Group of Prof. Dr. Wiskott                               #
+######################################################################################################################
 
 from __future__ import absolute_import
 from __future__ import print_function
@@ -48,10 +48,10 @@ class GSFANode(mdp.nodes.SFANode):
 
         self._covdcovmtx = CovDCovMatrix()
         # The following parameters are accepted during training
-        self.list_train_params = ["scheduler", "n_parallel", "train_mode", "block_size", "node_weights",
-                                  "edge_weights", "verbose"]
+        self.list_train_params = ["train_mode", "block_size", "node_weights", "edge_weights", "verbose"]
 
-    def _train_without_scheduler(self, x, block_size=None, train_mode=None, node_weights=None, edge_weights=None,
+
+    def _train(self, x, block_size=None, train_mode=None, node_weights=None, edge_weights=None,
                                  verbose=None):
         """ This is the main training function of GSFA. It is called internally by _train.
         
@@ -372,138 +372,6 @@ class GSFANode(mdp.nodes.SFANode):
         if self.pinv is None:
             self.pinv = pinv(self.sf)
         return mult(y, self.pinv) + self.avg
-
-    # TODO: write correct interface to enable for excecution_read, excecution_save
-    # TODO: check integer vs float arguments in parallelization
-    # TODO: This function could also be called _train_with_scheduler
-    def _train(self, x, block_size=None, train_mode=None, node_weights=None, edge_weights=None, scheduler=None,
-               n_parallel=None, verbose=None):
-        """ This code is the training funcion when an mdp scheduler is provided (otherwise it resorts to the
-        _train_without_scheduler version).
-
-        The use of an scheduler is still in an experimental and buggy state, please do not use the scheduler.
-        Parallelization through Intel MKL is preferred to using this method.
-        """
-        self._train_phase_started = True
-        if train_mode is None:
-            train_mode = self.train_mode
-        if verbose is None:
-           verbose = self.verbose
-        if block_size is None:
-            block_size = self.block_size
-        if scheduler is None or n_parallel is None or train_mode is None:
-            if verbose:
-                print("BLOCK_SIZE=", block_size)
-            return self._train_without_scheduler(x, block_size=block_size, train_mode=train_mode,
-                                                 node_weights=node_weights, edge_weights=edge_weights)
-        else:
-            num_chunks = min(n_parallel, x.shape[0] // block_size)  # WARNING, cover case division is not exact
-            # here chunk_size is given in blocks!!!
-            # chunk_size = int(numpy.ceil((x.shape[0]/block_size)*1.0/num_chunks))
-            chunk_size = int((x.shape[0] // block_size) // num_chunks)
-
-            # Notice that parallel training doesn't work with clustered mode and inhomogeneous blocks
-            # TODO:Fix this
-            if verbose:
-                print("%d chunks, of size %d blocks, last chunk contains %d blocks" % \
-                    (num_chunks, chunk_size, (x.shape[0] // block_size) % chunk_size))
-            if train_mode == 'clustered':
-                # TODO: Implement this
-                for i in range(num_chunks):
-                    if verbose:
-                        print("Adding scheduler task")
-                    sys.stdout.flush()
-                    if i < num_chunks - 1:
-                        scheduler.add_task(
-                            (x[i * block_size * chunk_size:(i + 1) * block_size * chunk_size], block_size, 1.0),
-                            compute_cov_dcov_matrix_clustered)
-                    else:  # i == num_chunks - 1
-                        scheduler.add_task((x[i * block_size * chunk_size:], block_size, 1.0),
-                                           compute_cov_dcov_matrix_clustered)
-                    if verbose:
-                        print("Done Adding scheduler task ///////////////////")
-                    sys.stdout.flush()
-            elif train_mode == 'serial':
-                for i in range(num_chunks):
-                    if i == 0:
-                        if verbose:
-                            print("adding task %d from sample " % i, i * block_size * chunk_size)
-                            print("to", (i + 1) * block_size * chunk_size)
-                        scheduler.add_task(
-                            (x[i * block_size * chunk_size:(i + 1) * block_size * chunk_size], block_size),
-                            compute_cov_dcov_matrix_serial)
-                    elif i == num_chunks - 1:  # Add one previous block to the chunk
-                        if verbose:
-                            print("adding task %d from sample " % i,
-                                  i * block_size * chunk_size - block_size, "to the end")
-                        scheduler.add_task((x[i * block_size * chunk_size - block_size:], block_size),
-                                           compute_cov_dcov_matrix_serial)
-                    else:
-                        if verbose:
-                            print("adding task %d from sample " % i, i * block_size * chunk_size - block_size)
-                            print("to", (i + 1) * block_size * chunk_size)
-                        scheduler.add_task((x[i * block_size * chunk_size -
-                                              block_size:(i + 1) * block_size * chunk_size], block_size),
-                                           compute_cov_dcov_matrix_serial)
-            elif train_mode == 'mixed':
-                bs = block_size
-                self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[0:bs], weight=0.5)
-
-                # self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[bs:-bs], weight=1.0)
-                x2 = x[bs:-bs]
-                # num_chunks2 = int(numpy.ceil((x2.shape[0]/block_size-2)*1.0/chunk_size))
-                num_chunks2 = int((x2.shape[0] / block_size - 2) / chunk_size)
-                for i in range(num_chunks2):
-                    if i < num_chunks2 - 1:
-                        scheduler.add_task(
-                            (x2[i * block_size * chunk_size:(i + 1) * block_size * chunk_size], block_size, 1.0),
-                            compute_cov_dcov_matrix_clustered)
-                    else:
-                        scheduler.add_task((x2[i * block_size * chunk_size:], block_size, 1.0),
-                                           compute_cov_dcov_matrix_clustered)
-
-                self._covdcovmtx.update_clustered_homogeneous_block_sizes(x[-bs:], weight=0.5)
-
-                # self._covdcovmtx.update_serial(x)
-                for i in range(num_chunks):
-                    if i == 0:
-                        scheduler.add_task(
-                            (x[i * block_size * chunk_size:(i + 1) * block_size * chunk_size], block_size),
-                            compute_cov_dcov_matrix_serial)
-                    elif i == num_chunks - 1:  # Add one previous block to the chunk
-                        scheduler.add_task((x[i * block_size * chunk_size - block_size:], block_size),
-                                           compute_cov_dcov_matrix_serial)
-                    else:  # Add one previous block to the chunk
-                        scheduler.add_task(
-                            (x[i * block_size * chunk_size - block_size:(i + 1) * block_size * chunk_size], block_size),
-                            compute_cov_dcov_matrix_serial)
-            elif train_mode == 'unlabeled':
-                # TODO: IMPLEMENT THIS
-                for i in range(num_chunks):
-                    if verbose:
-                        print("Adding scheduler task")
-                    sys.stdout.flush()
-                    # BUG:Why am I adding here the clustered graph!!!
-                    scheduler.add_task(
-                        (x[i * block_size * chunk_size:(i + 1) * block_size * chunk_size], block_size, 1.0),
-                        compute_cov_dcov_matrix_clustered)
-                    if verbose:
-                        print("Done Adding scheduler task")
-                    sys.stdout.flush()
-            # TODO:ADD support for regular/standard mode
-            else:
-                ex = "Unknown training method:" + str(self.train_mode)
-                raise Exception(ex)
-
-            if verbose:
-                print("Getting results")
-            sys.stdout.flush()
-
-            results = scheduler.get_results()
-            sys.stdout.flush()
-
-            for covdcovmtx in results:
-                self._covdcovmtx.add_cov_dcov_matrix(covdcovmtx)
 
     def _stop_training(self, debug=False, verbose=None):
         if verbose is None:
@@ -1566,7 +1434,7 @@ class iGSFANode(mdp.Node):
         self.stop_training()
 
     def multiple_train(self, x, block_size=None, train_mode=None, node_weights=None,
-                       edge_weights=None, verbose=None):  # scheduler = None, n_parallel=None
+                       edge_weights=None, verbose=None):
         """This function should not be called directly. Use instead the train method, which will decide whether
         multiple-training is enabled, and call this function if needed. """
         # TODO: is the following line needed? or also self.set_input_dim? or self._input_dim?

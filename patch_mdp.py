@@ -90,9 +90,9 @@ mdp.nodes.SFANode._inverse = SFANode_inverse
 # mdp.nodes.SFAPCANode.list_train_params = ["scheduler", "n_parallel", "train_mode",
 #                                          "block_size"]  # "sfa_expo", "pca_expo", "magnitude_sfa_biasing"
 mdp.nodes.PCANode.list_train_params = ["scheduler", "n_parallel"]
-mdp.nodes.GSFANode.list_train_params = ["scheduler", "n_parallel", "train_mode", "block_size", "node_weights",
+mdp.nodes.GSFANode.list_train_params = ["train_mode", "block_size", "node_weights",
                                         "edge_weights", "verbose"]
-mdp.nodes.iGSFANode.list_train_params = ["scheduler", "n_parallel", "train_mode", "block_size", "node_weights",
+mdp.nodes.iGSFANode.list_train_params = ["train_mode", "block_size", "node_weights",
                                          "edge_weights", "verbose"]
 mdp.nodes.SFAAdaptiveNLNode.list_train_params = ["scheduler", "n_parallel", "train_mode", "block_size"]
 mdp.nodes.NLIPCANode.list_train_params = ["exp_func", "norm_class"]
