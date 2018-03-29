@@ -4693,6 +4693,7 @@ class ParamsMNISTExperiment(system_parameters.ParamsSystem):
                                          num_images_per_cluster_used=5000, repetition_factor=1, seed=-1,
                                          use_orig_label=True,
                                          increasing_orig_label=True)  # 5000, num_images_per_cluster_used=-1
+        # WARNING! changed repetition factor to 2
         sSeq_set1 = self.sSeqCreateMNIST(iSeq_set1, images_array_MNIST, seed=-1, use_RGB_images=False)
 
         semi_supervised_learning = True and False
@@ -4724,8 +4725,9 @@ class ParamsMNISTExperiment(system_parameters.ParamsSystem):
                                                        clusters=clusters_MNIST, first_image_index=0,
                                                        num_images_per_cluster_used=1421, repetition_factor=1, seed=-1,
                                                        use_orig_label=True, increasing_orig_label=True)  # 421
-        # WARNING, should be 421, not 1421. The latter causes overlap between training and seenid
-
+        # WARNING, should be 421, not 1421. The latter causes overlap between training and seenid. WARNING!!! changed it to 421
+        # WARNING, changed dx and dy to 1.0!!!
+        # warning, changed repetition factor to 3
 
         sSeq_set = sSeenidMNIST = self.sSeqCreateMNIST(iSeq_set, images_array_MNIST, seed=-1, use_RGB_images=False)
 

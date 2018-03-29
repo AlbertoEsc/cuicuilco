@@ -906,7 +906,7 @@ pSFALayerL1V_S3_D2.sfa_out_dim = 50  # A: 50 L3 # 2*9 + 28
 pSFALayerL2H_S3_D2.sfa_out_dim = 70  # L4 #60 # 2*9 + 25
 pSFALayerL2V_S3_D2.sfa_out_dim = 90  # L5 #70 # 2*9 + 30
 pSFALayerL3H_S2_D1.sfa_out_dim = 120  # L6 #70 #44 #265 # 2*9 + 35
-pSFALayerL3V_S2_D1.sfa_out_dim = 160  # L7 #130 #150 # 2*9 + 40
+pSFALayerL3V_S2_D1.sfa_out_dim = 200  # A: 160 L7 #130 #150 # 2*9 + 40
 # pSFALayerL3V_S2_D1.sfa_args = {"pre_expansion_node_class":None,
 # "expansion_funcs":[identity, unsigned_08expo], "max_length_slow_part":10,
 # "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":1.99999}
@@ -927,11 +927,11 @@ pSFALayerL3V_S2_D1.sfa_args["delta_threshold"] = 9  # A: 9
 pSFALayerSupernode = system_parameters.ParamsSFASuperNode()  # L8
 pSFALayerSupernode.name = "SFA Super Node Layer"
 pSFALayerSupernode.pca_node_class = None
-pSFALayerSupernode.ord_node_class = mdp.nodes.HeadNode
-pSFALayerSupernode.ord_args = {"output_dim": 160}  # A: 115
+#pSFALayerSupernode.ord_node_class = mdp.nodes.HeadNode
+#pSFALayerSupernode.ord_args = {"output_dim": 200}  # A: 115
 # pSFALayerSupernode.exp_funcs = [identity, unsigned_08expo, unsigned_08expo_p15, unsigned_08expo_m15,
 # signed_08expo, QT_90_AP08, CT_30_AP08,] #signed_08expo
-pSFALayerSupernode.exp_funcs = [identity, unsigned_08expo, signed_08expo, QT_160_AP08, CT_26_AP08, ]  # signed_08expo
+pSFALayerSupernode.exp_funcs = [identity, unsigned_08expo, signed_08expo, QT_90_AP08, CT_27_AP08, ]  # QT_165_AP08, CT_26_AP08, # signed_08expo
 # pSFALayerSupernode.exp_funcs = [identity, QT, CT]
 # pSFALayerSupernode.red_node_class = None
 pSFALayerSupernode.sfa_node_class = mdp.nodes.GSFANode
@@ -943,7 +943,7 @@ pSFALayerSupernode.sfa_args = {"verbose":True}
 # pSFALayerSupernode.sfa_args = {"pre_expansion_node_class":None,
 # "expansion_funcs":[identity, unsigned_08expo_75],
 # "max_length_slow_part":1, ,  "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":1.99999}
-pSFALayerSupernode.sfa_out_dim = 80
+pSFALayerSupernode.sfa_out_dim = 15
 
 
 # ######################################### New Improved Network for MNIST ############################

@@ -598,6 +598,50 @@ def QT_145_AP08(x):
     return QT_AP(x[:, 0:145], d=0.8)
 
 
+def QT_150_AP08(x):
+    return QT_AP(x[:, 0:150], d=0.8)
+
+
+def QT_155_AP08(x):
+    return QT_AP(x[:, 0:155], d=0.8)
+
+
+def QT_160_AP08(x):
+    return QT_AP(x[:, 0:160], d=0.8)
+
+
+def QT_165_AP08(x):
+    return QT_AP(x[:, 0:165], d=0.8)
+
+
+def QT_170_AP08(x):
+    return QT_AP(x[:, 0:170], d=0.8)
+
+
+def QT_175_AP08(x):
+    return QT_AP(x[:, 0:175], d=0.8)
+
+
+def QT_180_AP08(x):
+    return QT_AP(x[:, 0:180], d=0.8)
+
+
+def QT_185_AP08(x):
+    return QT_AP(x[:, 0:185], d=0.8)
+
+
+def QT_190_AP08(x):
+    return QT_AP(x[:, 0:190], d=0.8)
+
+
+def QT_195_AP08(x):
+    return QT_AP(x[:, 0:195], d=0.8)
+
+
+def QT_200_AP08(x):
+    return QT_AP(x[:, 0:200], d=0.8)
+
+
 def CT_AP(x, d=0.3):
     xx = signed_expo(x, d)
     return CT(xx)
