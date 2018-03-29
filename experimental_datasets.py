@@ -4640,11 +4640,13 @@ class ParamsMNISTExperiment(system_parameters.ParamsSystem):
     """ Experiment for the recognition of hand-written digits (MNIST).
     Notice the original resolution is 28x28, but the images extracted here have resolution 24x24.
     """
-    def __init__(self, experiment_seed, experiment_basedir):
+    def __init__(self, experiment_seed, experiment_basedir, hold_out_test=True):
         super(ParamsMNISTExperiment, self).__init__()
         self.experiment_seed = experiment_seed
         self.experiment_basedir = experiment_basedir
+        self.hold_out_test = hold_out_test
 
+        # TODO: determine if the following variables are still necessary or can be deleted
         self.train_mode = "Weird Mode"  # Ignored for the moment
         self.analysis = None
         self.enable_reduced_image_sizes = False  # True
@@ -4669,9 +4671,24 @@ class ParamsMNISTExperiment(system_parameters.ParamsSystem):
         clusters_MNIST, images_array_MNIST = \
             self.load_MNIST_clusters(digits_used=digits_used, image_set='training',
                                      images_base_dir=self.experiment_basedir + '/MNIST')
-        clusters_MNIST_test, images_array_MNIST_test = \
-            self.load_MNIST_clusters(digits_used=digits_used, image_set='testing',
-                                     images_base_dir=self.experiment_basedir + '/MNIST')
+        if self.hold_out_test:
+            clusters_MNIST_test, images_array_MNIST_test = clusters_MNIST, images_array_MNIST
+            first_image_index_test=0
+            num_images_per_cluster_used_test=500
+            first_image_index_seenid=500
+            num_images_per_cluster_used_seenid=1500
+            first_image_index_train=1000
+            num_images_per_cluster_used_train=4000+421
+        else:
+            clusters_MNIST_test, images_array_MNIST_test = \
+                self.load_MNIST_clusters(digits_used=digits_used, image_set='testing',
+                                         images_base_dir=self.experiment_basedir + '/MNIST')
+            first_image_index_test=0
+            num_images_per_cluster_used_test=-1
+            first_image_index_seenid=0
+            num_images_per_cluster_used_seenid=1421
+            first_image_index_train=421
+            num_images_per_cluster_used_train=5000
 
         numpy.random.seed(self.experiment_seed + 987987987)
 
@@ -4689,8 +4706,10 @@ class ParamsMNISTExperiment(system_parameters.ParamsSystem):
         iSeq_set1 = self.iSeqCreateMNIST(dx=dx, dy=dy, smin=1.0, smax=1.0, delta_rotation=delta_rotation,
                                          pre_mirroring="none", contrast_enhance=None, obj_avg_std=0.0, obj_std_min=0.20,
                                          obj_std_max=0.20,
-                                         clusters=clusters_MNIST, first_image_index=421,
-                                         num_images_per_cluster_used=5000, repetition_factor=1, seed=-1,
+                                         clusters=clusters_MNIST,
+                                         first_image_index=first_image_index_train,
+                                         num_images_per_cluster_used=num_images_per_cluster_used_train,
+                                         repetition_factor=1, seed=-1,
                                          use_orig_label=True,
                                          increasing_orig_label=True)  # 5000, num_images_per_cluster_used=-1
         # WARNING! changed repetition factor to 2
@@ -4722,8 +4741,10 @@ class ParamsMNISTExperiment(system_parameters.ParamsSystem):
         iSeq_set = iSeenidMNIST = self.iSeqCreateMNIST(dx=dx, dy=dy, smin=1.0, smax=1.0, delta_rotation=delta_rotation,
                                                        pre_mirroring="none", contrast_enhance=None, obj_avg_std=0.0,
                                                        obj_std_min=0.20, obj_std_max=0.20,
-                                                       clusters=clusters_MNIST, first_image_index=0,
-                                                       num_images_per_cluster_used=1421, repetition_factor=1, seed=-1,
+                                                       clusters=clusters_MNIST,
+                                                       first_image_index=first_image_index_seenid,
+                                                       num_images_per_cluster_used=num_images_per_cluster_used_seenid,
+                                                       repetition_factor=1, seed=-1,
                                                        use_orig_label=True, increasing_orig_label=True)  # 421
         # WARNING, should be 421, not 1421. The latter causes overlap between training and seenid. WARNING!!! changed it to 421
         # WARNING, changed dx and dy to 1.0!!!
@@ -4734,8 +4755,10 @@ class ParamsMNISTExperiment(system_parameters.ParamsSystem):
         iSeq_set = iNewidMNIST = [[self.iSeqCreateMNIST(dx=0.0, dy=0.0, smin=1.0, smax=1.0, delta_rotation=None,
                                                         pre_mirroring="none", contrast_enhance=None, obj_avg_std=0.0,
                                                         obj_std_min=0.20, obj_std_max=0.20,
-                                                        clusters=clusters_MNIST_test, first_image_index=0,
-                                                        num_images_per_cluster_used=-1, repetition_factor=1, seed=-1,
+                                                        clusters=clusters_MNIST_test,
+                                                        first_image_index=first_image_index_test,
+                                                        num_images_per_cluster_used=num_images_per_cluster_used_test,
+                                                        repetition_factor=1, seed=-1,
                                                         use_orig_label=True, increasing_orig_label=True)]]
 
         sSeq_set = sNewidMNIST = [
@@ -4757,16 +4780,20 @@ class ParamsMNISTExperiment(system_parameters.ParamsSystem):
 
     def load_MNIST_clusters(self, digits_used=[2, 8], image_set='training',
                             images_base_dir='/home/escalafl/Databases/MNIST'):
+        """Computes a dictionary containing the indices used to index the images of each digit (cluster) and 
+        also returns an array containing all images.
+        
+        image_set: either 'training' or 'testing'
+        
+        Notice that the images of each cluster are shuffled
+        """
         from . import mnist
 
         images, labels = mnist.read(digits_used, image_set, images_base_dir)
         labels = labels.reshape((-1,))
-        # print images
-        # print images.shape, labels.shape
 
         num_images = len(labels)
         all_indices = numpy.arange(num_images)
-        # print "num_images=", num_images
 
         clusters = {}
         for i, digit in enumerate(digits_used):
@@ -5006,7 +5033,8 @@ class ParamsMNISTExperiment(system_parameters.ParamsSystem):
         return sSeq
 
 
-ParamsMNISTFunc = ParamsMNISTExperiment(experiment_seed, experiment_basedir)
+ParamsMNISTFunc = ParamsMNISTExperiment(experiment_seed, experiment_basedir, hold_out_test=True)
+ParamsMNISTFunc_test = ParamsMNISTExperiment(experiment_seed, experiment_basedir, hold_out_test=False)
 
 
 # TODO: IS a mapping from classes to zero-starting classes needed????

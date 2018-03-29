@@ -1511,7 +1511,7 @@ def main():
                                base_filename="output_features_training_TrainingD" + training_data_hash, overwrite=True,
                                verbose=True)
 
-    print ("min val: ", sl_seq_training.min(axis=0), "max val: ", sl_seq_training.max(axis=0))
+    print ("min val: ", sl_seq_training.min(axis=0), "\nmax val: ", sl_seq_training.max(axis=0))
     # Cutoff for final network output
     if feature_cut_off_level > 0.0:
         min_cutoff = -feature_cut_off_level
@@ -1527,7 +1527,7 @@ def main():
 
     if feature_cut_off_level != 0.0:
         sl_seq = sl_seq_training = numpy.clip(sl_seq_training, min_cutoff, max_cutoff)
-        print ("After cutoff: min val: ", sl_seq_training.min(axis=0), "max val: ", sl_seq_training.max(axis=0))
+        print ("After cutoff: min val: ", sl_seq_training.min(axis=0), "\nmax val: ", sl_seq_training.max(axis=0))
 
     if transfer_learning_feature_normalization:
         sl_seq_training_mean = sl_seq_training.mean(axis=0)
@@ -1673,13 +1673,15 @@ def main():
     sl_seq_seenid = flow.execute(subimages_seenid)
     sl_seq_seenid = sl_seq_seenid[:, skip_num_signals:]
 
-    print ("Knownid min value: ", sl_seq_seenid.min(axis=0), "max value: ", sl_seq_seenid.max(axis=0))
+    print ("Knownid min value: ", sl_seq_seenid.min(axis=0))
+    print ("Knownid max value: ", sl_seq_seenid.max(axis=0))
     sl_seq_seenid = numpy.nan_to_num(sl_seq_seenid)
 
     if feature_cut_off_level != 0.0:
         print ("before cutoff sl_seq_seenid= ", sl_seq_seenid)
         sl_seq_seenid = numpy.clip(sl_seq_seenid, min_cutoff, max_cutoff)
-        print ("After cutoff, Knownid min value: ", sl_seq_seenid.min(axis=0), "max value: ", sl_seq_seenid.max(axis=0))
+        print("After cutoff, Knownid min value: ", sl_seq_seenid.min(axis=0))
+        print("After cutoff, Knowind max value: ", sl_seq_seenid.max(axis=0))
 
     sl_seq_training_min = sl_seq_training.min(axis=0)
     sl_seq_training_max = sl_seq_training.max(axis=0)
