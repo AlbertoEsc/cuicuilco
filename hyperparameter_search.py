@@ -10,18 +10,39 @@ import scipy.misc
 from skopt import gp_minimize
 
 
-def exp_txt(expansion):
+def expansion_number_to_string(expansion):
     if expansion == 0:
         return "u08"
-    else:
+    elif expansion == 1:
         return "qt"
+    else:
+        ex = "invalid expansion number: " + str(expansion)
+        raise Exception(ex)
 
 
-def cuicuilco_f_RMSE_Gauss(arguments):
-    return cuicuilco_evaluation(arguments, measure="RMSE_Gauss")
+def string_to_expansion_number(string):
+    if string == "u08Exp":
+        return 0
+    elif string == "qtExp":
+        return 1
+    else:
+        ex = "invalid expansion string: " + string
+        raise Exception(ex)
 
+
+def cuicuilco_f_CE_Gauss(arguments):
+    return 1.0 - cuicuilco_evaluation(arguments, measure="CR_Gauss")
+
+
+def cuicuilco_f_CE_Gauss_soft(arguments):
+    return 1.0 - cuicuilco_evaluation(arguments, measure="CR_Gauss_soft")
+
+
+def cuicuilco_f_CE_Gauss_mix(arguments):
+    return 1.0 - cuicuilco_evaluation(arguments, measure="mix") 
  
-def cuicuilco_evaluation(arguments, measure="RMSE_Gauss"):
+
+def cuicuilco_evaluation(arguments, measure="CR_Gauss"):
     cuicuilco_experiment_seed = np.random.randint(2**25)  #     np.random.randn()
     os.putenv("CUICUILCO_EXPERIMENT_SEED", str(cuicuilco_experiment_seed))
     print("Setting CUICUILCO_EXPERIMENT_SEED: ", str(cuicuilco_experiment_seed))
@@ -36,13 +57,13 @@ def cuicuilco_evaluation(arguments, measure="RMSE_Gauss"):
     output_filename = "hyperparameter_tuning/MNIST_MNISTNetwork_24x24_7L_Overlap_config_L0cloneL_%dPC_%dSF_%sExp_%dF_" + \
                       "L1cloneL_%dSF_%sExp_%dF_L2clone_%dSF_%sExp_%dF_L3cloneL_%dSF_%sExp_%dF_" + \
                       "L4cloneL_%dF_%sExp_%dF_L5_%dF_%sExp_%dSF_L6_%dF_%sExp_%dSF_NoHead_QT%dAP_CT%dAP_seed%d.txt" 
-    output_filename = output_filename % (L0_pca_out_dim, L0_delta_threshold, exp_txt(L0_expansion), L0_sfa_out_dim,
-                            L1H_delta_threshold, exp_txt(L1H_expansion), L1H_sfa_out_dim,
-                            L1V_delta_threshold, exp_txt(L1V_expansion), L1V_sfa_out_dim,
-                            L2H_delta_threshold, exp_txt(L2H_expansion), L2H_sfa_out_dim,
-                            L2V_delta_threshold, exp_txt(L2V_expansion), L2V_sfa_out_dim,
-                            L3H_delta_threshold, exp_txt(L3H_expansion), L3H_sfa_out_dim,
-                            L3V_delta_threshold, exp_txt(L3V_expansion), L3V_sfa_out_dim,
+    output_filename = output_filename % (L0_pca_out_dim, L0_delta_threshold, expansion_number_to_string(L0_expansion), L0_sfa_out_dim,
+                            L1H_delta_threshold, expansion_number_to_string(L1H_expansion), L1H_sfa_out_dim,
+                            L1V_delta_threshold, expansion_number_to_string(L1V_expansion), L1V_sfa_out_dim,
+                            L2H_delta_threshold, expansion_number_to_string(L2H_expansion), L2H_sfa_out_dim,
+                            L2V_delta_threshold, expansion_number_to_string(L2V_expansion), L2V_sfa_out_dim,
+                            L3H_delta_threshold, expansion_number_to_string(L3H_expansion), L3H_sfa_out_dim,
+                            L3V_delta_threshold, expansion_number_to_string(L3V_expansion), L3V_sfa_out_dim,
                             L4_degree_QT, L4_degree_CT, cuicuilco_experiment_seed)
     if os.path.isfile(output_filename):
         print("file %s already exists, skipping its computation" % output_filename)
@@ -70,7 +91,11 @@ def cuicuilco_evaluation(arguments, measure="RMSE_Gauss"):
         print("excecuting command: ", command)
         os.system(command)
 
-    print("extracting performance metrici from resulting file")
+    print("extracting performance metric from resulting file")
+    metric = extract_performance_metric_from_file(output_filename)
+    return metric
+
+def extract_performance_metric_from_file(output_filename, measure = "CR_Gauss"):
     command_extract = "cat %s | grep New | grep CR_G > del_tmp.txt" % output_filename
     os.system(command_extract)
     fd = open("del_tmp.txt", "r")
@@ -78,16 +103,71 @@ def cuicuilco_evaluation(arguments, measure="RMSE_Gauss"):
     fd.close()
     print("metrics: ", metrics)
     if len(metrics) > 10 and metrics[6] == "CR_Gauss":
-        metric_CR_Gauss = metrics[7].strip(",")
-        metric_softCR_Gauss = metrics[9].strip(",")
+        metric_CR_Gauss = float(metrics[7].strip(","))
+        metric_CR_Gauss_soft = float(metrics[9].strip(","))
     else:
         print("unable to find metrics in file")
-        metric_CR_Gauss = 20.0
-        metric_softCR_Gauss = 20.0    
-    print("metric_CR_Gauss: ", metric_CR_Gauss, " metric_CR_Gauss:", metric_softCR_Gauss)
+        metric_CR_Gauss = 0.0
+        metric_CR_Gauss_soft = 0.0  
+    if measure == "CR_Gauss":
+        metric = metric_CR_Gauss
+    elif measure == "CR_Gauss_soft":
+        metric = metric_CR_Gauss_soft
+    elif measure == "mix":
+        metric = 0.5 * (metric_CR_Gauss + metric_CR_Gauss_soft)
+  
+    print("metric_CR_Gauss: ", metric_CR_Gauss, " metric_CR_Gauss_soft:", metric_CR_Gauss_soft)
 
-    return float(metric_CR_Gauss)
+    return metric
 
+
+def load_saved_executions(measure="CR_Gauss"):
+    path = "hyperparameter_tuning"
+    only_files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
+    only_files = [f for f in only_files if f.startswith("MNIST_MNISTNetwork_24x24_7L_Overlap_config")]
+    arguments_list = []
+    results_list = []
+    for f in only_files:
+        print("filename %s found" % f)
+        # MNIST_MNISTNetwork_24x24_7L_Overlap_config_L0cloneL_16PC_1SF_qtExp_25F_L1cloneL_1SF_u08Exp_20F_L2clone_30SF_u08Exp_80F_L3cloneL_1SF_u08Exp_100F_L4cloneL_20F_u08Exp_120F_L5_20F_u08Exp_90SF_L6_20F_u08Exp_250SF_NoHead_QT90AP_CT25AP_seed13153651.txt
+        vals = f.split("_")
+        vals = [val.strip("PCFSseedQTA.txt") for val in vals]
+        print("vals=", vals)
+        if len(vals) >= 35:
+            L0_pca_out_dim = int(vals[7])
+            L0_sfa_out_dim = int(vals[10])
+            L1H_sfa_out_dim = int(vals[14])
+            L1V_sfa_out_dim = int(vals[18]) 
+            L2H_sfa_out_dim = int(vals[22])
+            L2V_sfa_out_dim = int(vals[26])
+            L3H_sfa_out_dim = int(vals[30])
+            L3V_sfa_out_dim = int(vals[34])
+            L0_delta_threshold = int(vals[8])
+            L1H_delta_threshold = int(vals[12])
+            L1V_delta_threshold = int(vals[16]) 
+            L2H_delta_threshold = int(vals[20])
+            L2V_delta_threshold = int(vals[24])
+            L3H_delta_threshold = int(vals[28])
+            L3V_delta_threshold = int(vals[32])
+            L0_expansion = string_to_expansion_number(vals[9])
+            L1H_expansion = string_to_expansion_number(vals[13])
+            L1V_expansion = string_to_expansion_number(vals[17])
+            L2H_expansion = string_to_expansion_number(vals[21])
+            L2V_expansion = string_to_expansion_number(vals[25])
+            L3H_expansion = string_to_expansion_number(vals[29])
+            L3V_expansion = string_to_expansion_number(vals[33])
+            L4_degree_QT = int(vals[36])
+            L4_degree_CT = int(vals[37])
+            seed = int(vals[38])
+            arguments = [L0_pca_out_dim, L0_sfa_out_dim, L1H_sfa_out_dim, L1V_sfa_out_dim, L2H_sfa_out_dim, L2V_sfa_out_dim, L3H_sfa_out_dim, L3V_sfa_out_dim, L0_delta_threshold, L1H_delta_threshold, L1V_delta_threshold, L2H_delta_threshold, L2V_delta_threshold, L3H_delta_threshold, L3V_delta_threshold, L0_expansion, L1H_expansion, L1V_expansion, L2H_expansion, L2V_expansion, L3H_expansion, L3V_expansion, L4_degree_QT, L4_degree_CT]
+            print("parsed arguments:", arguments)
+
+            metric = extract_performance_metric_from_file(os.path.join(path, f), measure)
+            arguments_list.append(arguments)
+            results_list.append(metric)            
+        else:
+            print("Error parging values", vals)
+    return arguments_list, results_list
 
 
 def progress_callback(res):
@@ -129,9 +209,13 @@ cuicuilco_dimensions = [range_L0_pca_out_dim, range_L0_sfa_out_dim, range_L1H_sf
 
 np.random.seed(1234)
 
+argument_list, results_list = load_saved_executions()
+results_list = [1.0 - result for result in results_list]
+
+
 t0 = time.time()
-res = gp_minimize(func=cuicuilco_f_RMSE_Gauss, dimensions=cuicuilco_dimensions, base_estimator=None, n_calls=20, n_random_starts=10,
-                  acq_func='gp_hedge', acq_optimizer='auto', x0=None, y0=None, random_state=None, verbose=False,
+res = gp_minimize(func=cuicuilco_f_CE_Gauss_mix, dimensions=cuicuilco_dimensions, base_estimator=None, n_calls=60, n_random_starts=20,  # 20 10
+                  acq_func='gp_hedge', acq_optimizer='auto', x0=argument_list, y0=results_list, random_state=None, verbose=False,
                   callback=progress_callback, n_points=10000, n_restarts_optimizer=5,
                   xi=0.01, kappa=1.96, noise='gaussian', n_jobs=1)
 t1 = time.time()
