@@ -646,6 +646,20 @@ def CT_AP(x, d=0.3):
     xx = signed_expo(x, d)
     return CT(xx)
 
+
+def CT_20_AP08(x):
+    return CT_AP(x[:, 0:20], d=0.8)
+
+def CT_21_AP08(x):
+    return CT_AP(x[:, 0:21], d=0.8)
+
+def CT_22_AP08(x):
+    return CT_AP(x[:, 0:22], d=0.8)
+
+def CT_23_AP08(x):
+    return CT_AP(x[:, 0:23], d=0.8)
+
+
 def CT_24_AP08(x):
     return CT_AP(x[:, 0:24], d=0.8)
 

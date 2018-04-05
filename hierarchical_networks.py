@@ -1003,7 +1003,7 @@ try:
                    QT_140_AP08, QT_150_AP08, QT_160_AP08, QT_170_AP08][k]
     k = L4_degree_CT - 20
     selected_CT = [CT_20_AP08, CT_21_AP08, CT_22_AP08, CT_23_AP08, CT_24_AP08, CT_25_AP08, ][k]
-    network.L7.sfa_args["expansion_funcs"] = [identity, unsigned_08expo, signed_08expo, selected_QT, selected_CT]
+    network.L7.exp_funcs = [identity, unsigned_08expo, signed_08expo, selected_QT, selected_CT]
 except Exception as ex:
     print("Unable to set MNISTNetwork_24x24_7L_Overlap_config parameters:" + str(ex))
 

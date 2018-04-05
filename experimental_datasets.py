@@ -414,7 +414,7 @@ class ParamsGenderExperiment(system_parameters.ParamsSystem):
         self.enable_hack_image_size = True
 
     def create(self):
-        numpy.random.seed(self.experiment_seed + 987987987)
+        numpy.random.seed(self.experiment_seed + 987987)
         contrast_enhance = "ContrastGenderMultiply"
 
         iTrainGender0 = self.iSeqCreateGender(first_id=0, num_ids=180, user_base_dir=user_base_dir,
@@ -3050,7 +3050,7 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
 
 
 
-        numpy.random.seed(self.experiment_seed + 432432432)
+        numpy.random.seed(self.experiment_seed + 432432)
         # age_trim_number_INIBilder = None
         if self.age_use_RGB_images:
             age_eyes_normalized_base_dir_INIBilder = \
@@ -3081,7 +3081,7 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
         print ("num_images_per_cluster_used_INIBilder= %d" % num_images_per_cluster_used_INIBilder)
         # quit()
 
-        numpy.random.seed(self.experiment_seed + 654654654)
+        numpy.random.seed(self.experiment_seed + 654654)
         age_trim_number_MORPH_FGNet = 1400
         if self.age_use_RGB_images:
             age_eyes_normalized_base_dir_MORPH_FGNet = \
@@ -3107,7 +3107,7 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
         # GT_MORPH_AgeRAgeGenderRace.txt", age_included=True, rAge_included=True, gender_included=True,
         # race_included=True, avgColor_included=False)
 
-        numpy.random.seed(self.experiment_seed + 432432432)
+        numpy.random.seed(self.experiment_seed + 432432)
         # #pre_repetitions = 2 #16 # 24 #18 # ** 16 #2, 4, 4*4
         # #age_trim_number_set1 = (pre_repetitions*250)
 
@@ -3203,7 +3203,7 @@ class ParamsRAgeExperiment(system_parameters.ParamsSystem):
             num_images_per_cluster_used_set1test = 0
         print ("num_images_per_cluster_used_set1test=%d" % num_images_per_cluster_used_set1test)
 
-        numpy.random.seed(self.experiment_seed + 987987987)
+        numpy.random.seed(self.experiment_seed + 987987)
         if not self.use_setup_Guo:  # MY MORPH SETUP
             age_clusters = age_clusters_MORPH  # _MORPH #_FGNet
             age_clusters_seenid = age_clusters_MORPH_seenid
@@ -4659,7 +4659,7 @@ class ParamsMNISTExperiment(system_parameters.ParamsSystem):
         # import mnist
 
         print("MNIST: starting with experiment_seed= %d" % self.experiment_seed)
-        numpy.random.seed(self.experiment_seed + 123451313)
+        numpy.random.seed(self.experiment_seed + 123451)
         shuffle_digits = True  # and False
         num_digits_used = 10  # 8 #8 # 10
         digits_used = numpy.arange(10)  # (8) numpy.arange(10) #[4,9] #(4,9) or (9,7) or numpy.arange(10)
@@ -4690,7 +4690,7 @@ class ParamsMNISTExperiment(system_parameters.ParamsSystem):
             first_image_index_train=421
             num_images_per_cluster_used_train=5000
 
-        numpy.random.seed(self.experiment_seed + 987987987)
+        numpy.random.seed(self.experiment_seed + 987987)
 
         # enable_distortions = False
         dx = 1.0  # * 0
@@ -5119,7 +5119,7 @@ class ParamsRatlabExperiment(system_parameters.ParamsSystem):
 
     def create(self):
         print("Ratlab: starting with experiment_seed= %d" % self.experiment_seed)
-        numpy.random.seed(self.experiment_seed + 123451313)
+        numpy.random.seed(self.experiment_seed + 123451)
 
         num_available_images = self.num_available_images
         num_images_training = self.num_images_training  # 100000  # 6800

@@ -2715,19 +2715,19 @@ def main():
         print ("sl_seq_seenid.var(axis=0)=", sl_seq_seenid.var(axis=0))
         print ("sl_seq_newid.var(axis=0)=", sl_seq_newid.var(axis=0))
 
-    print (("Train: %0.3f CR_NCC, %0.3f CR_kNN, CR_Gauss %0.5f, softCR_Gauss=%0.5f, CR_SVM %0.3f, MSE_NCC %0.3f, " +
+    print (("Train: %0.3f CR_NCC, %0.3f CR_kNN, CR_Gauss %0.5f, softCR_Gauss %0.5f, CR_SVM %0.3f, MSE_NCC %0.3f, " +
            "MSE_kNN %0.3f, MSE_Gauss= %0.3f MSE3_SVM %0.3f, MSE2_SVM %0.3f, MSE_SVM %0.3f, MSE_LR %0.3f") % (
         results.class_ncc_rate_train, results.class_kNN_rate_train, results.class_Gauss_rate_train,
         softCR_Gauss_training, results.class_svm_rate_train, results.mse_ncc_train,
         results.mse_kNN_train, results.mse_gauss_train, results.mse3_svm_train, results.mse2_svm_train,
         results.mse_svm_train, results.mse_lr_train))
-    print (("Seen Id: %0.3f CR_NCC, %0.3f CR_kNN, CR_Gauss %0.5f, softCR_Gauss=%0.5f, CR_SVM %0.3f, MSE_NCC %0.3f, " +
+    print (("Seen Id: %0.3f CR_NCC, %0.3f CR_kNN, CR_Gauss %0.5f, softCR_Gauss %0.5f, CR_SVM %0.3f, MSE_NCC %0.3f, " +
            "MSE_kNN %0.3f, MSE_Gauss= %0.3f MSE3_SVM %0.3f, MSE2_SVM %0.3f, MSE_SVM %0.3f, MSE_LR %0.3f") % (
         results.class_ncc_rate_seenid, results.class_kNN_rate_seenid, results.class_Gauss_rate_seenid,
         softCR_Gauss_seenid, results.class_svm_rate_seenid, results.mse_ncc_seenid, results.mse_kNN_seenid,
         results.mse_gauss_seenid, results.mse3_svm_seenid, results.mse2_svm_seenid, results.mse_svm_seenid,
         results.mse_lr_seenid))
-    print (("New Id: %0.3f CR_NCC, %0.3f CR_kNN, CR_Gauss %0.5f, softCR_Gauss=%0.5f, CR_SVM %0.3f, MSE_NCC %0.3f, " +
+    print (("New Id: %0.3f CR_NCC, %0.3f CR_kNN, CR_Gauss %0.5f, softCR_Gauss %0.5f, CR_SVM %0.3f, MSE_NCC %0.3f, " +
            "MSE_kNN %0.3f, MSE_Gauss= %0.3f MSE3_SVM %0.3f, MSE2_SVM %0.3f, MSE_SVM %0.3f, MSE_LR %0.3f") % (
         results.class_ncc_rate_newid, results.class_kNN_rate_newid, results.class_Gauss_rate_newid, softCR_Gauss_newid,
         results.class_svm_rate_newid, results.mse_ncc_newid, results.mse_kNN_newid, results.mse_gauss_newid,

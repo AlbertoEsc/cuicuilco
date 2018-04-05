@@ -22,7 +22,7 @@ def cuicuilco_f_RMSE_Gauss(arguments):
 
  
 def cuicuilco_evaluation(arguments, measure="RMSE_Gauss"):
-    cuicuilco_experiment_seed = 112233445 # np.random.randint()
+    cuicuilco_experiment_seed = np.random.randint(2**25)  #     np.random.randn()
     os.putenv("CUICUILCO_EXPERIMENT_SEED", str(cuicuilco_experiment_seed))
     print("Setting CUICUILCO_EXPERIMENT_SEED: ", str(cuicuilco_experiment_seed))
 
@@ -33,7 +33,7 @@ def cuicuilco_evaluation(arguments, measure="RMSE_Gauss"):
      L4_degree_QT, L4_degree_CT) = arguments
 
 
-    output_filename = "MNIST_MNISTNetwork_24x24_7L_Overlap_config_L0cloneL_%dPC_%dSF_%sExp_%dF_" + \
+    output_filename = "hyperparameter_tuning/MNIST_MNISTNetwork_24x24_7L_Overlap_config_L0cloneL_%dPC_%dSF_%sExp_%dF_" + \
                       "L1cloneL_%dSF_%sExp_%dF_L2clone_%dSF_%sExp_%dF_L3cloneL_%dSF_%sExp_%dF_" + \
                       "L4cloneL_%dF_%sExp_%dF_L5_%dF_%sExp_%dSF_L6_%dF_%sExp_%dSF_NoHead_QT%dAP_CT%dAP_seed%d.txt" 
     output_filename = output_filename % (L0_pca_out_dim, L0_delta_threshold, exp_txt(L0_expansion), L0_sfa_out_dim,
@@ -88,9 +88,6 @@ def cuicuilco_evaluation(arguments, measure="RMSE_Gauss"):
 
     return float(metric_CR_Gauss)
 
-def f(x):
-    return (np.sin(5 * x[0]) * (1 - np.tanh(x[0] ** 2)) *
-            (0 + 1.0 * np.random.randn()) * 0.1)
 
 
 def progress_callback(res):
@@ -102,34 +99,38 @@ def progress_callback(res):
 #                n_points=10000, n_restarts_optimizer=5, xi=0.01, kappa=1.96, noise='gaussian', n_jobs=1)
 
 # 13 20 28 50 70 90 120 200 9 19 10 26 6 6 9 0 0 0 0 0 0 0 90 25
-range_L0_pca_out_dim = [13] # (13, 14)
-range_L0_sfa_out_dim = [20] # (20, 21)
-range_L1H_sfa_out_dim = [28] # (28, 29)
-range_L1V_sfa_out_dim = [50] # (50, 51)
-range_L2H_sfa_out_dim = [70] # (70, 71)
-range_L2V_sfa_out_dim = [90] # (90, 91)
-range_L3H_sfa_out_dim = [120] # (120, 121)
-range_L3V_sfa_out_dim = [200] # (200, 201)
-range_L0_delta_threshold = [9] # #(9, 10)
-range_L1H_delta_threshold = [19] # (19, 20)
-range_L1V_delta_threshold = [10] # (10, 11)
-range_L2H_delta_threshold = [26] # (26, 27)
-range_L2V_delta_threshold = [6] # (6, 7)
-range_L3H_delta_threshold = [6] # (6, 7)
-range_L3V_delta_threshold = [9] # (9, 10)
-range_L0_expansion = [0] # (0, 1)
+range_L0_pca_out_dim = (10, 16) # 13
+range_L0_sfa_out_dim = (15, 25) # [20] # (20, 21)
+range_L1H_sfa_out_dim = (20, 36) # [28] # (28, 29)
+range_L1V_sfa_out_dim = (30, 80) # [50] # (50, 51)
+range_L2H_sfa_out_dim = (40, 100) # [70] # (70, 71)
+range_L2V_sfa_out_dim = (60, 120) # [90] # (90, 91)
+range_L3H_sfa_out_dim = (90, 150) # [120] # (120, 121)
+range_L3V_sfa_out_dim = (100, 250) #[200] # (200, 201)
+range_L0_delta_threshold = (1, 20) # [9] # #(9, 10)
+range_L1H_delta_threshold = (1, 30) # [19] # (19, 20)
+range_L1V_delta_threshold = (1, 30) # [10] # (10, 11)
+range_L2H_delta_threshold = (1, 40) # [26] # (26, 27)
+range_L2V_delta_threshold = (1, 20) # [6] # (6, 7)
+range_L3H_delta_threshold = (1, 20) # [6] # (6, 7)
+range_L3V_delta_threshold = (1, 20) # [9] # (9, 10)
+range_L0_expansion = (0, 1) # [0] # (0, 1)
 range_L1H_expansion = [0] # (0, 1)
 range_L1V_expansion = [0] # (0, 1)
 range_L2H_expansion = [0] # (0, 1)
 range_L2V_expansion = [0] # (0, 1)
 range_L3H_expansion = [0] # (0, 0)
 range_L3V_expansion = [0] # (0, 0)
-range_L4_degree_QT = [90] # (90, 90)
-range_L4_degree_CT = [25] # (25, 25)
+range_L4_degree_QT = (60, 90) # [90] # (90, 90)
+range_L4_degree_CT = (20, 25) # [25] # (25, 25)
 cuicuilco_dimensions = [range_L0_pca_out_dim, range_L0_sfa_out_dim, range_L1H_sfa_out_dim, range_L1V_sfa_out_dim, range_L2H_sfa_out_dim, range_L2V_sfa_out_dim, range_L3H_sfa_out_dim, range_L3V_sfa_out_dim, range_L0_delta_threshold, range_L1H_delta_threshold, range_L1V_delta_threshold, range_L2H_delta_threshold, range_L2V_delta_threshold, range_L3H_delta_threshold, range_L3V_delta_threshold, range_L0_expansion, range_L1H_expansion, range_L1V_expansion, range_L2H_expansion, range_L2V_expansion, range_L3H_expansion, range_L3V_expansion, range_L4_degree_QT, range_L4_degree_CT]
 
+#TODO: load previously computed results from saved files
+
+np.random.seed(1234)
+
 t0 = time.time()
-res = gp_minimize(func=cuicuilco_f_RMSE_Gauss, dimensions=cuicuilco_dimensions, base_estimator=None, n_calls=4, n_random_starts=2,
+res = gp_minimize(func=cuicuilco_f_RMSE_Gauss, dimensions=cuicuilco_dimensions, base_estimator=None, n_calls=20, n_random_starts=10,
                   acq_func='gp_hedge', acq_optimizer='auto', x0=None, y0=None, random_state=None, verbose=False,
                   callback=progress_callback, n_points=10000, n_restarts_optimizer=5,
                   xi=0.01, kappa=1.96, noise='gaussian', n_jobs=1)
