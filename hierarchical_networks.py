@@ -788,7 +788,6 @@ pSFALayerL0_4x4.sfa_args = {"pre_expansion_node_class": None, "expansion_funcs":
                             "slow_feature_scaling_method": slow_feature_scaling_method,
                             "delta_threshold": 1.99999, "verbose":True, "reconstruct_with_sfa":reconstruct_with_sfa}
 pSFALayerL0_4x4.clone_layer = True
-#TODO: rename clone_layer to clone_layer
 
 pSFALayerL1H_S3_D2 = copy.deepcopy(pSFALayerL1H)  # L2
 pSFALayerL1H_S3_D2.name = "Homogeneous Linear Layer L1H S=3x1 D=2x1"
@@ -931,7 +930,7 @@ pSFALayerSupernode.pca_node_class = None
 #pSFALayerSupernode.ord_args = {"output_dim": 200}  # A: 115
 # pSFALayerSupernode.exp_funcs = [identity, unsigned_08expo, unsigned_08expo_p15, unsigned_08expo_m15,
 # signed_08expo, QT_90_AP08, CT_30_AP08,] #signed_08expo
-pSFALayerSupernode.exp_funcs = [identity, unsigned_08expo, signed_08expo, QT_90_AP08, CT_27_AP08, ]  # QT_165_AP08, CT_26_AP08, # signed_08expo
+pSFALayerSupernode.exp_funcs = [identity, unsigned_08expo, signed_08expo, QT_90_AP08, CT_25_AP08, ]  # QT_165_AP08, CT_26_AP08, # signed_08expo
 # pSFALayerSupernode.exp_funcs = [identity, QT, CT]
 # pSFALayerSupernode.red_node_class = None
 pSFALayerSupernode.sfa_node_class = mdp.nodes.GSFANode
@@ -958,6 +957,56 @@ network.L5 = copy.deepcopy(pSFALayerL3H_S2_D1)
 network.L6 = copy.deepcopy(pSFALayerL3V_S2_D1)
 network.L7 = copy.deepcopy(pSFALayerSupernode)
 network.layers = [network.L0, network.L1, network.L2, network.L3, network.L4, network.L5, network.L6, network.L7]
+
+
+
+network = MNISTNetwork_24x24_7L_Overlap_config = copy.deepcopy(MNISTNetwork_24x24_7L_Overlap)
+try:
+    fd = open("MNISTNetwork_24x24_7L_Overlap_config.txt", "r")
+    arguments = fd.readline().strip().split(" ")
+    fd.close()
+    print("MNISTNetwork_24x24_7L_Overlap_config has arguments: ", arguments)
+    (L0_pca_out_dim, L0_sfa_out_dim, L1H_sfa_out_dim, L1V_sfa_out_dim, L2H_sfa_out_dim, L2V_sfa_out_dim,
+     L3H_sfa_out_dim, L3V_sfa_out_dim, L0_delta_threshold, L1H_delta_threshold, L1V_delta_threshold,
+     L2H_delta_threshold, L2V_delta_threshold, L3H_delta_threshold, L3V_delta_threshold, L0_expansion,
+     L1H_expansion, L1V_expansion, L2H_expansion, L2V_expansion, L3H_expansion, L3V_expansion,
+     L4_degree_QT, L4_degree_CT) = map(int, arguments)
+
+    network.L0.pca_out_dim = L0_pca_out_dim
+    network.L0.sfa_out_dim = L0_sfa_out_dim
+    network.L1.sfa_out_dim = L1H_sfa_out_dim
+    network.L2.sfa_out_dim = L1V_sfa_out_dim
+    network.L3.sfa_out_dim = L2H_sfa_out_dim
+    network.L4.sfa_out_dim = L2V_sfa_out_dim
+    network.L5.sfa_out_dim = L3H_sfa_out_dim
+    network.L6.sfa_out_dim = L3V_sfa_out_dim
+
+    network.L0.sfa_args["delta_threshold"] = L0_delta_threshold
+    network.L1.sfa_args["delta_threshold"] = L1H_delta_threshold
+    network.L2.sfa_args["delta_threshold"] = L1V_delta_threshold
+    network.L3.sfa_args["delta_threshold"] = L2H_delta_threshold
+    network.L4.sfa_args["delta_threshold"] = L2V_delta_threshold
+    network.L5.sfa_args["delta_threshold"] = L3H_delta_threshold
+    network.L6.sfa_args["delta_threshold"] = L3V_delta_threshold
+
+    if L0_expansion == 0:
+        network.L0.sfa_args["expansion_funcs"] = [identity, unsigned_08expo, ]
+    elif L0_expansion == 1:
+        network.L0.sfa_args["expansion_funcs"] = [identity, unsigned_08expo, QT]
+    else:
+        ex = "invalid value for L0_expansion: " + str(L0_expansion)
+        raise Exception(ex)
+
+    # for the moment L1_expansion to L3V_expansion are ignored
+    k = L4_degree_QT // 10 - 7
+    selected_QT = [QT_70_AP08, QT_80_AP08, QT_90_AP08, QT_100_AP08, QT_110_AP08, QT_120_AP08, QT_130_AP08,
+                   QT_140_AP08, QT_150_AP08, QT_160_AP08, QT_170_AP08][k]
+    k = L4_degree_CT - 20
+    selected_CT = [CT_20_AP08, CT_21_AP08, CT_22_AP08, CT_23_AP08, CT_24_AP08, CT_25_AP08, ][k]
+    network.L7.sfa_args["expansion_funcs"] = [identity, unsigned_08expo, signed_08expo, selected_QT, selected_CT]
+except Exception as ex:
+    print("Unable to set MNISTNetwork_24x24_7L_Overlap_config parameters:" + str(ex))
+
 
 # Adding basic adaptive cutoff nodes to suitable layers
 # for i in range(1, 8):
