@@ -54,23 +54,50 @@ def cuicuilco_evaluation(arguments, measure="CR_Gauss", verbose=False):
      L4_degree_QT, L4_degree_CT) = arguments
 
     # Testing whether arguments are compatible
-    incompatible = False
+    incompatible = 0
     if L0_pca_out_dim + L0_delta_threshold < L0_sfa_out_dim:
-        incompatible = True
-    elif 3 * L0_sfa_out_dim + L1H_delta_threshold < L1H_sfa_out_dim:
-        incompatible = True
-    elif 3 * L1H_sfa_out_dim + L1V_delta_threshold < L1V_sfa_out_dim:
-        incompatible = True
+        incompatible = 1
+    elif 2 * L0_sfa_out_dim + L1H_delta_threshold < L1H_sfa_out_dim:  # This factor is 2 and not 3 due to overlap
+        incompatible = 2
+    elif 2 * L1H_sfa_out_dim + L1V_delta_threshold < L1V_sfa_out_dim:  # This factor is 2 and not 3 due to overlap
+        incompatible = 3
     elif 2 * L1V_sfa_out_dim + L2H_delta_threshold < L2H_sfa_out_dim:
-        incompatible = True
+        incompatible = 4
     elif 2 * L2H_sfa_out_dim + L2V_delta_threshold < L2V_sfa_out_dim:
-        incompatible = True
+        incompatible = 5
     elif 2 * L2V_sfa_out_dim + L3H_delta_threshold < L3H_sfa_out_dim:
-        incompatible = True
+        incompatible = 6
     elif 2 * L3H_sfa_out_dim + L3V_delta_threshold < L3V_sfa_out_dim:
-        incompatible = True
+        incompatible = 7
+    if L1H_delta_threshold >  (2 + 3) * L0_sfa_out_dim:
+        incompatible = 8
+    elif L1V_delta_threshold >  (2 + 3) * L1H_sfa_out_dim:
+        incompatible = 9
+    elif L2H_delta_threshold >  2 * L1V_sfa_out_dim: # the factor here should be actually 4, right?
+        incompatible = 10
+    elif L2V_delta_threshold >  2 * L2H_sfa_out_dim:
+        incompatible = 11
+    elif L3H_delta_threshold >  2 * L2V_sfa_out_dim:
+        incompatible = 12
+    elif L3V_delta_threshold >  2 * L3H_sfa_out_dim:
+        incompatible = 13
+    if L0_delta_threshold > L0_sfa_out_dim:
+        incompatible = 14
+    elif L1H_delta_threshold > L1H_sfa_out_dim:
+        incompatible = 15
+    elif L1V_delta_threshold > L1V_sfa_out_dim:
+        incompatible = 16
+    elif L2H_delta_threshold > L2H_sfa_out_dim:
+        incompatible = 17
+    elif L2V_delta_threshold > L2V_sfa_out_dim:
+        incompatible = 18
+    elif L3H_delta_threshold > L3H_sfa_out_dim:
+        incompatible = 19
+    elif L3V_delta_threshold > L3V_sfa_out_dim:
+        incompatible = 20
+
     if incompatible:
-        print("Configuration:", arguments, " is incompatible and was skipped")
+        print("Configuration:", arguments, " is incompatible (%d) and was skipped" % incompatible)
         return 0.0
 
     print("Creating configuration file ")
@@ -83,7 +110,7 @@ def cuicuilco_evaluation(arguments, measure="CR_Gauss", verbose=False):
 
     output_filename = "hyperparameter_tuning/MNIST_MNISTNetwork_24x24_7L_Overlap_config_L0cloneL_%dPC_%dSF_%sExp_%dF_" + \
                       "L1cloneL_%dSF_%sExp_%dF_L2clone_%dSF_%sExp_%dF_L3cloneL_%dSF_%sExp_%dF_" + \
-                      "L4cloneL_%dF_%sExp_%dF_L5_%dF_%sExp_%dSF_L6_%dF_%sExp_%dSF_NoHead_QT%dAP_CT%dAP_seed%d.txt" 
+                      "L4cloneL_%dSF_%sExp_%dF_L5_%dSF_%sExp_%dF_L6_%dSF_%sExp_%dF_NoHead_QT%dAP_CT%dAP_seed%d.txt"
     output_filename = output_filename % (L0_pca_out_dim, L0_delta_threshold, expansion_number_to_string(L0_expansion), L0_sfa_out_dim,
                             L1H_delta_threshold, expansion_number_to_string(L1H_expansion), L1H_sfa_out_dim,
                             L1V_delta_threshold, expansion_number_to_string(L1V_expansion), L1V_sfa_out_dim,
@@ -222,13 +249,13 @@ range_L2H_sfa_out_dim = (40, 100) # [70] # (70, 71)
 range_L2V_sfa_out_dim = (60, 120) # [90] # (90, 91)
 range_L3H_sfa_out_dim = (90, 150) # [120] # (120, 121)
 range_L3V_sfa_out_dim = (100, 250) #[200] # (200, 201)
-range_L0_delta_threshold = (1, 20) # [9] # #(9, 10)
+range_L0_delta_threshold = (1, 20) # [9] # #(9, 10) #
 range_L1H_delta_threshold = (1, 30) # [19] # (19, 20)
 range_L1V_delta_threshold = (1, 30) # [10] # (10, 11)
-range_L2H_delta_threshold = (1, 40) # [26] # (26, 27)
+range_L2H_delta_threshold = (1, 30) # [26] # (26, 27)
 range_L2V_delta_threshold = (1, 20) # [6] # (6, 7)
 range_L3H_delta_threshold = (1, 20) # [6] # (6, 7)
-range_L3V_delta_threshold = (1, 20) # [9] # (9, 10)
+range_L3V_delta_threshold = (1, 9) # [9] # (9, 10)
 range_L0_expansion = (0, 1) # [0] # (0, 1)
 range_L1H_expansion = [0] # (0, 1)
 range_L1V_expansion = [0] # (0, 1)
@@ -250,7 +277,7 @@ if results_list is not None:
 
 
 t0 = time.time()
-res = gp_minimize(func=cuicuilco_f_CE_Gauss_mix, dimensions=cuicuilco_dimensions, base_estimator=None, n_calls=20, n_random_starts=10,  # 20 10
+res = gp_minimize(func=cuicuilco_f_CE_Gauss_mix, dimensions=cuicuilco_dimensions, base_estimator=None, n_calls=20, n_random_starts=20,  # 20 10
                   acq_func='gp_hedge', acq_optimizer='auto', x0=argument_list, y0=results_list, random_state=None, verbose=False,
                   callback=progress_callback, n_points=100*10000, n_restarts_optimizer=5,   # n_points=10000
                   xi=0.01, kappa=1.96, noise='gaussian', n_jobs=1)

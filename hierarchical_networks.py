@@ -980,6 +980,8 @@ try:
     network.L4.sfa_out_dim = L2V_sfa_out_dim
     network.L5.sfa_out_dim = L3H_sfa_out_dim
     network.L6.sfa_out_dim = L3V_sfa_out_dim
+    print("Output dims:", L0_pca_out_dim, L0_sfa_out_dim, L1H_sfa_out_dim, L1V_sfa_out_dim, L2H_sfa_out_dim,
+          L2V_sfa_out_dim, L3H_sfa_out_dim, L3V_sfa_out_dim)
 
     network.L0.sfa_args["delta_threshold"] = L0_delta_threshold
     network.L1.sfa_args["delta_threshold"] = L1H_delta_threshold
@@ -988,6 +990,8 @@ try:
     network.L4.sfa_args["delta_threshold"] = L2V_delta_threshold
     network.L5.sfa_args["delta_threshold"] = L3H_delta_threshold
     network.L6.sfa_args["delta_threshold"] = L3V_delta_threshold
+    print("Delta thresholds:", L0_delta_threshold, L1H_delta_threshold, L1V_delta_threshold, L2H_delta_threshold,
+          L2V_delta_threshold, L3H_delta_threshold, L3V_delta_threshold)
 
     if L0_expansion == 0:
         network.L0.sfa_args["expansion_funcs"] = [identity, unsigned_08expo, ]
@@ -996,7 +1000,7 @@ try:
     else:
         ex = "invalid value for L0_expansion: " + str(L0_expansion)
         raise Exception(ex)
-
+    print("L0 expansion is", L0_expansion)
     # for the moment L1_expansion to L3V_expansion are ignored
     k = L4_degree_QT // 10 - 6
     print("k for QT is: ", k)
