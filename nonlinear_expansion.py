@@ -534,6 +534,14 @@ def QT_AP(x, d=0.4):
     return QT(xx)
 
 
+def QT_60_AP08(x):
+    return QT_AP(x[:, 0:60], d=0.8)
+
+
+def QT_65_AP08(x):
+    return QT_AP(x[:, 0:65], d=0.8)
+
+
 def QT_70_AP08(x):
     return QT_AP(x[:, 0:70], d=0.8)
 

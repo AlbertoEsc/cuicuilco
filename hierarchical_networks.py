@@ -998,15 +998,17 @@ try:
         raise Exception(ex)
 
     # for the moment L1_expansion to L3V_expansion are ignored
-    k = L4_degree_QT // 10 - 7
-    selected_QT = [QT_70_AP08, QT_80_AP08, QT_90_AP08, QT_100_AP08, QT_110_AP08, QT_120_AP08, QT_130_AP08,
+    k = L4_degree_QT // 10 - 6
+    print("k for QT is: ", k)
+    selected_QT = [QT_60_AP08, QT_70_AP08, QT_80_AP08, QT_90_AP08, QT_100_AP08, QT_110_AP08, QT_120_AP08, QT_130_AP08,
                    QT_140_AP08, QT_150_AP08, QT_160_AP08, QT_170_AP08][k]
     k = L4_degree_CT - 20
+    print("k for CT is: ", k)
     selected_CT = [CT_20_AP08, CT_21_AP08, CT_22_AP08, CT_23_AP08, CT_24_AP08, CT_25_AP08, ][k]
     network.L7.exp_funcs = [identity, unsigned_08expo, signed_08expo, selected_QT, selected_CT]
 except Exception as ex:
     print("Unable to set MNISTNetwork_24x24_7L_Overlap_config parameters:" + str(ex))
-
+    # quit()
 
 # Adding basic adaptive cutoff nodes to suitable layers
 # for i in range(1, 8):
