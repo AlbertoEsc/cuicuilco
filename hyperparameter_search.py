@@ -43,10 +43,6 @@ def cuicuilco_f_CE_Gauss_mix(arguments):
  
 
 def cuicuilco_evaluation(arguments, measure="CR_Gauss", verbose=False):
-    cuicuilco_experiment_seed = np.random.randint(2**25)  #     np.random.randn()
-    os.putenv("CUICUILCO_EXPERIMENT_SEED", str(cuicuilco_experiment_seed))
-    print("Setting CUICUILCO_EXPERIMENT_SEED: ", str(cuicuilco_experiment_seed))
-
     (L0_pca_out_dim, L0_sfa_out_dim, L1H_sfa_out_dim, L1V_sfa_out_dim, L2H_sfa_out_dim, L2V_sfa_out_dim,
      L3H_sfa_out_dim, L3V_sfa_out_dim, L0_delta_threshold, L1H_delta_threshold, L1V_delta_threshold,
      L2H_delta_threshold, L2V_delta_threshold, L3H_delta_threshold, L3V_delta_threshold, L0_expansion,
@@ -55,6 +51,17 @@ def cuicuilco_evaluation(arguments, measure="CR_Gauss", verbose=False):
 
     # Testing whether arguments are compatible
     incompatible = 0
+    if L0_pca_out_dim + L0_delta_threshold < L0_sfa_out_dim:
+        L0_delta_threshold = L0_sfa_out_dim - L0_pca_out_dim
+        print("Attempting to solve incompatibility case 1", L0_pca_out_dim, L0_delta_threshold, L0_sfa_out_dim)
+    if L0_delta_threshold < 1 or L0_delta_threshold > 20:
+        incompatible = 21
+
+    if 2 * L2H_sfa_out_dim + L2V_delta_threshold < L2V_sfa_out_dim:
+        L2V_delta_threshold - 2 * L2H_sfa_out_dim
+    if L2V_delta_threshold < 1 or L2V_delta_threshold > 20:
+        incompatible = 22
+
     if L0_pca_out_dim + L0_delta_threshold < L0_sfa_out_dim:
         incompatible = 1
     elif 2 * L0_sfa_out_dim + L1H_delta_threshold < L1H_sfa_out_dim:  # This factor is 2 and not 3 due to overlap
@@ -97,9 +104,16 @@ def cuicuilco_evaluation(arguments, measure="CR_Gauss", verbose=False):
         incompatible = 20
 
     if incompatible:
-        print("Configuration:", arguments, " is incompatible (%d) and was skipped" % incompatible)
+        print("Configuration (before fixes):", arguments, " is incompatible (%d) and was skipped" % incompatible)
         return 0.0
 
+
+    # Update arguments variable
+    arguments = (L0_pca_out_dim, L0_sfa_out_dim, L1H_sfa_out_dim, L1V_sfa_out_dim, L2H_sfa_out_dim, L2V_sfa_out_dim,
+     L3H_sfa_out_dim, L3V_sfa_out_dim, L0_delta_threshold, L1H_delta_threshold, L1V_delta_threshold,
+     L2H_delta_threshold, L2V_delta_threshold, L3H_delta_threshold, L3V_delta_threshold, L0_expansion,
+     L1H_expansion, L1V_expansion, L2H_expansion, L2V_expansion, L3H_expansion, L3V_expansion,
+     L4_degree_QT, L4_degree_CT)
     print("Creating configuration file ")
     fd = open("MNISTNetwork_24x24_7L_Overlap_config.txt", "w")
     txt = ""
@@ -108,21 +122,29 @@ def cuicuilco_evaluation(arguments, measure="CR_Gauss", verbose=False):
     fd.write(txt)
     fd.close()
 
-    output_filename = "hyperparameter_tuning/MNIST_MNISTNetwork_24x24_7L_Overlap_config_L0cloneL_%dPC_%dSF_%sExp_%dF_" + \
-                      "L1cloneL_%dSF_%sExp_%dF_L2clone_%dSF_%sExp_%dF_L3cloneL_%dSF_%sExp_%dF_" + \
-                      "L4cloneL_%dSF_%sExp_%dF_L5_%dSF_%sExp_%dF_L6_%dSF_%sExp_%dF_NoHead_QT%dAP_CT%dAP_seed%d.txt"
-    output_filename = output_filename % (L0_pca_out_dim, L0_delta_threshold, expansion_number_to_string(L0_expansion), L0_sfa_out_dim,
-                            L1H_delta_threshold, expansion_number_to_string(L1H_expansion), L1H_sfa_out_dim,
-                            L1V_delta_threshold, expansion_number_to_string(L1V_expansion), L1V_sfa_out_dim,
-                            L2H_delta_threshold, expansion_number_to_string(L2H_expansion), L2H_sfa_out_dim,
-                            L2V_delta_threshold, expansion_number_to_string(L2V_expansion), L2V_sfa_out_dim,
-                            L3H_delta_threshold, expansion_number_to_string(L3H_expansion), L3H_sfa_out_dim,
-                            L3V_delta_threshold, expansion_number_to_string(L3V_expansion), L3V_sfa_out_dim,
-                            L4_degree_QT, L4_degree_CT, cuicuilco_experiment_seed)
-    if os.path.isfile(output_filename):
-        print("file %s already exists, skipping its computation" % output_filename)
-    else:
-        command = "nice -n 19 time python -u -m cuicuilco.cuicuilco_run --EnableDisplay=0 --CacheAvailable=0 " + \
+    cuicuilco_experiment_seeds = [112233, 112244]
+    metrics = []
+    for cuicuilco_experiment_seed in cuicuilco_experiment_seeds:  #112233 #np.random.randint(2**25)  #     np.random.randn()
+        os.putenv("CUICUILCO_EXPERIMENT_SEED", str(cuicuilco_experiment_seed))
+        print("Setting CUICUILCO_EXPERIMENT_SEED: ", str(cuicuilco_experiment_seed))
+
+
+
+        output_filename = "hyperparameter_tuning/MNIST_MNISTNetwork_24x24_7L_Overlap_config_L0cloneL_%dPC_%dSF_%sExp_%dF_" + \
+                          "L1cloneL_%dSF_%sExp_%dF_L2clone_%dSF_%sExp_%dF_L3cloneL_%dSF_%sExp_%dF_" + \
+                          "L4cloneL_%dSF_%sExp_%dF_L5_%dSF_%sExp_%dF_L6_%dSF_%sExp_%dF_NoHead_QT%dAP_CT%dAP_seed%d.txt"
+        output_filename = output_filename % (L0_pca_out_dim, L0_delta_threshold, expansion_number_to_string(L0_expansion), L0_sfa_out_dim,
+                                L1H_delta_threshold, expansion_number_to_string(L1H_expansion), L1H_sfa_out_dim,
+                                L1V_delta_threshold, expansion_number_to_string(L1V_expansion), L1V_sfa_out_dim,
+                                L2H_delta_threshold, expansion_number_to_string(L2H_expansion), L2H_sfa_out_dim,
+                                L2V_delta_threshold, expansion_number_to_string(L2V_expansion), L2V_sfa_out_dim,
+                                L3H_delta_threshold, expansion_number_to_string(L3H_expansion), L3H_sfa_out_dim,
+                                L3V_delta_threshold, expansion_number_to_string(L3V_expansion), L3V_sfa_out_dim,
+                                L4_degree_QT, L4_degree_CT, cuicuilco_experiment_seed)
+        if os.path.isfile(output_filename):
+            print("file %s already exists, skipping its computation" % output_filename)
+        else:
+            command = "time nice -n 19 python -u -m cuicuilco.cuicuilco_run --EnableDisplay=0 --CacheAvailable=0 " + \
                   "--NetworkCacheReadDir=/local/tmp/escalafl/Alberto/SavedNetworks " + \
                   "--NetworkCacheWriteDir=/local/tmp/escalafl/Alberto/SavedNetworks " + \
                   "--NodeCacheReadDir=/local/tmp/escalafl/Alberto/SavedNodes " + \
@@ -142,13 +164,14 @@ def cuicuilco_evaluation(arguments, measure="CR_Gauss", verbose=False):
                   "--ExperimentalDataset=ParamsMNISTFunc --HierarchicalNetwork=MNISTNetwork_24x24_7L_Overlap_config " + \
                   "--SleepM=0 2>&1 > " + output_filename
 
-        print("excecuting command: ", command)
-        os.system(command)
+            print("excecuting command: ", command)
+            os.system(command)
 
-    if verbose:
-        print("extracting performance metric from resulting file")
-    metric = extract_performance_metric_from_file(output_filename)
-    return metric
+        if verbose:
+            print("extracting performance metric from resulting file")
+        metric = extract_performance_metric_from_file(output_filename)
+        metrics.append(metric)
+    return np.array(metric).mean()
 
 
 def extract_performance_metric_from_file(output_filename, measure = "CR_Gauss", verbose=False):
@@ -163,9 +186,9 @@ def extract_performance_metric_from_file(output_filename, measure = "CR_Gauss", 
         metric_CR_Gauss = float(metrics[7].strip(","))
         metric_CR_Gauss_soft = float(metrics[9].strip(","))
     else:
-        print("unable to find metrics in file")
-        metric_CR_Gauss = 0.0
-        metric_CR_Gauss_soft = 0.0  
+        print("unable to find metrics in file (defaulting to 0.95)")
+        metric_CR_Gauss = 0.95
+        metric_CR_Gauss_soft = 0.95  
     if measure == "CR_Gauss":
         metric = metric_CR_Gauss
     elif measure == "CR_Gauss_soft":
@@ -178,7 +201,7 @@ def extract_performance_metric_from_file(output_filename, measure = "CR_Gauss", 
     return metric
 
 
-def load_saved_executions(measure="CR_Gauss", verbose=False):
+def load_saved_executions(measure="CR_Gauss", dimensions=None, verbose=False):
     path = "hyperparameter_tuning"
     only_files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
     only_files = [f for f in only_files if f.startswith("MNIST_MNISTNetwork_24x24_7L_Overlap_config")]
@@ -229,6 +252,43 @@ def load_saved_executions(measure="CR_Gauss", verbose=False):
     if len(arguments_list) == 0:
         arguments_list = None
         results_list = None
+    else:
+        results_list = np.array(results_list)
+        # arguments_list = np.array(arguments_list, dtype=int)
+        ordering = np.argsort(results_list)[::-1]
+	results_list = results_list[ordering]
+        sorted_arguments_list = []
+        for i in range(len(ordering)):
+            sorted_arguments_list.append(arguments_list[ordering[i]])
+        arguments_list = sorted_arguments_list
+        print("ordered results_list: ", results_list)
+        print("ordered arguments_list: ")
+        for arguments in arguments_list:
+            print(arguments)
+        if dimensions is not None:
+            validity_values = []             
+            for i, arguments in enumerate(arguments_list):
+                valid = True
+                for j, dim in enumerate(dimensions):
+                    if len(dim) == 2 and isinstance(dim, tuple):
+                        if dim[0] > arguments[j] or dim[1] < arguments[j]:
+                            valid = False
+                    #elif isinstance(dim, list):
+                    #    if arguments[j] not in dim:
+                    #        valid = False
+       	        validity_values.append(valid)
+            print("validity_values:", validity_values)
+            filtered_arguments_list = []
+            for i in range(len(validity_values)):
+                if validity_values[i]:
+                    filtered_arguments_list.append(arguments_list[i])
+            arguments_list = filtered_arguments_list    
+            results_list = results_list[validity_values]
+    print("final ordered results_list: ", results_list)
+    print("final ordered arguments_list: ")
+    for arguments in arguments_list:
+        print(arguments)
+
     return arguments_list, results_list
 
 
@@ -241,21 +301,21 @@ def progress_callback(res):
 #                n_points=10000, n_restarts_optimizer=5, xi=0.01, kappa=1.96, noise='gaussian', n_jobs=1)
 
 # 13 20 28 50 70 90 120 200 9 19 10 26 6 6 9 0 0 0 0 0 0 0 90 25
-range_L0_pca_out_dim = (10, 16) # 13
-range_L0_sfa_out_dim = (15, 25) # [20] # (20, 21)
-range_L1H_sfa_out_dim = (20, 36) # [28] # (28, 29)
-range_L1V_sfa_out_dim = (30, 80) # [50] # (50, 51)
-range_L2H_sfa_out_dim = (40, 100) # [70] # (70, 71)
-range_L2V_sfa_out_dim = (60, 120) # [90] # (90, 91)
-range_L3H_sfa_out_dim = (90, 150) # [120] # (120, 121)
-range_L3V_sfa_out_dim = (100, 250) #[200] # (200, 201)
-range_L0_delta_threshold = (1, 20) # [9] # #(9, 10) #
-range_L1H_delta_threshold = (1, 30) # [19] # (19, 20)
-range_L1V_delta_threshold = (1, 30) # [10] # (10, 11)
-range_L2H_delta_threshold = (1, 30) # [26] # (26, 27)
-range_L2V_delta_threshold = (1, 20) # [6] # (6, 7)
-range_L3H_delta_threshold = (1, 20) # [6] # (6, 7)
-range_L3V_delta_threshold = (1, 9) # [9] # (9, 10)
+range_L0_pca_out_dim = (12, 14)  # (10, 16) # 13
+range_L0_sfa_out_dim = (15, 19)  # (15, 25) # [20] # (20, 21)
+range_L1H_sfa_out_dim = (32, 36)  # (20, 36) # [28] # (28, 29)
+range_L1V_sfa_out_dim = (45, 60) # [50] # (50, 51)
+range_L2H_sfa_out_dim = (75, 110) # [70] # (70, 71)
+range_L2V_sfa_out_dim = (60, 100) # [90] # (90, 91)
+range_L3H_sfa_out_dim = (80, 120) # [120] # (120, 121)
+range_L3V_sfa_out_dim = (90, 200) #[200] # (200, 201)
+range_L0_delta_threshold = (5, 16)  # (1, 20) # [9] # #(9, 10) #
+range_L1H_delta_threshold = (3, 20) # [19] # (19, 20)
+range_L1V_delta_threshold = (1, 25) # [10] # (10, 11)
+range_L2H_delta_threshold = (5, 35) # [26] # (26, 27)
+range_L2V_delta_threshold = (0, 20) # [6] # (6, 7)
+range_L3H_delta_threshold = (0, 10) # [6] # (6, 7)
+range_L3V_delta_threshold = (0, 6) # [9] # (9, 10)
 range_L0_expansion = (0, 1) # [0] # (0, 1)
 range_L1H_expansion = [0] # (0, 1)
 range_L1V_expansion = [0] # (0, 1)
@@ -263,21 +323,21 @@ range_L2H_expansion = [0] # (0, 1)
 range_L2V_expansion = [0] # (0, 1)
 range_L3H_expansion = [0] # (0, 0)
 range_L3V_expansion = [0] # (0, 0)
-range_L4_degree_QT = (60, 99) # [90] # (90, 90)
-range_L4_degree_CT = (20, 25) # [25] # (25, 25)
+range_L4_degree_QT = (70, 99) # [90] # (90, 90)
+range_L4_degree_CT = (21, 25) # [25] # (25, 25)
 cuicuilco_dimensions = [range_L0_pca_out_dim, range_L0_sfa_out_dim, range_L1H_sfa_out_dim, range_L1V_sfa_out_dim, range_L2H_sfa_out_dim, range_L2V_sfa_out_dim, range_L3H_sfa_out_dim, range_L3V_sfa_out_dim, range_L0_delta_threshold, range_L1H_delta_threshold, range_L1V_delta_threshold, range_L2H_delta_threshold, range_L2V_delta_threshold, range_L3H_delta_threshold, range_L3V_delta_threshold, range_L0_expansion, range_L1H_expansion, range_L1V_expansion, range_L2H_expansion, range_L2V_expansion, range_L3H_expansion, range_L3V_expansion, range_L4_degree_QT, range_L4_degree_CT]
 
 #TODO: load previously computed results from saved files
 
 np.random.seed(1234)
 
-argument_list, results_list = load_saved_executions()
+argument_list, results_list = load_saved_executions(measure="CR_Gauss", dimensions=cuicuilco_dimensions)
 if results_list is not None:
     results_list = [1.0 - result for result in results_list]
 
 
 t0 = time.time()
-res = gp_minimize(func=cuicuilco_f_CE_Gauss_mix, dimensions=cuicuilco_dimensions, base_estimator=None, n_calls=20, n_random_starts=20,  # 20 10
+res = gp_minimize(func=cuicuilco_f_CE_Gauss_mix, dimensions=cuicuilco_dimensions, base_estimator=None, n_calls=100, n_random_starts=20,  # 20 10
                   acq_func='gp_hedge', acq_optimizer='auto', x0=argument_list, y0=results_list, random_state=None, verbose=False,
                   callback=progress_callback, n_points=100*10000, n_restarts_optimizer=5,   # n_points=10000
                   xi=0.01, kappa=1.96, noise='gaussian', n_jobs=1)

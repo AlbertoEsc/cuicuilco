@@ -4674,11 +4674,11 @@ class ParamsMNISTExperiment(system_parameters.ParamsSystem):
         if self.hold_out_test:
             clusters_MNIST_test, images_array_MNIST_test = clusters_MNIST, images_array_MNIST
             first_image_index_test=0
-            num_images_per_cluster_used_test=500
-            first_image_index_seenid=500
-            num_images_per_cluster_used_seenid=1500
-            first_image_index_train=1000
-            num_images_per_cluster_used_train=4000+421
+            num_images_per_cluster_used_test=1000
+            first_image_index_seenid=1000
+            num_images_per_cluster_used_seenid=2000
+            first_image_index_train=1500
+            num_images_per_cluster_used_train=3500+421
         else:
             clusters_MNIST_test, images_array_MNIST_test = \
                 self.load_MNIST_clusters(digits_used=digits_used, image_set='testing',

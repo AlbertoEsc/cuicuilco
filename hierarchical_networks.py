@@ -858,7 +858,7 @@ pSFALayerL2V_S3_D2.clone_layer = True
 
 slow_feature_scaling_method = "sensitivity_based"
 reconstruct_with_sfa = True
-max_length_slow_part = 15
+max_length_slow_part = 30  # 15
 
 
 pSFALayerL3H_S2_D1 = copy.deepcopy(pSFALayerL1H)  # L6
