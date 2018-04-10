@@ -8,7 +8,7 @@
 # * Escalante-B., A.-N. and Wiskott, L., "Improved graph-based {SFA}: Information preservation complements the       #
 # slowness principle", e-print arXiv:1601.03945, http://arxiv.org/abs/1601.03945, 2017                               #
 #                                                                                                                    #
-# Example of using GSFA and iGSFA are provided at the end of the file                                              #
+# Example of using GSFA and iGSFA are provided at the end of the file                                                #
 #                                                                                                                    #
 # By Alberto Escalante. Alberto.Escalante@ini.ruhr-uni-bochum.de                                                     #
 # Ruhr-University-Bochum, Institute for Neural Computation, Group of Prof. Dr. Wiskott                               #

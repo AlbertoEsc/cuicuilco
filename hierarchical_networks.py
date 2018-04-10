@@ -840,7 +840,6 @@ pSFALayerL2H_S3_D2.sfa_args = {"pre_expansion_node_class": None, "expansion_func
                                "delta_threshold": 1.99999, "verbose":True, "reconstruct_with_sfa":reconstruct_with_sfa}
 pSFALayerL2H_S3_D2.clone_layer = True
 
-
 pSFALayerL2V_S3_D2 = copy.deepcopy(pSFALayerL1H)  # L5
 pSFALayerL2V_S3_D2.name = "Homogeneous Linear Layer L2V S=1x3 D=1x2"
 pSFALayerL2V_S3_D2.x_field_channels = 1
