@@ -15,6 +15,30 @@ def expansion_number_to_string(expansion):
         return "u08"
     elif expansion == 1:
         return "qt"
+    elif expansion == 2:
+        return "ct"
+    elif expansion == 3:
+        return "ch3_s10qt"
+    elif expansion == 4:
+        return "ch3_s15qt"
+    elif expansion == 5:
+        return "ch3_s20qt"
+    elif expansion == 6:
+        return "ch3_s25qt"
+    elif expansion == 7:
+        return "ch2_s10qt"
+    elif expansion == 8:
+        return "ch2_s15qt"
+    elif expansion == 9:
+        return "ch2_s20qt"
+    elif expansion == 10:
+        return "ch2_s25qt"
+    elif expansion == 11:
+        return "ch2_s30qt"
+    elif expansion == 12:
+        return "ch2_s35qt"
+    elif expansion == 13:
+        return "ch2_s40qt"
     else:
         ex = "invalid expansion number: " + str(expansion)
         raise Exception(ex)
@@ -25,6 +49,30 @@ def string_to_expansion_number(string):
         return 0
     elif string == "qtExp":
         return 1
+    elif string == "ctExp":
+        return 2
+    elif string == "ch3_s10qtExp":
+        return 3
+    elif string == "ch3_s15qtExp":
+        return 4
+    elif string == "ch3_s20qtExp":
+        return 5
+    elif string == "ch3_s25qtExp":
+        return 6
+    elif string == "ch2_s10qtExp":
+        return 7
+    elif string == "ch2_s15qtExp":
+        return 8
+    elif string == "ch2_s20qtExp":
+        return 9
+    elif string == "ch2_s25qtExp":
+        return 10
+    elif string == "ch2_s30qtExp":
+        return 11
+    elif string == "ch2_s35qtExp":
+        return 12
+    elif string == "ch2_s40qtExp":
+        return 13
     else:
         ex = "invalid expansion string: " + string
         raise Exception(ex)
@@ -122,7 +170,7 @@ def cuicuilco_evaluation(arguments, measure="CR_Gauss", verbose=False):
     fd.write(txt)
     fd.close()
 
-    cuicuilco_experiment_seeds = [112255, 112266, 112277]
+    cuicuilco_experiment_seeds = [112255, 112266]  # , 112277]
     metrics = []
     for cuicuilco_experiment_seed in cuicuilco_experiment_seeds:  #112233 #np.random.randint(2**25)  #     np.random.randn()
         os.putenv("CUICUILCO_EXPERIMENT_SEED", str(cuicuilco_experiment_seed))
@@ -281,17 +329,26 @@ def load_saved_executions(measure="CR_Gauss", dimensions=None, verbose=False):
                     filtered_arguments_list.append(arguments_list[i])
             arguments_list = filtered_arguments_list    
             results_list = results_list[validity_values]
-    if len(arguments_list) == 0:
-        arguments_list = None
-        results_list = None
+    # if len(arguments_list) == 0:
+    #     arguments_list = None
+    #     results_list = None
     print("final ordered results_list: ", results_list)
     print("final ordered arguments_list: ")
     for arguments in arguments_list:
         print(arguments)
         # quit()
+    if len(arguments_list) == 0:
+        arguments_list = None
+        results_list = None
+
+
     return arguments_list, results_list
 
 def display_best_arguments(arguments_list, results_list):
+    if arguments_list is None:
+        print("arguments_list is None")
+        return None, None
+
     arguments_results_dict = {}
     for i, arguments in enumerate(arguments_list):
         arg_tuple = tuple(arguments)
@@ -302,22 +359,32 @@ def display_best_arguments(arguments_list, results_list):
     # Average all entries with the same key
     averaged_arguments_list = []
     averaged_results_list = []
+    results_stds = []
+    results_lens = []
     for arg in arguments_results_dict.keys():
         averaged_arguments_list.append(arg)
         averaged_results_list.append(np.array(arguments_results_dict[arg]).mean())
-        print("std: ", np.array(arguments_results_dict[arg]).std())
+        results_stds.append(np.array(arguments_results_dict[arg]).std())
+        results_lens.append(len(arguments_results_dict[arg]))
+        # print("std: ", np.array(arguments_results_dict[arg]).std(), " len:", len(arguments_results_dict[arg]))
     # print("averaged_arguments_list=", averaged_arguments_list)
     # print("averaged_results_list=", averaged_results_list)
 
     # sort
     averaged_results_list = np.array(averaged_results_list)
+    results_stds = np.array(results_stds)
+    results_lens = np.array(results_lens)
     ordering = np.argsort(averaged_results_list)[::-1]
     averaged_results_list = averaged_results_list[ordering]
+    results_stds = results_stds[ordering]
+    results_lens = results_lens[ordering]
     averaged_sorted_arguments_list = []
     for i in range(len(ordering)):
         averaged_sorted_arguments_list.append(averaged_arguments_list[ordering[i]])
     averaged_arguments_list = averaged_sorted_arguments_list
     print("averaged ordered results_list: ", averaged_results_list)
+    print("results_stds: ", results_stds)
+    print("results_lens: ", results_lens)
     print("averaged ordered arguments_list: ")
     for arguments in averaged_arguments_list:
         print(arguments)
@@ -334,27 +401,27 @@ def progress_callback(res):
 
 # 13 20 28 50 70 90 120 200 9 19 10 26 6 6 9 0 0 0 0 0 0 0 90 25
 range_L0_pca_out_dim = [13]  # (12, 14)  # (10, 16) # 13
-range_L0_sfa_out_dim = (15, 19)  # (15, 25) # [20] # (20, 21)
+range_L0_sfa_out_dim = (15, 17)  # (15, 25) # [20] # (20, 21)
 range_L1H_sfa_out_dim = (33, 36)  # (20, 36) # [28] # (28, 29)
-range_L1V_sfa_out_dim = (45, 60) # [50] # (50, 51)
-range_L2H_sfa_out_dim = (75, 105) # [70] # (70, 71)
-range_L2V_sfa_out_dim = (70, 100) # [90] # (90, 91)
-range_L3H_sfa_out_dim = (80, 110) # [120] # (120, 121)
-range_L3V_sfa_out_dim = (100, 170) #[200] # (200, 201)
+range_L1V_sfa_out_dim = (50, 65) # [50] # (50, 51)
+range_L2H_sfa_out_dim = (80, 95) # [70] # (70, 71)
+range_L2V_sfa_out_dim = (70, 80) # [90] # (90, 91)
+range_L3H_sfa_out_dim = (80, 100) # [120] # (120, 121)
+range_L3V_sfa_out_dim = (140, 170) #[200] # (200, 201)
 range_L0_delta_threshold = (7, 16)  # (1, 20) # [9] # #(9, 10) #
-range_L1H_delta_threshold = (4, 18) # [19] # (19, 20)
-range_L1V_delta_threshold = (1, 20) # [10] # (10, 11)
-range_L2H_delta_threshold = (7, 30) # [26] # (26, 27)
-range_L2V_delta_threshold = (0, 19) # [6] # (6, 7)
-range_L3H_delta_threshold = (0, 7) # [6] # (6, 7)
-range_L3V_delta_threshold = (0, 5) # [9] # (9, 10)
-range_L0_expansion = [1] # [0] # (0, 1)
-range_L1H_expansion = [0] # (0, 1)
-range_L1V_expansion = [0] # (0, 1)
-range_L2H_expansion = [0] # (0, 1)
-range_L2V_expansion = [0] # (0, 1)
-range_L3H_expansion = [0] # (0, 0)
-range_L3V_expansion = [0] # (0, 0)
+range_L1H_delta_threshold = (9, 13) # [19] # (19, 20)
+range_L1V_delta_threshold = (7, 18) # [10] # (10, 11)
+range_L2H_delta_threshold = (22, 30) # [26] # (26, 27)
+range_L2V_delta_threshold = (0, 10) # [6] # (6, 7)
+range_L3H_delta_threshold = (0, 3) # [6] # (6, 7)
+range_L3V_delta_threshold = (0, 3) # [9] # (9, 10)
+range_L0_expansion = [1, 2] # [0] # (0, 1)
+range_L1H_expansion = [0, 3, 4] # (0, 1)
+range_L1V_expansion = [0, 3, 4] # (0, 1)
+range_L2H_expansion = [0, 3, 4] # (0, 1)
+range_L2V_expansion = [0, 3, 4] # (0, 1)
+range_L3H_expansion = [0, 7, 8, 9] # (0, 0)
+range_L3V_expansion = [0, 7, 8, 9] # (0, 0)
 range_L4_degree_QT = (75, 99) # [90] # (90, 90)
 range_L4_degree_CT = (23, 25) # [25] # (25, 25)
 cuicuilco_dimensions = [range_L0_pca_out_dim, range_L0_sfa_out_dim, range_L1H_sfa_out_dim, range_L1V_sfa_out_dim, range_L2H_sfa_out_dim, range_L2V_sfa_out_dim, range_L3H_sfa_out_dim, range_L3V_sfa_out_dim, range_L0_delta_threshold, range_L1H_delta_threshold, range_L1V_delta_threshold, range_L2H_delta_threshold, range_L2V_delta_threshold, range_L3H_delta_threshold, range_L3V_delta_threshold, range_L0_expansion, range_L1H_expansion, range_L1V_expansion, range_L2H_expansion, range_L2V_expansion, range_L3H_expansion, range_L3V_expansion, range_L4_degree_QT, range_L4_degree_CT]
@@ -367,14 +434,13 @@ argument_list, results_list = load_saved_executions(measure="CR_Gauss", dimensio
 display_best_arguments(argument_list, results_list)
 argument_list = None
 results_list = None
-quit()
 
 if results_list is not None:
     results_list = [1.0 - result for result in results_list]
 
 
 t0 = time.time()
-res = gp_minimize(func=cuicuilco_f_CE_Gauss_mix, dimensions=cuicuilco_dimensions, base_estimator=None, n_calls=100, n_random_starts=10,  # 20 10
+res = gp_minimize(func=cuicuilco_f_CE_Gauss_mix, dimensions=cuicuilco_dimensions, base_estimator=None, n_calls=60, n_random_starts=10,  # 20 10
                   acq_func='gp_hedge', acq_optimizer='auto', x0=argument_list, y0=results_list, random_state=None, verbose=False,
                   callback=progress_callback, n_points=100*10000, n_restarts_optimizer=5,   # n_points=10000
                   xi=0.01, kappa=1.96, noise='gaussian', n_jobs=1)

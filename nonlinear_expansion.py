@@ -2087,6 +2087,10 @@ def ch3o9s14QT(x):
     return ch3_Offset_sF_QT(x, Off=9, F=14)
 
 
+def ch3o0s15QT(x):
+    return ch3_Offset_sF_QT(x, Off=0, F=15)
+
+
 def ch3o6s15QT(x):
     return ch3_Offset_sF_QT(x, Off=6, F=15)
 
@@ -2175,6 +2179,10 @@ def ch3o9s24QT(x):
     return ch3_Offset_sF_QT(x, Off=9, F=24)
 
 
+def ch3o0s25QT(x):
+    return ch3_Offset_sF_QT(x, Off=0, F=25)
+
+
 def ch3o9s25QT(x):
     return ch3_Offset_sF_QT(x, Off=9, F=25)
 
@@ -2203,6 +2211,9 @@ def ch3o9s29QT(x):
     return ch3_Offset_sF_QT(x, Off=9, F=29)
 
 
+def ch3o0s30QT(x):
+    return ch3_Offset_sF_QT(x, Off=0, F=30)
+
 def ch3o6s30QT(x):
     return ch3_Offset_sF_QT(x, Off=6, F=30)
 
@@ -2227,6 +2238,10 @@ def ch3o9s34QT(x):
     return ch3_Offset_sF_QT(x, Off=9, F=34)
 
 
+def ch3o0s35QT(x):
+    return ch3_Offset_sF_QT(x, Off=0, F=35)
+
+
 def ch3o9s35QT(x):
     return ch3_Offset_sF_QT(x, Off=9, F=35)
 
@@ -2245,6 +2260,10 @@ def ch3o9s38QT(x):
 
 def ch3o9s39QT(x):
     return ch3_Offset_sF_QT(x, Off=9, F=39)
+
+
+def ch3o0s40QT(x):
+    return ch3_Offset_sF_QT(x, Off=0, F=40)
 
 
 def ch3o9s40QT(x):

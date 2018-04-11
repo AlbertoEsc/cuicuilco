@@ -823,7 +823,7 @@ pSFALayerL1V_S3_D2.clone_layer = True
 
 pSFALayerL2H_S3_D2 = copy.deepcopy(pSFALayerL1H)  # L4
 pSFALayerL2H_S3_D2.name = "Homogeneous Linear Layer L2H S=3x1 D=2x1"
-pSFALayerL2H_S3_D2.x_field_channels = 2  # 3 for 24x24 and 29x29, 2 for 28x28
+pSFALayerL2H_S3_D2.x_field_channels = 3  # 2????? 3 for 24x24 and 29x29, 2 for 28x28
 pSFALayerL2H_S3_D2.y_field_channels = 1
 pSFALayerL2H_S3_D2.x_field_spacing = 2  # 2 for 24x24, 1 for 29x29
 pSFALayerL2H_S3_D2.y_field_spacing = 1
@@ -958,6 +958,39 @@ network.L7 = copy.deepcopy(pSFALayerSupernode)
 network.layers = [network.L0, network.L1, network.L2, network.L3, network.L4, network.L5, network.L6, network.L7]
 
 
+def map_expansion_number_to_expansion(exp_n):
+    if exp_n == 0:
+        return [identity, unsigned_08expo, ]
+    elif exp_n  == 1:
+        return [identity, unsigned_08expo, QT]
+    elif exp_n  == 2:
+        return [identity, unsigned_08expo, CT]
+    elif exp_n  == 3:
+        return [identity, unsigned_08expo, ch3o0s10QT]
+    elif exp_n  == 4:
+        return [identity, unsigned_08expo, ch3o0s15QT]
+    elif exp_n  == 5:
+        return [identity, unsigned_08expo, ch3o0s20QT]
+    elif exp_n  == 6:
+        return [identity, unsigned_08expo, ch3o0s25QT]
+    elif exp_n  == 7:
+        return [identity, unsigned_08expo, ch2o0s10QT]
+    elif exp_n  == 8:
+        return [identity, unsigned_08expo, ch2o0s15QT]
+    elif exp_n  == 9:
+        return [identity, unsigned_08expo, ch2o0s20QT]
+    elif exp_n  == 10:
+        return [identity, unsigned_08expo, ch2o0s25QT]
+    elif exp_n  == 11:
+        return [identity, unsigned_08expo, ch2o0s30QT]
+    elif exp_n  == 12:
+        return [identity, unsigned_08expo, ch2o0s35QT]
+    elif exp_n  == 13:
+        return [identity, unsigned_08expo, ch2o0s40QT]
+    else:
+        ex = "invalid value for L0_expansion: " + str(L0_expansion)
+        raise Exception(ex)
+
 
 network = MNISTNetwork_24x24_7L_Overlap_config = copy.deepcopy(MNISTNetwork_24x24_7L_Overlap)
 try:
@@ -992,15 +1025,15 @@ try:
     print("Delta thresholds:", L0_delta_threshold, L1H_delta_threshold, L1V_delta_threshold, L2H_delta_threshold,
           L2V_delta_threshold, L3H_delta_threshold, L3V_delta_threshold)
 
-    if L0_expansion == 0:
-        network.L0.sfa_args["expansion_funcs"] = [identity, unsigned_08expo, ]
-    elif L0_expansion == 1:
-        network.L0.sfa_args["expansion_funcs"] = [identity, unsigned_08expo, QT]
-    else:
-        ex = "invalid value for L0_expansion: " + str(L0_expansion)
-        raise Exception(ex)
-    print("L0 expansion is", L0_expansion)
-    # for the moment L1_expansion to L3V_expansion are ignored
+    network.L0.sfa_args["expansion_funcs"] = map_expansion_number_to_expansion(L0_expansion)
+    network.L1.sfa_args["expansion_funcs"] = map_expansion_number_to_expansion(L1H_expansion)
+    network.L2.sfa_args["expansion_funcs"] = map_expansion_number_to_expansion(L1V_expansion)
+    network.L3.sfa_args["expansion_funcs"] = map_expansion_number_to_expansion(L2H_expansion)
+    network.L4.sfa_args["expansion_funcs"] = map_expansion_number_to_expansion(L2V_expansion)
+    network.L5.sfa_args["expansion_funcs"] = map_expansion_number_to_expansion(L3H_expansion)
+    network.L6.sfa_args["expansion_funcs"] = map_expansion_number_to_expansion(L3V_expansion)
+    print("L0 expansion is", L0_expansion, L1H_expansion, L1V_expansion, L2H_expansion, L2V_expansion, L3H_expansion, L3V_expansion)
+    
     k = L4_degree_QT // 10 - 6
     print("k for QT is: ", k)
     selected_QT = [QT_60_AP08, QT_70_AP08, QT_80_AP08, QT_90_AP08, QT_100_AP08, QT_110_AP08, QT_120_AP08, QT_130_AP08,
