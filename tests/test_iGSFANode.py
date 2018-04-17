@@ -100,15 +100,60 @@ def test_slow_feature_scaling_methods():
         assert (y - output_features[num_slow_feature_scaling_methods-1]) == pytest.approx(0.0)
 
 
-def pending_test_SFANode_reduce_output_dim():
+def test_enforce_int_delta_threshold_le_output_dim():
     x = numpy.random.normal(size=(300, 15))
-    n = SFANode(output_dim=10, reconstruct_with_sfa=True, slow_feature_scaling_method=slow_feature_scaling_method)
+    # No automatic stop_training
+    n = iGSFANode(output_dim=5, reconstruct_with_sfa=False, slow_feature_scaling_method=None, delta_threshold=6)
+    n.train(x, train_mode="regular")
+    n.train(x**3, train_mode="regular")
+    with pytest.raises(Exception):
+        n.stop_training()
+    # Automatic stop_training
+    n = iGSFANode(output_dim=5, reconstruct_with_sfa=True, slow_feature_scaling_method=None, delta_threshold=6)
+    with pytest.raises(Exception):
+        n.train(x, train_mode="regular")
+
+
+def test_enforce_int_delta_threshold_le_max_length_slow_part():
+    x = numpy.random.normal(size=(300, 10))
+    # No automatic stop_training
+    n = iGSFANode(output_dim=8, reconstruct_with_sfa=False, slow_feature_scaling_method=None,
+                  max_length_slow_part=5, delta_threshold=6)
+    n.train(x, train_mode="regular")
+    n.train(x**3, train_mode="regular")
+    with pytest.raises(Exception):
+        n.stop_training()
+    # Automatic stop_training
+    n = iGSFANode(output_dim=8, reconstruct_with_sfa=True, slow_feature_scaling_method=None,
+                  max_length_slow_part=5, delta_threshold=6)
+    with pytest.raises(Exception):
+        n.train(x, train_mode="regular")
+
+
+def test_SFANode_reduce_output_dim():
+    x = numpy.random.normal(size=(300, 15))
+    n = mdp.nodes.SFANode(output_dim=10)
     n.train(x)
     n.stop_training()
+    y1 = n.execute(x)[:, 0:6]
 
     n2 = copy.deepcopy(n)
     SFANode_reduce_output_dim(n2, 6)
-    output_features.append(n.execute(x))
+    y2 = n2.execute(x)
+    assert (y2 - y1) == pytest.approx(0.0)
+
+
+def test_PCANode_reduce_output_dim():
+    x = numpy.random.normal(size=(300, 15))
+    n = mdp.nodes.PCANode(output_dim=10)
+    n.train(x)
+    n.stop_training()
+    y1 = n.execute(x)[:, 0:6]
+
+    n2 = copy.deepcopy(n)
+    PCANode_reduce_output_dim(n2, 6)
+    y2 = n2.execute(x)
+    assert (y2 - y1) == pytest.approx(0.0)
 
 
 def test_equivalence_GSFA_iGSFA_for_DT_4_0():
