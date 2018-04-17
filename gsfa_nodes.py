@@ -1,6 +1,6 @@
 ######################################################################################################################
-# gsfa_nodes: This module implements the Graph-Based SFA Node (GSFANode) and the Information-Preserving GSFANode     #
-#             (iGSFANode), and it belongs of the Cuicuilco framework                                                 #
+# gsfa_nodes: This module implements the Graph-Based SFA Node (GSFANode) and the Information-Preserving GSFA Node    #
+#             (iGSFANode). This file belongs to the Cuicuilco framework                                              #
 #                                                                                                                    #
 # See the following publications for details on GSFA and iGSFA:                                                      #
 # * Escalante-B A.-N., Wiskott L, "How to solve classification and regression problems on high-dimensional data with #
@@ -8,7 +8,7 @@
 # * Escalante-B., A.-N. and Wiskott, L., "Improved graph-based {SFA}: Information preservation complements the       #
 # slowness principle", e-print arXiv:1601.03945, http://arxiv.org/abs/1601.03945, 2017                               #
 #                                                                                                                    #
-# Example of using GSFA and iGSFA are provided at the end of the file                                                #
+# Examples of using GSFA and iGSFA are provided at the end of the file                                               #
 #                                                                                                                    #
 # By Alberto Escalante. Alberto.Escalante@ini.ruhr-uni-bochum.de                                                     #
 # Ruhr-University-Bochum, Institute for Neural Computation, Group of Prof. Dr. Wiskott                               #
@@ -26,18 +26,18 @@ import mdp
 from mdp.utils import (mult, pinv, CovarianceMatrix, SymeigException)
 from .more_nodes import GeneralExpansionNode
 
-# The class is derived from SFANode only to reuse its _set_range function
 class GSFANode(mdp.nodes.SFANode):
     """ This node implements "Graph-Based SFA (GSFA)", which is the main component of hierarchical GSFA (HGSFA).
 
-    For further information, see: Escalante-B A.-N., Wiskott L, "How to solve classication and regression
+    For further information, see: Escalante-B A.-N., Wiskott L, "How to solve classification and regression
     problems on high-dimensional data with a supervised extension of Slow Feature Analysis". Journal of Machine
     Learning Research 14:3683-3719, 2013
     """
     def __init__(self, input_dim=None, output_dim=None, dtype=None, block_size=None, train_mode=None, verbose=False):
         """Initializes the GSFA node, which is a subclass of the SFA node.
 
-        The parameters block_size and train_mode are not necessary and it is better to provide them during training.
+        The parameters block_size and train_mode are not necessary and it is recommended to skip them here and
+        provide them as parameters to the train method.
         See the _train method for details.
         """
         super(GSFANode, self).__init__(input_dim, output_dim, dtype)
@@ -47,34 +47,35 @@ class GSFANode(mdp.nodes.SFANode):
         self.verbose = verbose
 
         self._covdcovmtx = CovDCovMatrix()
-        # The following parameters are accepted during training
+        # List of parameters that are accepted by train()
         self.list_train_params = ["train_mode", "block_size", "node_weights", "edge_weights", "verbose"]
 
 
     def _train(self, x, block_size=None, train_mode=None, node_weights=None, edge_weights=None,
                                  verbose=None):
-        """ This is the main training function of GSFA. It is called internally by _train.
+        """ This is the main training function of GSFA.
         
         x: training data (each sample is a row)
-        the usage of the parameters depends on the training mode (train_mode)
+
+        The semantics of the remaining parameters depends on the training mode (train_mode) parameter
         in order to train as in standard SFA:
-            set train_mode="regular" (the scale of the features should be corrected also)
+            set train_mode="regular" (the scale of the features should be corrected afterwards)
         in order to train using the clustered graph:
             set train_mode="clustered". The cluster size is given by block_size (integer). Variable cluster sizes are 
-            possible if block_size is a list of integers.
+            possible if block_size is a list of integers. Samples belonging to the same class should be adjacent.
         in order to train for classification:
             set train_mode=("classification", labels, weight), where labels is an array with the class information and
-            weight is a scalar value.
+            weight is a scalar value (e.g., 1.0).
         in order to train for regression:
-            set train_mode=("serial_regression#", labels, weight), where # is the block size used by a serial graph,
-            labels is an array with the label information and weight is a scalar value.
+            set train_mode=("serial_regression#", labels, weight), where # is an integer that specifies the block size
+            used by a serial graph, labels is an array with the label information and weight is a scalar value.
         in order to train using a graph without edges:
             set train_mode="unlabeled".
         in order to train using the serial graph:
             set train_mode="serial", and use block_size (integer) to specify the group size. 
         in order to train using the mixed graph:
             set train_mode="mixed", and use block_size (integer) to specify the group size.           
-        in order to train using an arbitrary graph:
+        in order to train using an arbitrary user-provided graph:
             set train_mode="graph", specify the node_weights (numpy 1D array), and the
             edge_weights (numpy 2D array).
         """
@@ -391,14 +392,12 @@ class GSFANode(mdp.nodes.SFANode):
 
         # Solve the generalized eigenvalue problem
         # the eigenvalues are already ordered in ascending order
-        # TODO: Only remove first eigenvalue and ignore negative eigenvalues (now there are features with
-        # negative delta value)
         try:
             if verbose:
                 print("***Range used=", rng)
             self.d, self.sf = self._symeig(self.dcov_mtx, self.cov_mtx, range=rng, overwrite=(not debug))
             d = self.d
-            # check that we get only *positive* eigenvalues
+            # check that we get only non-negative eigenvalues
             if d.min() < 0:
                 raise SymeigException("Got negative eigenvalues: %s." % str(d))
         except SymeigException as exception:
@@ -459,11 +458,24 @@ def Hamming_weight(integer_list):
 
 
 class CovDCovMatrix(object):
-    """Special purpose class to compute the covariance matrices used by GSFA.
+    """Special purpose class to compute the covariance/second moment matrices used by GSFA.
        It supports efficiently training methods for various graphs: e.g., clustered, serial, mixed.
+       Joint computation of these matrices is typically more efficient than their separate computation.
     """
     def __init__(self, verbose=False):
-        # self.block_size = block_size
+        """Variable descriptions:
+            sum_x: a vector with the sum of all data samples
+            sum_prod_x: a matrix with sum of all samples multiplied by their transposes
+            num_samples: the total weighted number of samples
+            sum_prod_diffs: a matrix with sum of all sample differences multiplied by their transposes
+            num_diffs: the total weighted number of sample differences
+            verbose: a Boolean verbosity parameter
+
+        The following variables are available after fix() has been called.
+            cov_mtx: the resulting covariance matrix of the samples
+            avg: the average sample
+            dcov_mtx: the resulting second-moment matrix of the sample differences
+        """
         self.sum_x = None
         self.sum_prod_x = None
         self.num_samples = 0
@@ -471,13 +483,15 @@ class CovDCovMatrix(object):
         self.num_diffs = 0
         self.verbose = verbose
 
-        # Variables used to store final results
+        # Variables used to store the final matrices
         self.cov_mtx = None
         self.avg = None
         self.dcov_mtx = None
-        self.tlen = 0
 
     def add_samples(self, sum_prod_x, sum_x, num_samples, weight=1.0):
+        """ The given sample information (sum_prod_x, sum_x, num_samples) is added to the cumulative
+        computation of the covariance matrix.
+        """
         weighted_sum_x = sum_x * weight
         weighted_sum_prod_x = sum_prod_x * weight
         weighted_num_samples = num_samples * weight
@@ -492,6 +506,9 @@ class CovDCovMatrix(object):
         self.num_samples = self.num_samples + weighted_num_samples
 
     def add_diffs(self, sum_prod_diffs, num_diffs, weight=1.0):
+        """ The given sample differences information (sum_prod_diffs, num_diffs) is added to the cumulative
+        computation of the second-moment differences matrix.
+        """
         weighted_sum_prod_diffs = sum_prod_diffs * weight
         weighted_num_diffs = num_diffs * weight
 
@@ -502,19 +519,16 @@ class CovDCovMatrix(object):
 
         self.num_diffs = self.num_diffs + weighted_num_diffs
 
-        # TODO:Add option to skip last sample from Cov part.
-
     def update_unlabeled(self, x, weight=1.0):
-        """ Add unlabeled samples to Cov matrix (DCov remains unmodified) """
+        """ Add unlabeled samples to the covariance matrix (DCov remains unmodified) """
         num_samples, dim = x.shape
 
         sum_x = x.sum(axis=0)
         sum_prod_x = mdp.utils.mult(x.T, x)
         self.add_samples(sum_prod_x, sum_x, num_samples, weight)
 
-    # TODO:Add option to skip last sample from Cov part.
     def update_regular(self, x, weight=1.0):
-        """This is equivalent to regular SFA training. """
+        """This is equivalent to regular SFA training (except for the final feature scale). """
         num_samples, dim = x.shape
 
         # Update Cov Matrix
@@ -529,7 +543,8 @@ class CovDCovMatrix(object):
         self.add_diffs(sum_prod_diffs, num_diffs, weight)
 
     def update_graph(self, x, node_weights=None, edge_weights=None, weight=1.0):
-        """Updates the covariance/second moment matrices using a graph (samples, node weights, edge weights).
+        """Updates the covariance/second moment matrices using an user-provided graph specified by
+        (x, node weights, edge weights, and a global weight).
 
          Usually sum(node_weights) = num_samples.
          """
@@ -548,8 +563,8 @@ class CovDCovMatrix(object):
             raise Exception(er)
 
         if isinstance(edge_weights, numpy.ndarray):
-            # TODO: make sure edge_weights are symmetric
-            # TODO: make sure consistency restriction is fulfilled
+            # TODO: eventually make sure edge_weights are symmetric
+            # TODO: eventually make sure consistency restriction is fulfilled
             if edge_weights.shape != (num_samples, num_samples):
                 er = "Error, dimensions of edge_weights should be (%d,%d) but is (%d,%d)" % \
                      (num_samples, num_samples, edge_weights.shape[0], edge_weights.shape[1])
@@ -566,8 +581,8 @@ class CovDCovMatrix(object):
 
         # Update DCov Matrix
         if isinstance(edge_weights, numpy.ndarray):
-            weighted_num_diffs = edge_weights.sum()  # R
-            prod1 = weighted_sum_prod_x  # TODO: USE THE CORRECT EQUATIONS; THIS ONLY WORKS IF Q==R!!!!!!!
+            weighted_num_diffs = edge_weights.sum()  # normalization constant R
+            prod1 = weighted_sum_prod_x  # TODO: eventually check these equations, they might only work if Q==R
             prod2 = mdp.utils.mult(mdp.utils.mult(x.T, edge_weights), x)
             weighted_sum_prod_diffs = 2 * prod1 - 2 * prod2
             self.add_diffs(weighted_sum_prod_diffs, weighted_num_diffs, weight=weight)
@@ -588,7 +603,9 @@ class CovDCovMatrix(object):
             self.add_diffs(weighted_sum_prod_diffs, weighted_num_diffs, weight=weight)
 
     def update_graph_old(self, x, node_weights=None, edge_weights=None, weight=1.0):
-        """This method performs the same task as update_graph, however it has not been optimized."""
+        """This method performs the same task as update_graph. It is slower than update_graph because it
+        has not been optimized. Thus, it is mainly useful to verify the correctness of update_graph.
+        """
         num_samples, dim = x.shape
 
         if node_weights is None:
@@ -643,7 +660,7 @@ class CovDCovMatrix(object):
     def update_mirroring_sliding_window(self, x, weight=1.0, window_halfwidth=2):
         """ Note: this method makes sense according to the consistency restriction for "larger" windows. """
         num_samples, dim = x.shape
-        width = window_halfwidth  # window_halfwidth is way too long to write it
+        width = window_halfwidth  # window_halfwidth is too long to write it complete each time
         if 2 * width >= num_samples:
             ex = "window_halfwidth %d not supported for %d samples!" % (width, num_samples)
             raise Exception(ex)
@@ -698,8 +715,8 @@ class CovDCovMatrix(object):
         # Update DCov Matrix. window = numpy.ones(2*width+1) # Rectangular window
         x_mirror = numpy.zeros((num_samples + 2 * width, dim))
         x_mirror[width:-width] = x  # center part
-        x_mirror[0:width, :] = x[0:width, :][::-1, :]  # first end
-        x_mirror[-width:, :] = x[-width:, :][::-1, :]  # second end
+        x_mirror[0:width, :] = x[0:width, :][::-1, :]  # start of the sequence
+        x_mirror[-width:, :] = x[-width:, :][::-1, :]  # end of the sequence
 
         for offset in range(-width, width + 1):
             if offset == 0:
@@ -941,7 +958,7 @@ class CovDCovMatrix(object):
             raise Exception(err)
         num_blocks = num_samples // block_size
 
-        # warning, plenty of dtype missing!!!!!!!!
+        # warning, plenty of dtype missing! they are just derived from the data.
         sum_x = x.sum(axis=0)
         sum_prod_x = mdp.utils.mult(x.T, x)
         self.add_samples(sum_prod_x, sum_x, num_samples, weight)
@@ -1068,9 +1085,9 @@ class CovDCovMatrix(object):
         # prod_avg_x = numpy.outer(avg_x, avg_x)
         # cov_x = exp_prod_x - prod_avg_x
         prod_avg_x = numpy.outer(avg_x, avg_x)
-        if divide_by_num_samples_or_differences:  # as specified by the theory on Training Graphs
+        if divide_by_num_samples_or_differences:  # as specified by the theory on training graphs
             cov_x = (self.sum_prod_x - self.num_samples * prod_avg_x) / (1.0 * self.num_samples)
-        else:  # standard unbiased estimation
+        else:  # standard unbiased estimation used by standard SFA
             cov_x = (self.sum_prod_x - self.num_samples * prod_avg_x) / (self.num_samples - 1.0)
 
         # Finalize covariance matrix of dx
@@ -1081,9 +1098,7 @@ class CovDCovMatrix(object):
 
         self.cov_mtx = cov_x
         self.avg = avg_x
-        self.tlen = self.num_samples
         self.dcov_mtx = cov_dx
-
 
         if self.verbose:
             print("Finishing training CovDcovMtx:", self.num_samples, "num_samples, and", self.num_diffs, "num_diffs")
@@ -1101,63 +1116,63 @@ class CovDCovMatrix(object):
 # ####### Helper functions for parallel processing and CovDcovMatrices #########
 
 # This function is used by patch_mdp
-def compute_cov_matrix(x, verbose=False):
-    print("PCov")
-    if verbose:
-        print("Computation Began!!! **********************************************************")
-        sys.stdout.flush()
-    covmtx = CovarianceMatrix(bias=True)
-    covmtx.update(x)
-    if verbose:
-        print("Computation Ended!!! **********************************************************")
-        sys.stdout.flush()
-    return covmtx
-
-
-def compute_cov_dcov_matrix_clustered(params, verbose=False):
-    print("PComp")
-    if verbose:
-        print("Computation Began!!! **********************************************************")
-        sys.stdout.flush()
-    x, block_size, weight = params
-    covdcovmtx = CovDCovMatrix()
-    covdcovmtx.update_clustered_homogeneous_block_sizes(x, block_size=block_size, weight=weight)
-    if verbose:
-        print("Computation Ended!!! **********************************************************")
-        sys.stdout.flush()
-    return covdcovmtx
-
-
-def compute_cov_dcov_matrix_serial(params, verbose=False):
-    print("PSeq")
-    if verbose:
-        print("Computation Began!!! **********************************************************")
-        sys.stdout.flush()
-    x, block_size = params
-    covdcovmtx = CovDCovMatrix()
-    covdcovmtx.update_serial(x, block_size=block_size)
-    if verbose:
-        print("Computation Ended!!! **********************************************************")
-        sys.stdout.flush()
-    return covdcovmtx
-
-
-def compute_cov_dcov_matrix_mixed(params, verbose=False):
-    print("PMixed")
-    if verbose:
-        print("Computation Began!!! **********************************************************")
-        sys.stdout.flush()
-    x, block_size = params
-    bs = block_size
-    covdcovmtx = CovDCovMatrix()
-    covdcovmtx.update_clustered_homogeneous_block_sizes(x[0:bs], block_size=block_size, weight=0.5)
-    covdcovmtx.update_clustered_homogeneous_block_sizes(x[bs:-bs], block_size=block_size, weight=1.0)
-    covdcovmtx.update_clustered_homogeneous_block_sizes(x[-bs:], block_size=block_size, weight=0.5)
-    covdcovmtx.update_serial(x, block_size=block_size)
-    if verbose:
-        print("Computation Ended!!! **********************************************************")
-        sys.stdout.flush()
-    return covdcovmtx
+# def compute_cov_matrix(x, verbose=False):
+#     print("PCov")
+#     if verbose:
+#         print("Computation Began!!! **********************************************************")
+#         sys.stdout.flush()
+#     covmtx = CovarianceMatrix(bias=True)
+#     covmtx.update(x)
+#     if verbose:
+#         print("Computation Ended!!! **********************************************************")
+#         sys.stdout.flush()
+#     return covmtx
+#
+#
+# def compute_cov_dcov_matrix_clustered(params, verbose=False):
+#     print("PComp")
+#     if verbose:
+#         print("Computation Began!!! **********************************************************")
+#         sys.stdout.flush()
+#     x, block_size, weight = params
+#     covdcovmtx = CovDCovMatrix()
+#     covdcovmtx.update_clustered_homogeneous_block_sizes(x, block_size=block_size, weight=weight)
+#     if verbose:
+#         print("Computation Ended!!! **********************************************************")
+#         sys.stdout.flush()
+#     return covdcovmtx
+#
+#
+# def compute_cov_dcov_matrix_serial(params, verbose=False):
+#     print("PSeq")
+#     if verbose:
+#         print("Computation Began!!! **********************************************************")
+#         sys.stdout.flush()
+#     x, block_size = params
+#     covdcovmtx = CovDCovMatrix()
+#     covdcovmtx.update_serial(x, block_size=block_size)
+#     if verbose:
+#         print("Computation Ended!!! **********************************************************")
+#         sys.stdout.flush()
+#     return covdcovmtx
+#
+#
+# def compute_cov_dcov_matrix_mixed(params, verbose=False):
+#     print("PMixed")
+#     if verbose:
+#         print("Computation Began!!! **********************************************************")
+#         sys.stdout.flush()
+#     x, block_size = params
+#     bs = block_size
+#     covdcovmtx = CovDCovMatrix()
+#     covdcovmtx.update_clustered_homogeneous_block_sizes(x[0:bs], block_size=block_size, weight=0.5)
+#     covdcovmtx.update_clustered_homogeneous_block_sizes(x[bs:-bs], block_size=block_size, weight=1.0)
+#     covdcovmtx.update_clustered_homogeneous_block_sizes(x[-bs:], block_size=block_size, weight=0.5)
+#     covdcovmtx.update_serial(x, block_size=block_size)
+#     if verbose:
+#         print("Computation Ended!!! **********************************************************")
+#         sys.stdout.flush()
+#     return covdcovmtx
 
 
 class iGSFANode(mdp.Node):
@@ -1315,6 +1330,16 @@ class iGSFANode(mdp.Node):
         elif isinstance(self.delta_threshold, int):
             # here self.max_length_slow_part should be considered
             self.num_sfa_features_preserved = self.delta_threshold
+            if self.delta_threshold > self.output_dim:
+                er = "The provided integer delta_threshold %d is larger than the allowed output dimensionality %d" % \
+                     (self.delta_threshold, self.output_dim)
+                raise Exception(er)
+            if self.max_length_slow_part is not None and self.delta_threshold > self.max_length_slow_part:
+                er = "The provided integer delta_threshold %d" % self.delta_threshold + \
+                     " is larger than the given upper bound on the size of the slow part (max_length_slow_part) %d" % \
+                     self.max_length_slow_part
+                raise Exception(er)
+
         else:
             ex = "Cannot handle type of self.delta_threshold"
             raise Exception(ex)
@@ -1511,6 +1536,15 @@ class iGSFANode(mdp.Node):
         elif isinstance(self.delta_threshold, int):
             # here self.max_length_slow_part should be considered
             self.num_sfa_features_preserved = self.delta_threshold
+            if self.delta_threshold > self.output_dim:
+                er = "The provided integer delta_threshold %d is larger than the allowed output dimensionality %d" % \
+                     (self.delta_threshold, self.output_dim)
+                raise Exception(er)
+            if self.max_length_slow_part is not None and self.delta_threshold > self.max_length_slow_part:
+                er = "The provided integer delta_threshold %d" % self.delta_threshold + \
+                     " is larger than the given upper bound on the size of the slow part (max_length_slow_part) %d" % \
+                     self.max_length_slow_part
+                raise Exception(er)
         else:
             ex = "Cannot handle type of self.delta_threshold:" + str(type(self.delta_threshold))
             raise Exception(ex)
@@ -1580,13 +1614,13 @@ class iGSFANode(mdp.Node):
         else:
             x_app = numpy.zeros_like(x_zm)
 
-        # Remove linear approximation
+        # Remove linear approximation from the centered data
         sfa_removed_x = x_zm - x_app
 
-        # AKA Laurenz method for feature scaling( +rotation)
+        # Laurenz method for feature scaling( +rotation)
         if self.reconstruct_with_sfa and self.slow_feature_scaling_method == "QR_decomposition":
             s_n_sfa_x = numpy.dot(n_sfa_x, self.R.T)
-        # AKA my method for feature scaling (no rotation)
+        # My method for feature scaling (no rotation)
         elif self.reconstruct_with_sfa and self.slow_feature_scaling_method == "sensitivity_based":
             s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x
         elif self.slow_feature_scaling_method is None:
@@ -1621,7 +1655,10 @@ class iGSFANode(mdp.Node):
             return self.non_linear_inverse(y)
 
     def non_linear_inverse(self, y, verbose=None):
-        """Non-linear inverse approximation method. """
+        """Non-linear inverse approximation method.
+
+        This method is experimental and should be used with care.
+        """
         if verbose is None:
             verbose = self.verbose
         x_lin = self.linear_inverse(y)
@@ -1780,7 +1817,7 @@ def f_residual(x_app_i, node, y_i):
 
 
 #########################################################################################################
-#                      A FEW EXAMPLES OF HOW GSFA CAN BE USED                                           #
+#   EXAMPLES THAT SHOW HOW GSFA CAN BE USED                                                             #
 #########################################################################################################
 
 def example_clustered_graph():
