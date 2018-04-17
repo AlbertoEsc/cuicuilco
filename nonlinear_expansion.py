@@ -1723,6 +1723,64 @@ def maximum_99mix2_s08_ex(x):
     return maximum_Fmix2_sE_ex(x, 99, 0.8)
 
 
+
+##############################################################################################
+# Functions that compute quadratic terms with offset, selection, and 2 channels              #
+##############################################################################################
+def ch2_Offset_sF_QT(x, Off, F):
+    ch = 2
+    s = F
+    ns, dim = x.shape
+    if (Off + F) * ch > dim or dim % 2 != 0:
+        er = "Incorrect parameters for ch2_Offset_sF_QT: Off=%d, F=%d, ch=%d, but data dim=%d" % (Off, F, ch, dim)
+        raise Exception(er)
+    else:
+        xs = numpy.zeros((ns, ch * s))
+        xs[:, 0:s] = x[:, Off:Off + s]
+        xs[:, s:2 * s] = x[:, dim // 2 + Off:dim // 2 + Off + s]
+        return QT(xs)
+
+
+def ch2o0s2QT(x):
+    return ch2_Offset_sF_QT(x, Off=0, F=2)
+
+
+def ch2o0s5QT(x):
+    return ch2_Offset_sF_QT(x, Off=0, F=5)
+
+
+def ch2o0s10QT(x):
+    return ch2_Offset_sF_QT(x, Off=0, F=10)
+
+
+def ch2o0s15QT(x):
+    return ch2_Offset_sF_QT(x, Off=0, F=15)
+
+
+def ch2o0s20QT(x):
+    return ch2_Offset_sF_QT(x, Off=0, F=20)
+
+
+def ch2o0s25QT(x):
+    return ch2_Offset_sF_QT(x, Off=0, F=25)
+
+
+def ch2o0s30QT(x):
+    return ch2_Offset_sF_QT(x, Off=0, F=30)
+
+
+def ch2o0s35QT(x):
+    return ch2_Offset_sF_QT(x, Off=0, F=35)
+
+
+def ch2o0s40QT(x):
+    return ch2_Offset_sF_QT(x, Off=0, F=40)
+
+
+def ch2o0s45QT(x):
+    return ch2_Offset_sF_QT(x, Off=0, F=45)
+
+
 ##############################################################################################
 # Functions that compute quadratic terms with selection, and 3 channels                      #
 ##############################################################################################

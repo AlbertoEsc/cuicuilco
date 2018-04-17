@@ -18,27 +18,27 @@ def expansion_number_to_string(expansion):
     elif expansion == 2:
         return "ct"
     elif expansion == 3:
-        return "ch3_s10qt"
+        return "ch3s10qt"
     elif expansion == 4:
-        return "ch3_s15qt"
+        return "ch3s15qt"
     elif expansion == 5:
-        return "ch3_s20qt"
+        return "ch3s20qt"
     elif expansion == 6:
-        return "ch3_s25qt"
+        return "ch3s25qt"
     elif expansion == 7:
-        return "ch2_s10qt"
+        return "ch2s10qt"
     elif expansion == 8:
-        return "ch2_s15qt"
+        return "ch2s15qt"
     elif expansion == 9:
-        return "ch2_s20qt"
+        return "ch2s20qt"
     elif expansion == 10:
-        return "ch2_s25qt"
+        return "ch2s25qt"
     elif expansion == 11:
-        return "ch2_s30qt"
+        return "ch2s30qt"
     elif expansion == 12:
-        return "ch2_s35qt"
+        return "ch2s35qt"
     elif expansion == 13:
-        return "ch2_s40qt"
+        return "ch2s40qt"
     else:
         ex = "invalid expansion number: " + str(expansion)
         raise Exception(ex)
@@ -51,27 +51,27 @@ def string_to_expansion_number(string):
         return 1
     elif string == "ctExp":
         return 2
-    elif string == "ch3_s10qtExp":
+    elif string == "ch3s10qtExp":
         return 3
-    elif string == "ch3_s15qtExp":
+    elif string == "ch3s15qtExp":
         return 4
-    elif string == "ch3_s20qtExp":
+    elif string == "ch3s20qtExp":
         return 5
-    elif string == "ch3_s25qtExp":
+    elif string == "ch3s25qtExp":
         return 6
-    elif string == "ch2_s10qtExp":
+    elif string == "ch2s10qtExp":
         return 7
-    elif string == "ch2_s15qtExp":
+    elif string == "ch2s15qtExp":
         return 8
-    elif string == "ch2_s20qtExp":
+    elif string == "ch2s20qtExp":
         return 9
-    elif string == "ch2_s25qtExp":
+    elif string == "ch2s25qtExp":
         return 10
-    elif string == "ch2_s30qtExp":
+    elif string == "ch2s30qtExp":
         return 11
-    elif string == "ch2_s35qtExp":
+    elif string == "ch2s35qtExp":
         return 12
-    elif string == "ch2_s40qtExp":
+    elif string == "ch2s40qtExp":
         return 13
     else:
         ex = "invalid expansion string: " + string
@@ -87,7 +87,7 @@ def cuicuilco_f_CE_Gauss_soft(arguments):
 
 
 def cuicuilco_f_CE_Gauss_mix(arguments):
-    return 1.0 - cuicuilco_evaluation(arguments, measure="mix") 
+    return 1.0 - cuicuilco_evaluation(arguments, measure="CR_Gauss_mix") 
  
 
 def cuicuilco_evaluation(arguments, measure="CR_Gauss", verbose=False):
@@ -96,7 +96,9 @@ def cuicuilco_evaluation(arguments, measure="CR_Gauss", verbose=False):
      L2H_delta_threshold, L2V_delta_threshold, L3H_delta_threshold, L3V_delta_threshold, L0_expansion,
      L1H_expansion, L1V_expansion, L2H_expansion, L2V_expansion, L3H_expansion, L3V_expansion,
      L4_degree_QT, L4_degree_CT) = arguments
-
+ 
+    print("invoking cuicuilco_evaluation with arguments:", arguments)
+    
     # Testing whether arguments are compatible
     incompatible = 0
     if L0_pca_out_dim + L0_delta_threshold < L0_sfa_out_dim:
@@ -169,16 +171,15 @@ def cuicuilco_evaluation(arguments, measure="CR_Gauss", verbose=False):
         txt += str(entry)+ " "
     fd.write(txt)
     fd.close()
+    print("created configuration file with contents:", txt)
 
-    cuicuilco_experiment_seeds = [112255, 112266]  # , 112277]
+    cuicuilco_experiment_seeds = [112277, 112288]  # , 112277]
     metrics = []
     for cuicuilco_experiment_seed in cuicuilco_experiment_seeds:  #112233 #np.random.randint(2**25)  #     np.random.randn()
         os.putenv("CUICUILCO_EXPERIMENT_SEED", str(cuicuilco_experiment_seed))
         print("Setting CUICUILCO_EXPERIMENT_SEED: ", str(cuicuilco_experiment_seed))
 
-
-
-        output_filename = "hyperparameter_tuning/MNIST_MNISTNetwork_24x24_7L_Overlap_config_L0cloneL_%dPC_%dSF_%sExp_%dF_" + \
+        output_filename = "hyper_t/MNIST_24x24_7L_L0cloneL_%dPC_%dSF_%sExp_%dF_" + \
                           "L1cloneL_%dSF_%sExp_%dF_L2clone_%dSF_%sExp_%dF_L3cloneL_%dSF_%sExp_%dF_" + \
                           "L4cloneL_%dSF_%sExp_%dF_L5_%dSF_%sExp_%dF_L6_%dSF_%sExp_%dF_NoHead_QT%dAP_CT%dAP_seed%d.txt"
         output_filename = output_filename % (L0_pca_out_dim, L0_delta_threshold, expansion_number_to_string(L0_expansion), L0_sfa_out_dim,
@@ -217,7 +218,7 @@ def cuicuilco_evaluation(arguments, measure="CR_Gauss", verbose=False):
 
         if verbose:
             print("extracting performance metric from resulting file")
-        metric = extract_performance_metric_from_file(output_filename)
+        metric = extract_performance_metric_from_file(output_filename, measure=measure)
         metrics.append(metric)
     return np.array(metric).mean()
 
@@ -233,6 +234,9 @@ def extract_performance_metric_from_file(output_filename, measure = "CR_Gauss", 
     if len(metrics) > 10 and metrics[6] == "CR_Gauss":
         metric_CR_Gauss = float(metrics[7].strip(","))
         metric_CR_Gauss_soft = float(metrics[9].strip(","))
+        if np.isnan(metric_CR_Gauss_soft):
+            print("warning, nan metric was found and fixed as metric_CR_Gauss - 0.001")
+            metric_CR_Gauss_soft = metric_CR_Gauss - 0.001
     else:
         print("unable to find metrics in file (defaulting to 0.95)")
         metric_CR_Gauss = 0.95
@@ -241,53 +245,56 @@ def extract_performance_metric_from_file(output_filename, measure = "CR_Gauss", 
         metric = metric_CR_Gauss
     elif measure == "CR_Gauss_soft":
         metric = metric_CR_Gauss_soft
-    elif measure == "mix":
+    elif measure == "CR_Gauss_mix":
         metric = 0.5 * (metric_CR_Gauss + metric_CR_Gauss_soft)
-  
+    else:
+        er = "invalid measure: " +  str(measure)
+        raise Exception(er)
     print("metric_CR_Gauss: ", metric_CR_Gauss, " metric_CR_Gauss_soft:", metric_CR_Gauss_soft)
 
     return metric
 
 
 def load_saved_executions(measure="CR_Gauss", dimensions=None, verbose=False):
-    path = "hyperparameter_tuning"
+    path = "hyper_t"
     only_files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
-    only_files = [f for f in only_files if f.startswith("MNIST_MNISTNetwork_24x24_7L_Overlap_config")]
+    only_files = [f for f in only_files if f.startswith("MNIST_24x24_7L")]
     arguments_list = []
     results_list = []
     for f in only_files:
         print("filename %s was found" % f)
-        # MNIST_MNISTNetwork_24x24_7L_Overlap_config_L0cloneL_16PC_1SF_qtExp_25F_L1cloneL_1SF_u08Exp_20F_L2clone_30SF_u08Exp_80F_L3cloneL_1SF_u08Exp_100F_L4cloneL_20F_u08Exp_120F_L5_20F_u08Exp_90SF_L6_20F_u08Exp_250SF_NoHead_QT90AP_CT25AP_seed13153651.txt
+        # MNIST_24x24_7L_L0cloneL_16PC_1SF_qtExp_25F_L1cloneL_1SF_u08Exp_20F_L2clone_30SF_u08Exp_80F_L3cloneL_1SF_u08Exp_100F_L4cloneL_20F_u08Exp_120F_L5_20F_u08Exp_90SF_L6_20F_u08Exp_250SF_NoHead_QT90AP_CT25AP_seed13153651.txt
         vals = f.split("_")
         vals = [val.strip("PCFSseedQTA.txt") for val in vals]
-        if verbose:
+        if verbose or True:
             print("vals=", vals)
+        # quit()
         if len(vals) >= 35:
-            L0_pca_out_dim = int(vals[7])
-            L0_sfa_out_dim = int(vals[10])
-            L1H_sfa_out_dim = int(vals[14])
-            L1V_sfa_out_dim = int(vals[18]) 
-            L2H_sfa_out_dim = int(vals[22])
-            L2V_sfa_out_dim = int(vals[26])
-            L3H_sfa_out_dim = int(vals[30])
-            L3V_sfa_out_dim = int(vals[34])
-            L0_delta_threshold = int(vals[8])
-            L1H_delta_threshold = int(vals[12])
-            L1V_delta_threshold = int(vals[16]) 
-            L2H_delta_threshold = int(vals[20])
-            L2V_delta_threshold = int(vals[24])
-            L3H_delta_threshold = int(vals[28])
-            L3V_delta_threshold = int(vals[32])
-            L0_expansion = string_to_expansion_number(vals[9])
-            L1H_expansion = string_to_expansion_number(vals[13])
-            L1V_expansion = string_to_expansion_number(vals[17])
-            L2H_expansion = string_to_expansion_number(vals[21])
-            L2V_expansion = string_to_expansion_number(vals[25])
-            L3H_expansion = string_to_expansion_number(vals[29])
-            L3V_expansion = string_to_expansion_number(vals[33])
-            L4_degree_QT = int(vals[36])
-            L4_degree_CT = int(vals[37])
-            seed = int(vals[38])
+            L0_pca_out_dim = int(vals[4])
+            L0_sfa_out_dim = int(vals[7])
+            L1H_sfa_out_dim = int(vals[11])
+            L1V_sfa_out_dim = int(vals[15]) 
+            L2H_sfa_out_dim = int(vals[19])
+            L2V_sfa_out_dim = int(vals[23])
+            L3H_sfa_out_dim = int(vals[27])
+            L3V_sfa_out_dim = int(vals[31])
+            L0_delta_threshold = int(vals[5])
+            L1H_delta_threshold = int(vals[9])
+            L1V_delta_threshold = int(vals[13]) 
+            L2H_delta_threshold = int(vals[17])
+            L2V_delta_threshold = int(vals[21])
+            L3H_delta_threshold = int(vals[25])
+            L3V_delta_threshold = int(vals[29])
+            L0_expansion = string_to_expansion_number(vals[6])
+            L1H_expansion = string_to_expansion_number(vals[10])
+            L1V_expansion = string_to_expansion_number(vals[14])
+            L2H_expansion = string_to_expansion_number(vals[18])
+            L2V_expansion = string_to_expansion_number(vals[22])
+            L3H_expansion = string_to_expansion_number(vals[26])
+            L3V_expansion = string_to_expansion_number(vals[30])
+            L4_degree_QT = int(vals[33])
+            L4_degree_CT = int(vals[34])
+            seed = int(vals[35])
             arguments = [L0_pca_out_dim, L0_sfa_out_dim, L1H_sfa_out_dim, L1V_sfa_out_dim, L2H_sfa_out_dim, L2V_sfa_out_dim, L3H_sfa_out_dim, L3V_sfa_out_dim, L0_delta_threshold, L1H_delta_threshold, L1V_delta_threshold, L2H_delta_threshold, L2V_delta_threshold, L3H_delta_threshold, L3V_delta_threshold, L0_expansion, L1H_expansion, L1V_expansion, L2H_expansion, L2V_expansion, L3H_expansion, L3V_expansion, L4_degree_QT, L4_degree_CT]
             if verbose:
                 print("parsed arguments:", arguments)
@@ -318,9 +325,9 @@ def load_saved_executions(measure="CR_Gauss", dimensions=None, verbose=False):
                     if len(dim) == 2 and isinstance(dim, tuple):
                         if dim[0] > arguments[j] or dim[1] < arguments[j]:
                             valid = False
-                    #elif isinstance(dim, list):
-                    #    if arguments[j] not in dim:
-                    #        valid = False
+                    elif isinstance(dim, list):
+                        if arguments[j] not in dim:
+                            valid = False
        	        validity_values.append(valid)
             print("validity_values:", validity_values)
             filtered_arguments_list = []
@@ -387,7 +394,11 @@ def display_best_arguments(arguments_list, results_list):
     print("results_lens: ", results_lens)
     print("averaged ordered arguments_list: ")
     for arguments in averaged_arguments_list:
-        print(arguments)
+	print("(", end="")
+        for arg in arguments:
+            print("%3d, "%arg, end="")
+        print(")")
+        #print(arguments)
     # quit()
     return averaged_arguments_list, averaged_results_list
 
@@ -401,46 +412,51 @@ def progress_callback(res):
 
 # 13 20 28 50 70 90 120 200 9 19 10 26 6 6 9 0 0 0 0 0 0 0 90 25
 range_L0_pca_out_dim = [13]  # (12, 14)  # (10, 16) # 13
-range_L0_sfa_out_dim = (15, 17)  # (15, 25) # [20] # (20, 21)
-range_L1H_sfa_out_dim = (33, 36)  # (20, 36) # [28] # (28, 29)
-range_L1V_sfa_out_dim = (50, 65) # [50] # (50, 51)
-range_L2H_sfa_out_dim = (80, 95) # [70] # (70, 71)
-range_L2V_sfa_out_dim = (70, 80) # [90] # (90, 91)
-range_L3H_sfa_out_dim = (80, 100) # [120] # (120, 121)
-range_L3V_sfa_out_dim = (140, 170) #[200] # (200, 201)
-range_L0_delta_threshold = (7, 16)  # (1, 20) # [9] # #(9, 10) #
-range_L1H_delta_threshold = (9, 13) # [19] # (19, 20)
-range_L1V_delta_threshold = (7, 18) # [10] # (10, 11)
-range_L2H_delta_threshold = (22, 30) # [26] # (26, 27)
-range_L2V_delta_threshold = (0, 10) # [6] # (6, 7)
-range_L3H_delta_threshold = (0, 3) # [6] # (6, 7)
-range_L3V_delta_threshold = (0, 3) # [9] # (9, 10)
-range_L0_expansion = [1, 2] # [0] # (0, 1)
-range_L1H_expansion = [0, 3, 4] # (0, 1)
+range_L0_sfa_out_dim = (15, 18)  # (15, 25) # [20] # (20, 21)
+range_L1H_sfa_out_dim = [31, 34]  # (31, 34)  # (20, 36) # [28] # (28, 29)
+range_L1V_sfa_out_dim = (55, 65) # [50] # (50, 51)
+range_L2H_sfa_out_dim = (75, 95) # [70] # (70, 71)
+range_L2V_sfa_out_dim = (73, 95) # [90] # (90, 91)
+range_L3H_sfa_out_dim = (84, 102) # [120] # (120, 121)
+range_L3V_sfa_out_dim = (139, 173) #[200] # (200, 201)
+range_L0_delta_threshold = (10, 16)  # (1, 20) # [9] # #(9, 10) #
+range_L1H_delta_threshold = (10, 15) # [19] # (19, 20)
+range_L1V_delta_threshold = (10, 20) # [10] # (10, 11)
+range_L2H_delta_threshold = (20, 29) # [26] # (26, 27)
+range_L2V_delta_threshold = (2, 15) # [6] # (6, 7)
+range_L3H_delta_threshold = (0, 9) # [6] # (6, 7)
+range_L3V_delta_threshold = (0, 9)  # (3, 5) # [9] # (9, 10)
+# WARNING two categories cannot be expressed as [n1, n2], instead use e.g., [n1, n1, n2]
+#         otherwise interval (n1, n2) is assumed
+range_L0_expansion = [0, 1] # [0] # (0, 1)
+range_L1H_expansion = [0] # TRY ALSO 3 [0, 0, 3] # (0, 1)
 range_L1V_expansion = [0, 3, 4] # (0, 1)
-range_L2H_expansion = [0, 3, 4] # (0, 1)
-range_L2V_expansion = [0, 3, 4] # (0, 1)
-range_L3H_expansion = [0, 7, 8, 9] # (0, 0)
-range_L3V_expansion = [0, 7, 8, 9] # (0, 0)
-range_L4_degree_QT = (75, 99) # [90] # (90, 90)
-range_L4_degree_CT = (23, 25) # [25] # (25, 25)
-cuicuilco_dimensions = [range_L0_pca_out_dim, range_L0_sfa_out_dim, range_L1H_sfa_out_dim, range_L1V_sfa_out_dim, range_L2H_sfa_out_dim, range_L2V_sfa_out_dim, range_L3H_sfa_out_dim, range_L3V_sfa_out_dim, range_L0_delta_threshold, range_L1H_delta_threshold, range_L1V_delta_threshold, range_L2H_delta_threshold, range_L2V_delta_threshold, range_L3H_delta_threshold, range_L3V_delta_threshold, range_L0_expansion, range_L1H_expansion, range_L1V_expansion, range_L2H_expansion, range_L2V_expansion, range_L3H_expansion, range_L3V_expansion, range_L4_degree_QT, range_L4_degree_CT]
+range_L2H_expansion = [0, ] # (0, 1)
+range_L2V_expansion = [0, 0, 3] # (0, 1)
+range_L3H_expansion = [0, 7, 8, 9, 10] # (0, 0)
+range_L3V_expansion = [0, 7, 8, 9, 10, 11, 12, 13] # [0, 7, 8, 9] (0, 0)
+range_L4_degree_QT = (60, 89) # [90] # (90, 90)
+range_L4_degree_CT = (20, 21, 22, 23, 24) # [25] # (25, 25)
+cuicuilco_dimensions = (range_L0_pca_out_dim, range_L0_sfa_out_dim, range_L1H_sfa_out_dim, range_L1V_sfa_out_dim, range_L2H_sfa_out_dim, range_L2V_sfa_out_dim, range_L3H_sfa_out_dim, range_L3V_sfa_out_dim, range_L0_delta_threshold, range_L1H_delta_threshold, range_L1V_delta_threshold, range_L2H_delta_threshold, range_L2V_delta_threshold, range_L3H_delta_threshold, range_L3V_delta_threshold, range_L0_expansion, range_L1H_expansion, range_L1V_expansion, range_L2H_expansion, range_L2V_expansion, range_L3H_expansion, range_L3V_expansion, range_L4_degree_QT, range_L4_degree_CT) # tuple or list? 
+
+print("cuicuilco_dimensions:", cuicuilco_dimensions)
 
 #TODO: load previously computed results from saved files
 
-np.random.seed(1234)
+# np.random.seed(1234) # use a new random seed each time to allow combination of executions on different systems
 
-argument_list, results_list = load_saved_executions(measure="CR_Gauss", dimensions=cuicuilco_dimensions)
+argument_list, results_list = load_saved_executions(measure="CR_Gauss_mix", dimensions=cuicuilco_dimensions)
 display_best_arguments(argument_list, results_list)
-argument_list = None
-results_list = None
+#argument_list = None
+#results_list = None
+#quit()
 
 if results_list is not None:
     results_list = [1.0 - result for result in results_list]
 
-
+print("cuicuilco_dimensions:", cuicuilco_dimensions)
 t0 = time.time()
-res = gp_minimize(func=cuicuilco_f_CE_Gauss_mix, dimensions=cuicuilco_dimensions, base_estimator=None, n_calls=60, n_random_starts=10,  # 20 10
+res = gp_minimize(func=cuicuilco_f_CE_Gauss_mix, dimensions=cuicuilco_dimensions, base_estimator=None, n_calls=40, n_random_starts=40,  # 20 10
                   acq_func='gp_hedge', acq_optimizer='auto', x0=argument_list, y0=results_list, random_state=None, verbose=False,
                   callback=progress_callback, n_points=100*10000, n_restarts_optimizer=5,   # n_points=10000
                   xi=0.01, kappa=1.96, noise='gaussian', n_jobs=1)

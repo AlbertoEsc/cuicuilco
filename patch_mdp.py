@@ -20,7 +20,7 @@ from mdp.utils import (mult, pinv)  # , symeig, CovarianceMatrix, SymeigExceptio
 
 from . import more_nodes
 from . import gsfa_nodes
-from .gsfa_nodes import compute_cov_matrix
+# from .gsfa_nodes import compute_cov_matrix
 from . import histogram_equalization
 from .sfa_libs import select_rows_from_matrix
 from . import inversion
@@ -89,7 +89,7 @@ mdp.nodes.SFANode._inverse = SFANode_inverse
 # SFANode is no longer being modified/monkey patched
 # mdp.nodes.SFAPCANode.list_train_params = ["scheduler", "n_parallel", "train_mode",
 #                                          "block_size"]  # "sfa_expo", "pca_expo", "magnitude_sfa_biasing"
-mdp.nodes.PCANode.list_train_params = ["scheduler", "n_parallel"]
+# mdp.nodes.PCANode.list_train_params = ["scheduler", "n_parallel"]
 mdp.nodes.GSFANode.list_train_params = ["train_mode", "block_size", "node_weights",
                                         "edge_weights", "verbose"]
 mdp.nodes.iGSFANode.list_train_params = ["train_mode", "block_size", "node_weights",
@@ -241,40 +241,40 @@ for node_str in dir(mdp.hinet):
         # print "Not a node:", node_str
 
 
-def PCANode_train_scheduler(self, x, scheduler=None, n_parallel=None):
-    if self.input_dim is None:
-        self.input_dim = x.shape[1]
-        print("YEAHH, CORRECTED TRULY")
-    if scheduler is None or n_parallel is None:
-        # update the covariance matrix
-        self._cov_mtx.update(x)
-    else:
-        num_chunks = n_parallel
-        chunk_size_samples = int(numpy.ceil(x.shape[0] * 1.0 / num_chunks))
+# def PCANode_train_scheduler(self, x, scheduler=None, n_parallel=None):
+#     if self.input_dim is None:
+#         self.input_dim = x.shape[1]
+#         print("YEAHH, CORRECTED TRULY")
+#     if scheduler is None or n_parallel is None:
+#         # update the covariance matrix
+#         self._cov_mtx.update(x)
+#     else:
+#         num_chunks = n_parallel
+#         chunk_size_samples = int(numpy.ceil(x.shape[0] * 1.0 / num_chunks))
+#
+#         print("%d chunks, of size %d samples" % (num_chunks, chunk_size_samples))
+#         for i in range(num_chunks):
+#             scheduler.add_task(x[i * chunk_size_samples:(i + 1) * chunk_size_samples], compute_cov_matrix)
+#
+#         print("Getting results")
+#         sys.stdout.flush()
+#
+#         results = scheduler.get_results()
+#         #        print "Shutting down scheduler"
+#         sys.stdout.flush()
+#
+#         if self._cov_mtx._cov_mtx is None:
+#             self._cov_mtx._cov_mtx = 0.0
+#             self._cov_mtx._avg = 0
+#             self._cov_mtx._tlen = 0
+#
+#         for covmtx in results:
+#             self._cov_mtx._cov_mtx += covmtx._cov_mtx
+#             self._cov_mtx._avg += covmtx._avg
+#             self._cov_mtx._tlen += covmtx._tlen
 
-        print("%d chunks, of size %d samples" % (num_chunks, chunk_size_samples))
-        for i in range(num_chunks):
-            scheduler.add_task(x[i * chunk_size_samples:(i + 1) * chunk_size_samples], ComputeCovMatrix)
 
-        print("Getting results")
-        sys.stdout.flush()
-
-        results = scheduler.get_results()
-        #        print "Shutting down scheduler"
-        sys.stdout.flush()
-
-        if self._cov_mtx._cov_mtx is None:
-            self._cov_mtx._cov_mtx = 0.0
-            self._cov_mtx._avg = 0
-            self._cov_mtx._tlen = 0
-
-        for covmtx in results:
-            self._cov_mtx._cov_mtx += covmtx._cov_mtx
-            self._cov_mtx._avg += covmtx._avg
-            self._cov_mtx._tlen += covmtx._tlen
-
-
-mdp.nodes.PCANode._train = PCANode_train_scheduler
+# mdp.nodes.PCANode._train = PCANode_train_scheduler
 
 
 # Make switchboard faster!!!
@@ -611,13 +611,13 @@ if patch_layer:
             stop_index += node.input_dim
             #           print "stop_index = ", stop_index
             if node.is_training():
-                if isinstance(node, (mdp.nodes.SFANode, mdp.nodes.PCANode, mdp.nodes.WhiteningNode,
-                                     mdp.hinet.CloneLayer, mdp.hinet.Layer)) and node.input_dim >= 45:
-                    print("Attempting node parallel training in Layer...")
-                    node.train(x[:, start_index: stop_index], scheduler=scheduler, n_parallel=n_parallel, *args,
-                               **kwargs)
-                else:
-                    node.train(x[:, start_index: stop_index], *args, **kwargs)
+                #if isinstance(node, (mdp.nodes.SFANode, mdp.nodes.PCANode, mdp.nodes.WhiteningNode,
+                #                     mdp.hinet.CloneLayer, mdp.hinet.Layer)) and node.input_dim >= 45:
+                #    print("Attempting node parallel training in Layer...")
+                #    node.train(x[:, start_index: stop_index], scheduler=scheduler, n_parallel=n_parallel, *args,
+                #               **kwargs)
+                #else:
+                node.train(x[:, start_index: stop_index], *args, **kwargs)
                 if node.is_training() and immediate_stop_training:
                     node.stop_training()
 
@@ -806,12 +806,12 @@ if patch_flow:
                         # WARNING: REMOVED scheduler & n_parallel
                         # self.flow[i].train(data, scheduler=scheduler, n_parallel=n_parallel)
                         self.flow[i].train(data, scheduler=scheduler, n_parallel=n_parallel)
-                    elif isinstance(self.flow[i], (mdp.nodes.SFANode,
-                                                   mdp.nodes.PCANode, mdp.nodes.WhiteningNode)) and \
-                                    self.flow[i].input_dim >= min_input_size_for_parallel:
-                        # print "Here it should be doing parallel training 2!!!"
-                        # WARNING: REMOVED scheduler & n_parallel
-                        self.flow[i].train(data, scheduler=scheduler, n_parallel=n_parallel)
+                    # elif isinstance(self.flow[i], (mdp.nodes.SFANode,
+                    #                                mdp.nodes.PCANode, mdp.nodes.WhiteningNode)) and \
+                    #                 self.flow[i].input_dim >= min_input_size_for_parallel:
+                    #     # print "Here it should be doing parallel training 2!!!"
+                    #     # WARNING: REMOVED scheduler & n_parallel
+                    #     self.flow[i].train(data, scheduler=scheduler, n_parallel=n_parallel)
                     else:
                         if verbose:
                             print("Input_dim was: ", self.flow[i].input_dim,
@@ -1086,20 +1086,20 @@ if patch_flow:
                             self.flow[i].train(data_vec, params=effective_node_params,
                                                immediate_stop_training=immediate_stop_training)
 
-                    elif isinstance(self.flow[i], (mdp.nodes.SFANode, mdp.nodes.PCANode, mdp.nodes.WhiteningNode)):
-                        # print("Second Step")
-                        if isinstance(data_vec, list):
-                            for j, data in enumerate(data_vec):
-                                if verbose and very_verbose:  #
-                                    print("Parameters used for training node (L)=", effective_node_params)
-                                    print("Pre self.flow[i].output_dim=", self.flow[i].output_dim)
-                                self.flow[i].train_params(data, params=effective_node_params[j])
-                                if verbose:
-                                    print("Post self.flow[i].output_dim=", self.flow[i].output_dim)
-                        else:
-                            if verbose and very_verbose:
-                                print("Parameters used for training node=", effective_node_params)
-                            self.flow[i].train_params(data_vec, params=effective_node_params)
+                    # elif isinstance(self.flow[i], (mdp.nodes.SFANode, mdp.nodes.PCANode, mdp.nodes.WhiteningNode)):
+                    #     # print("Second Step")
+                    #     if isinstance(data_vec, list):
+                    #         for j, data in enumerate(data_vec):
+                    #             if verbose and very_verbose:  #
+                    #                 print("Parameters used for training node (L)=", effective_node_params)
+                    #                 print("Pre self.flow[i].output_dim=", self.flow[i].output_dim)
+                    #             self.flow[i].train_params(data, params=effective_node_params[j])
+                    #             if verbose:
+                    #                 print("Post self.flow[i].output_dim=", self.flow[i].output_dim)
+                    #     else:
+                    #         if verbose and very_verbose:
+                    #             print("Parameters used for training node=", effective_node_params)
+                    #         self.flow[i].train_params(data_vec, params=effective_node_params)
                     else:  # Other node which does not have parameters nor parallelization
                         # print "Input_dim ", self.flow[i].input_dim, "<", min_input_size_for_parallel, ",
                         # or unknown parallel method, thus I didn't go parallel"

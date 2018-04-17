@@ -4679,6 +4679,8 @@ class ParamsMNISTExperiment(system_parameters.ParamsSystem):
             num_images_per_cluster_used_seenid=2000
             first_image_index_train=1500
             num_images_per_cluster_used_train=3500+421
+            rep_train = 4
+            rep_seenid = 3
         else:
             clusters_MNIST_test, images_array_MNIST_test = \
                 self.load_MNIST_clusters(digits_used=digits_used, image_set='testing',
@@ -4686,9 +4688,11 @@ class ParamsMNISTExperiment(system_parameters.ParamsSystem):
             first_image_index_test=0
             num_images_per_cluster_used_test=-1
             first_image_index_seenid=0
-            num_images_per_cluster_used_seenid=1421
-            first_image_index_train=421
-            num_images_per_cluster_used_train=5000
+            num_images_per_cluster_used_seenid=-1  # 1421
+            first_image_index_train=0  # 421
+            num_images_per_cluster_used_train=-1  # 5000
+            rep_train = 3
+            rep_seenid = 1
 
         numpy.random.seed(self.experiment_seed + 987987)
 
@@ -4709,7 +4713,7 @@ class ParamsMNISTExperiment(system_parameters.ParamsSystem):
                                          clusters=clusters_MNIST,
                                          first_image_index=first_image_index_train,
                                          num_images_per_cluster_used=num_images_per_cluster_used_train,
-                                         repetition_factor=1, seed=-1,
+                                         repetition_factor=rep_train, seed=-1,
                                          use_orig_label=True,
                                          increasing_orig_label=True)  # 5000, num_images_per_cluster_used=-1
         # WARNING! changed repetition factor to 2
@@ -4744,7 +4748,7 @@ class ParamsMNISTExperiment(system_parameters.ParamsSystem):
                                                        clusters=clusters_MNIST,
                                                        first_image_index=first_image_index_seenid,
                                                        num_images_per_cluster_used=num_images_per_cluster_used_seenid,
-                                                       repetition_factor=1, seed=-1,
+                                                       repetition_factor=rep_seenid, seed=-1,
                                                        use_orig_label=True, increasing_orig_label=True)  # 421
         # WARNING, should be 421, not 1421. The latter causes overlap between training and seenid. WARNING!!! changed it to 421
         # WARNING, changed dx and dy to 1.0!!!

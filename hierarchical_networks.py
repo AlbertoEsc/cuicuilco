@@ -1044,7 +1044,7 @@ try:
     network.L7.exp_funcs = [identity, unsigned_08expo, signed_08expo, selected_QT, selected_CT]
 except Exception as ex:
     print("Unable to set MNISTNetwork_24x24_7L_Overlap_config parameters:" + str(ex))
-    # quit()
+    quit()
 
 # Adding basic adaptive cutoff nodes to suitable layers
 # for i in range(1, 8):
