@@ -827,7 +827,7 @@ pSFALayerL2H_S3_D2.x_field_channels = 3  # 2????? 3 for 24x24 and 29x29, 2 for 2
 pSFALayerL2H_S3_D2.y_field_channels = 1
 pSFALayerL2H_S3_D2.x_field_spacing = 2  # 2 for 24x24, 1 for 29x29
 pSFALayerL2H_S3_D2.y_field_spacing = 1
-max_length_slow_part = 30
+max_length_slow_part = None  # 30
 # pSFALayerL2H_S3_D2.sfa_args = {"pre_expansion_node_class":None,
 # "expansion_funcs":[identity, unsigned_08expo, QT_3Split_25, CT_3Split_20], "max_length_slow_part":10,
 # "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":1.99999}
@@ -857,7 +857,7 @@ pSFALayerL2V_S3_D2.clone_layer = True
 
 slow_feature_scaling_method = "sensitivity_based"
 reconstruct_with_sfa = True
-max_length_slow_part = 30  # 15
+max_length_slow_part = None  # 30  # 15
 
 
 pSFALayerL3H_S2_D1 = copy.deepcopy(pSFALayerL1H)  # L6
@@ -929,7 +929,7 @@ pSFALayerSupernode.pca_node_class = None
 #pSFALayerSupernode.ord_args = {"output_dim": 200}  # A: 115
 # pSFALayerSupernode.exp_funcs = [identity, unsigned_08expo, unsigned_08expo_p15, unsigned_08expo_m15,
 # signed_08expo, QT_90_AP08, CT_30_AP08,] #signed_08expo
-pSFALayerSupernode.exp_funcs = [identity, unsigned_08expo, signed_08expo, QT_90_AP08, CT_25_AP08, ]  # QT_165_AP08, CT_26_AP08, # signed_08expo
+pSFALayerSupernode.exp_funcs = [identity, unsigned_08expo, signed_08expo, QT_60_AP08, CT_20_AP08, ]  # QT_165_AP08, CT_26_AP08, # signed_08expo
 # pSFALayerSupernode.exp_funcs = [identity, QT, CT]
 # pSFALayerSupernode.red_node_class = None
 pSFALayerSupernode.sfa_node_class = mdp.nodes.GSFANode
@@ -961,34 +961,50 @@ network.layers = [network.L0, network.L1, network.L2, network.L3, network.L4, ne
 def map_expansion_number_to_expansion(exp_n):
     if exp_n == 0:
         return [identity, unsigned_08expo, ]
-    elif exp_n  == 1:
+    elif exp_n == 1:
         return [identity, unsigned_08expo, QT]
-    elif exp_n  == 2:
+    elif exp_n == 2:
         return [identity, unsigned_08expo, CT]
-    elif exp_n  == 3:
+    elif exp_n == 3:
         return [identity, unsigned_08expo, ch3o0s10QT]
-    elif exp_n  == 4:
+    elif exp_n == 4:
         return [identity, unsigned_08expo, ch3o0s15QT]
-    elif exp_n  == 5:
+    elif exp_n == 5:
         return [identity, unsigned_08expo, ch3o0s20QT]
-    elif exp_n  == 6:
+    elif exp_n == 6:
         return [identity, unsigned_08expo, ch3o0s25QT]
-    elif exp_n  == 7:
+    elif exp_n == 7:
         return [identity, unsigned_08expo, ch2o0s10QT]
-    elif exp_n  == 8:
+    elif exp_n == 8:
         return [identity, unsigned_08expo, ch2o0s15QT]
-    elif exp_n  == 9:
+    elif exp_n == 9:
         return [identity, unsigned_08expo, ch2o0s20QT]
-    elif exp_n  == 10:
+    elif exp_n == 10:
         return [identity, unsigned_08expo, ch2o0s25QT]
-    elif exp_n  == 11:
+    elif exp_n == 11:
         return [identity, unsigned_08expo, ch2o0s30QT]
-    elif exp_n  == 12:
+    elif exp_n == 12:
         return [identity, unsigned_08expo, ch2o0s35QT]
-    elif exp_n  == 13:
+    elif exp_n == 13:
         return [identity, unsigned_08expo, ch2o0s40QT]
+    elif exp_n == 14:
+        return [identity, unsigned_08expo, ch2o0s45QT]
+    elif exp_n == 15:
+        return [identity, unsigned_08expo, ch2o0s50QT]
+    elif exp_n == 16:
+        return [identity, unsigned_08expo, ch2o0s55QT]
+    elif exp_n == 17:
+        return [identity, unsigned_08expo, ch2o0s60QT]
+    elif exp_n == 18:
+        return [identity, unsigned_08expo, ch2o0s65QT]
+    elif exp_n == 19:
+        return [identity, unsigned_08expo, ch2o0s70QT]
+    elif exp_n == 20:
+        return [identity, unsigned_08expo, ch2o0s75QT]
+    elif exp_n == 21:
+        return [identity, unsigned_08expo, ch2o0s80QT]
     else:
-        ex = "invalid value for L0_expansion: " + str(L0_expansion)
+        ex = "Invalid value for expansion:" + str(exp_n) + "-" + str(type(exp_n))
         raise Exception(ex)
 
 
@@ -1034,17 +1050,20 @@ try:
     network.L6.sfa_args["expansion_funcs"] = map_expansion_number_to_expansion(L3V_expansion)
     print("L0 expansion is", L0_expansion, L1H_expansion, L1V_expansion, L2H_expansion, L2V_expansion, L3H_expansion, L3V_expansion)
     
-    k = L4_degree_QT // 10 - 6
+    k = L4_degree_QT // 10
     print("k for QT is: ", k)
-    selected_QT = [QT_60_AP08, QT_70_AP08, QT_80_AP08, QT_90_AP08, QT_100_AP08, QT_110_AP08, QT_120_AP08, QT_130_AP08,
-                   QT_140_AP08, QT_150_AP08, QT_160_AP08, QT_170_AP08][k]
-    k = L4_degree_CT - 20
+    selected_QT = [None, QT_10_AP08, QT_20_AP08, QT_30_AP08, QT_40_AP08, QT_50_AP08, QT_60_AP08, QT_70_AP08, QT_80_AP08, QT_90_AP08, QT_100_AP08, QT_110_AP08, QT_120_AP08, QT_130_AP08, QT_140_AP08, QT_150_AP08, QT_160_AP08, QT_170_AP08][k]
+    k = L4_degree_CT
     print("k for CT is: ", k)
-    selected_CT = [CT_20_AP08, CT_21_AP08, CT_22_AP08, CT_23_AP08, CT_24_AP08, CT_25_AP08, ][k]
-    network.L7.exp_funcs = [identity, unsigned_08expo, signed_08expo, selected_QT, selected_CT]
+    selected_CT = [None, CT_1_AP08, CT_2_AP08, CT_3_AP08, CT_4_AP08, CT_5_AP08, CT_6_AP08, CT_7_AP08, CT_8_AP08, CT_9_AP08, CT_10_AP08, CT_11_AP08, CT_12_AP08, CT_13_AP08, CT_14_AP08, CT_15_AP08, CT_16_AP08, CT_17_AP08, CT_18_AP08, CT_19_AP08,CT_20_AP08, CT_21_AP08, CT_22_AP08, CT_23_AP08, CT_24_AP08, CT_25_AP08, CT_26_AP08, CT_27_AP08, CT_28_AP08, CT_29_AP08, CT_30_AP08,][k]
+    network.L7.exp_funcs = [identity, unsigned_08expo, signed_08expo]
+    if selected_QT is not None:
+        network.L7.exp_funcs.append(selected_QT)
+    if selected_CT is not None:
+        network.L7.exp_funcs.append(selected_CT)
 except Exception as ex:
     print("Unable to set MNISTNetwork_24x24_7L_Overlap_config parameters:" + str(ex))
-    quit()
+    del MNISTNetwork_24x24_7L_Overlap_config
 
 # Adding basic adaptive cutoff nodes to suitable layers
 # for i in range(1, 8):

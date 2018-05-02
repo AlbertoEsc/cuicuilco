@@ -305,3 +305,4 @@ def test_equivalence_update_graph_and_update_graph_old():
     y2 = n2.execute(x)
 
     assert (y - y2) == pytest.approx(0.0)
+

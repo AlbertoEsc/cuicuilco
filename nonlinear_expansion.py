@@ -534,6 +534,26 @@ def QT_AP(x, d=0.4):
     return QT(xx)
 
 
+def QT_10_AP08(x):
+    return QT_AP(x[:, 0:10], d=0.8)
+
+
+def QT_20_AP08(x):
+    return QT_AP(x[:, 0:20], d=0.8)
+
+
+def QT_30_AP08(x):
+    return QT_AP(x[:, 0:30], d=0.8)
+
+
+def QT_40_AP08(x):
+    return QT_AP(x[:, 0:40], d=0.8)
+
+
+def QT_50_AP08(x):
+    return QT_AP(x[:, 0:50], d=0.8)
+
+
 def QT_60_AP08(x):
     return QT_AP(x[:, 0:60], d=0.8)
 
@@ -655,14 +675,92 @@ def CT_AP(x, d=0.3):
     return CT(xx)
 
 
+def CT_1_AP08(x):
+    return CT_AP(x[:, 0:1], d=0.8)
+
+
+def CT_2_AP08(x):
+    return CT_AP(x[:, 0:2], d=0.8)
+
+
+def CT_3_AP08(x):
+    return CT_AP(x[:, 0:3], d=0.8)
+
+
+def CT_4_AP08(x):
+    return CT_AP(x[:, 0:4], d=0.8)
+
+
+def CT_5_AP08(x):
+    return CT_AP(x[:, 0:5], d=0.8)
+
+
+def CT_6_AP08(x):
+    return CT_AP(x[:, 0:6], d=0.8)
+
+
+def CT_7_AP08(x):
+    return CT_AP(x[:, 0:7], d=0.8)
+
+
+def CT_8_AP08(x):
+    return CT_AP(x[:, 0:8], d=0.8)
+
+
+def CT_9_AP08(x):
+    return CT_AP(x[:, 0:9], d=0.8)
+
+def CT_10_AP08(x):
+    return CT_AP(x[:, 0:10], d=0.8)
+
+
+def CT_11_AP08(x):
+    return CT_AP(x[:, 0:11], d=0.8)
+
+
+def CT_12_AP08(x):
+    return CT_AP(x[:, 0:12], d=0.8)
+
+
+def CT_13_AP08(x):
+    return CT_AP(x[:, 0:13], d=0.8)
+
+
+def CT_14_AP08(x):
+    return CT_AP(x[:, 0:14], d=0.8)
+
+
+def CT_15_AP08(x):
+    return CT_AP(x[:, 0:15], d=0.8)
+
+
+def CT_16_AP08(x):
+    return CT_AP(x[:, 0:16], d=0.8)
+
+
+def CT_17_AP08(x):
+    return CT_AP(x[:, 0:17], d=0.8)
+
+
+def CT_18_AP08(x):
+    return CT_AP(x[:, 0:18], d=0.8)
+
+
+def CT_19_AP08(x):
+    return CT_AP(x[:, 0:19], d=0.8)
+
+
 def CT_20_AP08(x):
     return CT_AP(x[:, 0:20], d=0.8)
+
 
 def CT_21_AP08(x):
     return CT_AP(x[:, 0:21], d=0.8)
 
+
 def CT_22_AP08(x):
     return CT_AP(x[:, 0:22], d=0.8)
+
 
 def CT_23_AP08(x):
     return CT_AP(x[:, 0:23], d=0.8)
@@ -1779,6 +1877,34 @@ def ch2o0s40QT(x):
 
 def ch2o0s45QT(x):
     return ch2_Offset_sF_QT(x, Off=0, F=45)
+
+
+def ch2o0s50QT(x):
+    return ch2_Offset_sF_QT(x, Off=0, F=50)
+
+
+def ch2o0s55QT(x):
+    return ch2_Offset_sF_QT(x, Off=0, F=55)
+
+
+def ch2o0s60QT(x):
+    return ch2_Offset_sF_QT(x, Off=0, F=60)
+
+
+def ch2o0s65QT(x):
+    return ch2_Offset_sF_QT(x, Off=0, F=65)
+
+
+def ch2o0s70QT(x):
+    return ch2_Offset_sF_QT(x, Off=0, F=70)
+
+
+def ch2o0s75QT(x):
+    return ch2_Offset_sF_QT(x, Off=0, F=75)
+
+
+def ch2o0s80QT(x):
+    return ch2_Offset_sF_QT(x, Off=0, F=80)
 
 
 ##############################################################################################

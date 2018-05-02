@@ -3001,7 +3001,7 @@ def main():
         print ("saving images to directory:", save_images_sorted_incorrect_class_Gauss_newid_base_dir)
         decimate = 1
         num_signals_per_image = subimage_shape[0] * subimage_shape[1] * in_channel_dim
-        for i, i_x in ennumerate(incorrect_Gauss_newid_indices):
+        for i, i_x in enumerate(incorrect_Gauss_newid_indices):
             if i % decimate == 0:
                 x = subimages_newid[i_x][0:num_signals_per_image]
                 if seq.convert_format == "L":

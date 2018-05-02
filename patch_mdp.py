@@ -55,7 +55,7 @@ mdp.hinet.Layer.localized_inverse = inversion.layer_localized_inverse
 
 mdp.nodes.GeneralExpansionNode.localized_inverse = inversion.general_expansion_node_localized_inverse
 
-
+# TODO: DETERMINE IF MDP INDEED NEEDS THIS PATCH!
 # The original version disregards output_dim if input_dim is None!!! Correction: ... or self.input_dim is None...
 # Apparently, this code is never reached with self.input_dim True
 def SFANode__set_range(self):
@@ -287,7 +287,6 @@ mdp.hinet.Switchboard._execute = switchboard_new_execute
 
 # print "Fixing GaussianClassifierNode_class_probabilities..."
 
-
 # Adds verbosity and fixes nan values
 def GaussianClassifierNode_class_probabilities(self, x, verbose=True):
     """Return the posterior probability of each class given the input."""
@@ -314,13 +313,13 @@ def GaussianClassifierNode_class_probabilities(self, x, verbose=True):
     smallest_probability = 1e-60
     counter = 0
     for i in range(probs.shape[0]):
-        if numpy.isnan(probs[i]).any() or tmp_tot[i, 0] < smallest_probability:
-            #                if verbose:
-            #                    print "Problematic probs[%d]="%i, probs[i],
-            #                    print "Problematic tmp_prob[%d]="%i, tmp_prob[i]
-            #                    print "Problematic tmp_tot[%d]="%i, tmp_tot[i]
+        if numpy.isnan(probs[i]).any(): # or tmp_tot[i, 0] < smallest_probability:
+            if verbose:
+                print("Problematic probs[%d]="%i, probs[i])
+                print("Problematic tmp_prob[%d]="%i, tmp_prob[i])
+                print("Problematic tmp_tot[%d]="%i, tmp_tot[i])
             # First attempt to fix it, use uniform_amplitude as guess
-            probs[i] = uniform_amplitude
+            probs[i] = uniform_amplitude  # TODO: Use apriori probabilities, not necessarily uniform
             counter += 1
         # Second attempt: Find maximum, and assing 1 to it, otherwise go to previous strategy...
         # Seems like it always fails with nan for all entries, thus first measure is better...
@@ -345,14 +344,11 @@ def GaussianSoftCR(self, data, true_classes):
     probabilities = self.class_probabilities(data)
     true_classes = true_classes.flatten().astype(int)
 
-    # ##??? WHYYY??? true_classes = true_classes[0:probabilities.shape[1]]
-
     tot_prob = 0.0
     for i, c in enumerate(true_classes):
         tot_prob += probabilities[i, c]
     tot_prob /= len(true_classes)
     print("In softCR: probabilities[0,:]=", probabilities[0, :])
-    # print "softCR=", tot_prob
     return tot_prob
 
 
@@ -463,8 +459,9 @@ def GaussianRegressionMAE_uniform_bars(self, data, avg_labels):
     return value
 
 
-# UPDATE WARNING: Do we need this correction?
-# mdp.nodes.GaussianClassifierNode.class_probabilities = GaussianClassifierNode_class_probabilities
+# Do we need this correction? apparently yes! TODO: report to MDP list
+print("Fixing GaussianClassifierNode_class_probabilities")
+mdp.nodes.GaussianClassifier.class_probabilities = GaussianClassifierNode_class_probabilities
 mdp.nodes.GaussianClassifier.regression = GaussianRegression
 # Original: mdp.nodes.GaussianClassifier.regressionMAE = GaussianRegressionMAE
 # Experimental:
@@ -707,6 +704,14 @@ if patch_layer:
         self.node = node  # attribute for convenience
 
 
+    # This is the current MDP _execute method of Layer (CloneLayer is derived from it)
+
+    def CloneLayer_new__execute(self, x, *args, **kwargs):
+        n_samples = x.shape[0]
+        x = x.reshape(n_samples * x.shape[1] / self.node.input_dim, self.node.input_dim)
+        y = self.node.execute(x)
+        return y.reshape(n_samples, self.output_dim)
+
     mdp.hinet.Layer.__init__ = Layer_new__init__
     mdp.hinet.Layer._check_props = Layer_new_check_props
 
@@ -719,6 +724,7 @@ if patch_layer:
     # mdp.hinet.Layer.train_scheduler = Layer_new_train
     mdp.hinet.Layer._pre_execution_checks = Layer_new_pre_execution_checks
     mdp.hinet.CloneLayer.__init__ = CloneLayer_new__init__
+    mdp.hinet.CloneLayer._execute = mdp.hinet.Layer._execute
     # print "mdp.Layer was patched"
 
 

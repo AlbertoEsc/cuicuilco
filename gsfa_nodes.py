@@ -1312,6 +1312,10 @@ class iGSFANode(mdp.Node):
         else:
             sfa_output_dim = min(self.max_length_slow_part, self.expanded_dim, self.output_dim)
 
+        if isinstance(self.delta_threshold, int):
+            sfa_output_dim = min(sfa_output_dim, self.delta_threshold)
+            sfa_output_dim = max(1, sfa_output_dim)
+
         # Apply SFA to expanded data
         self.sfa_node = GSFANode(output_dim=sfa_output_dim, verbose=verbose)
         # TODO: train_params is only present if patch_mdp has been imported, is this a bug?
@@ -1496,6 +1500,10 @@ class iGSFANode(mdp.Node):
             sfa_output_dim = min(self.expanded_dim, self.output_dim)
         else:
             sfa_output_dim = min(self.max_length_slow_part, self.expanded_dim, self.output_dim)
+
+        if isinstance(self.delta_threshold, int):
+            sfa_output_dim = min(sfa_output_dim, self.delta_threshold)
+            sfa_output_dim = max(1, sfa_output_dim)
 
         # Apply SFA to expanded data
         if self.sfa_node is None:

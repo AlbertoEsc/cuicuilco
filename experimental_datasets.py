@@ -4691,7 +4691,7 @@ class ParamsMNISTExperiment(system_parameters.ParamsSystem):
             num_images_per_cluster_used_seenid=-1  # 1421
             first_image_index_train=0  # 421
             num_images_per_cluster_used_train=-1  # 5000
-            rep_train = 3
+            rep_train = 4
             rep_seenid = 1
 
         numpy.random.seed(self.experiment_seed + 987987)
