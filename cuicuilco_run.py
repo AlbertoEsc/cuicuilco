@@ -49,8 +49,7 @@ import subprocess
 # import mkl
 
 import matplotlib as mpl
-
-mpl.use('Qt4Agg')
+# mpl.use('Qt4Agg')
 import matplotlib.pyplot as plt
 import socket
 
@@ -89,6 +88,7 @@ random_seed = 123456  # Default seed used by hierarchical_networks
 numpy.random.seed(random_seed)
 
 enable_display = False
+save_plots = False
 input_filename = None  # This field is only used by the ParamsNatural experimental dataset
 output_filename = None  # The delta values of the extracted features are saved to this file
 cache_available = True  # This should be enabled for any cache (network, node, signal, classifier caches) to work
@@ -307,6 +307,12 @@ if __name__ == "__main__":  # ############## Parse  command line arguments #####
                         else:
                             enable_display = False
                         print ("Setting enable_display to", enable_display)
+                    elif opt in ('--SavePlots',):
+                        if arg == '1':
+                            save_plots = True
+                        else:
+                            save_plots = False
+                        print ("Setting save_plots to", save_plots)
                     elif opt in ('--CacheAvailable',):
                         if arg == '1':
                             cache_available = True
@@ -3109,6 +3115,8 @@ def main():
                     plt.ylabel(messages[seqn])
                 else:
                     tmp_sb.axis('off')
+        if save_plots:
+            tmp_fig.savefig("figure1.png")
 
         #############################################################################################################
         # ############### Plot of all extracted features from the training, supervised, and test images #############
@@ -3159,6 +3167,9 @@ def main():
         sl_seq_newid.min(axis=0)[0], sl_seq_newid.max(axis=0)[0], scale_disp) + str3(
             sfa_libs.comp_eta(sl_seq_newid)[0:5]))
         plt.ylabel("New Id Images")
+        if save_plots:
+            f0.savefig("figure2.png")
+
 
         #############################################################################################################
         # ######## Plot of the first 3 extracted features from the training, supervised, and test images ############
@@ -3260,6 +3271,8 @@ def main():
         show_progressive_morph = False
 
         show_translation_x = False
+        if save_plots:
+            ax_5.savefig("figure3.png")
 
         #############################################################################################################
         # ##### Interactive plot that allows the user to perform network inverse for a given output vector ##########
@@ -3405,6 +3418,8 @@ def main():
             f1.canvas.draw()
 
         f1.canvas.mpl_connect('button_press_event', on_press_inv)
+        if save_plots:
+            f1.savefig("figure4.png")
 
         ###############################################################################################################
         # ##### Interactive plot that allows the user to approximate an inverse using kNN and a global linear model ###
@@ -3556,6 +3571,8 @@ def main():
             fkNNinv.canvas.draw()
 
         fkNNinv.canvas.mpl_connect('button_press_event', on_press_kNN)
+        if save_plots:
+            fkNNinv.savefig("figure6.png")
 
         ##############################################################################################################
         # ##### Plot that shows the classification of the training, supervised, and test datasets ####################
@@ -3654,7 +3671,8 @@ def main():
         # majorLocator_x   = MultipleLocator(block_size_newid)
         # p13.xaxis.set_major_locator(majorLocator_x)
         # #p13.yaxis.set_major_locator(majorLocator_y)
-
+        if save_plots:
+            f2.savefig("figure6.png")
 
         ################################################################################################################
         # ##### Plot that shows the label estimations for the training, supervised, and test datasets ##################
@@ -3792,6 +3810,8 @@ def main():
         plt.ylabel("Label")
         plt.legend(regression_text_labels, loc=2)
         p13.grid(True)
+        if save_plots:
+            f3.savefig("figure7.png")
 
         ###############################################################################################################
         # ##### Plot that displays the class probabilities estimated by a gaussian classifier #########################
@@ -3826,6 +3846,8 @@ def main():
         plt.xlabel("Class Number")
         plt.ylabel("Image Number, New Id Set")
         f4.colorbar(pic)
+        if save_plots:
+            f4.savefig("figure8.png")
 
         ###############################################################################################################
         # ##### Plot that displays  #################################
@@ -3939,6 +3961,8 @@ def main():
         ax6_45 = plt.subplot(4, 5, 20)
         plt.title("x-x'+H-1(SFA_train[4/4]-S)")
         ax6_45.axis('off')
+
+
 
         print("************ Displaying Linear (or Non-Linear) Masks Learned by SFA **********")
         # Create Figure
