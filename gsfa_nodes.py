@@ -1446,13 +1446,13 @@ class iGSFANode(mdp.Node):
             if pca_output_dim > 0:
                 val1 = self.pca_node.d[pca_output_dim // 4]
                 val2 = self.pca_node.d[3 * pca_output_dim // 4]
-                self.magn_n_sfa_x = numpy.logspace(numpy.log(val1), numpy.log(val2),
+                self.magn_n_sfa_x = numpy.logspace(numpy.log10(val1), numpy.log10(val2),
                                                    num=self.num_sfa_features_preserved) ** 0.5
             else:
                 self.magn_n_sfa_x = 1.0
             s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x
             if verbose:
-                print("method: data dependent2, self.magn_n_sfa_x:", self.magn_n_sfa_x)
+                print("method: data dependent2, self.magn_n_sfa_x:", self.magn_n_sfa_x, "val1:", val1, "val2:", val2)
 
 
         if self.pca_node.output_dim + self.num_sfa_features_preserved < self.output_dim:
@@ -1605,12 +1605,12 @@ class iGSFANode(mdp.Node):
             if final_pca_node_output_dim > 0:
                 val1 = self.pca_node.d[final_pca_node_output_dim // 4]
                 val2 = self.pca_node.d[3 * final_pca_node_output_dim // 4]
-                self.magn_n_sfa_x = numpy.logspace(numpy.log(val1), numpy.log(val2),
+                self.magn_n_sfa_x = numpy.logspace(numpy.log10(val1), numpy.log10(val2),
                                                    num=self.num_sfa_features_preserved) ** 0.5
             else:
                 self.magn_n_sfa_x = 1.0
             if verbose:
-                print("method: data dependent2, self.magn_n_sfa_x:", self.magn_n_sfa_x)
+                print("method: data dependent2, self.magn_n_sfa_x:", self.magn_n_sfa_x, "val1:", val1, "val2:", val2)
         else:
             er = "Unknown slow feature scaling method" + str(self.slow_feature_scaling_method)
             raise Exception(er)
