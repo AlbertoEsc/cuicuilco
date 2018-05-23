@@ -1255,7 +1255,7 @@ class iGSFANode(mdp.Node):
         return True
 
     # TODO: should train_mode be renamed training_mode?
-    def _train(self, x, block_size=None, train_mode=None, node_weights=None, edge_weights=None, verbose=None, **argv):
+    def _train(self, x, block_size=None, train_mode=None, node_weights=None, edge_weights=None, verbose=True, **argv):
         """Trains an iGSFA node on data 'x'
 
         The parameters:  block_size, train_mode, node_weights, and edge_weights are passed to the training function of
@@ -1271,14 +1271,16 @@ class iGSFANode(mdp.Node):
         if verbose:
             print("Training iGSFANode...")
 
-        if (not self.reconstruct_with_sfa) and (self.slow_feature_scaling_method in [None, "data_dependent"]):
+        if (not self.reconstruct_with_sfa) and (self.slow_feature_scaling_method in [None, "data_dependent",
+                                                                                     "data_dependent2"]):
             self.multiple_train(x, block_size=block_size, train_mode=train_mode, node_weights=node_weights,
                                 edge_weights=edge_weights)
             return
 
-        if (not self.reconstruct_with_sfa) and (self.slow_feature_scaling_method not in [None, "data_dependent"]):
+        if (not self.reconstruct_with_sfa) and (self.slow_feature_scaling_method not in [None, "data_dependent",
+                                                                                         "data_dependent2"]):
             er = "'reconstruct_with_sfa' (" + str(self.reconstruct_with_sfa) + ") must be True when the scaling" + \
-                 "method (" + str(self.slow_feature_scaling_method) + ") is neither 'None' not 'data_dependent'"
+                 "method (" + str(self.slow_feature_scaling_method) + ") is neither 'None' nor 'data_dependent(2)'"
             raise Exception(er)
         # else continue using the regular method:
 
@@ -1409,9 +1411,10 @@ class iGSFANode(mdp.Node):
             s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x
             if verbose:
                 print("method: constant amplitude for all slow features")
-        elif self.slow_feature_scaling_method == "data_dependent":
+        elif self.slow_feature_scaling_method == "data_dependent" or \
+                        self.slow_feature_scaling_method == "data_dependent2":
             if verbose:
-                print("skiped data_dependent")
+                print("skiped data_dependent(2)")
         else:
             er = "unknown slow feature scaling method= " + str(self.slow_feature_scaling_method) + \
                  " for reconstruct_with_sfa= " + str(self.reconstruct_with_sfa)
@@ -1433,13 +1436,24 @@ class iGSFANode(mdp.Node):
 
         if self.slow_feature_scaling_method == "data_dependent":
             if pca_output_dim > 0:
-                self.magn_n_sfa_x = 1.0 * numpy.median(
-                    self.pca_node.d) ** 0.5  # WARNING, why did I have 5.0 there? it is supposed to be 1.0
+                self.magn_n_sfa_x = 1.0 * numpy.median(self.pca_node.d) ** 0.5
             else:
                 self.magn_n_sfa_x = 1.0
-            s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x  # Scale according to ranking
+            s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x
             if verbose:
                 print("method: data dependent")
+        elif self.slow_feature_scaling_method == "data_dependent2":
+            if pca_output_dim > 0:
+                val1 = self.pca_node.d[pca_output_dim // 4]
+                val2 = self.pca_node.d[3 * pca_output_dim // 4]
+                self.magn_n_sfa_x = numpy.logspace(numpy.log(val1), numpy.log(val2),
+                                                   num=self.num_sfa_features_preserved) ** 0.5
+            else:
+                self.magn_n_sfa_x = 1.0
+            s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x
+            if verbose:
+                print("method: data dependent2, self.magn_n_sfa_x:", self.magn_n_sfa_x)
+
 
         if self.pca_node.output_dim + self.num_sfa_features_preserved < self.output_dim:
             er = "Error, the number of features computed is SMALLER than the output dimensionality of the node: " + \
@@ -1463,7 +1477,7 @@ class iGSFANode(mdp.Node):
         self.stop_training()
 
     def multiple_train(self, x, block_size=None, train_mode=None, node_weights=None,
-                       edge_weights=None, verbose=None):
+                       edge_weights=None, verbose=True):
         """This function should not be called directly. Use instead the train method, which will decide whether
         multiple-training is enabled, and call this function if needed. """
         # TODO: is the following line needed? or also self.set_input_dim? or self._input_dim?
@@ -1524,10 +1538,11 @@ class iGSFANode(mdp.Node):
         sfa_removed_x = x
         self.pca_node.train(sfa_removed_x)
 
-    def _stop_training(self, verbose=None):
+    def _stop_training(self, verbose=True):
         if verbose is None:
             verbose = self.verbose
-        if self.reconstruct_with_sfa or (self.slow_feature_scaling_method not in [None, "data_dependent"]):
+        if self.reconstruct_with_sfa or (self.slow_feature_scaling_method not in [None, "data_dependent",
+                                                                                  "data_dependent2"]):
             return
         # else, continue with multi-train method
 
@@ -1580,14 +1595,22 @@ class iGSFANode(mdp.Node):
             if verbose:
                 print("method: constant amplitude for all slow features")
         elif self.slow_feature_scaling_method == "data_dependent":
-            # SFA components have an std equal to that of the least significant principal component
             if self.pca_node.d.shape[0] > 0:
                 self.magn_n_sfa_x = 1.0 * numpy.median(self.pca_node.d) ** 0.5
-                # 100.0 * self.pca_node.d[-1] ** 0.5 + 0.0 # Experiment: use 5.0 instead of 1.0
             else:
                 self.magn_n_sfa_x = 1.0
             if verbose:
                 print("method: data dependent")
+        elif self.slow_feature_scaling_method == "data_dependent2":
+            if final_pca_node_output_dim > 0:
+                val1 = self.pca_node.d[final_pca_node_output_dim // 4]
+                val2 = self.pca_node.d[3 * final_pca_node_output_dim // 4]
+                self.magn_n_sfa_x = numpy.logspace(numpy.log(val1), numpy.log(val2),
+                                                   num=self.num_sfa_features_preserved) ** 0.5
+            else:
+                self.magn_n_sfa_x = 1.0
+            if verbose:
+                print("method: data dependent2, self.magn_n_sfa_x:", self.magn_n_sfa_x)
         else:
             er = "Unknown slow feature scaling method" + str(self.slow_feature_scaling_method)
             raise Exception(er)
@@ -1634,7 +1657,8 @@ class iGSFANode(mdp.Node):
         elif self.slow_feature_scaling_method is None:
             s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x
             # Scale according to ranking
-        elif self.slow_feature_scaling_method == "data_dependent":
+        elif self.slow_feature_scaling_method == "data_dependent" or \
+                        self.slow_feature_scaling_method == "data_dependent2":
             s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x
         else:
             er = "unknown feature scaling method" + str(self.slow_feature_scaling_method)

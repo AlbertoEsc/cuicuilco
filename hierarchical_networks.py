@@ -1061,6 +1061,12 @@ try:
         network.L7.exp_funcs.append(selected_QT)
     if selected_CT is not None:
         network.L7.exp_funcs.append(selected_CT)
+
+    network = MNISTNetwork_24x24_7L_Overlap_dd2_config = copy.deepcopy(MNISTNetwork_24x24_7L_Overlap_config)
+    for layer in network.layers:
+        if "slow_feature_scaling_method" in layer.sfa_args.keys():
+            layer.sfa_args["slow_feature_scaling_method"] = "data_dependent2"
+
 except Exception as ex:
     print("Unable to set MNISTNetwork_24x24_7L_Overlap_config parameters:" + str(ex))
     del MNISTNetwork_24x24_7L_Overlap_config

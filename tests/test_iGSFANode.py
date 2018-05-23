@@ -76,7 +76,8 @@ def test_slow_feature_scaling_methods():
     """
     x = numpy.random.normal(size=(300, 15))
 
-    all_slow_feature_scaling_methods = ["QR_decomposition", "sensitivity_based", None, "data_dependent"]
+    all_slow_feature_scaling_methods = ["QR_decomposition", "sensitivity_based", None, "data_dependent",
+                                        "data_dependent2"]
     num_slow_feature_scaling_methods = len(all_slow_feature_scaling_methods)
     output_features = []
     for slow_feature_scaling_method in all_slow_feature_scaling_methods:
