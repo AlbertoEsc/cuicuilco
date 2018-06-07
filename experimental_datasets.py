@@ -211,7 +211,6 @@ class ParamsCIFAR10Experiment(system_parameters.ParamsSystem):
         else:
             sSeq.convert_format = "L"
 
-
         def create_arrays(newSeq):
             return newSeq.dataset['data'][newSeq.ids] * 1.0 / 255.0
 

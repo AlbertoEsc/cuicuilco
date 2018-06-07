@@ -205,7 +205,7 @@ def cuicuilco_evaluation(arguments, measure="CR_Gauss", verbose=False):
     fd.close()
     print("created configuration file with contents:", txt)
 
-    cuicuilco_experiment_seeds = [112210, 112220, 112230, 112240] #[112244, 112255, 112266, 112277]  # , 112277]
+    cuicuilco_experiment_seeds = [112210, 112220, 112230] #, 112240] #[112244, 112255, 112266, 112277]  # , 112277]
     metrics = []
     for cuicuilco_experiment_seed in cuicuilco_experiment_seeds:  #112233 #np.random.randint(2**25)  #     np.random.randn()
         os.putenv("CUICUILCO_EXPERIMENT_SEED", str(cuicuilco_experiment_seed))
@@ -242,7 +242,7 @@ def cuicuilco_evaluation(arguments, measure="CR_Gauss", verbose=False):
                   "--IntegerLabelEstimation=0 --MapDaysToYears=0 --CumulativeScores=0 --DatasetForDisplayNewid=0 " + \
                   "--GraphExactLabelLearning=0 --OutputInsteadOfSVM2=0 --NumberTargetLabels=0 --EnableSVR=0 " + \
                   "--SVR_gamma=0.85 --SVR_C=48.0 --SVR_epsilon=0.075 --SVRInsteadOfSVM2=1 --ObjectiveLabel=0 " + \
-                  "--ExperimentalDataset=ParamsMNISTFunc --HierarchicalNetwork=MNISTNetwork_24x24_7L_Overlap_config " + \
+                  "--ExperimentalDataset=ParamsMNISTFunc --HierarchicalNetwork=MNISTNetwork_24x24_7L_Overlap_dd2_config " + \
                   "--SleepM=0 2>&1 > " + output_filename
 
             print("excecuting command: ", command)
@@ -354,21 +354,22 @@ def load_saved_executions(measure="CR_Gauss", dimensions=None, verbose=False):
             for i, arguments in enumerate(arguments_list):
                 valid = True
                 for j, dim in enumerate(dimensions):
+                    arg_value = arguments[j]
                     if isinstance(dim, Categorical):
                         if arguments[j] not in dim.categories:
                             valid = False
                             if verbose:
-                                print("component %d failed validity for argument %d" % (j, i))
+                                print("entry %d failed validity for argument %d with value %d" % (i, j, arg_value), dim.categories)
                     elif isinstance(dim, tuple) and len(dim) == 2:
                         if dim[0] > arguments[j] or dim[1] < arguments[j]:
                             valid = False
                             if verbose:
-                                print("component %d failed validity for argument %d" % (j, i))
+                                print("entry %d failed validity for argument %d with value %d" % (i, j, arg_value), dim)
                     elif isinstance(dim, list):
                         if arguments[j] not in dim:
                             valid = False
                             if verbose:
-                                print("component %d failed validity for argument %d" % (j, i))
+                                print("entry %d failed validity for argument %d with value %d" % (i, j, arg_value), dim)
        	        validity_values.append(valid)
             print("validity_values:", validity_values)
             filtered_arguments_list = []
@@ -392,7 +393,7 @@ def load_saved_executions(measure="CR_Gauss", dimensions=None, verbose=False):
 
     return arguments_list, results_list
 
-def display_best_arguments(arguments_list, results_list):
+def display_best_arguments(arguments_list, results_list, consider_std=True):
     if arguments_list is None:
         print("arguments_list is None")
         return None, None
@@ -422,7 +423,11 @@ def display_best_arguments(arguments_list, results_list):
     averaged_results_list = np.array(averaged_results_list)
     results_stds = np.array(results_stds)
     results_lens = np.array(results_lens)
-    ordering = np.argsort(averaged_results_list)[::-1]
+    if consider_std:
+        ordering = np.argsort(averaged_results_list - 0.5 * results_stds/(results_lens-1)**0.5)[::-1]
+    else:
+        ordering = np.argsort(averaged_results_list)[::-1]
+
     averaged_results_list = averaged_results_list[ordering]
     results_stds = results_stds[ordering]
     results_lens = results_lens[ordering]
@@ -432,17 +437,21 @@ def display_best_arguments(arguments_list, results_list):
     averaged_arguments_list = averaged_sorted_arguments_list
     print("averaged ordered results_list: ", averaged_results_list)
     print("results_stds: ", results_stds)
-    print("averaged ordered results_list - results_stds: ", averaged_results_list - results_stds)
+    corrected_results_list = averaged_results_list - 0.5 * results_stds/(results_lens-1)**0.5
+    print("averaged ordered results_list - 0.5 * results_stds/factor: ", corrected_results_list)
     print("results_lens: ", results_lens)
     print("averaged ordered arguments_list: ")
     for arguments in averaged_arguments_list:
-	print("(", end="")
+    	print("(", end="")
         for arg in arguments:
             print("%3d, "%arg, end="")
         print(")")
-        #print(arguments)
-    # quit()
-    return averaged_arguments_list, averaged_results_list
+
+    if consider_std:
+        final_results_list = corrected_results_list
+    else:
+        final_results_list = averaged_results_list
+    return averaged_arguments_list, final_results_list
 
 def progress_callback(res):
     print("C", end="")
@@ -456,32 +465,35 @@ def progress_callback(res):
 # [13, 17, 33, 57, 85, 90, 87, 170, 15, 10, 19, 23, 14, 8, 4, 1, 0, 0, 0, 0, 0, 13, 79, 20]
 
 # 13 20 28 50 70 90 120 200 9 19 10 26 6 6 9 0 0 0 0 0 0 0 90 25
-range_L0_pca_out_dim = [13]  # (12, 14)  # (10, 16) # 13
-range_L0_sfa_out_dim = (18, 23)  # (15, 25) # [20] # (20, 21)
-range_L1H_sfa_out_dim = (33, 38)  # (31, 34)  # (20, 36) # [28] # (28, 29)
-range_L1V_sfa_out_dim = (50, 63) # [50] # (50, 51)
-range_L2H_sfa_out_dim = (68, 78) # [70] # (70, 71)
-range_L2V_sfa_out_dim = (68, 95) # [90] # (90, 91)
-range_L3H_sfa_out_dim = (100, 145) # [120] # (120, 121)
-range_L3V_sfa_out_dim = (170, 230) #[200] # (200, 201)
-range_L0_delta_threshold = (12, 18)  # (1, 20) # [9] # #(9, 10) #
-range_L1H_delta_threshold = (7, 14) # [19] # (19, 20)
-range_L1V_delta_threshold = (7, 15) # [10] # (10, 11)
-range_L2H_delta_threshold = (23, 45) # [26] # (26, 27)
-range_L2V_delta_threshold = (0, 7) # [6] # (6, 7)
-range_L3H_delta_threshold = [0] # [6] # (6, 7)
-range_L3V_delta_threshold = [9]  # (3, 5) # [9] # (9, 10)
-# WARNING two categories cannot be expressed as [n1, n2], instead use e.g., [n1, n1, n2]
+# Output dimensionalities (PCA and iGSFA)
+range_L0_pca_out_dim = (12, 13)  # O [13]  # (12, 14)  # (10, 16) # 13
+range_L0_sfa_out_dim = (16, 21) # N (15, 23)  # O (18, 23)  # (15, 25) # [20] # (20, 21)
+range_L1H_sfa_out_dim = (32, 38)  #E (32, 35)  # O (33, 38)  # (31, 34)  # (20, 36) # [28] # (28, 29)
+range_L1V_sfa_out_dim = (54, 65) # N (50, 65)  # (50, 63)  # [50] # (50, 51)
+range_L2H_sfa_out_dim = (65, 77) # N (65, 95)  #E (65, 75)  # O (68, 78)  # [70] # (70, 71)
+range_L2V_sfa_out_dim = (89, 96) # N (72, 100)  #E (75, 100)  # O (68, 95)  # [90] # (90, 91)
+range_L3H_sfa_out_dim = (111, 150) # N (92, 145) #E (125, 145)  # O (100, 145)  # [120] # (120, 121)
+range_L3V_sfa_out_dim = (139, 230) #E (170, 216)  # O (170, 230) #[200] # (200, 201)
+# Length of slow part
+range_L0_delta_threshold = (10, 18)  # O (12, 18)  # (1, 20) # [9] # #(9, 10) #
+range_L1H_delta_threshold = (7, 16) # N (7, 18) #E (10, 20)  # O (7, 14)  # [19] # (19, 20)
+range_L1V_delta_threshold = (4, 18) # E(7, 18)  # O (7, 15)  # [10] # (10, 11)
+range_L2H_delta_threshold = (33, 50) # N (15, 46) # O (23, 45)  # [26] # (26, 27)
+range_L2V_delta_threshold = (0, 22)  # O (0, 7)  # [6] # (6, 7)
+range_L3H_delta_threshold = (0, 14)  # O [0]  # [6] # (6, 7)
+range_L3V_delta_threshold = (9, 13)  # O [9]  # (3, 5) # [9] # (9, 10)
+# WARNING two categories cannot be expressed as [n1, n2], instead use e.g., 
 #         otherwise interval (n1, n2) is assumed
-range_L0_expansion = [1] # [0] # (0, 1)
-range_L1H_expansion = [0] # TRY ALSO 3 [0, 0, 3] # (0, 1)
-range_L1V_expansion = [3] # (0, 1)
-range_L2H_expansion = [0] # (0, 1)
-range_L2V_expansion = [0]  # Categorical([0, 3])   #WARNING############################# [0, 3] # (0, 1)
-range_L3H_expansion = [7]  # [0, 7, 8, 9, 10] # (0, 0)
-range_L3V_expansion = (11, 21) # [0, 7, 8, 9] (0, 0)
-range_L4_degree_QT = (40, 119) # [90] # (90, 90)
-range_L4_degree_CT = (10, 26) # [25] # (25, 25)
+# Expansions
+range_L0_expansion = [1] # N (0, 1)  # O  [1] # [0] # (0, 1)
+range_L1H_expansion = [0] # N Categorical([0, 3]) # O [0] # TRY ALSO 3 [0, 0, 3] # (0, 1)
+range_L1V_expansion = Categorical([0, 3]) # O [3] # (0, 1)
+range_L2H_expansion = [4] # N Categorical([0, 3, 4]) #E (3, 4) # O [0] # (0, 1)
+range_L2V_expansion = Categorical([0, 3, 4]) #E (3, 4) # O [0]  # Categorical([0, 3])   #WARNING############################# [0, 3] # (0, 1)
+range_L3H_expansion = (6, 16) # N (0, 15) #E (6, 15)  # O [7]  # [0, 7, 8, 9, 10] # (0, 0)
+range_L3V_expansion = (17, 21) # N (0, 21) #E (15, 20)  # O (11, 21) # [0, 7, 8, 9] (0, 0)
+range_L4_degree_QT = (40, 109)  # O (40, 119) # [90] # (90, 90)
+range_L4_degree_CT = (13, 26)  # O (10, 26) # [25] # (25, 25)
 cuicuilco_dimensions = (range_L0_pca_out_dim, range_L0_sfa_out_dim, range_L1H_sfa_out_dim, range_L1V_sfa_out_dim, range_L2H_sfa_out_dim, range_L2V_sfa_out_dim, range_L3H_sfa_out_dim, range_L3V_sfa_out_dim, range_L0_delta_threshold, range_L1H_delta_threshold, range_L1V_delta_threshold, range_L2H_delta_threshold, range_L2V_delta_threshold, range_L3H_delta_threshold, range_L3V_delta_threshold, range_L0_expansion, range_L1H_expansion, range_L1V_expansion, range_L2H_expansion, range_L2V_expansion, range_L3H_expansion, range_L3V_expansion, range_L4_degree_QT, range_L4_degree_CT) # tuple or list? 
 
 print("cuicuilco_dimensions:", cuicuilco_dimensions)
@@ -491,42 +503,48 @@ print("cuicuilco_dimensions:", cuicuilco_dimensions)
 #( 13,  19,  35,  54,  71,  91, 111, 196,  14,  11,  14,  36,   3,   0,   9,   1,   0,   3,   0,   0,   7,  17,  80,  21, )
 #( 13,  19,  34,  53,  72,  89, 130, 200,  14,  12,  13,  36,   1,   0,   9,   1,   0,   3,   0,   0,   7,  17,  83,  24, )
 
-#TODO: load previously computed results from saved files
-
 # np.random.seed(1234) # use a new random seed each time to allow combination of executions on different systems
 
 argument_list, results_list = load_saved_executions(measure="CR_Gauss_mix", dimensions=cuicuilco_dimensions, verbose=False)
 display_best_arguments(argument_list, results_list)
 quit()
-argument_list = None
-results_list = None
-argument_list = [[ 13,  21,  36,  62,  74,  85, 144, 181,  17,  10,  10,  44,   6,   0,   9,   1,   0,   3,   0,   0,   7,  21,  96,  14, ],
-[ 13,  21,  37,  55,  78,  95, 108, 170,  18,   7,  15,  45,   2,   0,   9,   1,   0,   3,   0,   0,   7,  21,  40,  26, ],
-[ 13,  22,  38,  63,  78,  80, 139, 170,  18,   7,  15,  40,   7,   0,   9,   1,   0,   3,   0,   0,   7,  19,  40,  24, ],
-[ 13,  20,  36,  61,  75,  95, 140, 210,  16,  12,  10,  40,   5,   0,   9,   1,   0,   3,   0,   0,   7,  20, 109,  15, ],
-[ 13,  22,  38,  56,  77,  77, 124, 230,  17,   9,  14,  33,   6,   0,   9,   1,   0,   3,   0,   0,   7,  18,  91,  19, ],
-[ 13,  22,  36,  62,  78,  85, 119, 176,  17,   7,  13,  30,   7,   0,   9,   1,   0,   3,   0,   0,   7,  20,  92,  26, ],
-[ 13,  19,  33,  51,  73,  90, 114, 188,  16,  11,  15,  29,   3,   0,   9,   1,   0,   3,   0,   0,   7,  19,  42,  24, ],
-[ 13,  21,  35,  57,  76,  92, 136, 183,  17,   8,   9,  44,   6,   0,   9,   1,   0,   3,   0,   0,   7,  20, 101,  25, ],
-[ 13,  21,  36,  62,  74,  90, 143, 180,  17,   8,   9,  43,   5,   0,   9,   1,   0,   3,   0,   0,   7,  21, 117,  18, ],
-[ 13,  20,  36,  60,  72,  89, 139, 170,  14,   7,  10,  40,   5,   0,   9,   1,   0,   3,   0,   0,   7,  19, 101,  19, ],
-[ 13,  19,  35,  54,  71,  91, 111, 196,  14,  11,  14,  36,   3,   0,   9,   1,   0,   3,   0,   0,   7,  17,  80,  21, ]]
 
-#argument_list = [[13,  18,  34,  55,  75,  73, 102, 169,  16,  10,  10,  29,   2,   0,   9,   1,   0,   3,   0,   0,   7,  12,  89,  24]]
+#argument_list = None
+#results_list = None
+#argument_list = [ # Best hyperparameters for original slow feature scaling method
+#[13, 22, 38, 56, 77, 77, 124, 230, 17, 9, 14, 33, 6, 0, 9, 1, 0, 3, 0, 0, 7, 18, 91, 19],
+#[13, 21, 37, 55, 78, 95, 108, 170, 18, 7, 15, 45, 2, 0, 9, 1, 0, 3, 0, 0, 7, 21, 40, 26],
+#[13, 19, 35, 54, 71, 91, 111, 196, 14, 11, 14, 36, 3, 0, 9, 1, 0, 3, 0, 0, 7, 17, 80, 21],
+#[13, 17, 33, 65, 95, 72, 92, 139,  15, 13, 13, 24, 4, 0, 3, 2, 0, 3, 0, 0, 7, 9,  89, 24],
+#[13, 17, 34, 54, 95, 76, 100, 144, 13, 18, 4,  30, 4, 0, 1, 1, 0, 0, 0, 0, 0, 0,  98, 24],
+#[13, 22, 38, 56, 77, 77, 124, 230, 17,  9, 14, 33, 6, 0, 9, 1, 0, 3, 0, 0, 7, 18, 91, 19]
+#]
+#[12,  15,  35,  65,  70,  95, 140, 196,  10,  10,  12,  29,  16,   4,  11,   1,   3,   0,   4,   4,  15,  20, 109,  18],
+#[12,  23,  35,  64,  67,  98, 127, 184,  12,  14,  18,  29,   1,   2,   9,   0,   3,   0,   4,   4,   9,  18, 109,  20],
+#[15,  19,  34,  59,  74,  95, 131, 208,  14,  12,  14,  39,   1,  10,  10,   0,   3,   0,   3,   3,  14,  13,  57,  18],
+#[15,  20,  40,  58,  80,  76, 134, 201,  14,  12,  13,  47,  10,  10,   9,   1,   0,   3,   3,   3,  13,  15,  90,  13],
+#[14,  19,  35,  58,  81,  91, 127, 203,  11,  15,  17,  42,   7,  10,   9,   0,   3,   3,   0,   4,   7,  17, 100,  22],
+#[14,  23,  37,  58,  69, 100, 141, 222,  12,  16,  18,  16,   6,   3,   9,   1,   3,   3,   3,   3,  12,  19,  59,  21],
+#[14,  23,  34,  64,  68,  73, 118, 216,  16,  11,  16,  25,   9,   9,  11,   0,   0,   0,   3,   0,  14,  20,  73,  23],
+#[12,  20,  40,  60,  65,  68, 118, 170,  18,  18,   7,  15,  20,  12,  12,   0,   3,   3,   3,   3,  15,  20,  82,  23],
+#[12,  24,  35,  58,  76,  84, 131, 203,  12,  15,  13,  43,  20,   4,  12,   1,   3,   3,   3,   0,  11,  19, 107,  10],
+#[16,  15,  36,  54,  82,  88, 145, 218,  12,  10,  12,  37,  20,   3,  12,   0,   0,   3,   4,   4,  14,  19,  97,  10]]
+
+# 13,  18,  34,  55,  75,  73, 102, 169,  16,  10,  10,  29,   2,   0,   9,   1,   0,   3,   0,   0,   7,  12,  89,  24]]
 #argument_list += [[13, 17, 34, 61, 88, 94, 84, 139, 14, 11, 17, 23, 5, 7, 4, 0, 0, 0, 0, 3, 7, 14, 54, 24],
 #    [13, 16, 33, 60, 82, 82, 99, 162, 15, 10, 18, 26, 10, 1, 0, 0, 0, 3, 0, 3, 9, 14, 36, 3],
 #    [13, 17, 31, 56, 87, 81, 88, 171, 13, 14, 13, 28, 3, 7, 0, 0, 0, 3, 0, 0, 10, 14, 66, 21],
 #    [13, 15, 32, 58, 79, 75, 86, 142, 13, 10, 16, 28, 9, 2, 0, 0, 0, 0, 0, 3, 9, 14, 12, 11]]
-quit()
+#quit()
 
 if results_list is not None:
     results_list = [1.0 - result for result in results_list]
 
 print("cuicuilco_dimensions:", cuicuilco_dimensions)
 t0 = time.time()
-res = gp_minimize(func=cuicuilco_f_CE_Gauss_mix, dimensions=cuicuilco_dimensions, base_estimator=None, n_calls=11, n_random_starts=0,  # 20 10
+res = gp_minimize(func=cuicuilco_f_CE_Gauss_mix, dimensions=cuicuilco_dimensions, base_estimator=None, n_calls=50, n_random_starts=0,  # 20 10
                   acq_func='gp_hedge', acq_optimizer='auto', x0=argument_list, y0=results_list, random_state=None, verbose=False,
-                  callback=progress_callback, n_points=10*10000, n_restarts_optimizer=5,   # n_points=10000
+                  callback=progress_callback, n_points=1*10000, n_restarts_optimizer=5,   # n_points=10000
                   xi=0.01, kappa=1.96, noise='gaussian', n_jobs=1)
 t1 = time.time()
 
