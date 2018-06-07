@@ -46,6 +46,96 @@ if tuning_parameter is None:
     raise Exception(ex)
 print("tuning_parameter=", tuning_parameter)
 
+#TODO: Move these functions to nonlinear_expansion
+def map_expansion_number_to_expansion_cifar(exp_n):
+    if 0 <= exp_n < 100:
+        if exp_n == 0:
+            return [identity]
+        elif exp_n == 1:
+            return [identity, unsigned_08expo, ]
+        elif exp_n == 2:
+            return [identity, unsigned_08expo, s10QT]
+        elif exp_n == 3:
+            return [identity, unsigned_08expo, s12QT]
+        elif exp_n == 4:
+            return [identity, unsigned_08expo, s14QT]
+        elif exp_n == 5:
+            return [identity, unsigned_08expo, s16QT]
+        elif exp_n == 6:
+            return [identity, unsigned_08expo, s18QT]
+        elif exp_n == 7:
+            return [identity, unsigned_08expo, s20QT]
+        elif exp_n == 8:
+            return [identity, unsigned_08expo, s22QT]
+        elif exp_n == 9:
+            return [identity, unsigned_08expo, s24QT]
+        elif exp_n == 10:
+            return [identity, unsigned_08expo, s28QT]
+        elif exp_n == 11:
+            return [identity, unsigned_08expo, s30QT]
+        elif exp_n == 12:
+            return [identity, unsigned_08expo, s35QT]
+        elif exp_n == 13:
+            return [identity, unsigned_08expo, QT, s10CT]
+        elif exp_n == 14:
+            return [identity, unsigned_08expo, QT, s12CT]
+        elif exp_n == 15:
+            return [identity, unsigned_08expo, QT, s14CT]
+        elif exp_n == 16:
+            return [identity, unsigned_08expo, QT, s16CT]
+        else:
+            ex = "Invalid value for expansion:" + str(exp_n) + "-" + str(type(exp_n))
+            raise Exception(ex)
+    elif 200 <= exp_n < 300:
+        if exp_n == 200:
+            return [identity, unsigned_08expo, ch2o0s10QT]
+        elif exp_n == 201:
+            return [identity, unsigned_08expo, ch2o0s15QT]
+        elif exp_n == 202:
+            return [identity, unsigned_08expo, ch2o0s20QT]
+        elif exp_n == 203:
+            return [identity, unsigned_08expo, ch2o0s25QT]
+        elif exp_n == 204:
+            return [identity, unsigned_08expo, ch2o0s30QT]
+        elif exp_n == 205:
+            return [identity, unsigned_08expo, ch2o0s35QT]
+        elif exp_n == 206:
+            return [identity, unsigned_08expo, ch2o0s40QT]
+        elif exp_n == 207:
+            return [identity, unsigned_08expo, ch2o0s45QT]
+        elif exp_n == 208:
+            return [identity, unsigned_08expo, ch2o0s50QT]
+        elif exp_n == 209:
+            return [identity, unsigned_08expo, ch2o0s55QT]
+        elif exp_n == 210:
+            return [identity, unsigned_08expo, ch2o0s60QT]
+        elif exp_n == 211:
+            return [identity, unsigned_08expo, ch2o0s65QT]
+        elif exp_n == 212:
+            return [identity, unsigned_08expo, ch2o0s70QT]
+        elif exp_n == 213:
+            return [identity, unsigned_08expo, ch2o0s75QT]
+        elif exp_n == 214:
+            return [identity, unsigned_08expo, ch2o0s80QT]
+        else:
+            ex = "Invalid value for expansion:" + str(exp_n) + "-" + str(type(exp_n))
+            raise Exception(ex)
+    elif 300 <= exp_n < 400:
+        if exp_n == 300:
+            return [identity, unsigned_08expo, ch3o0s10QT]
+        elif exp_n == 301:
+            return [identity, unsigned_08expo, ch3o0s15QT]
+        elif exp_n == 302:
+            return [identity, unsigned_08expo, ch3o0s20QT]
+        elif exp_n == 303:
+            return [identity, unsigned_08expo, ch3o0s25QT]
+        else:
+            ex = "Invalid value for expansion:" + str(exp_n) + "-" + str(type(exp_n))
+            raise Exception(ex)
+    else:
+        ex = "Invalid value for expansion:" + str(exp_n) + "-" + str(type(exp_n))
+        raise Exception(ex)
+
 
 ###########################################################################################
 # AN HiGSFA NETWORK FOR CIFAR-10                                                          #
@@ -206,7 +296,87 @@ network = HiGSFA_CIFAR10_Network_11L = system_parameters.ParamsNetwork()
 network.name = "HiGSFA network for CIFAR-10"
 network.layers = [pSFALayerL0, pSFALayerL1H, pSFALayerL1V, pSFALayerL2H, pSFALayerL2V, pSFALayerL3H, pSFALayerL3V,
                   pSFALayerL5]  # pSFALayerL4H, pSFALayerL4V,
-                  
+
+pSFALayerL6 = system_parameters.ParamsSFASuperNode()
+pSFALayerL6.name = "SFA Super Node Layer 1x1"
+pSFALayerL6.pca_node_class = None
+pSFALayerL6.exp_funcs = [identity, unsigned_08expo]
+pSFALayerL6.sfa_node_class = mdp.nodes.GSFANode
+pSFALayerL6.sfa_out_dim = 9
+pSFALayerL6.sfa_args = {}
+
+network = HiGSFA_CIFAR10_Network_9L_config = copy.deepcopy(HiGSFA_CIFAR10_Network_11L)
+network.layers.append(pSFALayerL6)
+network.L8 = pSFALayerL6
+try:
+    fd = open("HiGSFA_CIFAR10_Network_9L_config.txt", "r")
+    arguments = fd.readline().strip().split(" ")
+    fd.close()
+    print("HiGSFA_CIFAR10_Network_9L_config has arguments: ", arguments)
+    (L0_pca_out_dim, L0_sfa_out_dim, L1H_sfa_out_dim, L1V_sfa_out_dim, L2H_sfa_out_dim, L2V_sfa_out_dim,
+     L3H_sfa_out_dim, L3V_sfa_out_dim, L5_sfa_out_dim, L0_delta_threshold, L1H_delta_threshold, L1V_delta_threshold,
+     L2H_delta_threshold, L2V_delta_threshold, L3H_delta_threshold, L3V_delta_threshold, L5_delta_threshold, L0_expansion,
+     L1H_expansion, L1V_expansion, L2H_expansion, L2V_expansion, L3H_expansion, L3V_expansion,
+     L5_expansion, L6_degree_QT, L6_degree_CT) = map(int, arguments)
+
+    network.L0.pca_out_dim = L0_pca_out_dim
+    network.L0.sfa_out_dim = L0_sfa_out_dim
+    network.L1.sfa_out_dim = L1H_sfa_out_dim
+    network.L2.sfa_out_dim = L1V_sfa_out_dim
+    network.L3.sfa_out_dim = L2H_sfa_out_dim
+    network.L4.sfa_out_dim = L2V_sfa_out_dim
+    network.L5.sfa_out_dim = L3H_sfa_out_dim
+    network.L6.sfa_out_dim = L3V_sfa_out_dim
+    network.L7.sfa_out_dim = L5_sfa_out_dim
+
+    print("Output dims:", L0_pca_out_dim, L0_sfa_out_dim, L1H_sfa_out_dim, L1V_sfa_out_dim, L2H_sfa_out_dim,
+          L2V_sfa_out_dim, L3H_sfa_out_dim, L3V_sfa_out_dim, L5_sfa_out_dim)
+
+    network.L0.sfa_args["delta_threshold"] = L0_delta_threshold
+    network.L1.sfa_args["delta_threshold"] = L1H_delta_threshold
+    network.L2.sfa_args["delta_threshold"] = L1V_delta_threshold
+    network.L3.sfa_args["delta_threshold"] = L2H_delta_threshold
+    network.L4.sfa_args["delta_threshold"] = L2V_delta_threshold
+    network.L5.sfa_args["delta_threshold"] = L3H_delta_threshold
+    network.L6.sfa_args["delta_threshold"] = L3V_delta_threshold
+    network.L7.sfa_args["delta_threshold"] = L5_delta_threshold
+    print("Delta thresholds:", L0_delta_threshold, L1H_delta_threshold, L1V_delta_threshold, L2H_delta_threshold,
+          L2V_delta_threshold, L3H_delta_threshold, L3V_delta_threshold)
+
+    network.L0.sfa_args["expansion_funcs"] = map_expansion_number_to_expansion_cifar(L0_expansion)
+    network.L1.sfa_args["expansion_funcs"] = map_expansion_number_to_expansion_cifar(L1H_expansion)
+    network.L2.sfa_args["expansion_funcs"] = map_expansion_number_to_expansion_cifar(L1V_expansion)
+    network.L3.sfa_args["expansion_funcs"] = map_expansion_number_to_expansion_cifar(L2H_expansion)
+    network.L4.sfa_args["expansion_funcs"] = map_expansion_number_to_expansion_cifar(L2V_expansion)
+    network.L5.sfa_args["expansion_funcs"] = map_expansion_number_to_expansion_cifar(L3H_expansion)
+    network.L6.sfa_args["expansion_funcs"] = map_expansion_number_to_expansion_cifar(L3V_expansion)
+    network.L7.sfa_args["expansion_funcs"] = map_expansion_number_to_expansion_cifar(L5_expansion)
+    print("L0 expansion is", L0_expansion, L1H_expansion, L1V_expansion, L2H_expansion, L2V_expansion, L3H_expansion,
+          L3V_expansion, L5_expansion)
+
+    k = L6_degree_QT // 10
+    print("k for QT is: ", k)
+    selected_QT = \
+    [None, QT_10_AP08, QT_20_AP08, QT_30_AP08, QT_40_AP08, QT_50_AP08, QT_60_AP08, QT_70_AP08, QT_80_AP08, QT_90_AP08,
+     QT_100_AP08, QT_110_AP08, QT_120_AP08, QT_130_AP08, QT_140_AP08, QT_150_AP08, QT_160_AP08, QT_170_AP08][k]
+    k = L6_degree_CT
+    print("k for CT is: ", k)
+    selected_CT = \
+    [None, CT_1_AP08, CT_2_AP08, CT_3_AP08, CT_4_AP08, CT_5_AP08, CT_6_AP08, CT_7_AP08, CT_8_AP08, CT_9_AP08,
+     CT_10_AP08, CT_11_AP08, CT_12_AP08, CT_13_AP08, CT_14_AP08, CT_15_AP08, CT_16_AP08, CT_17_AP08, CT_18_AP08,
+     CT_19_AP08, CT_20_AP08, CT_21_AP08, CT_22_AP08, CT_23_AP08, CT_24_AP08, CT_25_AP08, CT_26_AP08, CT_27_AP08,
+     CT_28_AP08, CT_29_AP08, CT_30_AP08, ][k]
+    network.L8.exp_funcs = [identity, unsigned_08expo, signed_08expo]
+    if selected_QT is not None:
+        network.L8.exp_funcs.append(selected_QT)
+    if selected_CT is not None:
+        network.L8.exp_funcs.append(selected_CT)
+
+    network = HiGSFA_CIFAR10_Network_9L_dd2_config = copy.deepcopy(HiGSFA_CIFAR10_Network_9L_config)
+    for layer in network.layers:
+        if "slow_feature_scaling_method" in layer.sfa_args.keys():
+            layer.sfa_args["slow_feature_scaling_method"] = "data_dependent2"
+
 
 ###########################################################################################
 # HELPER FUNCTIONS                                                                        #
@@ -934,7 +1104,7 @@ pSFALayerSupernode.exp_funcs = [identity, unsigned_08expo, signed_08expo, QT_60_
 # pSFALayerSupernode.red_node_class = None
 pSFALayerSupernode.sfa_node_class = mdp.nodes.GSFANode
 # pSFALayerSupernode.sfa_node_class = mdp.nodes.iGSFANode #mdp.nodes.GSFANode
-pSFALayerSupernode.sfa_args = {"verbose":True}
+pSFALayerSupernode.sfa_args = {} #{"verbose":True}
 # pSFALayerSupernode.sfa_args = {"pre_expansion_node_class":None,
 # "expansion_funcs":[identity, unsigned_08expo, QT_50, CT_30],
 # "max_length_slow_part":1, ,  "slow_feature_scaling_method":"sensitivity_based", "delta_threshold":1.99999}
