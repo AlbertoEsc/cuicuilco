@@ -2454,6 +2454,44 @@ def ch3o9s40QT(x):
     return ch3_Offset_sF_QT(x, Off=9, F=40)
 
 
+##############################################################################################
+# Functions that compute quadratic terms with offset, selection, and 4 channels              #
+##############################################################################################
+
+
+def ch4_Offset_sF_QT(x, Off, F):
+    ch = 4
+    s = F
+    ns, dim = x.shape
+    channel_dim = dim // 4
+    if (Off + F) * ch > dim:
+        er = "Incorrect parameters for ch4_Offset_sF_QT: Off=%d, F=%d, ch=%d, but data dim=%d" % (Off, F, ch, dim)
+        raise Exception(er)
+    else:
+        xs = numpy.zeros((ns, ch * s))
+        xs[:, 0:s] = x[:, Off:Off + s]
+        xs[:, s:2 * s] = x[:, channel_dim + Off:channel_dim + Off + s]
+        xs[:, 2 * s: 3*s] = x[:, 2 * channel_dim + Off:2 * channel_dim + Off + s]
+        xs[:, 3 * s:] = x[:, 3 * channel_dim + Off:3 * channel_dim + Off + s]
+        return QT(xs)
+
+
+def ch4o0s10QT(x):
+    return ch4_Offset_sF_QT(x, Off=0, F=10)
+
+
+def ch4o0s15QT(x):
+    return ch4_Offset_sF_QT(x, Off=0, F=15)
+
+
+def ch4o0s20QT(x):
+    return ch4_Offset_sF_QT(x, Off=0, F=20)
+
+
+def ch4o0s25QT(x):
+    return ch4_Offset_sF_QT(x, Off=0, F=25)
+
+
 ######################################################################################################
 # Functions that compute quadratic terms with selection                                              #
 ######################################################################################################
@@ -2531,8 +2569,20 @@ def s20QT(x):
     return QT(x[:, 0:20])
 
 
+def s22QT(x):
+    return QT(x[:, 0:22])
+
+
+def s24QT(x):
+    return QT(x[:, 0:24])
+
+
 def s25QT(x):
     return QT(x[:, 0:25])
+
+
+def s28QT(x):
+    return QT(x[:, 0:28])
 
 
 def s30QT(x):

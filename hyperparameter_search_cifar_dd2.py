@@ -51,50 +51,71 @@ def expansion_number_to_string(exp_n):
             raise Exception(ex)
     elif 200 <= exp_n < 300:
         if exp_n == 200:
-            return "ch2s10qt"
+            return "u08"
         elif exp_n == 201:
-            return "ch2s15qt"
+            return "ch2s10qt"
         elif exp_n == 202:
-            return "ch2s20qt"
+            return "ch2s15qt"
         elif exp_n == 203:
-            return "ch2s25qt"
+            return "ch2s20qt"
         elif exp_n == 204:
-            return "ch2s30qt"
+            return "ch2s25qt"
         elif exp_n == 205:
-            return "ch2s35qt"
+            return "ch2s30qt"
         elif exp_n == 206:
-            return "ch2s40qt"
+            return "ch2s35qt"
         elif exp_n == 207:
-            return "ch2s45qt"
+            return "ch2s40qt"
         elif exp_n == 208:
-            return "ch2s50qt"
+            return "ch2s45qt"
         elif exp_n == 209:
-            return "ch2s55qt"
+            return "ch2s50qt"
         elif exp_n == 210:
-            return "ch2s60qt"
+            return "ch2s55qt"
         elif exp_n == 211:
-            return "ch2s65qt"
+            return "ch2s60qt"
         elif exp_n == 212:
-            return "ch2s70qt"
+            return "ch2s65qt"
         elif exp_n == 213:
-            return "ch2s75qt"
+            return "ch2s70qt"
         elif exp_n == 214:
+            return "ch2s75qt"
+        elif exp_n == 215:
             return "ch2s80qt"
         else:
             ex = "invalid expansion number: " + str(exp_n)
             raise Exception(ex)
     elif 300 <= exp_n < 400:
         if exp_n == 300:
-            return "ch3s10qt"
+            return "u08"
         elif exp_n == 301:
-            return "ch3s15qt"
+            return "ch3s10qt"
         elif exp_n == 302:
-            return "ch3s20qt"
+            return "ch3s15qt"
         elif exp_n == 303:
+            return "ch3s20qt"
+        elif exp_n == 304:
             return "ch3s25qt"
         else:
             ex = "invalid expansion number: " + str(exp_n)
             raise Exception(ex)
+    elif 400 <= exp_n < 500:
+        if exp_n == 400:
+            return "u08"
+        elif exp_n == 401:
+            return "ch4s10qt"
+        elif exp_n == 402:
+            return "ch4s15qt"
+        elif exp_n == 403:
+            return "ch4s20qt"
+        elif exp_n == 404:
+            return "ch4s25qt"
+        else:
+            ex = "invalid expansion number: " + str(exp_n)
+            raise Exception(ex)
+    else:
+        ex = "invalid expansion number: " + str(exp_n)
+        raise Exception(ex)
 
 valid_expansion_numbers = range(0, 17) + range(200, 215) + range(300, 304)
 map_exp_n_to_string = [expansion_number_to_string(i) for i in valid_expansion_numbers]
@@ -124,26 +145,26 @@ def cuicuilco_f_CE_Gauss_mix(arguments):
  
 
 def cuicuilco_evaluation(arguments, measure="CR_Gauss", verbose=False):
-    (L0_pca_out_dim, L0_sfa_out_dim, L1H_sfa_out_dim, L1V_sfa_out_dim, L2H_sfa_out_dim, L2V_sfa_out_dim,
-     L3H_sfa_out_dim, L3V_sfa_out_dim, L5_sfa_out_dim, L0_delta_threshold, L1H_delta_threshold, L1V_delta_threshold,
-     L2H_delta_threshold, L2V_delta_threshold, L3H_delta_threshold, L3V_delta_threshold, L5_delta_threshold, L0_expansion,
-     L1H_expansion, L1V_expansion, L2H_expansion, L2V_expansion, L3H_expansion, L3V_expansion, L5_expansion,
-     L6_degree_QT, L6_degree_CT) = arguments
+    (L0_pca_out_dim, L0_sfa_out_dim, L1H_sfa_out_dim, L1V_sfa_out_dim, L2H_sfa_out_dim,
+     L2V_sfa_out_dim, L3H_sfa_out_dim, L3V_sfa_out_dim, L5_sfa_out_dim,
+     L0_delta_threshold, L1H_delta_threshold, L1V_delta_threshold, L2H_delta_threshold,
+     L2V_delta_threshold, L3H_delta_threshold, L3V_delta_threshold, L5_delta_threshold,
+     L0_expansion, L1H_expansion, L1V_expansion, L2H_expansion, L2V_expansion, L3H_expansion,
+     L3V_expansion, L5_expansion, L6_degree_QT, L6_degree_CT) = arguments
  
     print("invoking cuicuilco_evaluation with arguments:", arguments)
-    # TODO: Continue modifications for CIFAR-10 here!!!!
 
     # Testing whether arguments are compatible
     incompatible = 0
     if L0_pca_out_dim + L0_delta_threshold < L0_sfa_out_dim:
         L0_delta_threshold = L0_sfa_out_dim - L0_pca_out_dim
         print("Attempting to solve incompatibility case 1", L0_pca_out_dim, L0_delta_threshold, L0_sfa_out_dim)
-    if L0_delta_threshold < 1 or L0_delta_threshold > 20:
+    if L0_delta_threshold < 1 or L0_delta_threshold > 36:
         incompatible = 21
 
     if 2 * L2H_sfa_out_dim + L2V_delta_threshold < L2V_sfa_out_dim:
         L2V_delta_threshold - 2 * L2H_sfa_out_dim
-    if L2V_delta_threshold < 1 or L2V_delta_threshold > 20:
+    if L2V_delta_threshold < 1 or L2V_delta_threshold > 36:
         incompatible = 22
 
     if L0_pca_out_dim + L0_delta_threshold < L0_sfa_out_dim:
@@ -160,17 +181,17 @@ def cuicuilco_evaluation(arguments, measure="CR_Gauss", verbose=False):
         incompatible = 6
     elif 2 * L3H_sfa_out_dim + L3V_delta_threshold < L3V_sfa_out_dim:
         incompatible = 7
-    if L1H_delta_threshold >  (2 + 3) * L0_sfa_out_dim:
+    if L1H_delta_threshold > (2 + 3) * L0_sfa_out_dim:
         incompatible = 8
-    elif L1V_delta_threshold >  (2 + 3) * L1H_sfa_out_dim:
+    elif L1V_delta_threshold > (2 + 3) * L1H_sfa_out_dim:
         incompatible = 9
-    elif L2H_delta_threshold >  2 * L1V_sfa_out_dim: # the factor here should be actually 4, right?
+    elif L2H_delta_threshold > 2 * L1V_sfa_out_dim: # the factor here should be actually 4, right?
         incompatible = 10
-    elif L2V_delta_threshold >  2 * L2H_sfa_out_dim:
+    elif L2V_delta_threshold > 2 * L2H_sfa_out_dim:
         incompatible = 11
-    elif L3H_delta_threshold >  2 * L2V_sfa_out_dim:
+    elif L3H_delta_threshold > 2 * L2V_sfa_out_dim:
         incompatible = 12
-    elif L3V_delta_threshold >  2 * L3H_sfa_out_dim:
+    elif L3V_delta_threshold > 2 * L3H_sfa_out_dim:
         incompatible = 13
     if L0_delta_threshold > L0_sfa_out_dim:
         incompatible = 14
@@ -193,13 +214,14 @@ def cuicuilco_evaluation(arguments, measure="CR_Gauss", verbose=False):
 
 
     # Update arguments variable
-    arguments = (L0_pca_out_dim, L0_sfa_out_dim, L1H_sfa_out_dim, L1V_sfa_out_dim, L2H_sfa_out_dim, L2V_sfa_out_dim,
-     L3H_sfa_out_dim, L3V_sfa_out_dim, L0_delta_threshold, L1H_delta_threshold, L1V_delta_threshold,
-     L2H_delta_threshold, L2V_delta_threshold, L3H_delta_threshold, L3V_delta_threshold, L0_expansion,
-     L1H_expansion, L1V_expansion, L2H_expansion, L2V_expansion, L3H_expansion, L3V_expansion,
-     L4_degree_QT, L4_degree_CT)
+    arguments = (L0_pca_out_dim, L0_sfa_out_dim, L1H_sfa_out_dim, L1V_sfa_out_dim, L2H_sfa_out_dim,
+                 L2V_sfa_out_dim, L3H_sfa_out_dim, L3V_sfa_out_dim, L5_sfa_out_dim,
+                 L0_delta_threshold, L1H_delta_threshold, L1V_delta_threshold, L2H_delta_threshold,
+                 L2V_delta_threshold, L3H_delta_threshold, L3V_delta_threshold, L5_delta_threshold,
+                 L0_expansion, L1H_expansion, L1V_expansion, L2H_expansion, L2V_expansion, L3H_expansion,
+                 L3V_expansion, L5_expansion, L6_degree_QT, L6_degree_CT)
     print("Creating configuration file ")
-    fd = open("MNISTNetwork_24x24_7L_Overlap_config.txt", "w")
+    fd = open("HiGSFA_CIFAR10_Network_9L_config.txt", "w")
     txt = ""
     for entry in arguments:
         txt += str(entry)+ " "
@@ -207,15 +229,15 @@ def cuicuilco_evaluation(arguments, measure="CR_Gauss", verbose=False):
     fd.close()
     print("created configuration file with contents:", txt)
 
-    cuicuilco_experiment_seeds = [112210, 112220, 112230] #, 112240] #[112244, 112255, 112266, 112277]  # , 112277]
+    cuicuilco_experiment_seeds = [112210] # 112220, 112230] #, 112240] #[112244, 112255, 112266, 112277]  # , 112277]
     metrics = []
     for cuicuilco_experiment_seed in cuicuilco_experiment_seeds:  #112233 #np.random.randint(2**25)  #     np.random.randn()
         os.putenv("CUICUILCO_EXPERIMENT_SEED", str(cuicuilco_experiment_seed))
         print("Setting CUICUILCO_EXPERIMENT_SEED: ", str(cuicuilco_experiment_seed))
 
-        output_filename = "hyper_t/MNIST_24x24_7L_L0cloneL_%dPC_%dSF_%sExp_%dF_" + \
-                          "L1cloneL_%dSF_%sExp_%dF_L2clone_%dSF_%sExp_%dF_L3cloneL_%dSF_%sExp_%dF_" + \
-                          "L4cloneL_%dSF_%sExp_%dF_L5_%dSF_%sExp_%dF_L6_%dSF_%sExp_%dF_NoHead_QT%dAP_CT%dAP_seed%d.txt"
+        output_filename = "hyper_t/CIFAR_9L_5cloneL_L0_%dPC_%dSF_%s_%dF_" + \
+                          "L1H_%dSF_%s_%dF_L1V_%dSF_%s_%dF_L2H_%dSF_%s_%dF_" + \
+                          "L2V_%dSF_%s_%dF_L3H_%dSF_%s_%dF_L5_%dSF_%s_%dF_L6_QT%dAP_CT%dAP_seed%d.txt"
         output_filename = output_filename % (L0_pca_out_dim, L0_delta_threshold, expansion_number_to_string(L0_expansion), L0_sfa_out_dim,
                                 L1H_delta_threshold, expansion_number_to_string(L1H_expansion), L1H_sfa_out_dim,
                                 L1V_delta_threshold, expansion_number_to_string(L1V_expansion), L1V_sfa_out_dim,
@@ -223,7 +245,8 @@ def cuicuilco_evaluation(arguments, measure="CR_Gauss", verbose=False):
                                 L2V_delta_threshold, expansion_number_to_string(L2V_expansion), L2V_sfa_out_dim,
                                 L3H_delta_threshold, expansion_number_to_string(L3H_expansion), L3H_sfa_out_dim,
                                 L3V_delta_threshold, expansion_number_to_string(L3V_expansion), L3V_sfa_out_dim,
-                                L4_degree_QT, L4_degree_CT, cuicuilco_experiment_seed)
+                                L5_delta_threshold, expansion_number_to_string(L5_expansion), L5_sfa_out_dim,
+                                L6_degree_QT, L6_degree_CT, cuicuilco_experiment_seed)
         if os.path.isfile(output_filename):
             print("file %s already exists, skipping its computation" % output_filename)
         else:
@@ -244,10 +267,12 @@ def cuicuilco_evaluation(arguments, measure="CR_Gauss", verbose=False):
                   "--IntegerLabelEstimation=0 --MapDaysToYears=0 --CumulativeScores=0 --DatasetForDisplayNewid=0 " + \
                   "--GraphExactLabelLearning=0 --OutputInsteadOfSVM2=0 --NumberTargetLabels=0 --EnableSVR=0 " + \
                   "--SVR_gamma=0.85 --SVR_C=48.0 --SVR_epsilon=0.075 --SVRInsteadOfSVM2=1 --ObjectiveLabel=0 " + \
-                  "--ExperimentalDataset=ParamsMNISTFunc --HierarchicalNetwork=MNISTNetwork_24x24_7L_Overlap_dd2_config " + \
+                  "--ExperimentalDataset=ParamsCIFAR10Func_32x32 " +\
+                  "--HierarchicalNetwork=HiGSFA_CIFAR10_Network_9L_dd2_config_32x32_9L_Overlap_dd2_config " + \
                   "--SleepM=0 2>&1 > " + output_filename
 
             print("excecuting command: ", command)
+            quit()
             os.system(command)
 
         if verbose:
@@ -312,6 +337,7 @@ def load_saved_executions(measure="CR_Gauss", dimensions=None, verbose=False):
             L2V_sfa_out_dim = int(vals[23])
             L3H_sfa_out_dim = int(vals[27])
             L3V_sfa_out_dim = int(vals[31])
+            L5_sfa_out_dim = int(vals[31]) # FIX
             L0_delta_threshold = int(vals[5])
             L1H_delta_threshold = int(vals[9])
             L1V_delta_threshold = int(vals[13]) 
@@ -319,6 +345,7 @@ def load_saved_executions(measure="CR_Gauss", dimensions=None, verbose=False):
             L2V_delta_threshold = int(vals[21])
             L3H_delta_threshold = int(vals[25])
             L3V_delta_threshold = int(vals[29])
+            L5_delta_threshold = int(vals[29]) # FIX
             L0_expansion = string_to_expansion_number(vals[6])
             L1H_expansion = string_to_expansion_number(vals[10])
             L1V_expansion = string_to_expansion_number(vals[14])
@@ -326,10 +353,20 @@ def load_saved_executions(measure="CR_Gauss", dimensions=None, verbose=False):
             L2V_expansion = string_to_expansion_number(vals[22])
             L3H_expansion = string_to_expansion_number(vals[26])
             L3V_expansion = string_to_expansion_number(vals[30])
-            L4_degree_QT = int(vals[33])
-            L4_degree_CT = int(vals[34])
+            L5_expansion = string_to_expansion_number(vals[30]) # FIX
+            L6_degree_QT = int(vals[33])
+            L6_degree_CT = int(vals[34])
             seed = int(vals[35])
-            arguments = [L0_pca_out_dim, L0_sfa_out_dim, L1H_sfa_out_dim, L1V_sfa_out_dim, L2H_sfa_out_dim, L2V_sfa_out_dim, L3H_sfa_out_dim, L3V_sfa_out_dim, L0_delta_threshold, L1H_delta_threshold, L1V_delta_threshold, L2H_delta_threshold, L2V_delta_threshold, L3H_delta_threshold, L3V_delta_threshold, L0_expansion, L1H_expansion, L1V_expansion, L2H_expansion, L2V_expansion, L3H_expansion, L3V_expansion, L4_degree_QT, L4_degree_CT]
+            arguments = [L0_pca_out_dim, L0_sfa_out_dim, L1H_sfa_out_dim,
+                         L1V_sfa_out_dim, L2H_sfa_out_dim, L2V_sfa_out_dim,
+                         L3H_sfa_out_dim, L3V_sfa_out_dim, L5_sfa_out_dim,
+                         L0_delta_threshold, L1H_delta_threshold,
+                         L1V_delta_threshold, L2H_delta_threshold,
+                         L2V_delta_threshold, L3H_delta_threshold,
+                         L3V_delta_threshold, L5_delta_threshold,
+                         L0_expansion, L1H_expansion, L1V_expansion,
+                         L2H_expansion, L2V_expansion, L3H_expansion,
+                         L3V_expansion, L5_expansion, L6_degree_QT, L6_degree_CT]
             if verbose:
                 print("parsed arguments:", arguments)
 
@@ -391,7 +428,6 @@ def load_saved_executions(measure="CR_Gauss", dimensions=None, verbose=False):
     if len(arguments_list) == 0:
         arguments_list = None
         results_list = None
-
 
     return arguments_list, results_list
 
@@ -463,81 +499,64 @@ def progress_callback(res):
 #                acq_optimizer='auto', x0=None, y0=None, random_state=None, verbose=False, callback=None,
 #                n_points=10000, n_restarts_optimizer=5, xi=0.01, kappa=1.96, noise='gaussian', n_jobs=1)
 
-# ['13', '17', '33', '57', '85', '90', '87', '170', '15', '10', '19', '23', '14', '8', '4', '1', '0', '0', '0', '0', '0', '13', '79', '20']
-# [13, 17, 33, 57, 85, 90, 87, 170, 15, 10, 19, 23, 14, 8, 4, 1, 0, 0, 0, 0, 0, 13, 79, 20]
-
-# 13 20 28 50 70 90 120 200 9 19 10 26 6 6 9 0 0 0 0 0 0 0 90 25
 # Output dimensionalities (PCA and iGSFA)
-range_L0_pca_out_dim = (12, 13)  # O [13]  # (12, 14)  # (10, 16) # 13
-range_L0_sfa_out_dim = (16, 21) # N (15, 23)  # O (18, 23)  # (15, 25) # [20] # (20, 21)
-range_L1H_sfa_out_dim = (32, 38)  #E (32, 35)  # O (33, 38)  # (31, 34)  # (20, 36) # [28] # (28, 29)
-range_L1V_sfa_out_dim = (54, 65) # N (50, 65)  # (50, 63)  # [50] # (50, 51)
-range_L2H_sfa_out_dim = (65, 77) # N (65, 95)  #E (65, 75)  # O (68, 78)  # [70] # (70, 71)
-range_L2V_sfa_out_dim = (89, 96) # N (72, 100)  #E (75, 100)  # O (68, 95)  # [90] # (90, 91)
-range_L3H_sfa_out_dim = (111, 150) # N (92, 145) #E (125, 145)  # O (100, 145)  # [120] # (120, 121)
-range_L3V_sfa_out_dim = (139, 230) #E (170, 216)  # O (170, 230) #[200] # (200, 201)
+range_L0_pca_out_dim = (25, 40)
+range_L0_sfa_out_dim = (35, 50)
+range_L1H_sfa_out_dim = (40, 90)
+range_L1V_sfa_out_dim = (60, 140)
+range_L2H_sfa_out_dim = (80, 310)
+range_L2V_sfa_out_dim = (100, 600)
+range_L3H_sfa_out_dim = (120, 610)
+range_L3V_sfa_out_dim = (140, 620)
+range_L5_sfa_out_dim = (150, 630)
+
 # Length of slow part
-range_L0_delta_threshold = (10, 18)  # O (12, 18)  # (1, 20) # [9] # #(9, 10) #
-range_L1H_delta_threshold = (7, 16) # N (7, 18) #E (10, 20)  # O (7, 14)  # [19] # (19, 20)
-range_L1V_delta_threshold = (4, 18) # E(7, 18)  # O (7, 15)  # [10] # (10, 11)
-range_L2H_delta_threshold = (33, 50) # N (15, 46) # O (23, 45)  # [26] # (26, 27)
-range_L2V_delta_threshold = (0, 22)  # O (0, 7)  # [6] # (6, 7)
-range_L3H_delta_threshold = (0, 14)  # O [0]  # [6] # (6, 7)
-range_L3V_delta_threshold = (9, 13)  # O [9]  # (3, 5) # [9] # (9, 10)
-# WARNING two categories cannot be expressed as [n1, n2], instead use e.g., 
+range_L0_delta_threshold = (10, 30)
+range_L1H_delta_threshold = (5, 20)
+range_L1V_delta_threshold = (3, 20)
+range_L2H_delta_threshold = (5, 30)
+range_L2V_delta_threshold = (5, 30)
+range_L3H_delta_threshold = (5, 30)
+range_L3V_delta_threshold = (5, 30)
+range_L5_delta_threshold = (5, 30)
+
+# WARNING two categories cannot be expressed as [n1, n2], instead use e.g., Categorical([0, 3])
 #         otherwise interval (n1, n2) is assumed
 # Expansions
-range_L0_expansion = [1] # N (0, 1)  # O  [1] # [0] # (0, 1)
-range_L1H_expansion = [0] # N Categorical([0, 3]) # O [0] # TRY ALSO 3 [0, 0, 3] # (0, 1)
-range_L1V_expansion = Categorical([0, 3]) # O [3] # (0, 1)
-range_L2H_expansion = [4] # N Categorical([0, 3, 4]) #E (3, 4) # O [0] # (0, 1)
-range_L2V_expansion = Categorical([0, 3, 4]) #E (3, 4) # O [0]  # Categorical([0, 3])   #WARNING############################# [0, 3] # (0, 1)
-range_L3H_expansion = (6, 16) # N (0, 15) #E (6, 15)  # O [7]  # [0, 7, 8, 9, 10] # (0, 0)
-range_L3V_expansion = (17, 21) # N (0, 21) #E (15, 20)  # O (11, 21) # [0, 7, 8, 9] (0, 0)
-range_L4_degree_QT = (40, 109)  # O (40, 119) # [90] # (90, 90)
-range_L4_degree_CT = (13, 26)  # O (10, 26) # [25] # (25, 25)
-cuicuilco_dimensions = (range_L0_pca_out_dim, range_L0_sfa_out_dim, range_L1H_sfa_out_dim, range_L1V_sfa_out_dim, range_L2H_sfa_out_dim, range_L2V_sfa_out_dim, range_L3H_sfa_out_dim, range_L3V_sfa_out_dim, range_L0_delta_threshold, range_L1H_delta_threshold, range_L1V_delta_threshold, range_L2H_delta_threshold, range_L2V_delta_threshold, range_L3H_delta_threshold, range_L3V_delta_threshold, range_L0_expansion, range_L1H_expansion, range_L1V_expansion, range_L2H_expansion, range_L2V_expansion, range_L3H_expansion, range_L3V_expansion, range_L4_degree_QT, range_L4_degree_CT) # tuple or list? 
+range_L0_expansion = (1, 3)
+range_L1H_expansion = (300, 301)
+range_L1V_expansion = (300, 301)
+range_L2H_expansion = (300, 301)
+range_L2V_expansion = (300, 301)
+range_L3H_expansion = (200, 202)
+range_L3V_expansion = (200, 202)
+range_L5_expansion = (400, 402)
+range_L4_degree_QT = (20, 89)
+range_L4_degree_CT = (5, 20)
+cuicuilco_dimensions = (range_L0_pca_out_dim, range_L0_sfa_out_dim, range_L1H_sfa_out_dim,
+                        range_L1V_sfa_out_dim, range_L2H_sfa_out_dim, range_L2V_sfa_out_dim,
+                        range_L3H_sfa_out_dim, range_L3V_sfa_out_dim, range_L5_sfa_out_dim,
+                        range_L0_delta_threshold, range_L1H_delta_threshold,
+                        range_L1V_delta_threshold, range_L2H_delta_threshold,
+                        range_L2V_delta_threshold, range_L3H_delta_threshold,
+                        range_L3V_delta_threshold, range_L5_delta_threshold,
+                        range_L0_expansion, range_L1H_expansion, range_L1V_expansion,
+                        range_L2H_expansion, range_L2V_expansion, range_L3H_expansion,
+                        range_L3V_expansion, range_L5_expansion,
+                        range_L4_degree_QT, range_L4_degree_CT)
 
 print("cuicuilco_dimensions:", cuicuilco_dimensions)
-# ( 13,  20,  36,  61,  75,  95, 140, 210,  16,  12,  10,  40,   5,   0,   9,   1,   0,   3,   0,   0,   7,  20, 109,  15, )
-#( 13,  19,  33,  51,  73,  90, 114, 188,  16,  11,  15,  29,   3,   0,   9,   1,   0,   3,   0,   0,   7,  19,  42,  24, )
-#( 13,  20,  36,  60,  72,  89, 139, 170,  14,   7,  10,  40,   5,   0,   9,   1,   0,   3,   0,   0,   7,  19, 101,  19, )
-#( 13,  19,  35,  54,  71,  91, 111, 196,  14,  11,  14,  36,   3,   0,   9,   1,   0,   3,   0,   0,   7,  17,  80,  21, )
-#( 13,  19,  34,  53,  72,  89, 130, 200,  14,  12,  13,  36,   1,   0,   9,   1,   0,   3,   0,   0,   7,  17,  83,  24, )
-
 # np.random.seed(1234) # use a new random seed each time to allow combination of executions on different systems
-
 argument_list, results_list = load_saved_executions(measure="CR_Gauss_mix", dimensions=cuicuilco_dimensions, verbose=False)
-display_best_arguments(argument_list, results_list)
+display_best_arguments(argument_list, results_list, consider_std=False)
 quit()
 
 #argument_list = None
 #results_list = None
-#argument_list = [ # Best hyperparameters for original slow feature scaling method
+#argument_list = [
 #[13, 22, 38, 56, 77, 77, 124, 230, 17, 9, 14, 33, 6, 0, 9, 1, 0, 3, 0, 0, 7, 18, 91, 19],
 #[13, 21, 37, 55, 78, 95, 108, 170, 18, 7, 15, 45, 2, 0, 9, 1, 0, 3, 0, 0, 7, 21, 40, 26],
-#[13, 19, 35, 54, 71, 91, 111, 196, 14, 11, 14, 36, 3, 0, 9, 1, 0, 3, 0, 0, 7, 17, 80, 21],
-#[13, 17, 33, 65, 95, 72, 92, 139,  15, 13, 13, 24, 4, 0, 3, 2, 0, 3, 0, 0, 7, 9,  89, 24],
-#[13, 17, 34, 54, 95, 76, 100, 144, 13, 18, 4,  30, 4, 0, 1, 1, 0, 0, 0, 0, 0, 0,  98, 24],
-#[13, 22, 38, 56, 77, 77, 124, 230, 17,  9, 14, 33, 6, 0, 9, 1, 0, 3, 0, 0, 7, 18, 91, 19]
 #]
-#[12,  15,  35,  65,  70,  95, 140, 196,  10,  10,  12,  29,  16,   4,  11,   1,   3,   0,   4,   4,  15,  20, 109,  18],
-#[12,  23,  35,  64,  67,  98, 127, 184,  12,  14,  18,  29,   1,   2,   9,   0,   3,   0,   4,   4,   9,  18, 109,  20],
-#[15,  19,  34,  59,  74,  95, 131, 208,  14,  12,  14,  39,   1,  10,  10,   0,   3,   0,   3,   3,  14,  13,  57,  18],
-#[15,  20,  40,  58,  80,  76, 134, 201,  14,  12,  13,  47,  10,  10,   9,   1,   0,   3,   3,   3,  13,  15,  90,  13],
-#[14,  19,  35,  58,  81,  91, 127, 203,  11,  15,  17,  42,   7,  10,   9,   0,   3,   3,   0,   4,   7,  17, 100,  22],
-#[14,  23,  37,  58,  69, 100, 141, 222,  12,  16,  18,  16,   6,   3,   9,   1,   3,   3,   3,   3,  12,  19,  59,  21],
-#[14,  23,  34,  64,  68,  73, 118, 216,  16,  11,  16,  25,   9,   9,  11,   0,   0,   0,   3,   0,  14,  20,  73,  23],
-#[12,  20,  40,  60,  65,  68, 118, 170,  18,  18,   7,  15,  20,  12,  12,   0,   3,   3,   3,   3,  15,  20,  82,  23],
-#[12,  24,  35,  58,  76,  84, 131, 203,  12,  15,  13,  43,  20,   4,  12,   1,   3,   3,   3,   0,  11,  19, 107,  10],
-#[16,  15,  36,  54,  82,  88, 145, 218,  12,  10,  12,  37,  20,   3,  12,   0,   0,   3,   4,   4,  14,  19,  97,  10]]
-
-# 13,  18,  34,  55,  75,  73, 102, 169,  16,  10,  10,  29,   2,   0,   9,   1,   0,   3,   0,   0,   7,  12,  89,  24]]
-#argument_list += [[13, 17, 34, 61, 88, 94, 84, 139, 14, 11, 17, 23, 5, 7, 4, 0, 0, 0, 0, 3, 7, 14, 54, 24],
-#    [13, 16, 33, 60, 82, 82, 99, 162, 15, 10, 18, 26, 10, 1, 0, 0, 0, 3, 0, 3, 9, 14, 36, 3],
-#    [13, 17, 31, 56, 87, 81, 88, 171, 13, 14, 13, 28, 3, 7, 0, 0, 0, 3, 0, 0, 10, 14, 66, 21],
-#    [13, 15, 32, 58, 79, 75, 86, 142, 13, 10, 16, 28, 9, 2, 0, 0, 0, 0, 0, 3, 9, 14, 12, 11]]
-#quit()
 
 if results_list is not None:
     results_list = [1.0 - result for result in results_list]

@@ -218,8 +218,10 @@ class ParamsCIFAR10Experiment(system_parameters.ParamsSystem):
         return sSeq
 
 ParamsCIFAR10Func_32x32 = ParamsCIFAR10Experiment(experiment_seed, experiment_basedir + '/cifar-10-batches-py',
-                                                  num_hold_out_images=0)
+                                                  num_hold_out_images=10000)
 
+ParamsCIFAR10Func_32x32_test = ParamsCIFAR10Experiment(experiment_seed, experiment_basedir + '/cifar-10-batches-py',
+                                                  num_hold_out_images=0)
 
 ############################################################################################
 # ####################   Experiment that creates random data    #############################

@@ -88,47 +88,65 @@ def map_expansion_number_to_expansion_cifar(exp_n):
             raise Exception(ex)
     elif 200 <= exp_n < 300:
         if exp_n == 200:
-            return [identity, unsigned_08expo, ch2o0s10QT]
+            return [identity, unsigned_08expo]
         elif exp_n == 201:
-            return [identity, unsigned_08expo, ch2o0s15QT]
+            return [identity, unsigned_08expo, ch2o0s10QT]
         elif exp_n == 202:
-            return [identity, unsigned_08expo, ch2o0s20QT]
+            return [identity, unsigned_08expo, ch2o0s15QT]
         elif exp_n == 203:
-            return [identity, unsigned_08expo, ch2o0s25QT]
+            return [identity, unsigned_08expo, ch2o0s20QT]
         elif exp_n == 204:
-            return [identity, unsigned_08expo, ch2o0s30QT]
+            return [identity, unsigned_08expo, ch2o0s25QT]
         elif exp_n == 205:
-            return [identity, unsigned_08expo, ch2o0s35QT]
+            return [identity, unsigned_08expo, ch2o0s30QT]
         elif exp_n == 206:
-            return [identity, unsigned_08expo, ch2o0s40QT]
+            return [identity, unsigned_08expo, ch2o0s35QT]
         elif exp_n == 207:
-            return [identity, unsigned_08expo, ch2o0s45QT]
+            return [identity, unsigned_08expo, ch2o0s40QT]
         elif exp_n == 208:
-            return [identity, unsigned_08expo, ch2o0s50QT]
+            return [identity, unsigned_08expo, ch2o0s45QT]
         elif exp_n == 209:
-            return [identity, unsigned_08expo, ch2o0s55QT]
+            return [identity, unsigned_08expo, ch2o0s50QT]
         elif exp_n == 210:
-            return [identity, unsigned_08expo, ch2o0s60QT]
+            return [identity, unsigned_08expo, ch2o0s55QT]
         elif exp_n == 211:
-            return [identity, unsigned_08expo, ch2o0s65QT]
+            return [identity, unsigned_08expo, ch2o0s60QT]
         elif exp_n == 212:
-            return [identity, unsigned_08expo, ch2o0s70QT]
+            return [identity, unsigned_08expo, ch2o0s65QT]
         elif exp_n == 213:
-            return [identity, unsigned_08expo, ch2o0s75QT]
+            return [identity, unsigned_08expo, ch2o0s70QT]
         elif exp_n == 214:
+            return [identity, unsigned_08expo, ch2o0s75QT]
+        elif exp_n == 215:
             return [identity, unsigned_08expo, ch2o0s80QT]
         else:
             ex = "Invalid value for expansion:" + str(exp_n) + "-" + str(type(exp_n))
             raise Exception(ex)
     elif 300 <= exp_n < 400:
         if exp_n == 300:
+            return [identity, unsigned_08expo]
+        if exp_n == 301:
             return [identity, unsigned_08expo, ch3o0s10QT]
-        elif exp_n == 301:
-            return [identity, unsigned_08expo, ch3o0s15QT]
         elif exp_n == 302:
-            return [identity, unsigned_08expo, ch3o0s20QT]
+            return [identity, unsigned_08expo, ch3o0s15QT]
         elif exp_n == 303:
+            return [identity, unsigned_08expo, ch3o0s20QT]
+        elif exp_n == 304:
             return [identity, unsigned_08expo, ch3o0s25QT]
+        else:
+            ex = "Invalid value for expansion:" + str(exp_n) + "-" + str(type(exp_n))
+            raise Exception(ex)
+    elif 400 <= exp_n < 500:
+        if exp_n == 400:
+            return [identity, unsigned_08expo]
+        if exp_n == 401:
+            return [identity, unsigned_08expo, ch4o0s10QT]
+        elif exp_n == 402:
+            return [identity, unsigned_08expo, ch4o0s15QT]
+        elif exp_n == 403:
+            return [identity, unsigned_08expo, ch4o0s20QT]
+        elif exp_n == 404:
+            return [identity, unsigned_08expo, ch4o0s25QT]
         else:
             ex = "Invalid value for expansion:" + str(exp_n) + "-" + str(type(exp_n))
             raise Exception(ex)
@@ -230,7 +248,7 @@ pSFALayerL3H.sfa_args = {"expansion_funcs": [identity, ch2s300u08],
                          "slow_feature_scaling_method": "data_dependent",
                          "reconstruct_with_sfa": False,
                          "delta_threshold": 9}
-pSFALayerL3H.clone_layer = True
+pSFALayerL3H.clone_layer = False
 
 pSFALayerL3V = system_parameters.ParamsSFALayer()
 pSFALayerL3V.name = "Homogeneous HiGSFA Layer L3V 20x20, 2x2"
@@ -245,7 +263,7 @@ pSFALayerL3V.sfa_args = {"expansion_funcs": [identity, ch2s300u08],
                          "slow_feature_scaling_method": "data_dependent",
                          "reconstruct_with_sfa": False,
                          "delta_threshold": 9}
-pSFALayerL3V.clone_layer = True
+pSFALayerL3V.clone_layer = False
 
 # pSFALayerL4H = system_parameters.ParamsSFALayer()
 # pSFALayerL4H.name = "Homogeneous HiGSFA Layer L4H 28x20, 2x4"
