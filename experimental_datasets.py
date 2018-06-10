@@ -136,17 +136,17 @@ class ParamsCIFAR10Experiment(system_parameters.ParamsSystem):
 
         if self.num_hold_out_images == 0:
             self.num_images_training = self.training_data_size
-            # self.num_images_supervised = self.traning_data_size
+            # self.num_images_supervised = self.training_data_size
             self.num_images_test = self.test_data['data'].shape[0]
             self.indices_training = numpy.arange(self.training_data_size)
             # self.indices_supervised = all_subimages_training
             self.indices_test = numpy.arange(self.test_data_size)
             self.effective_test_data = self.test_data
-        elif self.num_hold_out_images < self.traning_data_size:
-            all_subimages_training = numpy.arange(self.traning_data_size)
+        elif self.num_hold_out_images < self.training_data_size:
+            all_subimages_training = numpy.arange(self.training_data_size)
             numpy.random.shuffle(all_subimages_training)
             self.num_images_training = self.training_data_size - self.num_hold_out_images
-            # self.num_images_supervised = self.traning_data_size - self.num_hold_out_images
+            # self.num_images_supervised = self.training_data_size - self.num_hold_out_images
             self.num_images_test = self.num_hold_out_images
             self.indices_training = all_subimages_training[0:self.num_images_training]
             # self.indices_supervised = all_subimages_training

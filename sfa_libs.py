@@ -190,8 +190,7 @@ def comp_typical_delta_eta(x, block_size, num_reps=10, training_mode='serial'):
     elif training_mode is None or training_mode == "regular":
         delta = comp_delta(x)    
     else:
-        er = "Training mode unknown:" + training_mode + "still, computing delta as a sequence"
-        print (er)
+        print("Training mode unknown:", training_mode, "still, computing delta as a sequence")
         delta = comp_delta(x)
 
     if eta is None:

@@ -169,7 +169,6 @@ pSFALayerL0.pca_out_dim = 36  # images are RGB, thus the original patch dimensio
 pSFALayerL0.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
 pSFALayerL0.sfa_out_dim = 9 + 35
 pSFALayerL0.sfa_args = {"expansion_funcs": [identity, unsigned_08expo],
-                        "max_length_slow_part": 9,
                         "slow_feature_scaling_method": "data_dependent",
                         "reconstruct_with_sfa": False,
                         "delta_threshold": 9}
@@ -184,7 +183,6 @@ pSFALayerL1H.y_field_spacing = 1
 pSFALayerL1H.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
 pSFALayerL1H.sfa_out_dim = 9 + 65
 pSFALayerL1H.sfa_args = {"expansion_funcs": [identity, ch3s30u08],
-                         "max_length_slow_part": 9,
                          "slow_feature_scaling_method": "data_dependent",
                          "reconstruct_with_sfa": False,
                          "delta_threshold": 9}
@@ -199,7 +197,6 @@ pSFALayerL1V.y_field_spacing = 2
 pSFALayerL1V.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
 pSFALayerL1V.sfa_out_dim = 9 + 120
 pSFALayerL1V.sfa_args = {"expansion_funcs": [identity, ch3s50u08],
-                         "max_length_slow_part": 9,
                          "slow_feature_scaling_method": "data_dependent",
                          "reconstruct_with_sfa": False,
                          "delta_threshold": 9}
@@ -214,7 +211,6 @@ pSFALayerL2H.y_field_spacing = 1
 pSFALayerL2H.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
 pSFALayerL2H.sfa_out_dim = 9 + 300  # 200
 pSFALayerL2H.sfa_args = {"expansion_funcs": [identity, ch3s60u08],
-                         "max_length_slow_part": 9,
                          "slow_feature_scaling_method": "data_dependent",
                          "reconstruct_with_sfa": False,
                          "delta_threshold": 9}
@@ -229,7 +225,6 @@ pSFALayerL2V.y_field_spacing = 2
 pSFALayerL2V.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
 pSFALayerL2V.sfa_out_dim = 9 + 550  # 300
 pSFALayerL2V.sfa_args = {"expansion_funcs": [identity, ch3s70u08],
-                         "max_length_slow_part": 9,
                          "slow_feature_scaling_method": "data_dependent",
                          "reconstruct_with_sfa": False,
                          "delta_threshold": 9}
@@ -244,7 +239,6 @@ pSFALayerL3H.y_field_spacing = 1
 pSFALayerL3H.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
 pSFALayerL3H.sfa_out_dim = 9 + 700 # 400
 pSFALayerL3H.sfa_args = {"expansion_funcs": [identity, ch2s300u08],
-                         "max_length_slow_part": 9,
                          "slow_feature_scaling_method": "data_dependent",
                          "reconstruct_with_sfa": False,
                          "delta_threshold": 9}
@@ -259,7 +253,6 @@ pSFALayerL3V.y_field_spacing = 1
 pSFALayerL3V.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
 pSFALayerL3V.sfa_out_dim = 9 + 850  # 450
 pSFALayerL3V.sfa_args = {"expansion_funcs": [identity, ch2s300u08],
-                         "max_length_slow_part": 9,
                          "slow_feature_scaling_method": "data_dependent",
                          "reconstruct_with_sfa": False,
                          "delta_threshold": 9}
@@ -304,7 +297,6 @@ pSFALayerL5.y_field_spacing = 1
 pSFALayerL5.sfa_node_class = mdp.nodes.iGSFANode  # mdp.nodes.GSFANode
 pSFALayerL5.sfa_out_dim = 9 + 1200
 pSFALayerL5.sfa_args = {"expansion_funcs": [identity, ch4s300u08],
-                         "max_length_slow_part": 9,
                          "slow_feature_scaling_method": None,
                          "reconstruct_with_sfa": False,
                          "delta_threshold": 9}
@@ -325,7 +317,16 @@ pSFALayerL6.sfa_args = {}
 
 network = HiGSFA_CIFAR10_Network_9L_config = copy.deepcopy(HiGSFA_CIFAR10_Network_11L)
 network.layers.append(pSFALayerL6)
-network.L8 = pSFALayerL6
+network.L0 = network.layers[0]
+network.L1 = network.layers[1]
+network.L2 = network.layers[2]
+network.L3 = network.layers[3]
+network.L4 = network.layers[4]
+network.L5 = network.layers[5]
+network.L6 = network.layers[6]
+network.L7 = network.layers[7]
+network.L8 = network.layers[8]
+
 try:
     fd = open("HiGSFA_CIFAR10_Network_9L_config.txt", "r")
     arguments = fd.readline().strip().split(" ")
@@ -394,6 +395,10 @@ try:
     for layer in network.layers:
         if "slow_feature_scaling_method" in layer.sfa_args.keys():
             layer.sfa_args["slow_feature_scaling_method"] = "data_dependent2"
+except Exception as ex:
+    print("Unable to set  parameters:" + str(ex))
+    raise(ex)
+    del HiGSFA_CIFAR10_Network_9L_config
 
 
 ###########################################################################################

@@ -117,18 +117,21 @@ def expansion_number_to_string(exp_n):
         ex = "invalid expansion number: " + str(exp_n)
         raise Exception(ex)
 
-valid_expansion_numbers = range(0, 17) + range(200, 215) + range(300, 304)
-map_exp_n_to_string = [expansion_number_to_string(i) for i in valid_expansion_numbers]
+valid_expansion_numbers = range(0, 17) + range(200, 216) + range(300, 305) + range(400, 405)
+map_exp_n_to_string = {}
 map_string_to_exp_n = {}
-for i in valid_expansion_numbers:
-    map_string_to_exp_n[map_exp_n_to_string[i]] = i
+for i in valid_expansion_numbers[::-1]:
+    entry = map_exp_n_to_string[i] = expansion_number_to_string(i)
+    map_string_to_exp_n[entry] = i
+print("map_exp_n_to_string:", map_exp_n_to_string)
+print("map_string_to_exp_n", map_string_to_exp_n)
 
 
 def string_to_expansion_number(string):
     if string in map_string_to_exp_n.keys():
         return map_string_to_exp_n[string]
     else:
-        ex = "Invalid expansion string: " + string
+        ex = "Invalid expansion string: " + string + " of type " + str(type(string))
         raise Exception(ex)
 
 
@@ -220,6 +223,7 @@ def cuicuilco_evaluation(arguments, measure="CR_Gauss", verbose=False):
                  L2V_delta_threshold, L3H_delta_threshold, L3V_delta_threshold, L5_delta_threshold,
                  L0_expansion, L1H_expansion, L1V_expansion, L2H_expansion, L2V_expansion, L3H_expansion,
                  L3V_expansion, L5_expansion, L6_degree_QT, L6_degree_CT)
+    print("arguments:", arguments)
     print("Creating configuration file ")
     fd = open("HiGSFA_CIFAR10_Network_9L_config.txt", "w")
     txt = ""
@@ -237,7 +241,8 @@ def cuicuilco_evaluation(arguments, measure="CR_Gauss", verbose=False):
 
         output_filename = "hyper_t/CIFAR_9L_5cloneL_L0_%dPC_%dSF_%s_%dF_" + \
                           "L1H_%dSF_%s_%dF_L1V_%dSF_%s_%dF_L2H_%dSF_%s_%dF_" + \
-                          "L2V_%dSF_%s_%dF_L3H_%dSF_%s_%dF_L5_%dSF_%s_%dF_L6_QT%dAP_CT%dAP_seed%d.txt"
+                          "L2V_%dSF_%s_%dF_L3H_%dSF_%s_%dF_L3V_%dSF_%s_%dF_" + \
+                          "L5_%dSF_%s_%dF_L6_QT%dAP_CT%dAP_seed%d.txt"
         output_filename = output_filename % (L0_pca_out_dim, L0_delta_threshold, expansion_number_to_string(L0_expansion), L0_sfa_out_dim,
                                 L1H_delta_threshold, expansion_number_to_string(L1H_expansion), L1H_sfa_out_dim,
                                 L1V_delta_threshold, expansion_number_to_string(L1V_expansion), L1V_sfa_out_dim,
@@ -268,11 +273,11 @@ def cuicuilco_evaluation(arguments, measure="CR_Gauss", verbose=False):
                   "--GraphExactLabelLearning=0 --OutputInsteadOfSVM2=0 --NumberTargetLabels=0 --EnableSVR=0 " + \
                   "--SVR_gamma=0.85 --SVR_C=48.0 --SVR_epsilon=0.075 --SVRInsteadOfSVM2=1 --ObjectiveLabel=0 " + \
                   "--ExperimentalDataset=ParamsCIFAR10Func_32x32 " +\
-                  "--HierarchicalNetwork=HiGSFA_CIFAR10_Network_9L_dd2_config_32x32_9L_Overlap_dd2_config " + \
+                  "--HierarchicalNetwork=HiGSFA_CIFAR10_Network_9L_dd2_config " + \
                   "--SleepM=0 2>&1 > " + output_filename
 
             print("excecuting command: ", command)
-            quit()
+            #quit()
             os.system(command)
 
         if verbose:
@@ -297,9 +302,9 @@ def extract_performance_metric_from_file(output_filename, measure = "CR_Gauss", 
             print("warning, nan metric was found and fixed as metric_CR_Gauss - 0.0001")
             metric_CR_Gauss_soft = metric_CR_Gauss - 0.0001
     else:
-        print("unable to find metrics in file (defaulting to 0.95)")
-        metric_CR_Gauss = 0.95
-        metric_CR_Gauss_soft = 0.95  
+        print("unable to find metrics in file (defaulting to 0.4)")
+        metric_CR_Gauss = 0.4
+        metric_CR_Gauss_soft = 0.4
     if measure == "CR_Gauss":
         metric = metric_CR_Gauss
     elif measure == "CR_Gauss_soft":
@@ -317,35 +322,35 @@ def extract_performance_metric_from_file(output_filename, measure = "CR_Gauss", 
 def load_saved_executions(measure="CR_Gauss", dimensions=None, verbose=False):
     path = "hyper_t"
     only_files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
-    only_files = [f for f in only_files if f.startswith("MNIST_24x24_7L")]
+    only_files = [f for f in only_files if f.startswith("CIFAR")]
     arguments_list = []
     results_list = []
     for f in only_files:
         # print("filename %s was found" % f)
         # MNIST_24x24_7L_L0cloneL_16PC_1SF_qtExp_25F_L1cloneL_1SF_u08Exp_20F_L2clone_30SF_u08Exp_80F_L3cloneL_1SF_u08Exp_100F_L4cloneL_20F_u08Exp_120F_L5_20F_u08Exp_90SF_L6_20F_u08Exp_250SF_NoHead_QT90AP_CT25AP_seed13153651.txt
         vals = f.split("_")
-        vals = [val.strip("PCFSseedQTA.txt") for val in vals]
+        #vals = [val.strip("PCFSseedQTA.txt") for val in vals]
         if verbose:
             print("vals=", vals)
         # quit()
         if len(vals) >= 36:
-            L0_pca_out_dim = int(vals[4])
-            L0_sfa_out_dim = int(vals[7])
-            L1H_sfa_out_dim = int(vals[11])
-            L1V_sfa_out_dim = int(vals[15]) 
-            L2H_sfa_out_dim = int(vals[19])
-            L2V_sfa_out_dim = int(vals[23])
-            L3H_sfa_out_dim = int(vals[27])
-            L3V_sfa_out_dim = int(vals[31])
-            L5_sfa_out_dim = int(vals[31]) # FIX
-            L0_delta_threshold = int(vals[5])
-            L1H_delta_threshold = int(vals[9])
-            L1V_delta_threshold = int(vals[13]) 
-            L2H_delta_threshold = int(vals[17])
-            L2V_delta_threshold = int(vals[21])
-            L3H_delta_threshold = int(vals[25])
-            L3V_delta_threshold = int(vals[29])
-            L5_delta_threshold = int(vals[29]) # FIX
+            L0_pca_out_dim = int(vals[4].strip("PC"))
+            L0_sfa_out_dim = int(vals[7].strip("SF"))
+            L1H_sfa_out_dim = int(vals[11].strip("SF"))
+            L1V_sfa_out_dim = int(vals[15].strip("SF")) 
+            L2H_sfa_out_dim = int(vals[19].strip("SF"))
+            L2V_sfa_out_dim = int(vals[23].strip("SF"))
+            L3H_sfa_out_dim = int(vals[27].strip("SF"))
+            L3V_sfa_out_dim = int(vals[31].strip("SF"))
+            L5_sfa_out_dim = int(vals[35].strip("SF")) # FIX
+            L0_delta_threshold = int(vals[5].strip("SF"))
+            L1H_delta_threshold = int(vals[9].strip("SF"))
+            L1V_delta_threshold = int(vals[13].strip("SF")) 
+            L2H_delta_threshold = int(vals[17].strip("SF"))
+            L2V_delta_threshold = int(vals[21].strip("SF"))
+            L3H_delta_threshold = int(vals[25].strip("SF"))
+            L3V_delta_threshold = int(vals[29].strip("SF"))
+            L5_delta_threshold = int(vals[33].strip("SF")) # FIX
             L0_expansion = string_to_expansion_number(vals[6])
             L1H_expansion = string_to_expansion_number(vals[10])
             L1V_expansion = string_to_expansion_number(vals[14])
@@ -353,10 +358,24 @@ def load_saved_executions(measure="CR_Gauss", dimensions=None, verbose=False):
             L2V_expansion = string_to_expansion_number(vals[22])
             L3H_expansion = string_to_expansion_number(vals[26])
             L3V_expansion = string_to_expansion_number(vals[30])
-            L5_expansion = string_to_expansion_number(vals[30]) # FIX
-            L6_degree_QT = int(vals[33])
-            L6_degree_CT = int(vals[34])
-            seed = int(vals[35])
+            L5_expansion = string_to_expansion_number(vals[34]) # FIX
+            L6_degree_QT = int(vals[37].strip("QTAP"))
+            L6_degree_CT = int(vals[38].strip("CTAP"))
+            seed = int(vals[39].strip("seed.txt"))
+            if L1H_expansion == 1:
+		L1H_expansion = 300
+            if L1V_expansion == 1:
+                L1V_expansion = 300
+            if L2H_expansion == 1:
+                L2H_expansion = 300
+            if L2V_expansion == 1:
+                L2V_expansion = 300
+            if L3H_expansion == 1:
+                L3H_expansion = 200
+            if L3V_expansion == 1:
+                L3V_expansion = 200
+            if L5_expansion == 1:
+                L5_expansion = 400
             arguments = [L0_pca_out_dim, L0_sfa_out_dim, L1H_sfa_out_dim,
                          L1V_sfa_out_dim, L2H_sfa_out_dim, L2V_sfa_out_dim,
                          L3H_sfa_out_dim, L3V_sfa_out_dim, L5_sfa_out_dim,
@@ -502,18 +521,18 @@ def progress_callback(res):
 # Output dimensionalities (PCA and iGSFA)
 range_L0_pca_out_dim = (25, 40)
 range_L0_sfa_out_dim = (35, 50)
-range_L1H_sfa_out_dim = (40, 90)
-range_L1V_sfa_out_dim = (60, 140)
-range_L2H_sfa_out_dim = (80, 310)
-range_L2V_sfa_out_dim = (100, 600)
-range_L3H_sfa_out_dim = (120, 610)
-range_L3V_sfa_out_dim = (140, 620)
-range_L5_sfa_out_dim = (150, 630)
+range_L1H_sfa_out_dim = (70, 90)
+range_L1V_sfa_out_dim = (120, 140)
+range_L2H_sfa_out_dim = (180, 310)
+range_L2V_sfa_out_dim = (200, 600)
+range_L3H_sfa_out_dim = (220, 610)
+range_L3V_sfa_out_dim = (240, 620)
+range_L5_sfa_out_dim = (250, 630)
 
 # Length of slow part
-range_L0_delta_threshold = (10, 30)
+range_L0_delta_threshold = (15, 30)
 range_L1H_delta_threshold = (5, 20)
-range_L1V_delta_threshold = (3, 20)
+range_L1V_delta_threshold = (5, 20)
 range_L2H_delta_threshold = (5, 30)
 range_L2V_delta_threshold = (5, 30)
 range_L3H_delta_threshold = (5, 30)
@@ -526,7 +545,7 @@ range_L5_delta_threshold = (5, 30)
 range_L0_expansion = (1, 3)
 range_L1H_expansion = (300, 301)
 range_L1V_expansion = (300, 301)
-range_L2H_expansion = (300, 301)
+range_L2H_expansion = [300]  # (300, 301)
 range_L2V_expansion = (300, 301)
 range_L3H_expansion = (200, 202)
 range_L3V_expansion = (200, 202)
@@ -547,7 +566,7 @@ cuicuilco_dimensions = (range_L0_pca_out_dim, range_L0_sfa_out_dim, range_L1H_sf
 
 print("cuicuilco_dimensions:", cuicuilco_dimensions)
 # np.random.seed(1234) # use a new random seed each time to allow combination of executions on different systems
-argument_list, results_list = load_saved_executions(measure="CR_Gauss_mix", dimensions=cuicuilco_dimensions, verbose=False)
+argument_list, results_list = load_saved_executions(measure="CR_Gauss_mix", dimensions=cuicuilco_dimensions, verbose=True)
 display_best_arguments(argument_list, results_list, consider_std=False)
 quit()
 
@@ -563,7 +582,7 @@ if results_list is not None:
 
 print("cuicuilco_dimensions:", cuicuilco_dimensions)
 t0 = time.time()
-res = gp_minimize(func=cuicuilco_f_CE_Gauss_mix, dimensions=cuicuilco_dimensions, base_estimator=None, n_calls=50, n_random_starts=0,  # 20 10
+res = gp_minimize(func=cuicuilco_f_CE_Gauss_mix, dimensions=cuicuilco_dimensions, base_estimator=None, n_calls=100, n_random_starts=0,  # 20 10
                   acq_func='gp_hedge', acq_optimizer='auto', x0=argument_list, y0=results_list, random_state=None, verbose=False,
                   callback=progress_callback, n_points=1*10000, n_restarts_optimizer=5,   # n_points=10000
                   xi=0.01, kappa=1.96, noise='gaussian', n_jobs=1)
