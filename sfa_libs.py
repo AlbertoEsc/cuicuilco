@@ -41,7 +41,7 @@ def wider(imag, scale_x=1):
 
 
 def wider_1Darray(x, scale_x=1):
-    z = numpy.zeros(x.shape[0]*scale_x)
+    z = numpy.zeros(x.shape[0]*scale_x, dtype=x.dtype)
     for i in range(x.shape[0]):
         z[scale_x*i:scale_x*(i+1)] = x[i]
     return z

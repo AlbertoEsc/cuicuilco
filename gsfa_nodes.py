@@ -1255,7 +1255,7 @@ class iGSFANode(mdp.Node):
         return True
 
     # TODO: should train_mode be renamed training_mode?
-    def _train(self, x, block_size=None, train_mode=None, node_weights=None, edge_weights=None, verbose=True, **argv):
+    def _train(self, x, block_size=None, train_mode=None, node_weights=None, edge_weights=None, verbose=False, **argv):
         """Trains an iGSFA node on data 'x'
 
         The parameters:  block_size, train_mode, node_weights, and edge_weights are passed to the training function of
@@ -1477,7 +1477,7 @@ class iGSFANode(mdp.Node):
         self.stop_training()
 
     def multiple_train(self, x, block_size=None, train_mode=None, node_weights=None,
-                       edge_weights=None, verbose=True):
+                       edge_weights=None, verbose=False):
         """This function should not be called directly. Use instead the train method, which will decide whether
         multiple-training is enabled, and call this function if needed. """
         # TODO: is the following line needed? or also self.set_input_dim? or self._input_dim?
@@ -1610,7 +1610,7 @@ class iGSFANode(mdp.Node):
             else:
                 self.magn_n_sfa_x = 1.0
             if verbose:
-                print("method: data dependent2, self.magn_n_sfa_x:", self.magn_n_sfa_x, "val1:", val1, "val2:", val2)
+                print("method: data dependent2, self.magn_n_sfa_x:", self.magn_n_sfa_x)
         else:
             er = "Unknown slow feature scaling method" + str(self.slow_feature_scaling_method)
             raise Exception(er)

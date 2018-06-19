@@ -162,13 +162,13 @@ def cuicuilco_evaluation(arguments, measure="CR_Gauss", verbose=False):
     if L0_pca_out_dim + L0_delta_threshold < L0_sfa_out_dim:
         L0_delta_threshold = L0_sfa_out_dim - L0_pca_out_dim
         print("Attempting to solve incompatibility case 1", L0_pca_out_dim, L0_delta_threshold, L0_sfa_out_dim)
-    if L0_delta_threshold < 1 or L0_delta_threshold > 36:
-        incompatible = 21
+    #if L0_delta_threshold < 1 or L0_delta_threshold > 36:
+    #    incompatible = 21
 
     if 2 * L2H_sfa_out_dim + L2V_delta_threshold < L2V_sfa_out_dim:
         L2V_delta_threshold - 2 * L2H_sfa_out_dim
-    if L2V_delta_threshold < 1 or L2V_delta_threshold > 36:
-        incompatible = 22
+    #if L2V_delta_threshold < 1 or L2V_delta_threshold > 36:
+    #    incompatible = 22
 
     if L0_pca_out_dim + L0_delta_threshold < L0_sfa_out_dim:
         incompatible = 1
@@ -197,9 +197,13 @@ def cuicuilco_evaluation(arguments, measure="CR_Gauss", verbose=False):
     elif L3V_delta_threshold > 2 * L3H_sfa_out_dim:
         incompatible = 13
     if L0_delta_threshold > L0_sfa_out_dim:
-        incompatible = 14
+        L0_delta_threshold = (L0_delta_threshold + L0_sfa_out_dim) // 2
+        L0_sfa_out_dim = L0_delta_threshold
+        print("Attempting to solve incompatibility case 14:", L0_delta_threshold, L0_sfa_out_dim)
     elif L1H_delta_threshold > L1H_sfa_out_dim:
-        incompatible = 15
+        L1H_delta_threshold = (L1H_delta_threshold + L1H_sfa_out_dim) // 2
+        L1H_sfa_out_dim = L1H_delta_threshold
+        print("Attempting to solve incompatibility case 15:", L1H_delta_threshold, L1H_sfa_out_dim)
     elif L1V_delta_threshold > L1V_sfa_out_dim:
         incompatible = 16
     elif L2H_delta_threshold > L2H_sfa_out_dim:
@@ -233,7 +237,7 @@ def cuicuilco_evaluation(arguments, measure="CR_Gauss", verbose=False):
     fd.close()
     print("created configuration file with contents:", txt)
 
-    cuicuilco_experiment_seeds = [112210] # 112220, 112230] #, 112240] #[112244, 112255, 112266, 112277]  # , 112277]
+    cuicuilco_experiment_seeds = [112210, 112220] # 112220, 112230] #, 112240] #[112244, 112255, 112266, 112277]  # , 112277]
     metrics = []
     for cuicuilco_experiment_seed in cuicuilco_experiment_seeds:  #112233 #np.random.randint(2**25)  #     np.random.randn()
         os.putenv("CUICUILCO_EXPERIMENT_SEED", str(cuicuilco_experiment_seed))
@@ -519,39 +523,39 @@ def progress_callback(res):
 #                n_points=10000, n_restarts_optimizer=5, xi=0.01, kappa=1.96, noise='gaussian', n_jobs=1)
 
 # Output dimensionalities (PCA and iGSFA)
-range_L0_pca_out_dim = (25, 40)
-range_L0_sfa_out_dim = (35, 50)
-range_L1H_sfa_out_dim = (70, 90)
-range_L1V_sfa_out_dim = (120, 140)
-range_L2H_sfa_out_dim = (180, 310)
-range_L2V_sfa_out_dim = (200, 600)
-range_L3H_sfa_out_dim = (220, 610)
-range_L3V_sfa_out_dim = (240, 620)
-range_L5_sfa_out_dim = (250, 630)
+range_L0_pca_out_dim = (28, 40)
+range_L0_sfa_out_dim = (30, 42)
+range_L1H_sfa_out_dim = (60, 84)
+range_L1V_sfa_out_dim = (85, 145)
+range_L2H_sfa_out_dim = (160, 210)
+range_L2V_sfa_out_dim = (180, 360)
+range_L3H_sfa_out_dim = (180, 400)
+range_L3V_sfa_out_dim = (180, 400)
+range_L5_sfa_out_dim = (230, 600)
 
 # Length of slow part
-range_L0_delta_threshold = (15, 30)
-range_L1H_delta_threshold = (5, 20)
-range_L1V_delta_threshold = (5, 20)
-range_L2H_delta_threshold = (5, 30)
-range_L2V_delta_threshold = (5, 30)
-range_L3H_delta_threshold = (5, 30)
-range_L3V_delta_threshold = (5, 30)
-range_L5_delta_threshold = (5, 30)
+range_L0_delta_threshold = (25, 37)
+range_L1H_delta_threshold = (10, 21)
+range_L1V_delta_threshold = (15, 25)
+range_L2H_delta_threshold = (23, 35)
+range_L2V_delta_threshold = (0, 27)
+range_L3H_delta_threshold = (18, 33)
+range_L3V_delta_threshold = (0, 18)
+range_L5_delta_threshold = (0, 12)
 
 # WARNING two categories cannot be expressed as [n1, n2], instead use e.g., Categorical([0, 3])
 #         otherwise interval (n1, n2) is assumed
 # Expansions
-range_L0_expansion = (1, 3)
+range_L0_expansion = [1]
 range_L1H_expansion = (300, 301)
 range_L1V_expansion = (300, 301)
-range_L2H_expansion = [300]  # (300, 301)
+range_L2H_expansion = (300, 301)
 range_L2V_expansion = (300, 301)
 range_L3H_expansion = (200, 202)
-range_L3V_expansion = (200, 202)
-range_L5_expansion = (400, 402)
-range_L4_degree_QT = (20, 89)
-range_L4_degree_CT = (5, 20)
+range_L3V_expansion = (201, 202)
+range_L5_expansion = (400, 401)  # (400, 402)
+range_L4_degree_QT = (60, 129)
+range_L4_degree_CT = (19, 32)
 cuicuilco_dimensions = (range_L0_pca_out_dim, range_L0_sfa_out_dim, range_L1H_sfa_out_dim,
                         range_L1V_sfa_out_dim, range_L2H_sfa_out_dim, range_L2V_sfa_out_dim,
                         range_L3H_sfa_out_dim, range_L3V_sfa_out_dim, range_L5_sfa_out_dim,
@@ -566,15 +570,39 @@ cuicuilco_dimensions = (range_L0_pca_out_dim, range_L0_sfa_out_dim, range_L1H_sf
 
 print("cuicuilco_dimensions:", cuicuilco_dimensions)
 # np.random.seed(1234) # use a new random seed each time to allow combination of executions on different systems
-argument_list, results_list = load_saved_executions(measure="CR_Gauss_mix", dimensions=cuicuilco_dimensions, verbose=True)
-display_best_arguments(argument_list, results_list, consider_std=False)
-quit()
+argument_list, results_list = load_saved_executions(measure="CR_Gauss_mix", dimensions=cuicuilco_dimensions, verbose=False)
+display_best_arguments(argument_list, results_list, consider_std=True)
+#quit()
 
 #argument_list = None
 #results_list = None
 #argument_list = [
-#[13, 22, 38, 56, 77, 77, 124, 230, 17, 9, 14, 33, 6, 0, 9, 1, 0, 3, 0, 0, 7, 18, 91, 19],
-#[13, 21, 37, 55, 78, 95, 108, 170, 18, 7, 15, 45, 2, 0, 9, 1, 0, 3, 0, 0, 7, 21, 40, 26],
+#[ 29,  34,  82, 106, 177, 213, 247, 329, 327,  32,  20,  24,  33,  10,  20,  13,   3,   1, 300, 300, 300, 300, 202, 201, 400,  99,  22, ],
+#[ 31,  35,  70, 120, 180, 200, 220, 240, 250,  30,  20,  20,  30,   5,  30,   5,   5,   1, 300, 300, 300, 300, 202, 202, 400, 105,  28, ],
+#[ 32,  35,  69, 121, 182, 193, 203, 227, 280,  30,  19,  19,  29,   4,  31,   6,   6,   1, 300, 300, 300, 300, 202, 202, 400, 107,  20, ],
+#[ 29,  33,  81, 100, 169, 251, 227, 345, 249,  28,  19,  24,  33,  11,  25,   7,   2,   1, 300, 300, 300, 300, 202, 201, 400,  99,  20, ],
+#[ 33,  38,  79, 117, 202, 187, 322, 312, 571,  35,  18,  16,  30,   9,  20,  18,   4,   1, 300, 300, 300, 300, 202, 202, 400,  99,  21, ],
+#[ 32,  36,  71, 100, 166, 305, 383, 232, 280,  32,  21,  15,  34,  18,  31,   8,   3,   1, 301, 300, 301, 301, 201, 201, 400,  99,  19, ],
+#[ 29,  33,  75, 112, 165, 180, 233, 200, 399,  26,  10,  25,  33,   2,  22,  13,   7,   1, 300, 300, 300, 300, 201, 202, 400, 109,  25, ],
+#[ 31,  35,  70, 120, 180, 200, 220, 240, 250,  30,  20,  20,  30,   5,  30,   5,   5,   1, 300, 300, 300, 300, 202, 202, 400,  99,  20, ],
+#[ 40,  39,  72, 124, 183, 259, 219, 271, 304,  35,  16,  23,  25,  21,  21,   7,   4,   1, 301, 300, 300, 300, 202, 202, 401,  96,  24, ],
+#[ 29,  33,  81, 100, 169, 251, 227, 345, 249,  28,  19,  24,  33,  11,  25,   7,   2,   1, 300, 300, 300, 300, 202, 201, 400,  89,  20, ],
+#[ 32,  35,  69, 121, 182, 193, 203, 227, 280,  30,  19,  19,  29,   4,  31,   6,   6,   1, 300, 300, 300, 300, 202, 202, 400,  97,  20, ],
+#[ 29,  33,  75, 112, 165, 180, 233, 200, 399,  26,  10,  25,  33,   2,  22,  13,   7,   1, 300, 300, 300, 300, 201, 202, 400,  89,  25, ],
+#[ 29,  33,  75, 112, 165, 180, 233, 200, 399,  26,  10,  25,  33,   2,  22,  13,   7,   1, 300, 300, 300, 300, 201, 202, 400,  99,  25, ],
+#[ 32,  35,  69, 121, 182, 193, 203, 227, 280,  30,  19,  19,  29,   4,  31,   6,   6,   1, 300, 300, 300, 300, 202, 202, 400,  87,  20, ],
+#[ 31,  35,  70, 120, 180, 200, 220, 240, 250,  30,  20,  20,  30,   5,  30,   5,   5,   1, 300, 300, 300, 300, 202, 202, 400,  89,  20, ],
+#[ 32,  33,  68, 116, 173, 259, 299, 220, 261,  32,  21,  17,  24,  10,  31,   6,  10,   1, 300, 300, 300, 300, 202, 202, 400,  73,  20, ],
+#[ 33,  40,  78, 131, 175, 254, 233, 314, 554,  33,  11,  17,  28,  14,  25,  13,  11,   1, 300, 300, 300, 301, 201, 202, 400,  86,  25, ],
+#[ 30,  33,  75, 100, 210, 360, 233, 264, 249,  31,  15,  20,  25,  21,  26,   0,   4,   1, 301, 300, 300, 300, 202, 201, 400,  76,  24, ],
+#[ 38,  33,  74, 109, 175, 255, 198, 200, 565,  31,  12,  17,  30,   3,  29,   3,  11,   1, 300, 301, 300, 300, 201, 202, 400,  89,  25, ],
+#[ 36,  33,  75, 118, 210, 183, 197, 313, 276,  30,  21,  18,  23,   9,  33,   4,   2,   1, 300, 300, 300, 301, 200, 202, 400,  74,  24, ],
+#[ 33,  32,  81, 115, 178, 243, 400, 222, 469,  26,  21,  24,  29,   2,  31,  11,   4,   1, 300, 300, 300, 300, 201, 202, 400,  63,  24, ],
+#[ 38,  40,  67, 137, 177, 264, 382, 215, 301,  30,  13,  20,  24,   6,  30,   2,  11,   1, 301, 301, 301, 301, 201, 201, 400,  69,  22, ]
+#[ 29,  33,  81, 100, 169, 251, 227, 345, 249,  28,  19,  24,  33,  11,  25,   7,   2,   1, 300, 300, 300, 300, 202, 201, 400,  107,  20, ],
+#[ 29,  33,  75, 112, 165, 180, 233, 200, 399,  26,  10,  25,  33,   2,  22,  13,   7,   1, 300, 300, 300, 300, 201, 202, 400,  109,  25, ],
+#[ 32,  35,  69, 121, 182, 193, 203, 227, 280,  30,  19,  19,  29,   4,  31,   6,   6,   1, 300, 300, 300, 300, 202, 202, 400,  107,  20, ],
+#[ 31,  35,  70, 120, 180, 200, 220, 240, 250,  30,  20,  20,  30,   5,  30,   5,   5,   1, 300, 300, 300, 300, 202, 202, 400,  105,  28, ]
 #]
 
 if results_list is not None:
@@ -584,7 +612,7 @@ print("cuicuilco_dimensions:", cuicuilco_dimensions)
 t0 = time.time()
 res = gp_minimize(func=cuicuilco_f_CE_Gauss_mix, dimensions=cuicuilco_dimensions, base_estimator=None, n_calls=100, n_random_starts=0,  # 20 10
                   acq_func='gp_hedge', acq_optimizer='auto', x0=argument_list, y0=results_list, random_state=None, verbose=False,
-                  callback=progress_callback, n_points=1*10000, n_restarts_optimizer=5,   # n_points=10000
+                  callback=progress_callback, n_points=100*10000, n_restarts_optimizer=5,   # n_points=10000
                   xi=0.01, kappa=1.96, noise='gaussian', n_jobs=1)
 t1 = time.time()
 

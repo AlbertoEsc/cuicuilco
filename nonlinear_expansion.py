@@ -798,6 +798,22 @@ def CT_31_AP08(x):
     return CT_AP(x[:, 0:31], d=0.8)
 
 
+def CT_32_AP08(x):
+    return CT_AP(x[:, 0:32], d=0.8)
+
+
+def CT_33_AP08(x):
+    return CT_AP(x[:, 0:33], d=0.8)
+
+
+def CT_34_AP08(x):
+    return CT_AP(x[:, 0:34], d=0.8)
+
+
+def CT_35_AP08(x):
+    return CT_AP(x[:, 0:35], d=0.8)
+
+
 def pairwise_adjacent_expansion_subset(x, adj, func, reflexive=True, k=10):
     return pairwise_adjacent_expansion(x[:, 0:k], adj, func, reflexive)
 
