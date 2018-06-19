@@ -156,13 +156,19 @@ class ParamsCIFAR10Experiment(system_parameters.ParamsSystem):
             ex = "Invalid size of hold out set:" + str(self.num_hold_out_images)
             raise Exception(ex)
 
-        self.iTrain = [[self.iSeqCreate(self.training_data, self.indices_training)]]
+        self.iTrain = [[self.iSeqCreate(self.training_data,
+                                        self.indices_training,
+                                        repetitions=3)]]
         self.sTrain = [[self.sSeqCreate(self.iTrain[0][0], seed=-1, use_RGB_images=True)]]
 
-        self.iSeenid = self.iSeqCreate(self.training_data, self.indices_training)
+        self.iSeenid = self.iSeqCreate(self.training_data,
+                                       self.indices_training,
+                                       repetitions=1)
         self.sSeenid = self.sSeqCreate(self.iSeenid, seed=-1, use_RGB_images=True)
 
-        self.iNewid = [[self.iSeqCreate(self.effective_test_data, self.indices_test)]]
+        self.iNewid = [[self.iSeqCreate(self.effective_test_data,
+                                        self.indices_test,
+                                        repetitions=1)]]
         self.sNewid = [[self.sSeqCreate(self.iNewid[0][0], seed=-1, use_RGB_images=True)]]
 
         print("len(self.iTrain[0][0].input_files)= %d" % len(self.iTrain[0][0].input_files))
@@ -171,21 +177,24 @@ class ParamsCIFAR10Experiment(system_parameters.ParamsSystem):
         self.name = "Function Based Data Creation for CIFAR10"
 
     @staticmethod
-    def iSeqCreate(dataset, used_indices):
+    def iSeqCreate(dataset, used_indices, repetitions=1):
         print("***** Setting Information Parameters for CIFAR10 ******")
         iSeq = system_parameters.ParamsInput()
         iSeq.data_base_dir = ""
-        iSeq.ids = used_indices
+        iSeq.ids = sfa_libs.wider_1Darray(used_indices, repetitions)
         iSeq.dataset = dataset
+        iSeq.repetitions = repetitions
 
         iSeq.input_files = []
-        iSeq.num_images = len(used_indices)
+        iSeq.num_images = len(iSeq.ids)
         iSeq.params = []
 
-        iSeq.correct_classes = dataset['labels'][used_indices]
+        iSeq.correct_classes = dataset['labels'][iSeq.ids]
         iSeq.correct_labels = iSeq.correct_classes.astype('float')
+
         iSeq.block_size = 10
         iSeq.train_mode = ("classification", iSeq.correct_labels, 1.0)
+
         return iSeq
 
     @staticmethod
@@ -206,14 +215,41 @@ class ParamsCIFAR10Experiment(system_parameters.ParamsSystem):
         sSeq.subimage_width = 32
         sSeq.subimage_height = 32
 
+        if iSeq.repetitions == 1:
+            sSeq.dx = None
+            sSeq.dy = None
+        else:
+            sSeq.dx = numpy.random.random_integers(-1, 1, sSeq.num_images)
+            sSeq.dy = numpy.random.random_integers(-1, 1, sSeq.num_images)
+
+
         if use_RGB_images:
             sSeq.convert_format = "RGB"  # "RGB", "L"
         else:
             sSeq.convert_format = "L"
 
         def create_arrays(newSeq):
-            return newSeq.dataset['data'][newSeq.ids] * 1.0 / 255.0
-
+            row_data = newSeq.dataset['data'][newSeq.ids] / 255.0
+            if newSeq.dx is not None and newSeq.dy is not None:
+                row_data = newSeq.dataset['data'][newSeq.ids] / 255.0
+                shaped_data = row_data.reshape((iSeq.num_images,
+                                                sSeq.subimage_width,
+                                                sSeq.subimage_height, 3))
+                a1_dx = numpy.maximum(0, sSeq.dx)
+                b1_dx = numpy.minimum(32, 32 + sSeq.dx)
+                a2_dx = numpy.maximum(0, -sSeq.dx)
+                b2_dx = numpy.minimum(32, 32 - sSeq.dx)
+                a1_dy = numpy.maximum(0, sSeq.dy)
+                b1_dy = numpy.minimum(32, 32 + sSeq.dy)
+                a2_dy = numpy.maximum(0, -sSeq.dy)
+                b2_dy = numpy.minimum(32, 32 - sSeq.dy)
+                for i in range(iSeq.num_images):
+                    shaped_data[i, a1_dx[i]:b1_dx[i], :, :] = \
+                        shaped_data[i, a2_dx[i]:b2_dx[i], :, :]
+                    shaped_data[i, :, a1_dy[i]:b1_dy[i], :] = \
+                        shaped_data[i, :, a2_dy[i]:b2_dy[i], :]
+                row_data = shaped_data.reshape((iSeq.num_images, -1))
+            return row_data
         sSeq.load_data = create_arrays
         return sSeq
 
