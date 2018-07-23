@@ -384,7 +384,8 @@ try:
     [None, CT_1_AP08, CT_2_AP08, CT_3_AP08, CT_4_AP08, CT_5_AP08, CT_6_AP08, CT_7_AP08, CT_8_AP08, CT_9_AP08,
      CT_10_AP08, CT_11_AP08, CT_12_AP08, CT_13_AP08, CT_14_AP08, CT_15_AP08, CT_16_AP08, CT_17_AP08, CT_18_AP08,
      CT_19_AP08, CT_20_AP08, CT_21_AP08, CT_22_AP08, CT_23_AP08, CT_24_AP08, CT_25_AP08, CT_26_AP08, CT_27_AP08,
-     CT_28_AP08, CT_29_AP08, CT_30_AP08, CT_31_AP08, CT_32_AP08][k]
+     CT_28_AP08, CT_29_AP08, CT_30_AP08, CT_31_AP08, CT_32_AP08, CT_33_AP08, CT_34_AP08, CT_35_AP08, CT_36_AP08,
+     CT_37_AP08, CT_38_AP08, CT_39_AP08, CT_40_AP08][k]
     network.L8.exp_funcs = [identity, unsigned_08expo, signed_08expo]
     if selected_QT is not None:
         network.L8.exp_funcs.append(selected_QT)
