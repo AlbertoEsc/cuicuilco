@@ -150,7 +150,8 @@ class GSFANode(mdp.nodes.SFANode):
                               block_size)
                     ordering = numpy.argsort(labels)
                     x2 = x[ordering, :]
-                    self._covdcovmtx.update_serial(x2, block_size=block_size, weight=weight)
+                    self._covdcovmtx.update_serial(x2, block_size=block_size,
+                                                   weight=weight)
                 else:
                     er = "method unknown: %s" % (str(method))
                     raise ValueError(er)
@@ -375,8 +376,9 @@ class GSFANode(mdp.nodes.SFANode):
                               self._covdcovmtx.num_diffs)
                     w11 = 1 / (N1_norm - 1 + v_norm * N2)
                     if verbose:
-                        print("After adjustment (Diag(C')/num_diffs.avg)**0.5 =", ((numpy.diagonal(
-                        self._covdcovmtx.sum_prod_diffs) / self._covdcovmtx.num_diffs).mean()) ** 0.5)
+                        print("Adjusted (Diag(C')/num_diffs.avg)**0.5 =",
+                              ((numpy.diagonal(self._covdcovmtx.sum_prod_diffs) 
+                                / self._covdcovmtx.num_diffs).mean()) ** 0.5)
                         print("")
 
                     # Connections within unlabeled data (notice that C times
@@ -635,8 +637,10 @@ class CovDCovMatrix(object):
         self.add_samples(sum_prod_x, sum_x, num_samples, weight)
 
     def update_regular(self, x, weight=1.0):
-        """This is equivalent to regular SFA training (except for the final feature scale). """
-        num_samples, dim = x.shape
+        """This is equivalent to regular SFA training (except for the final
+        feature scale).
+        """
+        num_samples = x.shape[0]
 
         # Update Cov Matrix
         sum_x = x.sum(axis=0)
@@ -731,9 +735,10 @@ class CovDCovMatrix(object):
             node_weights = numpy.ones(num_samples)
 
         if len(node_weights) != num_samples:
-            er = "Node weights should be the same length %d as the number of samples %d" % \
-                 (len(node_weights), num_samples)
-            raise Exception(er)
+            er = "Node weights should be the same length " + \
+                 "%d as the number of samples %d" % (len(node_weights),
+                                                     num_samples)
+            raise TrainingException(er)
 
         if edge_weights is None:
             er = "edge_weights should be a dictionary with entries: " + \
@@ -810,7 +815,8 @@ class CovDCovMatrix(object):
 
         Aacc123 = numpy.zeros((dim, dim))
         for i in range(0, 2 * width):
-            Aacc123 += (i + 1) * mdp.utils.mult(x_mirror[i:i + 1, :].T, x_mirror[i:i + 1, :])
+            Aacc123 += (i + 1) * mdp.utils.mult(x_mirror[i:i + 1, :].T,
+                                                x_mirror[i:i + 1, :])
 
         for i in range(num_samples, num_samples + 2 * width):
             Aacc123 += (num_samples + 2 * width - i) * mdp.utils.mult(
@@ -1232,8 +1238,10 @@ class CovDCovMatrix(object):
         avg_x = self.sum_x * (1.0 / self.num_samples)
 
         prod_avg_x = numpy.outer(avg_x, avg_x)
-        if divide_by_num_samples_or_differences:  # as specified by the theory on training graphs
-            cov_x = (self.sum_prod_x - self.num_samples * prod_avg_x) / (1.0 * self.num_samples)
+        if divide_by_num_samples_or_differences:
+            # as specified by the theory on training graphs
+            cov_x = (self.sum_prod_x -
+                     self.num_samples * prod_avg_x) / (1.0 * self.num_samples)
         else:  # standard unbiased estimation used by standard SFA
             cov_x = (self.sum_prod_x -
                      self.num_samples * prod_avg_x) / (self.num_samples - 1.0)
@@ -1399,21 +1407,24 @@ class iGSFANode(mdp.Node):
 
         if (not self.reconstruct_with_sfa) and (self.slow_feature_scaling_method not in [None, "data_dependent",
                                                                                          "data_dependent2"]):
-            er = "'reconstruct_with_sfa' (" + str(self.reconstruct_with_sfa) + ") must be True when the scaling" + \
+            er = "'reconstruct_with_sfa' (" + str(self.reconstruct_with_sfa) + ") should be True when the scaling" + \
                  "method (" + str(self.slow_feature_scaling_method) + ") is neither 'None' nor 'data_dependent(2)'"
-            raise Exception(er)
+            raise TrainingException(er)
         # else continue using the regular method:
 
         # Remove mean before expansion
         self.x_mean = x.mean(axis=0)
         x_zm = x - self.x_mean
 
-        # Reorder or pre-process the data before it is expanded, but only if there is really an expansion
+        # Reorder or pre-process the data before it is expanded,
+        # but only if there is really an expansion
         if self.pre_expansion_node_class and self.exp_node:
-            self.pre_expansion_node = self.pre_expansion_node_class(output_dim=self.pre_expansion_output_dim)
-            # reasonable options are pre_expansion_node_class = GSFANode or WhitheningNode
+            self.pre_expansion_node = self.pre_expansion_node_class(
+                output_dim=self.pre_expansion_output_dim)
+            # reasonable options for pre_expansion_node_class are GSFANode
+            # or WhitheningNode
             self.pre_expansion_node.train(x_zm, block_size=block_size,
-                                          train_mode=train_mode)  # Some arguments might not be necessary
+                                          train_mode=train_mode)
             self.pre_expansion_node.stop_training()
             x_pre_exp = self.pre_expansion_node.execute(x_zm)
         else:
@@ -1432,14 +1443,15 @@ class iGSFANode(mdp.Node):
         if self.max_length_slow_part is None:
             sfa_output_dim = min(self.expanded_dim, self.output_dim)
         else:
-            sfa_output_dim = min(self.max_length_slow_part, self.expanded_dim, self.output_dim)
+            sfa_output_dim = min(self.max_length_slow_part, self.expanded_dim,
+                                 self.output_dim)
 
         if isinstance(self.delta_threshold, int):
             sfa_output_dim = min(sfa_output_dim, self.delta_threshold)
             sfa_output_dim = max(1, sfa_output_dim)
 
         # Apply SFA to expanded data
-        self.sfa_node = GSFANode(output_dim=sfa_output_dim, verbose=verbose)
+        self.sfa_node = GSFANode(output_dim=sfa_output_dim, dtype=self.dtype, verbose=verbose)
         # TODO: train_params is only present if patch_mdp has been imported, is this a bug?
         self.sfa_node.train_params(exp_x, params={"block_size": block_size, "train_mode": train_mode,
                                                   "node_weights": node_weights,
@@ -1448,32 +1460,39 @@ class iGSFANode(mdp.Node):
         if verbose:
             print("self.sfa_node.d", self.sfa_node.d)
 
-        # Decide how many slow features are preserved (either use Delta_T=delta_threshold when
-        # delta_threshold is a float, or preserve delta_threshold features when delta_threshold is an integer)
+        # Decide how many slow features are preserved (either use
+        # Delta_T=delta_threshold when delta_threshold is a float, or
+        # preserve delta_threshold features when delta_threshold is an integer)
         if isinstance(self.delta_threshold, float):
             # here self.max_length_slow_part should be considered
-            self.num_sfa_features_preserved = (self.sfa_node.d <= self.delta_threshold).sum()
+            self.num_sfa_features_preserved = (self.sfa_node.d <=
+                                               self.delta_threshold).sum()
         elif isinstance(self.delta_threshold, int):
             # here self.max_length_slow_part should be considered
             self.num_sfa_features_preserved = self.delta_threshold
             if self.delta_threshold > self.output_dim:
-                er = "The provided integer delta_threshold %d is larger than the allowed output dimensionality %d" % \
+                er = "The provided integer delta_threshold " + \
+                     "%d is larger than the output dimensionality %d" % \
                      (self.delta_threshold, self.output_dim)
-                raise Exception(er)
-            if self.max_length_slow_part is not None and self.delta_threshold > self.max_length_slow_part:
-                er = "The provided integer delta_threshold %d" % self.delta_threshold + \
-                     " is larger than the given upper bound on the size of the slow part (max_length_slow_part) %d" % \
+                raise ValueError(er)
+            if self.max_length_slow_part is not None and \
+                            self.delta_threshold > self.max_length_slow_part:
+                er = "The provided integer delta_threshold " + \
+                     "%d" % self.delta_threshold + \
+                     " is larger than the given upper bound on the size " + \
+                     "of the slow part (max_length_slow_part) %d" % \
                      self.max_length_slow_part
-                raise Exception(er)
+                raise ValueError(er)
 
         else:
             ex = "Cannot handle type of self.delta_threshold"
-            raise Exception(ex)
+            raise ValueError(ex)
 
         if self.num_sfa_features_preserved > self.output_dim:
             self.num_sfa_features_preserved = self.output_dim
 
-        SFANode_reduce_output_dim(self.sfa_node, self.num_sfa_features_preserved)
+        SFANode_reduce_output_dim(self.sfa_node,
+                                  self.num_sfa_features_preserved)
         if verbose:
             print("sfa execute...")
         sfa_x = self.sfa_node.execute(exp_x)
@@ -1486,17 +1505,18 @@ class iGSFANode(mdp.Node):
             print("self.sfa_x_std=", self.sfa_x_std)
         if (self.sfa_x_std == 0).any():
             er = "zero-component detected"
-            raise Exception(er)
+            raise TrainingException(er)
         n_sfa_x = (sfa_x - self.sfa_x_mean) / self.sfa_x_std
 
         if self.reconstruct_with_sfa:
             x_pca = x_zm
 
-            # approximate input linearly, done inline to preserve node for future use
+            # Approximate input linearly
             if verbose:
                 print("training linear regression...")
             self.lr_node = mdp.nodes.LinearRegressionNode()
-            # Notice that the input "x"=n_sfa_x and the output to learn is "y" = x_pca
+            # Notice that the input data is "x"=n_sfa_x and the output
+            # to learn is "y" = x_pca
             self.lr_node.train(n_sfa_x, x_pca)
             self.lr_node.stop_training()
             x_pca_app = self.lr_node.execute(n_sfa_x)
@@ -1510,17 +1530,20 @@ class iGSFANode(mdp.Node):
         # TODO:Compute variance removed by linear approximation
         if verbose:
             print("ranking method...")
-        # AKA Laurenz method for feature scaling( +rotation)
-        if self.reconstruct_with_sfa and self.slow_feature_scaling_method == "QR_decomposition":
-            M = self.lr_node.beta[1:, :].T  # bias is used by default, we do not need to consider it
+        # A method for feature scaling( +rotation)
+        if self.reconstruct_with_sfa and \
+                        self.slow_feature_scaling_method == "QR_decomposition":
+            # A bias term is included by default, we do not need it
+            M = self.lr_node.beta[1:, :].T
             Q, R = numpy.linalg.qr(M)
             self.Q = Q
             self.R = R
             self.Rpinv = pinv(R)
             s_n_sfa_x = numpy.dot(n_sfa_x, R.T)
-        # AKA my method for feature scaling (no rotation)
-        elif self.reconstruct_with_sfa and (self.slow_feature_scaling_method == "sensitivity_based"):
-            beta = self.lr_node.beta[1:, :]  # bias is used by default, we do not need to consider it
+        # Another method for feature scaling (no rotation)
+        elif self.reconstruct_with_sfa and \
+                (self.slow_feature_scaling_method == "sensitivity_based"):
+            beta = self.lr_node.beta[1:, :]
             sens = (beta ** 2).sum(axis=1)
             self.magn_n_sfa_x = sens ** 0.5
             s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x
@@ -1536,17 +1559,20 @@ class iGSFANode(mdp.Node):
             if verbose:
                 print("skiped data_dependent(2)")
         else:
-            er = "unknown slow feature scaling method= " + str(self.slow_feature_scaling_method) + \
+            er = "unknown slow feature scaling method= " + \
+                 str(self.slow_feature_scaling_method) + \
                  " for reconstruct_with_sfa= " + str(self.reconstruct_with_sfa)
-            raise Exception(er)
+            raise ValueError(er)
 
         print("training PCA...")
         pca_output_dim = self.output_dim - self.num_sfa_features_preserved
         # This allows training of PCA when pca_out_dim is zero
-        self.pca_node = mdp.nodes.PCANode(output_dim=max(1, pca_output_dim))  # reduce=True
+        self.pca_node = mdp.nodes.PCANode(output_dim=max(1, pca_output_dim),
+                                          dtype=self.dtype)
         self.pca_node.train(sfa_removed_x)
         self.pca_node.stop_training()
-        PCANode_reduce_output_dim(self.pca_node, pca_output_dim, verbose=False)
+        PCANode_reduce_output_dim(self.pca_node, pca_output_dim,
+                                  verbose=False)
 
         # TODO:check that pca_out_dim > 0
         if verbose:
@@ -1574,20 +1600,24 @@ class iGSFANode(mdp.Node):
             if verbose:
                 print("method: data dependent2, self.magn_n_sfa_x:", self.magn_n_sfa_x, "val1:", val1, "val2:", val2)
 
-
-        if self.pca_node.output_dim + self.num_sfa_features_preserved < self.output_dim:
-            er = "Error, the number of features computed is SMALLER than the output dimensionality of the node: " + \
-                 "self.pca_node.output_dim=" + str(self.pca_node.output_dim) + ", self.num_sfa_features_preserved=" + \
-                 str(self.num_sfa_features_preserved) + ", self.output_dim=" + str(self.output_dim)
-            raise Exception(er)
+        if self.pca_node.output_dim + self.num_sfa_features_preserved < \
+                self.output_dim:
+            er = "Error, the number of features computed is SMALLER than " \
+                 + "the output dimensionality of the node: " + \
+                 "self.pca_node.output_dim=" + str(self.pca_node.output_dim) \
+                 + ", self.num_sfa_features_preserved=" + \
+                 str(self.num_sfa_features_preserved) + ", self.output_dim=" \
+                 + str(self.output_dim)
+            raise TrainingException(er)
 
         # Finally, the output is the concatenation of scaled slow features and remaining pca components
         sfa_pca_x = numpy.concatenate((s_n_sfa_x, pca_x), axis=1)
 
         sfa_pca_x_truncated = sfa_pca_x[:, 0:self.output_dim]
 
-        # Compute explained variance from amplitudes of output compared to amplitudes of input
-        # Only works because amplitudes of SFA are scaled to be equal to explained variance, because PCA is
+        # Compute explained variance from amplitudes of output compared to
+        # amplitudes of input. Only works because amplitudes of SFA are
+        # scaled to be equal to explained variance, because PCA is
         # a rotation, and because data has zero mean
         self.evar = (sfa_pca_x_truncated ** 2).sum() / (x_zm ** 2).sum()
         if verbose:
@@ -1596,11 +1626,12 @@ class iGSFANode(mdp.Node):
             print("Variance(output) / Variance(input) is ", self.evar)
         self.stop_training()
 
-    def multiple_train(self, x, block_size=None, train_mode=None, node_weights=None,
-                       edge_weights=None, verbose=False):
-        """This function should not be called directly. Use instead the train method, which will decide whether
-        multiple-training is enabled, and call this function if needed. """
-        # TODO: is the following line needed? or also self.set_input_dim? or self._input_dim?
+    def multiple_train(self, x, block_size=None, train_mode=None,
+                       node_weights=None, edge_weights=None, verbose=None):
+        """This function should not be called directly. Use instead the train
+        method, which will decide whether multiple-training is enabled, and
+        call this function if needed.
+        """
         self.input_dim = x.shape[1]
         if verbose is None:
             verbose = self.verbose
@@ -1613,18 +1644,18 @@ class iGSFANode(mdp.Node):
             self.x_mean = numpy.zeros(self.input_dim)
         x_zm = x
 
-        # Reorder or pre-process the data before it is expanded, but only if there is really an expansion.
-        # WARNING, why the last condition???
+        # Reorder or pre-process the data before it is expanded, but only if
+        # there is really an expansion.
         if self.pre_expansion_node_class and self.exp_node:
             er = "Unexpected parameters"
-            raise Exception(er)
+            raise TrainingException(er)
         else:
             x_pre_exp = x_zm
 
         if self.exp_node:
             if verbose:
                 print("expanding x...")
-            exp_x = self.exp_node.execute(x_pre_exp)  # x_zm
+            exp_x = self.exp_node.execute(x_pre_exp)
         else:
             exp_x = x_pre_exp
 
@@ -1633,7 +1664,8 @@ class iGSFANode(mdp.Node):
         if self.max_length_slow_part is None:
             sfa_output_dim = min(self.expanded_dim, self.output_dim)
         else:
-            sfa_output_dim = min(self.max_length_slow_part, self.expanded_dim, self.output_dim)
+            sfa_output_dim = min(self.max_length_slow_part, self.expanded_dim,
+                                 self.output_dim)
 
         if isinstance(self.delta_threshold, int):
             sfa_output_dim = min(sfa_output_dim, self.delta_threshold)
@@ -1641,7 +1673,8 @@ class iGSFANode(mdp.Node):
 
         # Apply SFA to expanded data
         if self.sfa_node is None:
-            self.sfa_node = GSFANode(output_dim=sfa_output_dim, verbose=verbose)
+            self.sfa_node = GSFANode(output_dim=sfa_output_dim, dtype=self.dtype,
+                                     verbose=verbose)
         self.sfa_x_mean = 0
         self.sfa_x_std = 1.0
 
@@ -1653,12 +1686,12 @@ class iGSFANode(mdp.Node):
             print("training PCA...")
         pca_output_dim = self.output_dim
         if self.pca_node is None:
-            # WARNING: WHY WAS I EXTRACTING ALL PCA COMPONENTS!!?? INEFFICIENT!!!!
-            self.pca_node = mdp.nodes.PCANode(output_dim=pca_output_dim)  # reduce=True) #output_dim = pca_out_dim)
+            # If necessary, add reduce=True
+            self.pca_node = mdp.nodes.PCANode(output_dim=pca_output_dim)
         sfa_removed_x = x
         self.pca_node.train(sfa_removed_x)
 
-    def _stop_training(self, verbose=True):
+    def _stop_training(self, verbose=None):
         if verbose is None:
             verbose = self.verbose
         if self.reconstruct_with_sfa or (self.slow_feature_scaling_method not in [None, "data_dependent",
@@ -1671,41 +1704,51 @@ class iGSFANode(mdp.Node):
             print("self.sfa_node.d", self.sfa_node.d)
         self.pca_node.stop_training()
 
-        # Decide how many slow features are preserved (either use Delta_T=delta_threshold when
-        # delta_threshold is a float, or preserve delta_threshold features when delta_threshold is an integer)
+        # Decide how many slow features are preserved
         if isinstance(self.delta_threshold, float):
             # here self.max_length_slow_part should be considered
-            self.num_sfa_features_preserved = (self.sfa_node.d <= self.delta_threshold).sum()
+            self.num_sfa_features_preserved = (self.sfa_node.d <=
+                                               self.delta_threshold).sum()
         elif isinstance(self.delta_threshold, int):
             # here self.max_length_slow_part should be considered
             self.num_sfa_features_preserved = self.delta_threshold
             if self.delta_threshold > self.output_dim:
-                er = "The provided integer delta_threshold %d is larger than the allowed output dimensionality %d" % \
+                er = "The provided integer delta_threshold " + \
+                     "%d is larger than the output dimensionality %d" % \
                      (self.delta_threshold, self.output_dim)
-                raise Exception(er)
-            if self.max_length_slow_part is not None and self.delta_threshold > self.max_length_slow_part:
-                er = "The provided integer delta_threshold %d" % self.delta_threshold + \
-                     " is larger than the given upper bound on the size of the slow part (max_length_slow_part) %d" % \
+                raise ValueError(er)
+            if self.max_length_slow_part is not None and \
+                            self.delta_threshold > self.max_length_slow_part:
+                er = "The provided integer delta_threshold: %d" % \
+                     self.delta_threshold + \
+                     " is larger than max_length_slow_part: %d" % \
                      self.max_length_slow_part
-                raise Exception(er)
+                raise ValueError(er)
         else:
-            ex = "Cannot handle type of self.delta_threshold:" + str(type(self.delta_threshold))
-            raise Exception(ex)
+            ex = "Cannot handle type of self.delta_threshold:" + \
+                 str(type(self.delta_threshold))
+            raise ValueError(ex)
 
         if self.num_sfa_features_preserved > self.output_dim:
             self.num_sfa_features_preserved = self.output_dim
 
-        SFANode_reduce_output_dim(self.sfa_node, self.num_sfa_features_preserved)
+        SFANode_reduce_output_dim(self.sfa_node,
+                                  self.num_sfa_features_preserved)
         if verbose:
             print("size of slow part:", self.num_sfa_features_preserved)
 
-        final_pca_node_output_dim = self.output_dim - self.num_sfa_features_preserved
+        final_pca_node_output_dim = self.output_dim - \
+                                    self.num_sfa_features_preserved
         if final_pca_node_output_dim > self.pca_node.output_dim:
-            er = "Error, the number of features computed is SMALLER than the output dimensionality of the node: " + \
-                 "self.pca_node.output_dim=" + str(self.pca_node.output_dim) + ", self.num_sfa_features_preserved=" + \
-                 str(self.num_sfa_features_preserved) + ", self.output_dim=" + str(self.output_dim)
-            raise Exception(er)
-        PCANode_reduce_output_dim(self.pca_node, final_pca_node_output_dim, verbose=False)
+            er = "The number of features computed is SMALLER than the " + \
+                 "output dimensionality of the node: " + \
+                 "pca_node.output_dim=" + str(self.pca_node.output_dim) + \
+                 ", num_sfa_features_preserved=" + \
+                 str(self.num_sfa_features_preserved) + \
+                 ", output_dim=" + str(self.output_dim)
+            raise ValueError(er)
+        PCANode_reduce_output_dim(self.pca_node, final_pca_node_output_dim,
+                                  verbose=False)
 
         if verbose:
             print("self.pca_node.d", self.pca_node.d)
@@ -1715,6 +1758,8 @@ class iGSFANode(mdp.Node):
             if verbose:
                 print("method: constant amplitude for all slow features")
         elif self.slow_feature_scaling_method == "data_dependent":
+            # SFA components are given a variance equal to the median variance
+            # of the principal components
             if self.pca_node.d.shape[0] > 0:
                 self.magn_n_sfa_x = 1.0 * numpy.median(self.pca_node.d) ** 0.5
             else:
@@ -1732,8 +1777,9 @@ class iGSFANode(mdp.Node):
             if verbose:
                 print("method: data dependent2, self.magn_n_sfa_x:", self.magn_n_sfa_x)
         else:
-            er = "Unknown slow feature scaling method" + str(self.slow_feature_scaling_method)
-            raise Exception(er)
+            er = "Unknown slow feature scaling method" + \
+                 str(self.slow_feature_scaling_method)
+            raise ValueError(er)
         self.evar = self.pca_node.explained_variance
 
     @staticmethod
@@ -1741,7 +1787,9 @@ class iGSFANode(mdp.Node):
         return True
 
     def _execute(self, x):
-        """Extracts iGSFA features from some data. The node must have been already trained. """
+        """Extracts iGSFA features from some data. The node must have been
+        already trained.
+        """
         x_zm = x - self.x_mean
 
         if self.pre_expansion_node:
@@ -1776,13 +1824,13 @@ class iGSFANode(mdp.Node):
             s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x
         elif self.slow_feature_scaling_method is None:
             s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x
-            # Scale according to ranking
         elif self.slow_feature_scaling_method == "data_dependent" or \
                         self.slow_feature_scaling_method == "data_dependent2":
             s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x
         else:
-            er = "unknown feature scaling method" + str(self.slow_feature_scaling_method)
-            raise Exception(er)
+            er = "unknown feature scaling method" + \
+                 str(self.slow_feature_scaling_method)
+            raise ValueError(er)
 
         # Apply PCA to sfa removed data
         if self.pca_node.output_dim > 0:
@@ -1797,19 +1845,22 @@ class iGSFANode(mdp.Node):
         return sfa_pca_x  # sfa_pca_x_truncated
 
     def _inverse(self, y, linear_inverse=True):
-        """This method approximates an inverse function to the feature extraction.
+        """This method approximates an inverse function to the feature
+        extraction.
 
-        if linear_inverse is True, a linear method is used. Otherwise, a gradient-based non-linear method is used.
+        If linear_inverse is True, a linear method is used. Otherwise, a
+        gradient-based non-linear method is used.
         """
         if linear_inverse:
             return self.linear_inverse(y)
         else:
-            return self.non_linear_inverse(y)
+            return self.nonlinear_inverse(y)
 
-    def non_linear_inverse(self, y, verbose=None):
+    def nonlinear_inverse(self, y, verbose=None):
         """Non-linear inverse approximation method.
 
         This method is experimental and should be used with care.
+        Note: this function requires scipy.
         """
         if verbose is None:
             verbose = self.verbose
@@ -1839,14 +1890,18 @@ class iGSFANode(mdp.Node):
                 print("x_nl_i=", x_nl_i, "plsq[1]=", plsq[1])
             if plsq[1] != 2:
                 print("Quitting: plsq[1]=", plsq[1])
-                # quit()
             x_nl[i] = x_nl_i
             if verbose:
-                print("|E_lin(%d)|=" % i, ((y_i - self.execute(x_lin[i].reshape((1, -1)))) ** 2).sum() ** 0.5)
-                print("|E_nl(%d)|=" % i, ((y_i - self.execute(x_nl_i.reshape((1, -1)))) ** 2).sum() ** 0.5)
+                y_i_app = self.execute(x_lin[i].reshape((1, -1)))
+                print("|E_lin(%d)|=" % i,
+                      ((y_i - y_i_app) ** 2).sum() ** 0.5)
+                y_i_app = self.execute(x_nl_i.reshape((1, -1)))
+                print("|E_nl(%d)|=" % i,
+                      ((y_i - y_i_app) ** 2).sum() ** 0.5)
         rmse_nl = ((y - self.execute(x_nl)) ** 2).sum(axis=1).mean() ** 0.5
         if verbose:
-            print("rmse_lin(all samples)=", rmse_lin, "rmse_nl(all samples)=", rmse_nl)
+            print("rmse_lin(all samples)=", rmse_lin,
+                  "rmse_nl(all samples)=", rmse_nl)
         return x_nl
 
     def linear_inverse(self, y, verbose=None):
@@ -1855,11 +1910,12 @@ class iGSFANode(mdp.Node):
             verbose = self.verbose
         num_samples = y.shape[0]
         if y.shape[1] != self.output_dim:
-            er = "Serious dimensionality inconsistency:", y.shape[0], self.output_dim
-            raise Exception(er)
+            er = "Serious dimensionality inconsistency"
+            raise TrainingException(er)
 
         sfa_pca_x_full = numpy.zeros(
-            (num_samples, self.pca_node.output_dim + self.num_sfa_features_preserved))  # self.input_dim
+            (num_samples, self.pca_node.output_dim + self.num_sfa_features_preserved),
+            dtype=self.dtype)
         sfa_pca_x_full[:, 0:self.output_dim] = y
 
         s_n_sfa_x = sfa_pca_x_full[:, 0:self.num_sfa_features_preserved]
@@ -1876,7 +1932,7 @@ class iGSFANode(mdp.Node):
         else:
             n_sfa_x = s_n_sfa_x / self.magn_n_sfa_x
 
-        # sfa_x = n_sfa_x * self.sfa_x_std + self.sfa_x_mean
+        # recall: sfa_x is n_sfa_x * self.sfa_x_std + self.sfa_x_mean
         if self.reconstruct_with_sfa:
             x_pca_app = self.lr_node.execute(n_sfa_x)
             x_app = x_pca_app
@@ -1888,20 +1944,9 @@ class iGSFANode(mdp.Node):
         x = x_zm + self.x_mean
 
         if verbose:
-            print("Data_variance(x_zm)=", data_variance(x_zm))
-            print("Data_variance(x_app)=", data_variance(x_app))
-            print("Data_variance(sfa_removed_x)=", data_variance(sfa_removed_x))
-            print("x_app.mean(axis=0)=", x_app)
-            print("x[0]=", x[0])
-            print("zm_x[0]=", zm_x[0])
-            print("exp_x[0]=", exp_x[0])
-            print("s_x_1[0]=", s_x_1[0])
-            print("proj_sfa_x[0]=", proj_sfa_x[0])
-            print("sfa_removed_x[0]=", sfa_removed_x[0])
-            print("pca_x[0]=", pca_x[0])
-            print("n_pca_x[0]=", n_pca_x[0])
-            print("sfa_x[0]=", sfa_x[0])
-
+            print("Data_std(x_zm)=", x_zm.var(axis=0))
+            print("Data_std(x_app)=", x_app.var(axis=0))
+            print("Data_std(sfa_removed_x)=", sfa_removed_x.var(axis=0))
         return x
 
 
@@ -1913,12 +1958,8 @@ def SFANode_reduce_output_dim(sfa_node, new_output_dim, verbose=False):
     if verbose:
         print("Updating the output dimensionality of SFA node")
     if new_output_dim > sfa_node.output_dim:
-        er = "Can only reduce output dimensionality of SFA node, not increase it (%d > %d)" % \
-             (new_output_dim, sfa_node.output_dim)
-        raise Exception(er)
-    if verbose:
-        print("Before: sfa_node.d.shape=", sfa_node.d.shape, " sfa_node.sf.shape=", sfa_node.sf.shape)
-        print("sfa_node._bias.shape=", sfa_node._bias.shape)
+        er = "Cannot increase the output dimensionality of the SFA node"
+        raise ValueError(er)
     sfa_node.d = sfa_node.d[:new_output_dim]
     sfa_node.sf = sfa_node.sf[:, :new_output_dim]
     sfa_node._bias = sfa_node._bias[:new_output_dim]
@@ -1931,34 +1972,36 @@ def SFANode_reduce_output_dim(sfa_node, new_output_dim, verbose=False):
 def PCANode_reduce_output_dim(pca_node, new_output_dim, verbose=False):
     """ This function modifies an already trained PCA node,
     reducing the number of preserved SFA features to new_output_dim features.
-    The modification is done in place. Also the explained variance field is updated
+    The modification is done in place. Also the explained variance field is
+    updated.
     """
     if verbose:
         print("Updating the output dimensionality of PCA node")
     if new_output_dim > pca_node.output_dim:
-        er = "Can only reduce output dimensionality of PCA node, not increase it"
-        raise Exception(er)
+        er = "Cannot increase the output dimensionality of the PCA node"
+        raise ValueError(er)
     if verbose:
         print("Before: pca_node.d.shape=", pca_node.d.shape, " pca_node.v.shape=", pca_node.v.shape)
         print(" pca_node.avg.shape=", pca_node.avg.shape)
 
-    # if new_output_dim > 0:
     original_total_variance = pca_node.d.sum()
     original_explained_variance = pca_node.explained_variance
     pca_node.d = pca_node.d[0:new_output_dim]
     pca_node.v = pca_node.v[:, 0:new_output_dim]
     # pca_node.avg is not affected by this method!
     pca_node._output_dim = new_output_dim
-    pca_node.explained_variance = original_explained_variance * pca_node.d.sum() / original_total_variance
-    # else:
+    pca_node.explained_variance = \
+        original_explained_variance * \
+        pca_node.d.sum() / original_total_variance
 
     if verbose:
         print("After: pca_node.d.shape=", pca_node.d.shape, " pca_node.v.shape=", pca_node.v.shape)
         print(" pca_node.avg.shape=", pca_node.avg.shape)
 
-
-# Computes output errors dimension by dimension for a single sample: y - node.execute(x_app)
-# The library fails when dim(x_app) > dim(y), thus filling of x_app with zeros is recommended
+# Computes output errors dimension by dimension for a single sample:
+# y - node.execute(x_app)
+# The library fails when dim(x_app) > dim(y), thus filling of x_app with
+# zeros is recommended
 def f_residual(x_app_i, node, y_i):
     res_long = numpy.zeros_like(y_i)
     y_i = y_i.reshape((1, -1))
@@ -1968,12 +2011,12 @@ def f_residual(x_app_i, node, y_i):
     return res_long
 
 
-#########################################################################################################
-#   EXAMPLES THAT SHOW HOW GSFA CAN BE USED                                                             #
-#########################################################################################################
+###############################################################################
+#   EXAMPLES THAT SHOW HOW GSFA CAN BE USED                                   #
+###############################################################################
 
 def example_clustered_graph():
-    print("\n**************************************************************************")
+    print("\n****************************************************************")
     print("*Example of training GSFA using a clustered graph")
     cluster_size = 20
     num_clusters = 5
@@ -2009,11 +2052,12 @@ def example_clustered_graph():
     x_test += 0.1 * numpy.arange(num_samples).reshape((num_samples, 1))
     y_test = GSFA_n.execute(Exp_n.execute(x_test))
     print("y_test", y_test)
-    print("Standard delta values of output features y_test:", comp_delta(y_test))
+    print("Standard delta values of output features y_test:",
+          comp_delta(y_test))
 
 
 def example_pathological_outputs(experiment):
-    print("\n **************************************************************************")
+    print("\n ***************************************************************")
     print("*Pathological responses. Experiment on graph with weakly connected samples")
     x = numpy.random.normal(size=(20, 19))
     x2 = numpy.random.normal(size=(20, 19))
@@ -2033,23 +2077,23 @@ def example_pathological_outputs(experiment):
     e[(19, 19)] = 0.5
     train_mode = "graph"
 
-    # experiment = 0 #Select the experiment to perform, from 0 to 11
+    # Select the experiment to perform, from 0 to 11
     print("experiment", experiment)
     if experiment == 0:
-        exp_title = "Original linear SFA graph"
+        exp_title = "Original linear SFA graph. Experiment 0"
     elif experiment == 1:
         v[0] = 10.0
         v[10] = 0.1
         v[19] = 10.0
-        exp_title = "Modified node weights 1"
+        exp_title = "Modified node weights. Experiment 1"
     elif experiment == 2:
         v[0] = 10.0
         v[19] = 0.1
-        exp_title = "Modified node weights 2"
+        exp_title = "Modified node weights. Experiment 2"
     elif experiment == 3:
         e[(0, 1)] = 0.1
         e[(18, 19)] = 10.0
-        exp_title = "Modified edge weights 3"
+        exp_title = "Modified edge weights. Experiment 3"
     elif experiment == 4:
         e[(0, 1)] = 0.01
         e[(18, 19)] = 0.01
@@ -2060,8 +2104,7 @@ def example_pathological_outputs(experiment):
         e[(4, 6)] = 0.5
         e[(5, 7)] = 0.5
 
-        # e[(1,2)] = 0.1
-        exp_title = "Modified edge weights 4"
+        exp_title = "Modified edge weights. Experiment 4"
     elif experiment == 5:
         e[(10, 11)] = 0.02
         e[(1, 2)] = 0.02
@@ -2070,41 +2113,45 @@ def example_pathological_outputs(experiment):
         e[(17, 19)] = 1.0
         e[(14, 16)] = 1.0
 
-        exp_title = "Modified edge weights 5"
+        exp_title = "Modified edge weights. Experiment 5"
     elif experiment == 6:
         e[(6, 7)] = 0.1
         e[(5, 6)] = 0.1
-        exp_title = "Modified edge weights 6"
+        exp_title = "Modified edge weights. Experiment 6"
     elif experiment == 7:
         e = {}
         for j1 in range(19):
             for j2 in range(j1 + 1, 20):
                 e[(j1, j2)] = 1 / (l[j2] - l[j1] + 0.00005)
-        exp_title = "Modified edge weights for labels as w12 = 1/(l2-l1+0.00005) 7"
+        exp_title = "Modified edge weights for labels with " + \
+                    "w12 = 1/(l2-l1+0.00005). Experiment 7"
     elif experiment == 8:
         e = {}
         for j1 in range(19):
             for j2 in range(j1 + 1, 20):
                 e[(j1, j2)] = numpy.exp(-0.25 * (l[j2] - l[j1]) ** 2)
-        exp_title = "Modified edge weights for labels as w12 = exp(-0.25*(l2-l1)**2) 8"
+        exp_title = "Modified edge weights for labels as w12 = exp(-0.25*(l2-l1)**2). Experiment 8"
     elif experiment == 9:
         e = {}
         for j1 in range(19):
             for j2 in range(j1 + 1, 20):
-                if l[j2] - l[j1] < 0.6:
-                    e[(j1, j2)] = 1 / (l[j2] - l[j1] + 0.00005)
-        exp_title = "Modified edge weights w12 = 1/(l2-l1+0.00005), for l2-l1<0.6 9"
+                if l[j2] - l[j1] < 1.5:
+                    e[(j1, j2)] = 1 / (l[j2] - l[j1] + 0.0005)
+        exp_title = "Modified edge weights w12 = 1/(l2-l1+0.0005), " + \
+                    "for l2-l1<1.5. Experiment 9"
     elif experiment == 10:
-        exp_title = "Mirroring training graph, w=%d" % half_width + "10"
+        exp_title = "Mirroring training graph, w=%d" % half_width + \
+                    ". Experiment 10"
         train_mode = "smirror_window%d" % half_width
         e = {}
     elif experiment == 11:
-        exp_title = "Node weight adjustment training graph, w=%d " % half_width + "11"
+        exp_title = "Node weight adjustment training graph, w=%d " % \
+                    half_width + ". Experiment 11"
         train_mode = "window%d" % half_width
         e = {}
     else:
-        er = "Unknown experiment " + str(experiment)
-        raise Exception(er)
+        er = "Unknown experiment: " + str(experiment)
+        raise ValueError(er)
 
     n = GSFANode(output_dim=5)
     if experiment in (10, 11):
@@ -2130,8 +2177,9 @@ def example_pathological_outputs(experiment):
     import matplotlib.pyplot as plt
 
     plt.figure()
-    plt.title("Overfitted outputs on training data, v (node weights)=" + str(v))
-    plt.xlabel(exp_title + "\n With D (half the sum of all edges from/to each vertex)=" + str(D))
+    plt.title("Outputs overfitted to training data, node weights=" + str(v))
+    plt.xlabel(exp_title + "\n With D (half the sum of all edges " +
+               "from/to each vertex)=" + str(D))
     plt.xticks(numpy.arange(0, 20, 1))
     plt.plot(y)
     if experiment in (6, 7, 8):
@@ -2142,7 +2190,7 @@ def example_pathological_outputs(experiment):
 
 
 def example_continuous_edge_weights():
-    print("\n**************************************************************************")
+    print("\n****************************************************************")
     print("*Testing continuous edge weigths w_{n,n'} = 1/(|l_n'-l_n|+k)")
     x = numpy.random.normal(size=(20, 19))
     x2 = numpy.random.normal(size=(20, 19))
@@ -2190,12 +2238,12 @@ def example_continuous_edge_weights():
     plt.show()
 
 
-########################################################################################
-#   AN EXAMPLE OF HOW iGSFA CAN BE USED                                                #
-########################################################################################
+###############################################################################
+#   AN EXAMPLE OF HOW iGSFA CAN BE USED                                       #
+###############################################################################
 
 def example_iGSFA():
-    print("\n\n**************************************************************************")
+    print("\n\n**************************************************************")
     print("*Example of training iGSFA on random data")
     num_samples = 1000
     dim = 20
@@ -2213,7 +2261,8 @@ def example_iGSFA():
     import cuicuilco.patch_mdp
     from cuicuilco.sfa_libs import zero_mean_unit_var
     print("Node creation and training")
-    n = iGSFANode(output_dim=15, reconstruct_with_sfa=False, slow_feature_scaling_method="data_dependent",
+    n = iGSFANode(output_dim=15, reconstruct_with_sfa=False,
+                  slow_feature_scaling_method="data_dependent",
                   verbose=verbose)
     n.train(x, train_mode="regular")
     n.stop_training()
@@ -2224,12 +2273,21 @@ def example_iGSFA():
     print("y=", y)
     print("y_test=", y_test)
     print("Standard delta values of output features y:", comp_delta(y))
-    print("Standard delta values of output features y_test:", comp_delta(y_test))
+    print("Standard delta values of output features y_test:",
+          comp_delta(y_test))
     y_norm = zero_mean_unit_var(y)
     y_test_norm = zero_mean_unit_var(y_test)
-    print("Standard delta values of output features y after constraint enforcement:", comp_delta(y_norm))
-    print("Standard delta values of output features y_test after constraint enforcement:", comp_delta(y_test_norm))
+    print("Standard delta values of output features y after constraint ",
+          "enforcement:", comp_delta(y_norm))
+    print("Standard delta values of output features y_test after constraint ",
+          "enforcement:", comp_delta(y_test_norm))
 
+    x_app_lin = n.inverse(y)
+    x_app_nonlin = n.nonlinear_inverse(y)
+    y_app_lin = n.execute(x_app_lin)
+    y_app_nonlin = n.execute(x_app_nonlin)
+    print("|y - y_app_lin|", ((y - y_app_lin)**2).mean())
+    print("|y - y_app_nonlin|", ((y - y_app_nonlin)**2).mean())
 
 if __name__ == "__main__":
     for experiment_number in range(0, 12):
