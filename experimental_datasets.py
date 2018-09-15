@@ -660,7 +660,7 @@ class ParamsGenderExperiment(system_parameters.ParamsSystem):
         iSeq.GENDER_STEP = 0.10000  # 01. 0.20025 default. 0.4 fails, use 0.4005, 0.80075, 0.9005
         # iSeq.GENDER_STEP = 0.80075 #01. default. 0.4 fails, use 0.4005, 0.80075, 0.9005
         iSeq.real_genders = numpy.arange(iSeq.MIN_GENDER, iSeq.MAX_GENDER, iSeq.GENDER_STEP)
-        iSeq.genders = map(image_loader.code_gender, iSeq.real_genders)
+        iSeq.genders = list(map(image_loader.code_gender, iSeq.real_genders))
         iSeq.racetweens = [999]
         iSeq.expressions = [0]
         iSeq.morphs = [0]
@@ -1752,10 +1752,10 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
         # GTSRB_onlineAnnotations, GTSRB_annotationsTest
         iSeq_set = iNewidRGTSRB_Labels = [
             [self.iSeqCreateRGTSRB_Labels(GTSRB_annotationsTest, repetition_factors=1, seed=-1)]]
-        sNewidRGTSRB = self.sSeqCreateRGTSRB(iSeq_set[0][0], delta_translation=0.0, delta_scaling=0.0,
+        sNewidRGTSRB = [[self.sSeqCreateRGTSRB(iSeq_set[0][0], delta_translation=0.0, delta_scaling=0.0,
                                              delta_rotation=0.0, contrast_enhance=contrast_enhance,
                                              activate_HOG=activate_HOG, switch_SFA_over_HOG=switch_SFA_over_HOG,
-                                             feature_noise=0.0, seed=-1)
+                                             feature_noise=0.0, seed=-1)]]
         # sSeq_set.add_noise_L0 = False
         # sSeq_set.rotations = 0.0
 
@@ -1824,7 +1824,7 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
             prefix = rootpath + '/' + "%05d" % c + '/'  # subdirectory for class. format(c, '05d')
             gtFile = open(prefix + 'GT-' + "%05d" % c + '.csv')  # annotations file. format(c, '05d')
             gtReader = csv.reader(gtFile, delimiter=';')  # csv parser for annotations file
-            gtReader.next()  # skip header
+            next(gtReader) # skip header. Notice that gtReader.next() is obsolete
             # loop over all images in current annotations file
             for _, row in enumerate(gtReader):
                 #            if ii%1000==0:
@@ -1842,7 +1842,7 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
                     del im
                 extended_row.append(int(row[0][0:5]))  # Extract track number
                 if shrink_signs:
-                    sign_coordinates = map(float, row[3:7])
+                    sign_coordinates = list(map(float, row[3:7]))
                     center_x = (sign_coordinates[0] + sign_coordinates[2]) / 2.0
                     center_y = (sign_coordinates[1] + sign_coordinates[3]) / 2.0
                     rand_scale_factor1 = 1.0 + numpy.random.uniform(-delta_rand_scale, delta_rand_scale)
@@ -1853,7 +1853,7 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
                     row[5] = center_x + width // 2
                     row[4] = center_y - height // 2
                     row[6] = center_y + height // 2
-                extended_row = extended_row + map(float, row[1:7])
+                extended_row = extended_row + list(map(float, row[1:7]))
                 if include_labels:
                     extended_row.append(int(row[7]))  # the 8th column is the label
                 for i in range(repetition_factors[c]):
@@ -1889,7 +1889,7 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
         # loop over all 42 classes
         gtFile = open(prefix + '/' + csv_file)  # annotations file
         gtReader = csv.reader(gtFile, delimiter=';')  # csv parser for annotations file
-        gtReader.next()  # skip header
+        next(gtReader)  # skip header
         # loop over all images in current annotations file
         for _, row in enumerate(gtReader):
             #            if ii%1000==0:
@@ -1907,7 +1907,7 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
             extended_row.append(0)  # Fictuous track number
             if shrink_signs:
                 shrink_factor = 0.8
-                sign_coordinates = map(float, row[3:7])
+                sign_coordinates = list(map(float, row[3:7]))
                 center_x = (sign_coordinates[0] + sign_coordinates[2]) / 2.0
                 center_y = (sign_coordinates[1] + sign_coordinates[3]) / 2.0
                 width = (sign_coordinates[2] - sign_coordinates[0] + 1) * shrink_factor
@@ -1916,7 +1916,7 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
                 row[5] = center_x + width // 2
                 row[4] = center_y - height // 2
                 row[6] = center_y + height // 2
-            extended_row = extended_row + map(float, row[1:7])
+            extended_row = extended_row + list(map(float, row[1:7]))
             if include_labels:
                 label = int(row[7])
                 if label in sign_selection:

@@ -398,7 +398,6 @@ try:
             layer.sfa_args["slow_feature_scaling_method"] = "data_dependent2"
 except Exception as ex:
     print("Unable to set  parameters:" + str(ex))
-    raise(ex)
     del HiGSFA_CIFAR10_Network_9L_config
 
 
