@@ -45,18 +45,24 @@ if experiment_seed:
     experiment_seed = int(experiment_seed)
 else:
     ex = """CUICUILCO_EXPERIMENT_SEED unset.
-            Please use this environment variable to indicate the random seed of the experiments """
-    raise Exception(ex)
+            Please use this environment variable to indicate the random seed 
+            of the experiments. Using default value"""
+    print(ex)
+    experiment_seed = 112233445
 print("experiment_seed=%d" % experiment_seed)
 numpy.random.seed(experiment_seed)
 
 experiment_basedir = os.getenv("CUICUILCO_EXPERIMENT_BASEDIR")  # 1112223339 #1112223339
 if not experiment_basedir:
     ex = """CUICUILCO_EXPERIMENT_BASEDIR unset.
-            Please use this environment variable to indicate the base directory of all databases"""
-    raise Exception(ex)
+            Please use this environment variable to indicate the base 
+            directory of all databases. Using default value"""
+    print(ex)
+    experiment_basedir = "/local/escalafl/Alberto"
+print("experiment_basedir:", experiment_basedir)
 
-# Setting default directories where the databases are located
+# Setting
+#  default directories where the databases are located
 user_base_dir = experiment_basedir  # "/local/tmp/escalafl/Alberto"
 frgc_normalized_base_dir = experiment_basedir + "/FRGC_Normalized"
 frgc_noface_base_dir = experiment_basedir + "/FRGC_NoFace"
@@ -2109,7 +2115,7 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
         for row in annotations:
             all_classes.append(row[8])
             # print "adding ", row[8],
-        print ("all_classes=" +  str( all_classes))
+        # print ("all_classes=" +  str( all_classes))
         all_classes = numpy.unique(all_classes)
         print ("all_classes=" +  str( all_classes))
 
@@ -2178,7 +2184,8 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
         for c in all_classes:
             if len(c_filenames[c]) > 0:
                 iSeq.block_size.append(len(c_filenames[c]))
-                print ("iSeq.block_size[%d]=%d" % (c, iSeq.block_size[-1]))
+                print ("iSeq.block_size[%d]=%d, " % (c, iSeq.block_size[-1]),
+                       end='')
                 for filename in c_filenames[c]:
                     iSeq.ids.append(c)
                     iSeq.input_files.append(filename)

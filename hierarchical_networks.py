@@ -41,9 +41,10 @@ from . import lattice
 
 tuning_parameter = os.getenv("CUICUILCO_TUNING_PARAMETER")  # 1112223339 #1112223339
 if tuning_parameter is None:
-    ex = "CUICUILCO_TUNING_PARAMETER unset"
+    ex = """Environment variable CUICUILCO_TUNING_PARAMETER unset. 
+            Using default value"""
     print(ex)
-    raise Exception(ex)
+    tuning_parameter = 20
 print("tuning_parameter=", tuning_parameter)
 
 #TODO: Move these functions to nonlinear_expansion

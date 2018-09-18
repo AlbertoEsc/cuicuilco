@@ -857,8 +857,10 @@ def load_image_data(image_files, image_array, image_width, image_height, subimag
         num_proc = int(num_proc)
         print("setting num_proc for image loading to", num_proc)
     else:
-        er = "CUICUILCO_IMAGE_LOADING_NUM_PROC undefined"
-        raise Exception(er)
+        er = """CUICUILCO_IMAGE_LOADING_NUM_PROC undefined.
+             Using default value 4"""
+        print(er)
+        num_proc = 4
 
     if image_array is not None:
         num_proc = 1
