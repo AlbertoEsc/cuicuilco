@@ -49,11 +49,12 @@ def unpickle_from_disk(filename):
     Passes Exception if file could not be loaded.
     """
     # Warning: only using 'r' or 'w' can result in EOFError when unpickling! 
-    pickle_file = open(filename, "rb")
     try:
-        obj = pickle.load(pickle_file)
-    finally:
-        pickle_file.close()
+        with open(filename, "rb") as pickle_file:
+            obj = pickle.load(pickle_file)
+    except UnicodeDecodeError as e:
+        with open(filename, "rb") as pickle_file:
+            obj = pickle.load(pickle_file, encoding='latin1')
     return obj
 
 
