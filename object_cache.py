@@ -55,6 +55,9 @@ def unpickle_from_disk(filename):
     except UnicodeDecodeError as e:
         with open(filename, "rb") as pickle_file:
             obj = pickle.load(pickle_file, encoding='latin1')
+    except Exception as e:
+        print('Unable to load data ', filename, ':', e)
+        raise
     return obj
 
 
