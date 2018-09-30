@@ -1436,21 +1436,21 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
         self.experiment_seed = experiment_seed
         self.experiment_basedir = experiment_basedir
 
-        self.GTSRB_Images_dir_training = "/local/escalafl/Alberto/GTSRB/Final_Training/Images"
-        self.GTSRB_HOG_dir_training = "/local/escalafl/Alberto/GTSRB/Final_Training/HOG"
-        self.GTSRB_SFA_dir_training = "/local/escalafl/Alberto/GTSRB/Final_Training/HOG"
+        self.GTSRB_Images_dir_training = experiment_basedir + '/GTSRB/Final_Training/Images'
+        self.GTSRB_HOG_dir_training = experiment_basedir + '/GTSRB/Final_Training/HOG'
+        self.GTSRB_SFA_dir_training = experiment_basedir + '/GTSRB/Final_Training/HOG'
 
-        self.GTSRB_Images_dir_test = "/local/escalafl/Alberto/GTSRB/Final_Test/Images"
-        self.GTSRB_HOG_dir_test = "/local/escalafl/Alberto/GTSRB/Final_Test/HOG"
-        self.GTSRB_SFA_dir_test = "/local/escalafl/Alberto/GTSRB/Final_Test/SFA"
+        self.GTSRB_Images_dir_test = experiment_basedir + '/GTSRB/Final_Test/Images'
+        self.GTSRB_HOG_dir_test = experiment_basedir + '/GTSRB/Final_Test/HOG'
+        self.GTSRB_SFA_dir_test = experiment_basedir + '/GTSRB/Final_Test/SFA'
 
-        self.GTSRB_Images_dir_Online = "/local/escalafl/Alberto/GTSRB/Final_Test/Images"
-        self.GTSRB_HOG_dir_Online = "/local/escalafl/Alberto/GTSRB/Final_Test/HOG"
-        self.GTSRB_SFA_dir_Online = "/local/escalafl/Alberto/GTSRB/Final_Test/SFA"
+        self.GTSRB_Images_dir_Online = experiment_basedir + '/GTSRB/Final_Test/Images'
+        self.GTSRB_HOG_dir_Online = experiment_basedir + '/GTSRB/Final_Test/HOG'
+        self.GTSRB_SFA_dir_Online = experiment_basedir + '/GTSRB/Final_Test/SFA'
 
-        self.GTSRB_Images_dir_UnlabeledOnline = "/local/escalafl/Alberto/GTSRB/Online-Test/Images"
-        self.GTSRB_HOG_dir_UnlabeledOnline = "/local/escalafl/Alberto/GTSRB/Online-Test/HOG"
-        self.GTSRB_SFA_dir_UnlabeledOnline = "/local/escalafl/Alberto/GTSRB/Online-Test/SFA"
+        self.GTSRB_Images_dir_UnlabeledOnline = experiment_basedir + '/GTSRB/Online-Test/Images'
+        self.GTSRB_HOG_dir_UnlabeledOnline = experiment_basedir + '/GTSRB/Online-Test/HOG'
+        self.GTSRB_SFA_dir_UnlabeledOnline = experiment_basedir + '/GTSRB/Online-Test/SFA'
 
         self.analysis = None
         self.enable_reduced_image_sizes = True
@@ -1473,55 +1473,21 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
         # class 39 : 210   class 40 : 240
         # class 41 : 180   class 42 : 180
 
-        # repetition_factors = [10  1  1  1  1  1  5  1  1  1  1  1  1  1  2  3  5  2  1 10  6  6  5  4  8
-        #  1  3  8  4  8  5  2  8  3  5  1  5 10  1  7  6  8  8]
-
-        # repetition_factors = [5  1  1  1  1
-        #                      1  3  1  1  1
-        #                      1  1  1  1  2
-        #                      2  3  2  1  5  4
-        #                      4  3  4  8
-        #  1  3  8  4  8  5  2  8  3  5  1  5 10  1  7  6  8  8]
-
-        # For all tracks:
-        # repetition_factorsTrain = [10,  1,  1,  1,  1,  1,  5,  1,  1,  1,  1,  1,  1,  1,  2,  3,  5,  2, 1, 10,
-        # 6,  6,  5,  4,  8,  1,  3,  8,  4,  8,  5,  2,  8,  3,  5,  1,  5, 10,  1,  7,  6,  8,  8]
-
-        # To support even/odd distribution
-        # W
-        # repetition_factors = numpy.array(repetition_factors)*2
-        # repetition_factorsTrain = numpy.array(repetition_factorsTrain)*2
-
-        # At most 15 tracks:
-        # repetition_factors = [ 4, 1, 1, 1, 1, 1,
-        #  2, 1, 1, 1, 1, 1,
-        #  1, 1, 1, 2, 2, 1,
-        #  1, 4, 3, 3, 2, 2,
-        #  3, 1, 2, 3, 2, 3,
-        #  2, 1, 3, 2, 2, 1,
-        #  2, 4, 1, 3, 3, 3,
-        #  3]
-
-        GTSRB_present = os.path.lexists(
-            "/local/escalafl/Alberto/GTSRB/")  # and os.path.lexists("/local/escalafl/on_lux10")
+        GTSRB_present = os.path.lexists(self.experiment_basedir + '/GTSRB')
         if not GTSRB_present:
             er = "GTSRB: experiment data not found"
             raise Exception(er)
 
-        GTSRBTrain_base_dir = "/local/escalafl/Alberto/GTSRB/Final_Training/Images"
-        # "/local/escalafl/Alberto/GTSRB/Final_Training/Images"
-        # GTSRBOnline_base_dir = "/local/escalafl/Alberto/GTSRB/Online-Test-sort/Images"
-        # #"/local/escalafl/Alberto/GTSRB/Online-Test-sort/Images"
-        # repetition_factorsTrain = None
+        GTSRBTrain_base_dir = self.GTSRB_Images_dir_training
 
         # TODO:Repetition factors should not be at this level, also randomization of scales does not belong here.
         # TODO:Update the databases used to the final system
-        sign_selection = numpy.arange(43)
-
-        sign_selection = list(set(sign_selection) - set([0, 19, 21, 24, 27, 29, 32, 37, 39, 41, 42]))
+        sign_selection = numpy.arange(43)  # 43 signs?
+        # sign_selection = list(set(sign_selection) - set([0, 19, 21, 24, 27, 29, 32, 37, 39, 41, 42]))
 
         GTSRB_annotationsTrain_Train = self.readTrafficSignsAnnotations(GTSRBTrain_base_dir, include_labels=True,
                                                                         sign_selection=sign_selection)
+        # TODO: Why loading again the same values here? Read once and select appropriate subsets!
         # delta_rand_scale=0.07
         print ("Len GTSRB_annotationsTrain_Train= %d" % len(GTSRB_annotationsTrain_Train))
         GTSRB_annotationsTrain_Seenid = self.readTrafficSignsAnnotations(GTSRBTrain_base_dir, include_labels=True,
@@ -1530,18 +1496,14 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
         GTSRB_annotationsTrain_Newid = self.readTrafficSignsAnnotations(GTSRBTrain_base_dir, include_labels=True,
                                                                         sign_selection=sign_selection)
 
-        #    GTSRB_annotationsOnline_Train = readTrafficSignsAnnotations(GTSRBOnline_base_dir, include_labels=True)
-        #    GTSRB_annotationsOnline_Seenid = readTrafficSignsAnnotations(GTSRBOnline_base_dir, include_labels=True)
-        #    GTSRB_annotationsOnline_Newid = readTrafficSignsAnnotations(GTSRBOnline_base_dir, include_labels=True)
-        #    print "Len GTSRB_annotationsOnline_Newid=", len(GTSRB_annotationsOnline_Newid)
-        #    quit()
 
         activate_HOG = True and False  # for direct image processing, true for SFA/HOG features
         # TODO: HOG set selection HOG02, SFA,
         switch_SFA_over_HOG = "HOG02"  # "SFA" # "HOG02", "SFA"
 
+        # TODO: why fixing constant_block_size, variable block sizes are supported now!
         print ("fixing max_samples_per_class")
-        GTSRB_rep = 1  # 6
+        GTSRB_rep = 1
         GTSRB_constant_block_size = 360 * GTSRB_rep
         GTSRB_annotationsTrain_Train = self.enforce_max_samples_per_class(GTSRB_annotationsTrain_Train,
                                                                           GTSRB_constant_block_size,
@@ -1570,16 +1532,16 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
 
             for _, row in enumerate(GTSRB_annotationsTrain_Train):
                 row[8] = correction_c[row[8]]
-            for row in GTSRB_annotationsTrain_Seenid:
+            for row in GTSRB_annotationsTrain_Seenid:  # TODO: Why doing this again
                 row[8] = correction_c[row[8]]
-            for row in GTSRB_annotationsTrain_Newid:
+            for row in GTSRB_annotationsTrain_Newid:  # TODO: Why doing this again
                 row[8] = correction_c[row[8]]
             print("class consequtive correction mapping" + str(correction_c))
 
         count = self.count_annotation_classes(GTSRB_annotationsTrain_Train)
         print("number of samples per each class B (GTSRB_annotationsTrain_Train): " + str(count))
 
-        shuffle_classes = True
+        shuffle_classes = True  # intra-class shuffling
         if shuffle_classes:
             all_classes = []
             for row in GTSRB_annotationsTrain_Train:
@@ -1587,6 +1549,8 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
             unique_c = numpy.unique(all_classes)
             print("unique_c=" + str(unique_c))
 
+            # A consistent shuffling of class numbers
+            # This is needed for particular experiments
             shuffled_c = unique_c.copy()
             numpy.random.shuffle(shuffled_c)
             print("shuffled_c=" + str(shuffled_c))
@@ -1599,10 +1563,10 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
             for row in GTSRB_annotationsTrain_Train:
                 row[8] = shuffling_c[row[8]]
 
-            for row in GTSRB_annotationsTrain_Seenid:
+            for row in GTSRB_annotationsTrain_Seenid: # Again, this computation is not justified
                 row[8] = shuffling_c[row[8]]
 
-            for row in GTSRB_annotationsTrain_Newid:
+            for row in GTSRB_annotationsTrain_Newid: # And this one
                 row[8] = shuffling_c[row[8]]
 
             print("class shuffling mapping" + str(shuffling_c))
@@ -1610,16 +1574,6 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
         count = self.count_annotation_classes(GTSRB_annotationsTrain_Train)
         print("number of samples per each class C (GTSRB_annotationsTrain_Train): " + str(count))
 
-        #    count = count_annotation_classes(GTSRB_annotationsTrain_Seenid)
-        #    print "number of samples per each class (GTSRB_annotationsTrain_Seenid): ", count
-
-        #    count = count_annotation_classes(GTSRB_annotationsTrain_Newid)
-        #    print "number of samples per each class (GTSRB_annotationsTrain_Newid): ", count
-
-        # print 500.0/count+0.99
-        # print 700/count
-        # print GTSRB_annotationsTrain[0]
-        #
         # TODO:Add a first_sample parameter
 
         GTSRB_annotationsTrain_TrainOrig = GTSRB_annotationsTrain_Train
@@ -1632,26 +1586,7 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
         GTSRB_annotationsTrain_Newid = self.sample_annotations(GTSRB_annotationsTrain_TrainOrig,
                                                                first_sample=240 * GTSRB_rep,
                                                                num_samples=120 * GTSRB_rep)  # make testing faster for
-        # now, 0.3 , 1.0
 
-        #    GTSRB_annotationsTrain_Train = sample_annotations(GTSRB_annotationsTrain_TrainOrig,
-        # first_sample = 0, num_samples=360*GTSRB_rep) #W 0.6, 0.5, Odd, AllP, Univ, 2/3
-        #    GTSRB_annotationsTrain_Seenid = sample_annotations(GTSRB_annotationsTrain_TrainOrig,
-        # first_sample = 0*GTSRB_rep, num_samples=360*GTSRB_rep ) #W 1.0, 0.3, Even, 1/3
-        #    GTSRB_annotationsTrain_Newid = sample_annotations(GTSRB_annotationsTrain_TrainOrig,
-        # first_sample = 240*GTSRB_rep, num_samples=10*GTSRB_rep ) #make testing faster for now, 0.3 , 1.0
-
-        # GTSRB_annotationsOnline_Train = sample_annotations(GTSRB_annotationsOnline_Train, flag="Univ",
-        # passing=0.25) #W 0.6, 0.5, Odd, AllP, Univ
-        # GTSRB_annotationsOnline_Seenid = sample_annotations(GTSRB_annotationsOnline_Seenid, flag="Univ",
-        # passing=0.25) #W 1.0, 0.3, Even
-        # GTSRB_annotationsOnline_Newid = sample_annotations(GTSRB_annotationsOnline_Newid, flag="Univ",
-        # passing=1.0) #make testing faster for now, 0.3 , 1.0
-
-        # count = count_annotation_classes(GTSRB_annotationsTest)
-        # print count
-        # quit()
-        #
         GTSRB_Unlabeled_base_dir = "/local/escalafl/Alberto/GTSRB/Final_Test/Images"
         # "/local/escalafl/Alberto/GTSRB/Online-Test/Images"
         GTSRB_Unlabeled_csvfile = "GT-final_test.csv"
@@ -1865,17 +1800,6 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
                 for i in range(repetition_factors[c]):
                     annotations.append(extended_row)
             gtFile.close()
-
-            #     #Correct class indices, so that only consecutive classes appear
-            #     if correct_classes:
-            #         all_classes=[]
-            #         for row in annotations:
-            #             all_classes.append(row[8])
-            #         unique, corrected_classes = numpy.unique(all_classes, return_inverse=True)
-            #         print "unique classes:", unique
-            #         for ii, row in enumerate(annotations):
-            #             row[8] = corrected_classes[ii]
-
         return annotations
 
     def readTrafficSignsAnnotationsOnline(self, prefix, csv_file, shrink_signs=True, correct_sizes=True,
@@ -1898,8 +1822,6 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
         next(gtReader)  # skip header
         # loop over all images in current annotations file
         for _, row in enumerate(gtReader):
-            #            if ii%1000==0:
-            #                print row
             image_filename = prefix + "/" + row[0]
             extended_row = [image_filename]  # extended_row: filename, track number, im_width, im_height, x0, y0, x1, y1
             if correct_sizes:
@@ -1932,9 +1854,9 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
                 extended_row.append(0)
                 annotations.append(extended_row)
         gtFile.close()
-
         return annotations
 
+    @staticmethod
     def count_annotation_classes(self, annotations):
         classes = []
         count = []
@@ -1946,6 +1868,7 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
             count.append((classes[:] == c).sum())
         return numpy.array(count)
 
+    @staticmethod
     def enforce_max_samples_per_class(self, annotations, max_samples=150, repetition=1):
         annot_list = [None] * 43
         for i in range(len(annot_list)):
@@ -1971,6 +1894,7 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
             new_annotations += annot_list[c]
         return new_annotations
 
+    @staticmethod
     def sample_annotations(self, annotations, first_sample=0, num_samples=None):
         if len(annotations[0]) < 8 or (first_sample is None and num_samples is None):
             return annotations
@@ -1992,7 +1916,7 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
 
         # Switch either HOG or SFA here
 
-    def load_HOG_data(self, base_GTSRB_dir="/home/eban/GTSRB", filenames=None, switch_SFA_over_HOG="HOG02",
+    def load_HOG_data(self, filenames=None, switch_SFA_over_HOG="HOG02",
                       feature_noise=0.0, padding=False):
         all_data = []
         print("HOG DATA LOADING %d images..." % len(filenames))
@@ -2325,6 +2249,8 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
 
 
 ParamsRGTSRBFunc = ParamsRGTSRBExperiment(experiment_seed, experiment_basedir)
+# TODO: Add various options (test data is real test, or validation),
+# and SeenId (validation) is disjoint with training
 
 
 # This subsumes RTransX, RTransY, RTrainsScale
