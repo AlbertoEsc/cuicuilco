@@ -1454,8 +1454,8 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
 
         self.analysis = None
         self.enable_reduced_image_sizes = True
-        self.reduction_factor = 1.0  # WARNING 1.0, 2.0, 4.0, 8.0  / 1.0 2.0 ...
-        self.hack_image_size = 128  # WARNING   128,  64,  32 , 16 / 160  80 ...
+        self.reduction_factor = 1.0
+        self.hack_image_size = 128  # Final resolution is 32x32x3
         self.enable_hack_image_size = True
 
     def create(self):
@@ -1490,16 +1490,16 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
         # TODO: Why loading again the same values here? Read once and select appropriate subsets!
         # delta_rand_scale=0.07
         print ("Len GTSRB_annotationsTrain_Train= %d" % len(GTSRB_annotationsTrain_Train))
-        GTSRB_annotationsTrain_Seenid = self.readTrafficSignsAnnotations(GTSRBTrain_base_dir, include_labels=True,
-                                                                         sign_selection=sign_selection)
+        ##GTSRB_annotationsTrain_Seenid = self.readTrafficSignsAnnotations(GTSRBTrain_base_dir, include_labels=True,
+        ##                                                                 sign_selection=sign_selection)
         # delta_rand_scale=0.07
-        GTSRB_annotationsTrain_Newid = self.readTrafficSignsAnnotations(GTSRBTrain_base_dir, include_labels=True,
-                                                                        sign_selection=sign_selection)
+        ##GTSRB_annotationsTrain_Newid = self.readTrafficSignsAnnotations(GTSRBTrain_base_dir, include_labels=True,
+        ##                                                                sign_selection=sign_selection)
 
 
         activate_HOG = True and False  # for direct image processing, true for SFA/HOG features
         # TODO: HOG set selection HOG02, SFA,
-        switch_SFA_over_HOG = "HOG02"  # "SFA" # "HOG02", "SFA"
+        switch_SFA_over_HOG = "HOG02"  # "SFA" # "HOG02", "SFA" features
 
         # TODO: why fixing constant_block_size, variable block sizes are supported now!
         print ("fixing max_samples_per_class")
@@ -1508,16 +1508,16 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
         GTSRB_annotationsTrain_Train = self.enforce_max_samples_per_class(GTSRB_annotationsTrain_Train,
                                                                           GTSRB_constant_block_size,
                                                                           repetition=GTSRB_rep)
-        GTSRB_annotationsTrain_Seenid = self.enforce_max_samples_per_class(GTSRB_annotationsTrain_Seenid,
-                                                                           GTSRB_constant_block_size,
-                                                                           repetition=GTSRB_rep)
-        GTSRB_annotationsTrain_Newid = self.enforce_max_samples_per_class(GTSRB_annotationsTrain_Newid,
-                                                                          GTSRB_constant_block_size)
+        ##GTSRB_annotationsTrain_Seenid = self.enforce_max_samples_per_class(GTSRB_annotationsTrain_Seenid,
+        ##                                                                   GTSRB_constant_block_size,
+        ##                                                                  repetition=GTSRB_rep)
+        ##GTSRB_annotationsTrain_Newid = self.enforce_max_samples_per_class(GTSRB_annotationsTrain_Newid,
+        ##                                                                  GTSRB_constant_block_size)
 
         count = self.count_annotation_classes(GTSRB_annotationsTrain_Train)
         print ("number of samples per each class A (GTSRB_annotationsTrain_Train): ", count)
 
-        # Correct class indices, so that only consecutive classes appear
+        # Rename class indices, so that only consecutive classes appear
         consequtive_classes = True
         if consequtive_classes:
             all_classes = []
@@ -1532,16 +1532,16 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
 
             for _, row in enumerate(GTSRB_annotationsTrain_Train):
                 row[8] = correction_c[row[8]]
-            for row in GTSRB_annotationsTrain_Seenid:  # TODO: Why doing this again
-                row[8] = correction_c[row[8]]
-            for row in GTSRB_annotationsTrain_Newid:  # TODO: Why doing this again
-                row[8] = correction_c[row[8]]
+            ##for row in GTSRB_annotationsTrain_Seenid:  # TODO: Why doing this again
+            ##    row[8] = correction_c[row[8]]
+            ##for row in GTSRB_annotationsTrain_Newid:  # TODO: Why doing this again
+            ##    row[8] = correction_c[row[8]]
             print("class consequtive correction mapping" + str(correction_c))
 
         count = self.count_annotation_classes(GTSRB_annotationsTrain_Train)
         print("number of samples per each class B (GTSRB_annotationsTrain_Train): " + str(count))
 
-        shuffle_classes = True  # intra-class shuffling
+        shuffle_classes = True  # shuffles class numbers
         if shuffle_classes:
             all_classes = []
             for row in GTSRB_annotationsTrain_Train:
@@ -1563,11 +1563,11 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
             for row in GTSRB_annotationsTrain_Train:
                 row[8] = shuffling_c[row[8]]
 
-            for row in GTSRB_annotationsTrain_Seenid: # Again, this computation is not justified
-                row[8] = shuffling_c[row[8]]
+            ##for row in GTSRB_annotationsTrain_Seenid: # Again, this computation is not justified
+            ##    row[8] = shuffling_c[row[8]]
 
-            for row in GTSRB_annotationsTrain_Newid: # And this one
-                row[8] = shuffling_c[row[8]]
+            ##for row in GTSRB_annotationsTrain_Newid: # And this one
+            ##    row[8] = shuffling_c[row[8]]
 
             print("class shuffling mapping" + str(shuffling_c))
 
@@ -1578,14 +1578,14 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
 
         GTSRB_annotationsTrain_TrainOrig = GTSRB_annotationsTrain_Train
         GTSRB_annotationsTrain_Train = self.sample_annotations(GTSRB_annotationsTrain_TrainOrig, first_sample=0,
-                                                               num_samples=360 * GTSRB_rep)  # W 0.6, 0.5, Odd, AllP,
+                                                               num_samples=150 * GTSRB_rep)  # W 0.6, 0.5, Odd, AllP,
         # Univ, 2/3
-        GTSRB_annotationsTrain_Seenid = self.sample_annotations(GTSRB_annotationsTrain_TrainOrig,
-                                                                first_sample=0 * GTSRB_rep,
-                                                                num_samples=360 * GTSRB_rep)  # W 1.0, 0.3, Even, 1/3
-        GTSRB_annotationsTrain_Newid = self.sample_annotations(GTSRB_annotationsTrain_TrainOrig,
-                                                               first_sample=240 * GTSRB_rep,
-                                                               num_samples=120 * GTSRB_rep)  # make testing faster for
+        GTSRB_annotationsTrain_Seenid = self.sample_annotations(copy.deepcopy(GTSRB_annotationsTrain_TrainOrig),
+                                                                first_sample=150 * GTSRB_rep,
+                                                                num_samples=60 * GTSRB_rep)  # W 1.0, 0.3, Even, 1/3
+        ##GTSRB_annotationsTrain_Newid = self.sample_annotations(GTSRB_annotationsTrain_TrainOrig,
+        ##                                                      first_sample=240 * GTSRB_rep,
+        ##                                                      num_samples=120 * GTSRB_rep)  # make testing faster for
 
         GTSRB_Unlabeled_base_dir = "/local/escalafl/Alberto/GTSRB/Final_Test/Images"
         # "/local/escalafl/Alberto/GTSRB/Online-Test/Images"
@@ -1616,49 +1616,8 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
         GTSRB_annotationsSeenid = GTSRB_annotationsTrain_Seenid
         GTSRB_annotationsTest = GTSRB_UnlabeledAnnotations  # GTSRB_UnlabeledAnnotations, GTSRB_annotationsOnline_Newid
 
-        # # CASE [[F]]
-        # WARNING!
-        # #############################'''WAAAAAARNNNNIIINNNNNNGGGG TRTRAAAACKKKKSSSSSS 1111
-        # W first track=1
-        # #iSeq_set = iTrainRGTSRB_Labels = [[iSeqCreateRGTSRB_Labels(GTSRB_annotationsTrain, first_track = 0,
-        # last_track=100, seed=-1),
-        # #                                   iSeqCreateRGTSRB_Labels(GTSRB_annotationsTestData, first_track = 0,
-        # last_track=4, labels_available=False, seed=-1)]]
-        # #sSeq_set = sTrainRGTSRB = [[sSeqCreateRGTSRB(iSeq_set[0][0], enable_translation=True, enable_rotation=True,
-        # contrast_enhance=True, activate_HOG=activate_HOG, switch_SFA_over_HOG= switch_SFA_over_HOG,
-        # add_HOG_noise=True, seed=-1),
-        # #                            sSeqCreateRGTSRB(iSeq_set[0][1], enable_translation=False, enable_rotation=False,
-        #  contrast_enhance=True, activate_HOG=activate_HOG, switch_SFA_over_HOG= switch_SFA_over_HOG,
-        #  add_HOG_noise=True,  seed=-1)]]
-        # #
-        # #iSeq_set = iSeenidRGTSRB_Labels = iSeqCreateRGTSRB_Labels(GTSRB_annotationsSeenid, first_track = 0,
-        # last_track=100, seed=-1)
-        # #sSeq_set = sSeenidRGTSRB = sSeqCreateRGTSRB(iSeq_set, enable_translation=True, enable_rotation=True,
-        # contrast_enhance=True, activate_HOG=activate_HOG, switch_SFA_over_HOG= switch_SFA_over_HOG,
-        # add_HOG_noise=True, seed=-1)
-        # #    iSeq_set = iTrainRGTSRB_Labels = [[iSeqCreateRGTSRB_Labels(GTSRB_annotationsTrain, first_track = 0,
-        # last_track=100, seed=-1),
-        # #                                       iSeqCreateRGTSRB_Labels(GTSRB_annotationsTest, first_track = 0,
-        # last_track=100, labels_available=False, seed=-1)]]
-        # #    sSeq_set = sTrainRGTSRB = [[sSeqCreateRGTSRB(iSeq_set[0][0], enable_translation=True,
-        # enable_rotation=True, contrast_enhance=True, activate_HOG=activate_HOG,
-        # switch_SFA_over_HOG=switch_SFA_over_HOG, feature_noise=0.03, seed=-1),
-        # #                                sSeqCreateRGTSRB(iSeq_set[0][1], enable_translation=True,
-        # enable_rotation=True, contrast_enhance=True, activate_HOG=activate_HOG,
-        # switch_SFA_over_HOG=switch_SFA_over_HOG, feature_noise=0.0,  seed=-1)]]
-
         # delta_translation=0.0, delta_scaling=0.1, delta_rotation=4.0
         contrast_enhance = "GTSRBContrastEnhancement"
-        #    delta_translation_t= 1.25 #1.5 #1.25
-        #    delta_scaling_t= 0.070 #0.075 #0.065
-        #    delta_rotation_t = 3.5 #2.5 pointer
-        #
-        #    delta_translation_s= 2.0 #RETUNE! # 1.0 #1.5 #1.25
-        #    delta_scaling_s= 0.110 # Retune! 0.056 #0.075 #0.065
-        #    delta_rotation_s = 2.75 #2.8 #2.5 pointer
-        # NOTE: TUNED PARAMS: 2.0, 0.11 and 2.75, however strange results,
-        # so reverting to same parameters used for training
-
         delta_translation_t = 1.5
         delta_scaling_t = 0.090
         delta_rotation_t = 3.15
@@ -1697,16 +1656,10 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
                                              delta_rotation=0.0, contrast_enhance=contrast_enhance,
                                              activate_HOG=activate_HOG, switch_SFA_over_HOG=switch_SFA_over_HOG,
                                              feature_noise=0.0, seed=-1)]]
-        # sSeq_set.add_noise_L0 = False
-        # sSeq_set.rotations = 0.0
 
-        #    print iTrainRGTSRB_Labels[0][0].input_files[0:5]
-        #    print iSeenidRGTSRB_Labels.input_files[0:5]
-        #    quit()
         print (iTrainRGTSRB_Labels[0][0].correct_labels)
         print (iSeenidRGTSRB_Labels.correct_labels)
         print (iNewidRGTSRB_Labels[0][0].correct_labels)
-        # quit()
 
         self.name = "Function Based Data Creation for GTSRB"
         self.network = "linearNetwork4L"  # Default Network, but ignored
@@ -1857,7 +1810,7 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
         return annotations
 
     @staticmethod
-    def count_annotation_classes(self, annotations):
+    def count_annotation_classes(annotations):
         classes = []
         count = []
         for row in annotations:
@@ -1869,7 +1822,7 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
         return numpy.array(count)
 
     @staticmethod
-    def enforce_max_samples_per_class(self, annotations, max_samples=150, repetition=1):
+    def enforce_max_samples_per_class(annotations, max_samples=150, repetition=1):
         annot_list = [None] * 43
         for i in range(len(annot_list)):
             annot_list[i] = []
@@ -1895,7 +1848,7 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
         return new_annotations
 
     @staticmethod
-    def sample_annotations(self, annotations, first_sample=0, num_samples=None):
+    def sample_annotations(annotations, first_sample=0, num_samples=None):
         if len(annotations[0]) < 8 or (first_sample is None and num_samples is None):
             return annotations
 
@@ -1909,6 +1862,7 @@ class ParamsRGTSRBExperiment(system_parameters.ParamsSystem):
         for c in range(43):
             if num_samples is None:
                 num_samples = len(c_annotations[c]) - first_sample
+                # quit()
             # print "Add", first_sample, first_sample+num_samples, len(c_annotations[c]),
             out_annotations += c_annotations[c][first_sample:first_sample + num_samples]
             #    print "out_annotations=", out_annotations
